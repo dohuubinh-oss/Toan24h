@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ngân hàng câu hỏi | Math EdTech</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2563EB",
+                        "card-bg": "#F8FAFC",
+                        "page-bg": "#FFFFFF",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body { font-family: 'Lexend', sans-serif; }
+        .latex-font { font-family: 'Times New Roman', serif; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
+    </style>
+</head>
+<body class="bg-page-bg text-slate-900 min-h-screen flex flex-col">
+<div class="flex flex-1 overflow-hidden">
+<aside class="w-72 border-r border-slate-100 overflow-y-auto hidden md:block bg-page-bg">
+<nav class="p-4 space-y-6">
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-xl">dashboard</span>
+<span class="text-sm font-medium">Bảng điều khiển</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/5 text-primary rounded-lg transition-all border-r-4 border-primary" href="#">
+<span class="material-symbols-outlined text-xl">database</span>
+<span class="text-sm font-bold">Ngân hàng câu hỏi</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-xl">assignment</span>
+<span class="text-sm font-medium">Ngân hàng đề thi</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-xl">group</span>
+<span class="text-sm font-medium">Học sinh</span>
+</a>
+</div>
+<hr class="border-slate-100"/>
+<div class="space-y-4">
+<h3 class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Bộ lọc chi tiết</h3>
+<details class="group px-3" open="">
+<summary class="flex items-center justify-between cursor-pointer text-sm font-semibold py-1 hover:text-primary transition-colors list-none">
+<div class="flex items-center gap-2 text-slate-700">
+<span class="material-symbols-outlined text-lg">school</span>
+<span>Khối lớp</span>
+</div>
+<span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="mt-3 grid grid-cols-2 gap-2 pl-6">
+<label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-3 w-3" type="checkbox"/> Lớp 6
+                            </label>
+<label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-3 w-3" type="checkbox"/> Lớp 7
+                            </label>
+<label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-3 w-3" type="checkbox"/> Lớp 8
+                            </label>
+<label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-3 w-3" type="checkbox"/> Lớp 9
+                            </label>
+</div>
+</details>
+<details class="group px-3" open="">
+<summary class="flex items-center justify-between cursor-pointer text-sm font-semibold py-1 hover:text-primary transition-colors list-none">
+<div class="flex items-center gap-2 text-slate-700">
+<span class="material-symbols-outlined text-lg">category</span>
+<span>Môn học</span>
+</div>
+<span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="mt-3 space-y-2 pl-6">
+<label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-3 w-3" type="checkbox"/> Đại số
+                            </label>
+<label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-3 w-3" type="checkbox"/> Hình học
+                            </label>
+<label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-3 w-3" type="checkbox"/> Giải tích
+                            </label>
+</div>
+</details>
+<details class="group px-3" open="">
+<summary class="flex items-center justify-between cursor-pointer text-sm font-semibold py-1 hover:text-primary transition-colors list-none">
+<div class="flex items-center gap-2 text-slate-700">
+<span class="material-symbols-outlined text-lg">signal_cellular_alt</span>
+<span>Mức độ</span>
+</div>
+<span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="mt-3 space-y-2 pl-6">
+<label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-3 w-3" type="checkbox"/> Nhận biết
+                            </label>
+<label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-3 w-3" type="checkbox"/> Thông hiểu
+                            </label>
+<label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-3 w-3" type="checkbox"/> Vận dụng
+                            </label>
+<label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-3 w-3" type="checkbox"/> Vận dụng cao
+                            </label>
+</div>
+</details>
+</div>
+</nav>
+</aside>
+<main class="flex-1 overflow-y-auto bg-page-bg p-6">
+<div class="flex flex-col gap-6 max-w-6xl mx-auto">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+<span>Admin</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span class="text-primary font-medium">Ngân hàng câu hỏi</span>
+</div>
+<h3 class="text-2xl font-bold text-slate-900">Danh sách câu hỏi</h3>
+</div>
+<div class="flex flex-wrap gap-2">
+<button class="flex items-center gap-2 bg-card-bg border border-slate-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-100 transition-all text-slate-700">
+<span class="material-symbols-outlined text-xl">upload_file</span>
+                            Nhập từ JSON
+                        </button>
+<button class="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-all">
+<span class="material-symbols-outlined text-xl">add</span>
+                            Tạo đề thi
+                        </button>
+</div>
+</div>
+<div class="space-y-4">
+<!-- Standard Question Card -->
+<div class="bg-card-bg rounded-xl border border-slate-200/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group overflow-hidden">
+<div class="p-5">
+<div class="flex items-start justify-between gap-4 mb-4">
+<div class="flex items-center gap-3">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded uppercase">LỚP 9 - Giải tích</span>
+<span class="px-2 py-0.5 bg-amber-500/10 text-amber-600 text-[10px] font-bold rounded uppercase">Thông hiểu</span>
+<span class="text-[10px] text-slate-400 font-medium">ID: #Q-7721</span>
+</div>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-all" title="Xem lịch sử">
+<span class="material-symbols-outlined text-lg">history</span>
+</button>
+<button class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-all" title="Chỉnh sửa">
+<span class="material-symbols-outlined text-lg">edit</span>
+</button>
+<button class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-all" title="Xóa">
+<span class="material-symbols-outlined text-lg">delete</span>
+</button>
+</div>
+</div>
+<div class="latex-font text-lg leading-relaxed text-slate-800 mb-6 pl-7">
+                                Cho hàm số $f(x) = \frac{x^2 - 4}{x - 2}$. Tính giá trị của giới hạn $\lim_{x \to 2} f(x)$.
+                            </div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3 pl-7">
+<div class="flex items-center gap-3 p-2 bg-white rounded-lg border border-slate-100 hover:border-primary/20 cursor-pointer">
+<span class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">A</span>
+<span class="text-sm">$\lim_{x \to 2} f(x) = 0$</span>
+</div>
+<div class="flex items-center gap-3 p-2 bg-primary/5 rounded-lg border border-primary/20 cursor-pointer">
+<span class="w-6 h-6 flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold">B</span>
+<span class="text-sm font-semibold text-primary">$\lim_{x \to 2} f(x) = 4$</span>
+<span class="material-symbols-outlined text-primary text-sm ml-auto">check_circle</span>
+</div>
+<div class="flex items-center gap-3 p-2 bg-white rounded-lg border border-slate-100 hover:border-primary/20 cursor-pointer">
+<span class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">C</span>
+<span class="text-sm">$\lim_{x \to 2} f(x) = 2$</span>
+</div>
+<div class="flex items-center gap-3 p-2 bg-white rounded-lg border border-slate-100 hover:border-primary/20 cursor-pointer">
+<span class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">D</span>
+<span class="text-sm">Giới hạn không tồn tại</span>
+</div>
+</div>
+</div>
+<div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-white">
+<div class="flex items-center gap-4">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-100 overflow-hidden" title="Đã dùng trong HK1-2023">
+<img alt="Exam Tag" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1qDNEfyLy_lMIHoziVzHldZj9wUjFB3TWnFcZTseIvMpB62-c150yeg5nXz5EuP4s3nVK2mQ8tWZp94FL6kW2CRvmjNOQSwpq9LEKZCBuV9Q-y9WRiGOB2a9FKuJx5OMepTRwcj86wvl3ysk4UGtlnjHnKtwBKytFRsiF9AkVtrZ33e2CM4xzYr9jJZRPMH7qgNbe8-eyjjEpQRL7VQTDCreIfiwYfe_hQasog56_QwzS3CC9GaKk2AxBNcCqAK2vZQAJuNnUJi-1"/>
+</div>
+</div>
+<span class="text-[10px] text-slate-400">Lần cuối cập nhật: 12/10/2023 bởi Admin</span>
+</div>
+<button class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                                Xem chi tiết giải bài
+                                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Grouped Question Card (Câu hỏi chùm) -->
+<div class="bg-card-bg rounded-xl border border-slate-200/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group overflow-hidden">
+<div class="p-5">
+<div class="flex items-start justify-between gap-4 mb-4">
+<div class="flex items-center gap-3">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded uppercase">LỚP 6 - Hình học</span>
+<span class="px-2 py-0.5 bg-red-500/10 text-red-600 text-[10px] font-bold rounded uppercase">Vận dụng cao</span>
+<span class="text-[10px] text-slate-400 font-medium">ID: #Q-CLUSTER-81</span>
+</div>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-all"><span class="material-symbols-outlined text-lg">history</span></button>
+<button class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-all"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</div>
+<!-- Shared Context (Nội dung dẫn chung) -->
+<div class="bg-white p-4 rounded-lg border-l-4 border-primary shadow-sm mb-6 ml-7">
+<h4 class="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Nội dung dẫn chung</h4>
+<div class="latex-font text-base text-slate-700 italic">
+                                    Cho hình chóp S.ABCD có đáy ABCD là hình thang vuông tại A và D. Biết $AD = CD = a$, $AB = 2a$. Cạnh bên $SA$ vuông góc với mặt đáy $(ABCD)$.
+                                </div>
+</div>
+<!-- Sub-questions -->
+<div class="space-y-6 ml-7">
+<div class="relative pl-6 border-l-2 border-slate-100">
+<span class="absolute -left-[1px] top-0 w-2 h-2 bg-slate-300 rounded-full"></span>
+<div class="latex-font text-md text-slate-800 mb-3">
+                                        1. Tính khoảng cách từ điểm B đến mặt phẳng (SCD).
+                                    </div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+<div class="text-sm p-2 border border-slate-100 rounded bg-white">A. $a\sqrt{2}$</div>
+<div class="text-sm p-2 border border-slate-100 rounded bg-white font-bold text-primary flex justify-between items-center">B. $a\sqrt{3}/2$ <span class="material-symbols-outlined text-sm">check</span></div>
+</div>
+</div>
+<div class="relative pl-6 border-l-2 border-slate-100">
+<span class="absolute -left-[1px] top-0 w-2 h-2 bg-slate-300 rounded-full"></span>
+<div class="latex-font text-md text-slate-800 mb-3">
+                                        2. Xác định tâm và bán kính mặt cầu ngoại tiếp hình chóp S.ABCD.
+                                    </div>
+<div class="italic text-xs text-slate-500">Dạng bài: Tự luận</div>
+</div>
+</div>
+</div>
+<div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-white">
+<div class="flex items-center gap-4">
+<span class="text-[10px] text-slate-400">Lần cuối cập nhật: 05/11/2023 bởi GV. Lê Thu</span>
+</div>
+<button class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                                Xem đáp án mẫu
+                                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Simple Question Card -->
+<div class="bg-card-bg rounded-xl border border-slate-200/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group overflow-hidden">
+<div class="p-5">
+<div class="flex items-start justify-between gap-4 mb-4">
+<div class="flex items-center gap-3">
+<input class="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded uppercase">LỚP 7 - Đại số</span>
+<span class="px-2 py-0.5 bg-green-500/10 text-green-600 text-[10px] font-bold rounded uppercase">Nhận biết</span>
+<span class="text-[10px] text-slate-400 font-medium">ID: #Q-4491</span>
+</div>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-all"><span class="material-symbols-outlined text-lg">history</span></button>
+<button class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-all"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</div>
+<div class="latex-font text-lg leading-relaxed text-slate-800 mb-4 pl-7">
+                                Giải bất phương trình: $x^2 - 5x + 6 &gt; 0$
+                            </div>
+</div>
+<div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-white">
+<div class="flex items-center gap-4">
+<span class="text-[10px] text-slate-400">Lần cuối cập nhật: 01/12/2023 bởi Admin</span>
+</div>
+<button class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                                Xem chi tiết
+                                <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-6 border-t border-slate-100 pb-20">
+<p class="text-sm text-slate-500">Hiển thị <span class="font-bold text-slate-800">1 - 10</span> trong số <span class="font-bold text-slate-800">1,284</span> câu hỏi</p>
+<div class="flex items-center gap-1">
+<button class="p-2 text-slate-400 hover:text-primary disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">first_page</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-primary disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded bg-primary text-white text-xs font-bold">1</button>
+<button class="w-8 h-8 rounded hover:bg-slate-100 text-slate-600 text-xs font-bold">2</button>
+<button class="w-8 h-8 rounded hover:bg-slate-100 text-slate-600 text-xs font-bold">3</button>
+<span class="px-1 text-slate-400">...</span>
+<button class="w-8 h-8 rounded hover:bg-slate-100 text-slate-600 text-xs font-bold">129</button>
+<button class="p-2 text-slate-400 hover:text-primary">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-primary">
+<span class="material-symbols-outlined">last_page</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Floating Action Bar -->
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white border border-slate-200 shadow-2xl rounded-2xl px-6 py-3 flex items-center gap-6 z-50">
+<div class="flex items-center gap-3">
+<span class="w-6 h-6 rounded-full bg-primary text-white text-[10px] flex items-center justify-center font-bold">2</span>
+<span class="text-sm font-semibold text-slate-700 whitespace-nowrap">Đã chọn 2 câu hỏi</span>
+</div>
+<div class="h-6 w-px bg-slate-200"></div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-primary transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-lg">folder_open</span>
+                Lưu vào thư mục
+            </button>
+<button class="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-primary transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-lg">print</span>
+                In đề thi
+            </button>
+<button class="flex items-center gap-2 text-xs font-bold text-red-500 hover:text-red-600 transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-lg">delete</span>
+                Xóa hàng loạt
+            </button>
+</div>
+<button class="text-slate-400 hover:text-slate-600 ml-2">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</body></html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Chi tiết bài giảng | MathEdu</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2463eb",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#111621",
+                    },
+                    fontFamily: {
+                        "display": ["Be Vietnam Pro", "Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Be Vietnam Pro', sans-serif; }
+        .latex-font { font-family: "Times New Roman", Times, serif; font-style: italic; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased">
+<!-- Header / TopNavBar -->
+<header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex h-16 items-center justify-between gap-4">
+<div class="flex items-center gap-8">
+<a class="flex items-center gap-2 text-primary" href="#">
+<span class="material-symbols-outlined text-3xl">functions</span>
+<span class="text-xl font-bold tracking-tight">MathEdu</span>
+</a>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-sm font-semibold hover:text-primary transition-colors" href="#">Khóa học</a>
+<a class="text-sm font-semibold hover:text-primary transition-colors text-primary" href="#">Luyện đề</a>
+<a class="text-sm font-semibold hover:text-primary transition-colors" href="#">Tài liệu</a>
+<a class="text-sm font-semibold hover:text-primary transition-colors" href="#">Diễn đàn</a>
+</nav>
+</div>
+<div class="flex flex-1 max-w-md mx-4 hidden lg:block">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/50" placeholder="Tìm kiếm bài giảng, công thức..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
+<div class="text-right hidden sm:block">
+<p class="text-xs font-bold">Minh Anh</p>
+<p class="text-[10px] text-slate-500">Học sinh lớp 12</p>
+</div>
+<div class="size-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/20">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="Student profile picture avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkP0W3XADsLurTSfsUbbKbWn5brqCedUB8Ay4ozFJlrErDtSspJr1MEa2EQXPZ3AaHHtnQMD2Nd-gKWFwwvkcEz_gyHFbRjpfbcm7wKRh-kkik1U2ELgWFk1O4o2QJFmBad68_8ia7lhcjgBUHkjHmFlxbaP0_wBTEH1dfr6YtvduGuiLXW2kQRit3luOFw1gpmf1y7KuQwcSV-yRSqYzCysygkCe3QItA5_G8C2DwHpfGsHBtJ3k6cR6vuV-XyalSzYjxstm3vO56"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Layout Container -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 text-sm text-slate-500 mb-6 overflow-x-auto whitespace-nowrap">
+<a class="hover:text-primary" href="#">Trang chủ</a>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<a class="hover:text-primary" href="#">Hình học lớp 12</a>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-slate-900 dark:text-slate-100 font-medium">Thể tích khối chóp</span>
+</nav>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Main Content Area -->
+<div class="lg:col-span-8 space-y-8">
+<!-- Article Header -->
+<div class="space-y-4">
+<h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-slate-100 leading-tight">
+                        Chuyên đề: Thể tích khối chóp và các bài toán thực tế nâng cao
+                    </h1>
+<div class="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+<div class="flex items-center gap-2">
+<div class="size-6 rounded-full bg-slate-200" data-alt="Teacher portrait thumbnail" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCzSslrpFYTVOe7PBe90atgl3hsXwdX1HWUfxWXspmgUurRfocJ961-ft4IENBquzWrvdzEJawGjjPadrlMNnAgf5SurVoBod_tLgjpp2MCk_Wkk_6vkfCkEbfU5bOk9zekEPEtL01nlMpyVRQpqDYk1OUJby4BeEsGEIpw5nceRvR6QlzQusn_l3dHBhVag9I6EsAXPeDvmZ37j6iUPoXbYtvfzDRtqKVtT6deKmWtrXQXlCjz_wcV7al4MPpSiVnRlipHnU47Ee-N'); background-size: cover;"></div>
+<span class="font-semibold text-slate-700 dark:text-slate-300">Thầy Nguyễn Văn A</span>
+</div>
+<span>•</span>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-base">calendar_today</span>
+<span>15 Tháng 5, 2024</span>
+</div>
+<span>•</span>
+<div class="flex items-center gap-1 text-primary bg-primary/10 px-2 py-0.5 rounded-full font-medium">
+<span class="material-symbols-outlined text-base">category</span>
+<span>Hình học lớp 12</span>
+</div>
+</div>
+</div>
+<!-- Content Sections -->
+<div class="space-y-8">
+<!-- Concept Explanation -->
+<section class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary text-3xl">menu_book</span>
+<h2 class="text-xl font-bold">1. Giải thích khái niệm</h2>
+</div>
+<div class="prose dark:prose-invert max-w-none space-y-4 leading-relaxed">
+<p>Thể tích của một khối chóp bất kỳ bằng một phần ba tích của diện tích mặt đáy và chiều cao tương ứng của nó. Đây là nền tảng quan trọng trong hình học không gian.</p>
+<div class="bg-primary/5 border-l-4 border-primary p-6 rounded-r-lg my-6">
+<p class="text-lg font-medium text-center latex-font">
+                                    V = <span class="inline-block px-1">1</span>/<span class="inline-block px-1">3</span> . B . h
+                                </p>
+<p class="text-sm text-slate-500 mt-4 italic text-center">Trong đó: B là diện tích đáy, h là chiều cao khối chóp.</p>
+</div>
+<p>Đối với khối chóp đều, việc tính toán trở nên đơn giản hơn nhờ các tính chất đối xứng, trong đó hình chiếu của đỉnh trùng với tâm của đa giác đáy.</p>
+</div>
+</section>
+<!-- Exercise Analysis -->
+<section class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary text-3xl">biotech</span>
+<h2 class="text-xl font-bold">2. Phân tích bài tập mẫu</h2>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-lg border border-slate-200 dark:border-slate-700 mb-6">
+<p class="font-bold mb-2">Đề bài:</p>
+<p class="italic">Cho khối chóp S.ABC có đáy ABC là tam giác đều cạnh a. Cạnh bên SA vuông góc với đáy và SA = a√3. Tính thể tích khối chóp S.ABC.</p>
+</div>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="flex-none flex flex-col items-center">
+<div class="size-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">1</div>
+<div class="w-0.5 h-full bg-slate-200 dark:bg-slate-800 my-1"></div>
+</div>
+<div class="pb-6">
+<h4 class="font-bold text-slate-900 dark:text-white">Tính diện tích đáy B (Tam giác ABC)</h4>
+<p class="text-slate-600 dark:text-slate-400 mt-1">Vì ABC là tam giác đều cạnh a nên diện tích đáy được tính theo công thức:</p>
+<p class="mt-2 latex-font text-primary font-bold">B = S<sub>ABC</sub> = (a²√3) / 4</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="flex-none flex flex-col items-center">
+<div class="size-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">2</div>
+<div class="w-0.5 h-full bg-slate-200 dark:bg-slate-800 my-1"></div>
+</div>
+<div class="pb-6">
+<h4 class="font-bold text-slate-900 dark:text-white">Xác định chiều cao h</h4>
+<p class="text-slate-600 dark:text-slate-400 mt-1">Theo giả thiết SA ⊥ (ABC), suy ra chiều cao h = SA = a√3.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="flex-none flex flex-col items-center">
+<div class="size-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">3</div>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white">Áp dụng công thức tính thể tích</h4>
+<p class="text-slate-600 dark:text-slate-400 mt-1">V = 1/3 . B . h = 1/3 . (a²√3 / 4) . a√3 = a³/4.</p>
+<p class="mt-3 font-bold text-green-600 dark:text-green-400">Kết luận: Thể tích khối chóp là a³/4.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Graphic Illustration -->
+<section class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary text-3xl">polyline</span>
+<h2 class="text-xl font-bold">3. Ví dụ minh họa hình vẽ</h2>
+</div>
+<div class="aspect-video w-full rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center group">
+<div class="w-full h-full bg-gradient-to-br from-slate-50 to-slate-200 dark:from-slate-800 dark:to-slate-900 relative flex items-center justify-center">
+<!-- Placeholder for mathematical diagram -->
+<div class="text-center space-y-4">
+<span class="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600">architecture</span>
+<p class="text-slate-400 text-sm font-medium italic">Sơ đồ khối chóp S.ABC trong không gian 3D</p>
+</div>
+<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5 flex-col gap-2">
+<button class="bg-white/90 px-4 py-2 rounded-lg text-xs font-bold shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">zoom_in</span> Phóng to hình vẽ
+                                    </button>
+</div>
+</div>
+</div>
+<p class="text-sm text-slate-500 mt-4 text-center">Hình 1.1: Mô tả trực quan khối chóp có cạnh bên vuông góc với đáy.</p>
+</section>
+<!-- Teacher's Notes Section -->
+<section class="bg-blue-50/50 dark:bg-primary/5 p-6 md:p-8 rounded-2xl border-2 border-primary/20 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 text-primary/10 select-none">
+<span class="material-symbols-outlined text-9xl">campaign</span>
+</div>
+<div class="relative z-10">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary text-3xl">campaign</span>
+<h2 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Dặn dò của giáo viên</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-primary/10 shadow-sm">
+<div class="flex items-center gap-2 mb-3 text-red-500">
+<span class="material-symbols-outlined">warning</span>
+<h3 class="font-bold">Lưu ý khi làm bài</h3>
+</div>
+<ul class="text-sm space-y-2 text-slate-600 dark:text-slate-400 list-disc pl-4">
+<li>Cẩn thận nhầm lẫn giữa công thức diện tích và thể tích.</li>
+<li>Quên nhân hệ số 1/3 là lỗi phổ biến nhất.</li>
+</ul>
+</div>
+<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-primary/10 shadow-sm">
+<div class="flex items-center gap-2 mb-3 text-amber-500">
+<span class="material-symbols-outlined">bolt</span>
+<h3 class="font-bold">Kinh nghiệm thi</h3>
+</div>
+<ul class="text-sm space-y-2 text-slate-600 dark:text-slate-400 list-disc pl-4">
+<li>Sử dụng phương pháp loại trừ cho các bài trắc nghiệm.</li>
+<li>Học thuộc các bộ số diện tích đặc biệt để tính nhanh.</li>
+</ul>
+</div>
+<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-primary/10 shadow-sm">
+<div class="flex items-center gap-2 mb-3 text-primary">
+<span class="material-symbols-outlined">lightbulb</span>
+<h3 class="font-bold">Lời khuyên học tập</h3>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed italic">
+                                        "Toán học không chỉ là công thức, hãy cố gắng hình dung khối hình trong đầu để không bị phụ thuộc vào đề bài."
+                                    </p>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Sidebar -->
+<aside class="lg:col-span-4 space-y-6">
+<!-- Action Cards -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
+<button class="w-full flex items-center justify-center gap-2 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/25">
+<span class="material-symbols-outlined">download</span>
+                        Tải tài liệu PDF
+                    </button>
+<button class="w-full flex items-center justify-center gap-2 py-3 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
+<span class="material-symbols-outlined">bookmark_add</span>
+                        Lưu bài viết
+                    </button>
+</div>
+<!-- Related Lessons -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+<h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">local_library</span>
+                        Bài giảng liên quan
+                    </h3>
+<div class="space-y-4">
+<a class="group block" href="#">
+<div class="flex gap-3">
+<div class="w-20 h-20 shrink-0 rounded-lg bg-slate-100 overflow-hidden">
+<img alt="Math related image" class="w-full h-full object-cover group-hover:scale-110 transition-transform" data-alt="Abstract mathematical digital art visualization" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFyR2dPO3YUvSW77SfHGSTI8IOvpNB9DC2Z5JAqRbn7sQ7JdcPZpzxdL2aeDGqdTbdRTiHZoCZgtHzfmwclKFK-Yba5Y1rSyaDk427_S5lXzlEW-Ui3rjJO8udm1WEHWPNitbIKbVDKY9D6SE0pVPEAsjdXjYvbIR6jVRuHCTg0_aFvKZ8Vx8O5s49UsvYP3R7dGymdZRxMlP8lYVY_s5Kg2SUNiJH8N9w4LojiL2i0pQxQviLlBZp_mmBYgnXLGFQmD7pd9rti2TG"/>
+</div>
+<div>
+<h4 class="text-sm font-bold group-hover:text-primary transition-colors line-clamp-2">Thể tích khối lăng trụ đứng và lăng trụ xiên</h4>
+<p class="text-[11px] text-slate-500 mt-1 uppercase font-bold tracking-wider">Hình học lớp 12</p>
+</div>
+</div>
+</a>
+<a class="group block" href="#">
+<div class="flex gap-3">
+<div class="w-20 h-20 shrink-0 rounded-lg bg-slate-100 overflow-hidden">
+<img alt="Math related image" class="w-full h-full object-cover group-hover:scale-110 transition-transform" data-alt="Blackboard with complex math equations written" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRHkSJjH-Rb63ttXabCUwd9bYLe1tPqVPnwCtM7d5nHXIWGSqh-H7IOfdH8m5XZf52Vb_WbsQWlQnoI_jPmXKVNabc0ViEeAM5GkeBhJtf8ujU-KKr-LR-819FzYdpePGwkKxmgXnZ69KEeh6wGns6zD1VkxEfCXBaLLJbkqvTfF4yuaTIaUIZ2xlyMwhi_wBTwOv1jkiQmBS_6DC7j3yZVlG6DtrvSVdVTclUEzmAwNa59Vw_LMkc68t0hjNHFtNOGZ3n05_rLGxO"/>
+</div>
+<div>
+<h4 class="text-sm font-bold group-hover:text-primary transition-colors line-clamp-2">Góc và khoảng cách trong không gian 3D</h4>
+<p class="text-[11px] text-slate-500 mt-1 uppercase font-bold tracking-wider">Luyện đề THPT</p>
+</div>
+</div>
+</a>
+<a class="group block" href="#">
+<div class="flex gap-3">
+<div class="w-20 h-20 shrink-0 rounded-lg bg-slate-100 overflow-hidden">
+<img alt="Math related image" class="w-full h-full object-cover group-hover:scale-110 transition-transform" data-alt="Geometry tools like compass and ruler" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAy737Z2c8odbCCLUBKX_d2E6ArFVSuJBUdfz8JSApeGVCugkmS8cdZEp3W7oOu9vM4jlHk1D53enZ0mL6pl6TY2Tt2fC9Kkup4adoASzZwB4fLf0zrThYe5qYNoKRwJWejTilln78agw-a8sJm6m3jUF0cP1rITQ3MUtOPMfLFtNM20vjnBuPXdMPx1KXkikIXnWBmpUQsgB3d1a5nmvvtERpA3mkRSxXbaQSvisk2bw8-vJkYGcYx8hZo89G92xFRQq3zxtB9B4pS"/>
+</div>
+<div>
+<h4 class="text-sm font-bold group-hover:text-primary transition-colors line-clamp-2">Bài toán cực trị trong hình học không gian</h4>
+<p class="text-[11px] text-slate-500 mt-1 uppercase font-bold tracking-wider">Nâng cao</p>
+</div>
+</div>
+</a>
+</div>
+<button class="w-full mt-6 text-sm font-bold text-primary hover:underline flex items-center justify-center gap-1">
+                        Xem tất cả bài giảng <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<!-- Ad/Promo Card -->
+<div class="rounded-xl bg-slate-900 p-6 text-white relative overflow-hidden group">
+<div class="relative z-10 space-y-4">
+<span class="bg-primary px-2 py-1 rounded text-[10px] font-bold uppercase">Ưu đãi 50%</span>
+<h3 class="text-xl font-bold leading-tight">Khóa học Luyện thi THPT Quốc gia 2024</h3>
+<p class="text-slate-400 text-sm">Hệ thống bài giảng từ cơ bản đến nâng cao cùng đội ngũ giáo viên top đầu.</p>
+<button class="bg-white text-slate-900 px-6 py-2 rounded-lg font-bold text-sm w-full hover:bg-primary hover:text-white transition-all">Đăng ký ngay</button>
+</div>
+<!-- Abstract decoration -->
+<div class="absolute -bottom-10 -right-10 size-40 bg-primary/20 rounded-full blur-3xl"></div>
+</div>
+</aside>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12 py-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+<div class="flex items-center justify-center gap-2 text-primary mb-4">
+<span class="material-symbols-outlined text-3xl">functions</span>
+<span class="text-xl font-bold">MathEdu</span>
+</div>
+<p class="text-slate-500 text-sm max-w-md mx-auto">Nền tảng học toán trực tuyến hàng đầu dành cho học sinh Việt Nam. Sáng tạo - Tư duy - Thành công.</p>
+<div class="mt-8 flex justify-center gap-6 text-slate-400">
+<a class="hover:text-primary transition-colors" href="#">Facebook</a>
+<a class="hover:text-primary transition-colors" href="#">Youtube</a>
+<a class="hover:text-primary transition-colors" href="#">TikTok</a>
+</div>
+<div class="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
+<p class="text-slate-400 text-xs">© 2024 MathEdu Learning. All rights reserved.</p>
+</div>
+</div>
+</footer>
+</body></html>

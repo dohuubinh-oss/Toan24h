@@ -1,64 +1,66 @@
 ---
-name: Modern Academic (Editorial Scholarship)
-description: A high-fidelity design system for professional examination management. Focuses on clarity, authority, and focused learning through strong typography and generous whitespace.
+name: Modern Academic (Google Material Inspired)
+description: Một hệ thống thiết kế kết hợp sự rõ ràng của thiết kế học thuật với các tiêu chuẩn Material Design của Google. Tập trung vào trải nghiệm đọc, tính tương tác rõ ràng và khả năng hiển thị Toán học xuất sắc.
 colors:
-  surface: "#FFFFFF"
-  on-surface: "#1E293B"
-  on-surface-variant: "#64748B"
-  primary: "#334155"
-  on-primary: "#F8FAFC"
-  primary-container: "#F1F5F9"
-  on-primary-container: "#475569"
-  secondary: "#0F172A"
-  on-secondary: "#FFFFFF"
-  accent: "#475569"
-  on-accent: "#FFFFFF"
-  error: "#991B1B"
-  on-error: "#FEF2F2"
-  background: "#F8FAFC"
-  on-background: "#1E293B"
-  outline: "#E2E8F0"
+  primary: "#2563EB"
+  on-primary: "#FFFFFF"
+  primary-container: "rgba(37, 99, 235, 0.1)"
+  on-primary-container: "#1D4ED8"
+  
+  surface: "#F8FAFC"
+  on-surface: "#0F172A"
+  background: "#FFFFFF"
+  on-background: "#0F172A"
+  
+  outline: "rgba(226, 232, 240, 0.6)"
   outline-variant: "#F1F5F9"
+  
+  success: "#22C55E"
+  warning: "#F59E0B"
+  error: "#EF4444"
 typography:
   display-lg:
-    fontFamily: Lexend
+    fontFamily: "Lexend, sans-serif"
     fontSize: 48px
     fontWeight: "700"
     lineHeight: 56px
     letterSpacing: -0.02em
   headline-lg:
-    fontFamily: Lexend
+    fontFamily: "Lexend, sans-serif"
     fontSize: 32px
     fontWeight: "600"
     lineHeight: 40px
   headline-md:
-    fontFamily: Lexend
+    fontFamily: "Lexend, sans-serif"
     fontSize: 24px
     fontWeight: "600"
     lineHeight: 32px
   body-lg:
-    fontFamily: Inter
+    fontFamily: "Lexend, sans-serif"
     fontSize: 18px
     fontWeight: "400"
     lineHeight: 28px
   body-md:
-    fontFamily: Inter
+    fontFamily: "Lexend, sans-serif"
     fontSize: 16px
     fontWeight: "400"
     lineHeight: 24px
   label-sm:
-    fontFamily: Inter
+    fontFamily: "Lexend, sans-serif"
     fontSize: 12px
     fontWeight: "600"
     lineHeight: 16px
     letterSpacing: 0.05em
+  math:
+    fontFamily: "'Times New Roman', serif"
+    fontSize: 16px
+    fontWeight: "400"
 rounded:
-  sm: 4px
-  DEFAULT: 8px
-  md: 12px
-  lg: 16px
-  xl: 24px
-  full: 9999px
+  DEFAULT: "0.25rem"
+  md: "0.5rem"
+  lg: "0.75rem"
+  xl: "1rem"
+  full: "9999px"
 spacing:
   unit: 8px
   container-padding: 32px
@@ -70,51 +72,43 @@ components:
     textColor: "{colors.on-surface}"
     rounded: "{rounded.lg}"
     padding: "{spacing.container-padding}"
-    border: "none"
-    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)"
+    border: "1px solid {colors.outline}"
+    boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)"
+    hover:
+      border: "1px solid rgba(37, 99, 235, 0.3)"
+      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)"
   button-primary:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.on-primary}"
     typography: "{typography.label-sm}"
     rounded: "{rounded.md}"
-    height: 44px
+    height: 48px
     padding: 0 20px
-  input-field:
+    boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)"
+  tag-label:
     backgroundColor: "{colors.primary-container}"
-    textColor: "{colors.on-surface}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.md}"
-    padding: 12px 16px
-    border: "1px solid {colors.outline}"
+    textColor: "{colors.primary}"
+    typography: "{typography.label-sm}"
+    rounded: "{rounded.DEFAULT}"
+    padding: "2px 8px"
 ---
 
-# Brand & Style
-The **Modern Academic** design system is built for the "ExamModel" project. It follows the **Editorial Scholarship** philosophy: priority is given to reading and focus. The aesthetic is clean, authoritative, and sophisticated, mirroring the environment of a premium educational institution or a professional broadsheet.
+# Brand & Style (Modern Academic)
+The **Modern Academic** design system is built for the "Toan24h" project. It merges the **Editorial Scholarship** philosophy with **Google's Material Design 3** accessibility and UX standards.
 
 ## Core Principles
-1. **Typography First**: Hierarchy is established through weight and size of Lexend (headings) and Inter (body), not through color or boxes.
-2. **Infinite Whitespace**: Margins and gaps are intentionally large to create "breathing room" for complex exam data.
-3. **No-Line Architecture**: Borders and lines are replaced by subtle depth (shadows) and background shifts to define sections.
-4. **Slate Authority**: A palette of Slate and Ink blues provides a serious, professional tone that is easier on the eyes than pure black.
+1. **Accessibility First (A11y)**: Cỡ chữ nhỏ nhất (minimum size) được nâng lên `12px` (text-xs) để tuân thủ chuẩn Google về Legibility. Vùng chạm (Touch targets) trên thiết bị di động cần đảm bảo tối thiểu `48x48px` (hoặc `44x44px`).
+2. **Typography Hierarchy**: Sử dụng `Lexend` đồng nhất cho toàn bộ giao diện (tiêu đề và nội dung) tạo cảm giác hiện đại, dễ đọc. Sử dụng `Times New Roman` ĐỘC QUYỀN cho môi trường render Toán học (LaTeX) để duy trì chất lượng học thuật.
+3. **Outlined Elevation (Depth)**: Chiều sâu giao diện được thiết kế theo chuẩn M3 Outlined. Trạng thái nghỉ dùng viền rất mờ (`border-slate-200/60`) và bóng đổ nhẹ (`shadow-sm`). Khi tương tác (Hover), bóng đổ rõ hơn (`shadow-md`) và viền chuyển sang màu Primary (`border-primary/30`).
+4. **Vibrant Yet Professional Palette**: Sử dụng nền Canvas trắng tinh (`#FFFFFF`) giúp tăng tối đa độ tương phản. Bề mặt nổi (Surface/Card) dùng nền Slate 50 (`#F8FAFC`). Màu chủ đạo là Blue 600 (`#2563EB`) tươi sáng nhưng vẫn chuyên nghiệp.
 
-# Colors
-The color strategy uses a high-contrast Light Mode only approach.
-- **Background**: We use a very light slate (#F8FAFC) instead of pure white for the main canvas to reduce glare.
-- **Cards**: Pure white cards sit on the background, creating a natural elevation.
-- **Accents**: Used sparingly for interactive elements to keep the focus on the academic content.
+## Colors
+- **Canvas**: Pure white `#FFFFFF` (page-bg).
+- **Surface**: Slate 50 `#F8FAFC` (card-bg).
+- **Primary**: Tailwind Blue 600 `#2563EB` (Dành cho nút bấm chính và hover states).
+- **Semantic Tags**: Sử dụng background có độ trong suốt 10% kết hợp với chữ đậm (Green, Amber, Red) để làm các nhãn cảnh báo, thông báo nổi bật và thân thiện với mắt.
 
-# Typography
-We use two Google Fonts:
-- **Lexend**: A font specifically designed to improve reading proficiency. Used for all headings and brand elements.
-- **Inter**: A highly legible sans-serif for UI labels and long-form body text.
-
-# Elevation & Depth
-Depth is achieved through **Soft Layering**:
-- **Level 1 (Canvas)**: Background color.
-- **Level 2 (Content)**: Surface cards with soft shadows.
-- **Level 3 (Interactions)**: Primary buttons and active states with a slightly deeper shadow or high-contrast color.
-
-# Layout
-- **Grid**: 8px base unit.
-- **Margins**: 32px container padding is the standard minimum.
-- **Density**: Low density is preferred. Information should be chunked into clean sections rather than crammed into a single view.
+## Elevation & Depth (Cards)
+- **Resting State**: `border-slate-200/60` và `shadow-sm`.
+- **Hover/Active State**: `shadow-md` và `hover:border-primary/30`.
+- **Selected State**: Khi người dùng đánh dấu chọn một thành phần (ví dụ chọn câu hỏi), card sẽ đổi màu nền sang `bg-primary/5` kết hợp `border-primary`.

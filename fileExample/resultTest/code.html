@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kết quả bài thi chi tiết | EdTech VN</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2563EB",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#111621",
+                        "success": "#10b981",
+                        "error": "#ef4444",
+                        "warning": "#f59e0b"
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Lexend', sans-serif;
+        }
+        .paper-lines {
+            background-image: repeating-linear-gradient(#f1f5f9 0px, #f1f5f9 1px, transparent 1px, transparent 24px);
+            background-size: 100% 24px;
+            line-height: 24px;
+        }
+        .math-handwriting {
+            font-family: 'Brush Script MT', 'Comic Sans MS', cursive;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<header class="sticky top-0 z-50 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-16">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2">
+<div class="bg-primary text-white p-1.5 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">school</span>
+</div>
+<h2 class="text-xl font-bold tracking-tight text-primary">EdTech VN</h2>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Khóa học</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Lớp học</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Thư viện</a>
+<a class="text-sm font-medium text-primary border-b-2 border-primary pt-1" href="#">Kết quả</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="text-xs font-semibold">Nguyễn Minh Anh</p>
+<p class="text-[10px] text-slate-500">Học sinh lớp 12A1</p>
+</div>
+<div class="h-10 w-10 rounded-full bg-slate-200 border-2 border-primary/20 overflow-hidden">
+<img alt="Ảnh đại diện học sinh" class="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6n5Rt7M7R-lZ7S1m24fQKFoV-hl4wPqby28qFCJOh-btkZEyo1sw-scBn681CIx7xgVFzSmPSgwgjGfGZWlKD2WMzU0J2s4-dAVVgQcuUVlxvMQTWF38L53UnI8GZuT0nqlyrg7m8RZzK3_9O7i5FZl_7niud47AAJeij7Z816FbCub8mDB6so3ThqE20Ewj7FuQUeGX6HqCgjyLF7KSjiPuQqHDzkdft2JvGCSF4yTxsowrounZ3pRDnnWq_fKBZYyf9uVwL3KV6"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+<div class="space-y-2">
+<nav class="flex items-center gap-2 text-xs text-slate-500 mb-2">
+<a class="hover:text-primary" href="#">Trang chủ</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<a class="hover:text-primary" href="#">Toán học 12</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-slate-900 dark:text-slate-100 font-medium">Kết quả bài thi</span>
+</nav>
+<h1 class="text-3xl font-black tracking-tight leading-none">Kết quả bài thi: Toán Học Kỳ I</h1>
+<p class="text-slate-500 text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">calendar_today</span> Hoàn thành lúc: 14:30 - 25/10/2023 
+                <span class="mx-2">|</span>
+<span class="material-symbols-outlined text-sm">timer</span> Thời gian làm bài: 85 phút
+            </p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 transition-all text-sm font-semibold">
+<span class="material-symbols-outlined text-lg">share</span> Chia sẻ
+            </button>
+<button class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 text-sm font-semibold">
+<span class="material-symbols-outlined text-lg">dashboard</span> Quay lại Dashboard
+            </button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<div class="lg:col-span-4 space-y-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16"></div>
+<div class="text-center relative">
+<div class="inline-flex items-center justify-center relative mb-4">
+<svg class="w-40 h-40 transform -rotate-90">
+<circle class="text-slate-100 dark:text-slate-800" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-dasharray="440" stroke-dashoffset="66" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-4xl font-black text-slate-900 dark:text-slate-100">8.5</span>
+<span class="text-slate-400 font-bold text-sm">/ 10</span>
+</div>
+</div>
+<h3 class="text-xl font-bold mb-1">Kết quả xuất sắc!</h3>
+<p class="text-slate-500 text-sm">Bạn nằm trong top 5% của lớp.</p>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-8">
+<div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center border border-slate-100 dark:border-slate-700">
+<p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Trắc nghiệm</p>
+<p class="text-xl font-bold text-success">5.0<span class="text-xs text-slate-400">/5.0</span></p>
+</div>
+<div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center border border-slate-100 dark:border-slate-700">
+<p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Tự luận</p>
+<p class="text-xl font-bold text-warning">3.5<span class="text-xs text-slate-400">/5.0</span></p>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-bold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">grid_view</span>
+                        Bản đồ câu hỏi
+                    </h3>
+<span class="text-xs font-medium text-slate-400">15 Câu hỏi</span>
+</div>
+<div class="space-y-6">
+<div>
+<p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Trắc nghiệm</p>
+<div class="flex flex-wrap gap-2">
+<button class="w-10 h-10 rounded-lg bg-success/10 text-success border border-success/20 flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform">1</button>
+<button class="w-10 h-10 rounded-lg bg-success/10 text-success border border-success/20 flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform">2</button>
+<button class="w-10 h-10 rounded-lg bg-error/10 text-error border border-error/20 flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform">3</button>
+<button class="w-10 h-10 rounded-lg bg-success/10 text-success border border-success/20 flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform">4</button>
+<button class="w-10 h-10 rounded-lg bg-success/10 text-success border border-success/20 flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform">5</button>
+<button class="w-10 h-10 rounded-lg bg-success/10 text-success border border-success/20 flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform">6</button>
+<button class="w-10 h-10 rounded-lg bg-success/10 text-success border border-success/20 flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform">7</button>
+<button class="w-10 h-10 rounded-lg bg-success/10 text-success border border-success/20 flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform">8</button>
+<button class="w-10 h-10 rounded-lg bg-success/10 text-success border border-success/20 flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform">9</button>
+<button class="w-10 h-10 rounded-lg bg-success/10 text-success border border-success/20 flex items-center justify-center font-bold text-sm hover:scale-105 transition-transform">10</button>
+</div>
+</div>
+<div>
+<p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Tự luận</p>
+<div class="flex flex-wrap gap-2">
+<button class="px-3 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1 font-bold text-xs hover:scale-105 transition-transform">11 <span class="text-[10px] font-normal opacity-70">(1.0đ)</span></button>
+<button class="px-3 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1 font-bold text-xs hover:scale-105 transition-transform">12 <span class="text-[10px] font-normal opacity-70">(0.5đ)</span></button>
+<button class="px-3 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1 font-bold text-xs hover:scale-105 transition-transform">13 <span class="text-[10px] font-normal opacity-70">(0.8đ)</span></button>
+<button class="px-3 h-10 rounded-lg bg-warning/10 text-warning border border-warning/20 flex items-center justify-center gap-1 font-bold text-xs hover:scale-105 transition-transform">14 <span class="text-[10px] font-normal opacity-70">(0.7đ)</span></button>
+<button class="px-3 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1 font-bold text-xs hover:scale-105 transition-transform">15 <span class="text-[10px] font-normal opacity-70">(0.5đ)</span></button>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-primary/5 rounded-xl p-6 border border-primary/10">
+<div class="flex items-start gap-4">
+<div class="bg-primary text-white p-2 rounded-lg">
+<span class="material-symbols-outlined">lightbulb</span>
+</div>
+<div>
+<h4 class="font-bold text-primary mb-1">Gợi ý ôn tập</h4>
+<p class="text-xs leading-relaxed text-slate-600 dark:text-slate-400">Hãy tập trung vào phần Hình học không gian (câu 11, 14). AI nhận thấy bạn đang gặp khó khăn ở các bước chứng minh vuông góc.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-8 space-y-8">
+<section>
+<div class="flex items-center justify-between mb-4 px-2">
+<h2 class="text-xl font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-success">done_all</span>
+                        Phần 1: Trắc nghiệm (10 câu)
+                    </h2>
+</div>
+<div class="space-y-4">
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+<div class="p-6">
+<div class="flex items-start justify-between gap-4 mb-4">
+<div class="flex gap-3">
+<span class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-sm">3</span>
+<div class="space-y-4">
+<p class="font-semibold text-base">Tìm giá trị cực đại của hàm số $y = x^3 - 3x + 2$ trên đoạn $[0, 2]$.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<div class="p-4 rounded-lg border border-slate-200 dark:border-slate-700 text-sm flex items-center justify-between">
+<span>A. 0</span>
+<span class="material-symbols-outlined text-slate-300">circle</span>
+</div>
+<div class="p-4 rounded-lg border-2 border-error bg-error/5 text-sm flex items-center justify-between font-bold">
+<span class="text-error">B. 2 (Lựa chọn của bạn)</span>
+<span class="material-symbols-outlined text-error">cancel</span>
+</div>
+<div class="p-4 rounded-lg border-2 border-success bg-success/5 text-sm flex items-center justify-between font-bold">
+<span class="text-success">C. 4 (Đáp án đúng)</span>
+<span class="material-symbols-outlined text-success">check_circle</span>
+</div>
+<div class="p-4 rounded-lg border border-slate-200 dark:border-slate-700 text-sm flex items-center justify-between">
+<span>D. -2</span>
+<span class="material-symbols-outlined text-slate-300">circle</span>
+</div>
+</div>
+</div>
+</div>
+<button class="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-primary hover:border-primary transition-all text-xs font-bold">
+<span class="material-symbols-outlined text-base">style</span> Lưu Flashcard
+                                </button>
+</div>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800/30 p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+<p class="text-xs text-slate-500 italic">Câu hỏi này có độ khó: Trung bình</p>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all text-xs font-bold">
+<span class="material-symbols-outlined text-lg">psychology</span> AI Giải thích chi tiết
+                            </button>
+</div>
+</div>
+</div>
+</section>
+<section>
+<div class="flex items-center justify-between mb-4 px-2 pt-4">
+<h2 class="text-xl font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-warning">edit_note</span>
+                        Phần 2: Tự luận (5 câu)
+                    </h2>
+</div>
+<div class="space-y-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/20">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm">11</span>
+<h3 class="font-bold">Giải bất phương trình: $log_2(x-1) + log_2(x+1) \le 3$</h3>
+</div>
+<div class="text-right">
+<p class="text-xs text-slate-400 uppercase font-bold tracking-widest">Điểm đạt</p>
+<p class="text-lg font-black text-primary">1.0 / 1.0</p>
+</div>
+</div>
+<div class="p-6 space-y-6">
+<div>
+<p class="text-xs font-bold text-slate-400 uppercase mb-3">Bài làm của bạn</p>
+<div class="relative rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white p-6 min-h-[300px] paper-lines">
+<div class="math-handwriting text-blue-800 text-lg space-y-4">
+<p>Điều kiện: $x-1 &gt; 0$ và $x+1 &gt; 0 \Rightarrow x &gt; 1$</p>
+<p>BPT $\Leftrightarrow log_2((x-1)(x+1)) \le 3$</p>
+<p>$\Leftrightarrow (x-1)(x+1) \le 2^3 = 8$</p>
+<p>$\Leftrightarrow x^2 - 1 \le 8$</p>
+<p>$\Leftrightarrow x^2 \le 9 \Leftrightarrow -3 \le x \le 3$</p>
+<p>Kết hợp điều kiện $x &gt; 1$, ta được tập nghiệm $S = (1; 3]$</p>
+</div>
+<div class="absolute inset-0 pointer-events-none">
+<div class="absolute top-8 left-[60%] w-32 h-12 border-2 border-success rounded-lg flex items-center justify-center">
+<span class="text-success font-bold text-xs bg-white/90 px-1 rounded shadow-sm">Đúng điều kiện!</span>
+</div>
+<div class="absolute bottom-8 right-12 w-24 h-10 border-2 border-success rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-success">check</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-primary/5 border border-primary/20 rounded-xl p-5">
+<div class="flex items-center gap-2 mb-2 text-primary">
+<span class="material-symbols-outlined text-sm">chat_bubble</span>
+<h4 class="font-bold text-sm">Nhận xét của giáo viên</h4>
+</div>
+<p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic">
+                                    "Trình bày rất rõ ràng và mạch lạc. Em đã nhớ đặt điều kiện xác định cho logarit - đây là lỗi mà rất nhiều bạn hay mắc phải. Tiếp tục phát huy nhé!"
+                                </p>
+</div>
+<div class="bg-slate-100 dark:bg-slate-800/50 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+<div class="flex items-center gap-2 mb-3 text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined text-sm">database</span>
+<h4 class="font-bold text-xs uppercase tracking-wider">Giải thích từ hệ thống</h4>
+</div>
+<div class="text-sm space-y-3 text-slate-600 dark:text-slate-400">
+<p class="font-semibold text-slate-800 dark:text-slate-200">Phương pháp giải bất phương trình Logarit:</p>
+<ul class="list-disc list-inside space-y-1">
+<li>Bước 1: Tìm điều kiện xác định (biểu thức trong log &gt; 0).</li>
+<li>Bước 2: Sử dụng quy tắc cộng logarit $log_a(u) + log_a(v) = log_a(uv)$.</li>
+<li>Bước 3: Khử logarit (chú ý chiều BPT nếu cơ số $a &lt; 1$).</li>
+<li>Bước 4: Đối chiếu điều kiện và kết luận.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/20">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm">14</span>
+<h3 class="font-bold">Chứng minh đường thẳng $SD$ vuông góc với mặt phẳng $(AMC)$.</h3>
+</div>
+<div class="text-right">
+<p class="text-xs text-slate-400 uppercase font-bold tracking-widest">Điểm đạt</p>
+<p class="text-lg font-black text-warning">0.7 / 1.0</p>
+</div>
+</div>
+<div class="p-6 space-y-6">
+<div>
+<p class="text-xs font-bold text-slate-400 uppercase mb-3 text-error flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">draw</span> Bài làm (Có lỗi được đánh dấu)
+                                </p>
+<div class="relative rounded-xl border-2 border-error/30 overflow-hidden bg-white p-8">
+<div class="flex flex-col md:flex-row gap-8 items-center">
+<div class="w-full md:w-1/2 flex justify-center">
+<svg class="w-64 h-64 text-slate-800" viewBox="0 0 200 200">
+<path d="M100 20 L40 140 L160 140 Z" fill="none" stroke="currentColor" stroke-width="2"></path>
+<path d="M100 20 L130 140" fill="none" stroke="currentColor" stroke-dasharray="4" stroke-width="1"></path>
+<text class="text-[12px] font-bold" x="95" y="15">S</text>
+<text class="text-[12px] font-bold" x="30" y="150">A</text>
+<text class="text-[12px] font-bold" x="165" y="150">C</text>
+<text class="text-[12px] font-bold" x="125" y="155">D</text>
+<circle cx="100" cy="20" fill="currentColor" r="3"></circle>
+<circle cx="40" cy="140" fill="currentColor" r="3"></circle>
+<circle cx="160" cy="140" fill="currentColor" r="3"></circle>
+<circle cx="130" cy="140" fill="currentColor" r="3"></circle>
+</svg>
+</div>
+<div class="w-full md:w-1/2 math-handwriting text-blue-800 space-y-3">
+<p>Ta có: $AC \perp BD$ (tính chất hình vuông)</p>
+<p>Và $AC \perp SO$ (do $SO \perp (ABCD)$)</p>
+<p>$\Rightarrow AC \perp (SBD) \Rightarrow AC \perp SD$ (1)</p>
+<p>Xét $\triangle AMC$... (thiếu bước chứng minh $SD \perp AM$)</p>
+</div>
+</div>
+<div class="absolute inset-0 pointer-events-none">
+<div class="absolute top-[60%] right-[10%] w-24 h-24 border-2 border-error rounded-full opacity-60"></div>
+<div class="absolute top-[55%] right-[15%] text-error font-bold text-xs rotate-12 bg-white px-1">Lỗi suy luận!</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-error/5 border border-error/20 rounded-xl p-5">
+<div class="flex items-center gap-2 mb-2 text-error">
+<span class="material-symbols-outlined text-sm">feedback</span>
+<h4 class="font-bold text-sm">Góp ý từ giáo viên</h4>
+</div>
+<p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic">
+                                        "Phần vẽ hình chính xác. Tuy nhiên ở bước chứng minh thứ 2, em chưa chỉ ra được $SD$ vuông góc với $AC$ dựa trên tính chất hình vuông. Bị trừ 0.3đ ở bước này."
+                                    </p>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 flex flex-col justify-center">
+<h4 class="font-bold text-sm mb-3">Thao tác nhanh</h4>
+<div class="space-y-2">
+<button class="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-primary/5 hover:text-primary transition-all">
+<span class="material-symbols-outlined text-sm">menu_book</span> Xem đáp án mẫu
+                                        </button>
+<button class="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-primary text-white text-xs font-bold hover:shadow-lg hover:shadow-primary/30 transition-all">
+<span class="material-symbols-outlined text-sm">add_circle</span> Thêm vào Flashcard ôn tập
+                                        </button>
+</div>
+</div>
+</div>
+<div class="bg-slate-100 dark:bg-slate-800/50 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+<div class="flex items-center gap-2 mb-3 text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined text-sm">database</span>
+<h4 class="font-bold text-xs uppercase tracking-wider">Giải thích từ hệ thống</h4>
+</div>
+<div class="text-sm space-y-3 text-slate-600 dark:text-slate-400">
+<p class="font-semibold text-slate-800 dark:text-slate-200">Tiêu chí chấm điểm Hình học không gian:</p>
+<ul class="list-disc list-inside space-y-1">
+<li><strong>Vẽ hình (0.2đ):</strong> Hình vẽ rõ ràng, đúng nét đứt/liền.</li>
+<li><strong>Lập luận 1 (0.4đ):</strong> Chứng minh được $SD$ vuông góc với một đường thẳng trong mặt phẳng $(AMC)$.</li>
+<li><strong>Lập luận 2 (0.4đ):</strong> Chứng minh được $SD$ vuông góc với đường thẳng thứ hai cắt đường thẳng thứ nhất trong $(AMC)$.</li>
+</ul>
+<p class="text-xs italic mt-2">Gợi ý: Để chứng minh $d \perp (P)$, ta cần chứng minh $d$ vuông góc với hai đường thẳng cắt nhau nằm trong mặt phẳng $(P)$.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<div class="flex flex-col items-center justify-center py-12 space-y-4">
+<p class="text-slate-500 text-sm">Bạn đã xem hết toàn bộ kết quả.</p>
+<div class="flex gap-4">
+<button class="px-8 py-3 rounded-xl border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-all">Tải bản PDF</button>
+<button class="px-8 py-3 rounded-xl bg-primary text-white font-bold hover:shadow-xl hover:shadow-primary/40 transition-all">Tiếp tục học bài</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<div class="fixed bottom-8 right-8 group">
+<div class="absolute bottom-full right-0 mb-4 w-64 p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+<p class="text-xs font-bold text-primary mb-1">Gia sư AI 24/7</p>
+<p class="text-[11px] leading-relaxed">Chào Minh Anh! Tôi đã phân tích các lỗi sai của bạn. Nhấn vào đây nếu bạn muốn tôi hướng dẫn giải chi tiết câu số 14 nhé!</p>
+<div class="w-3 h-3 bg-white dark:bg-slate-800 border-r border-b border-slate-200 dark:border-slate-700 absolute -bottom-1.5 right-6 rotate-45"></div>
+</div>
+<button class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-xl shadow-primary/40 hover:scale-110 transition-transform active:scale-95">
+<span class="material-symbols-outlined text-3xl">smart_toy</span>
+</button>
+</div>
+
+</body></html>

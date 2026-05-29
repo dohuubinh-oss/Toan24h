@@ -3,8 +3,8 @@
 Đây là bản mẫu dự án (Golden Template) được thiết kế cho các ứng dụng web chuyên nghiệp, yêu cầu **Thẩm mỹ cao**, **Quy trình kỷ luật** và **Khả năng chịu tải (High-Concurrency)**.
 
 ## 🏗️ Tech Stack
-- **Frontend**: Next.js 14 (App Router) + Tailwind CSS + Framer Motion.
-- **Backend**: Golang (Gin/Fiber) - Tối ưu cho 1,000+ users đồng thời.
+- **Frontend**: Next.js 16.2.6 (App Router) + React 19.2.6 + Tailwind CSS 4.0.
+- **Backend**: Golang 1.26 (Gin/Fiber), tối ưu cho 1,000+ users đồng thời.
 - **Cache**: Redis (Session & Data Caching).
 - **Database**: PostgreSQL (Relational Data).
 - **Proxy/LB**: Nginx (Reverse Proxy, SSL, Gzip).

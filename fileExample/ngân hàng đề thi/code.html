@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quản lý Bài thi | Math EdTech</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#b45309",
+                        "background-light": "#fdfbf7",
+                        "background-dark": "#1a1814",
+                        "charcoal": "#374151"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+        .table-row-hover:hover {
+            background-color: rgba(180, 83, 9, 0.03);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-charcoal dark:text-slate-200 min-h-screen">
+<div class="flex min-h-screen">
+<!-- Sidebar Navigation (Minimalist) -->
+<aside class="w-20 lg:w-64 bg-[#f9f7f2] dark:bg-slate-900 border-r border-amber-100 dark:border-slate-800 flex flex-col items-center lg:items-start py-6 px-4"><div class="flex items-center gap-3 px-4 mb-10">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-icons-round">functions</span>
+</div>
+<span class="text-xl font-bold hidden lg:block tracking-tight text-primary">MathFlow</span>
+</div>
+<nav class="flex-1 w-full space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary rounded-lg transition-colors group" href="#">
+<span class="material-icons-round">dashboard</span>
+<span class="font-medium hidden lg:block">Tổng quan hệ thống</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary text-white rounded-lg transition-colors" href="#">
+<span class="material-icons-round">assignment</span>
+<span class="font-medium hidden lg:block">Kho lưu trữ đề thi</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary rounded-lg transition-colors" href="#">
+<span class="material-icons-round">people</span>
+<span class="font-medium hidden lg:block">Quản lý học sinh</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary rounded-lg transition-colors" href="#">
+<span class="material-icons-round">analytics</span>
+<span class="font-medium hidden lg:block">Báo cáo phân tích</span>
+</a>
+</nav>
+<div class="w-full space-y-4 pt-6 border-t border-amber-100 dark:border-slate-800">
+<div class="flex items-center gap-3 px-4 py-2 cursor-pointer">
+<img class="w-10 h-10 rounded-full border border-amber-100 flex-shrink-0" data-alt="Teacher profile picture wearing a suit" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqGgDE8VWkCmrn7CUVjJ_kF-a4tnIQutE9E13ewi8_x6ndaxtWPoVIP9S4YNBzwhr3xJnt8cb3g1OOH2sdkuRuP_-2c-7bPA779IcdJQlHgN2pnrO3vKN8LoiRmD8q-QFtkKpf7jHrdL9wX_PVXSmh5tZ_AMzAeUKnOdsW0YJ8bIq03gz8b702gkypjnCcBvNYxdmreBqtoCTY8aekq2hje1Wye0IBA9UtwTCJpLmUD0Mf9ef_h5MAQ2YUUxbG_zRh6ogQp-jTzl4c"/>
+<div class="hidden lg:block overflow-hidden">
+<p class="text-sm font-bold text-charcoal dark:text-white truncate">Nguyễn Văn A</p>
+<p class="text-xs text-slate-400 truncate">Giáo viên Toán</p>
+</div>
+</div>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors" href="#">
+<span class="material-icons-round">logout</span>
+<span class="font-medium hidden lg:block">Đăng xuất</span>
+</a>
+</div></aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col max-h-screen overflow-hidden">
+<!-- Header -->
+<header class="h-20 bg-white dark:bg-slate-900 border-b border-amber-100 dark:border-slate-800 flex items-center justify-between px-8"><div class="flex flex-col">
+<nav aria-label="Breadcrumb" class="flex text-xs text-slate-400 mb-1">
+<ol class="inline-flex items-center space-x-1">
+<li>Trang chủ</li>
+<li><span class="material-icons-round text-sm mx-1 leading-none">chevron_right</span></li>
+<li class="text-primary font-medium">Kho lưu trữ đề thi</li>
+</ol>
+</nav>
+<h1 class="text-2xl font-bold text-charcoal dark:text-white">Danh sách Bài thi</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-400 hover:bg-slate-100 rounded-full relative">
+<span class="material-icons-round">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+</button>
+</div></header>
+<!-- Dashboard Content -->
+<section class="flex-1 overflow-y-auto p-8 space-y-6"><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-amber-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
+<div class="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 rounded-full flex items-center justify-center text-primary">
+<span class="material-icons-round">description</span>
+</div>
+<div>
+<p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Tổng số đề thi</p>
+<h3 class="text-2xl font-extrabold text-charcoal dark:text-white">156</h3>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-amber-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
+<div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center text-emerald-600">
+<span class="material-icons-round">task_alt</span>
+</div>
+<div>
+<p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Đang hoạt động</p>
+<h3 class="text-2xl font-extrabold text-charcoal dark:text-white">84</h3>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-amber-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
+<div class="w-12 h-12 bg-amber-100/50 dark:bg-amber-900/30 rounded-full flex items-center justify-center text-primary">
+<span class="material-icons-round">trending_up</span>
+</div>
+<div>
+<p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Tổng lượt làm bài</p>
+<h3 class="text-2xl font-extrabold text-charcoal dark:text-white">5,420</h3>
+</div>
+</div>
+</div>
+<!-- Controls Bar -->
+<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-amber-100 dark:border-slate-800">
+<div class="flex flex-col md:flex-row items-center gap-3 flex-1">
+<!-- Search -->
+<div class="relative w-full md:w-80">
+<span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-amber-50/50 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder="Tìm kiếm tên đề thi..." type="text"/>
+</div>
+<!-- Grade Filter -->
+<select class="w-full md:w-40 py-2 bg-amber-50/50 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-sm text-slate-600 dark:text-slate-300">
+<option value="">Khối lớp</option>
+<option value="10">Lớp 10</option>
+<option value="11">Lớp 11</option>
+<option value="12">Lớp 12</option>
+</select>
+<!-- Status Filter -->
+<div class="flex bg-amber-50/50 dark:bg-slate-800 p-1 rounded-lg">
+<button class="px-4 py-1.5 text-xs font-semibold rounded-md bg-white dark:bg-slate-700 shadow-sm text-primary">Tất cả</button>
+<button class="px-4 py-1.5 text-xs font-semibold rounded-md text-slate-500 hover:text-primary transition-colors">Nháp</button>
+<button class="px-4 py-1.5 text-xs font-semibold rounded-md text-slate-500 hover:text-primary transition-colors">Đã xuất bản</button>
+<button class="px-4 py-1.5 text-xs font-semibold rounded-md text-slate-500 hover:text-primary transition-colors">Kết thúc</button>
+</div>
+</div>
+<button class="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-lg font-bold transition-all shadow-lg shadow-primary/20">
+<span class="material-icons-round">add</span>
+                    Tạo đề thi mới
+                </button>
+</div>
+<!-- Exams Table -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-amber-100 dark:border-slate-800 overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-amber-50 dark:border-slate-800 bg-amber-50/20 dark:bg-slate-800/50">
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Tên đề thi</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Khối lớp</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Số câu hỏi</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Thời gian</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-amber-50 dark:divide-slate-800">
+<!-- Row 1 -->
+<tr class="table-row-hover transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-amber-100/50 dark:bg-amber-900/30 flex items-center justify-center text-primary">
+<span class="material-icons-round">calculate</span>
+</div>
+<div>
+<p class="font-bold text-charcoal dark:text-slate-100">Kiểm tra Giữa kỳ I - Đại số 10</p>
+<p class="text-xs text-slate-400">Cập nhật 2 giờ trước</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="px-3 py-1 bg-amber-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-bold">Lớp 10</span>
+</td>
+<td class="px-6 py-4 text-center text-sm font-medium">50</td>
+<td class="px-6 py-4 text-center text-sm font-medium">90 phút</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+                                    Đã xuất bản
+                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all" title="Chia sẻ">
+<span class="material-icons-round text-[20px]">share</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all" title="Nhân bản">
+<span class="material-icons-round text-[20px]">content_copy</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all" title="Chỉnh sửa">
+<span class="material-icons-round text-[20px]">edit</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Xóa">
+<span class="material-icons-round text-[20px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="table-row-hover transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-amber-100/50 dark:bg-amber-900/30 flex items-center justify-center text-primary">
+<span class="material-icons-round">square_foot</span>
+</div>
+<div>
+<p class="font-bold text-charcoal dark:text-slate-100">Ôn tập Hình học Giải tích</p>
+<p class="text-xs text-slate-400">Cập nhật Hôm qua</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="px-3 py-1 bg-amber-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-bold">Lớp 12</span>
+</td>
+<td class="px-6 py-4 text-center text-sm font-medium">35</td>
+<td class="px-6 py-4 text-center text-sm font-medium">60 phút</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1.5"></span>
+                                    Nháp
+                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"><span class="material-icons-round text-[20px]">share</span></button>
+<button class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"><span class="material-icons-round text-[20px]">content_copy</span></button>
+<button class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"><span class="material-icons-round text-[20px]">edit</span></button>
+<button class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><span class="material-icons-round text-[20px]">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="table-row-hover transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-amber-100/50 dark:bg-amber-900/30 flex items-center justify-center text-primary">
+<span class="material-icons-round">timeline</span>
+</div>
+<div>
+<p class="font-bold text-charcoal dark:text-slate-100">Kiểm tra 15p - Đạo hàm</p>
+<p class="text-xs text-slate-400">Cập nhật 3 ngày trước</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="px-3 py-1 bg-amber-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-bold">Lớp 11</span>
+</td>
+<td class="px-6 py-4 text-center text-sm font-medium">20</td>
+<td class="px-6 py-4 text-center text-sm font-medium">15 phút</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+<span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>
+                                    Đã kết thúc
+                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"><span class="material-icons-round text-[20px]">share</span></button>
+<button class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"><span class="material-icons-round text-[20px]">content_copy</span></button>
+<button class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"><span class="material-icons-round text-[20px]">edit</span></button>
+<button class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><span class="material-icons-round text-[20px]">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="table-row-hover transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-amber-100/50 dark:bg-amber-900/30 flex items-center justify-center text-primary">
+<span class="material-icons-round">query_stats</span>
+</div>
+<div>
+<p class="font-bold text-charcoal dark:text-slate-100">Khảo sát năng lực đầu năm</p>
+<p class="text-xs text-slate-400">Cập nhật 1 tuần trước</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="px-3 py-1 bg-amber-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-bold">Lớp 10</span>
+</td>
+<td class="px-6 py-4 text-center text-sm font-medium">40</td>
+<td class="px-6 py-4 text-center text-sm font-medium">60 phút</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+                                    Đã xuất bản
+                                </span>
+</td>
+<td class="px-6 py-4 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"><span class="material-icons-round text-[20px]">share</span></button>
+<button class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"><span class="material-icons-round text-[20px]">content_copy</span></button>
+<button class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"><span class="material-icons-round text-[20px]">edit</span></button>
+<button class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><span class="material-icons-round text-[20px]">delete</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 flex items-center justify-between border-t border-amber-50 dark:border-slate-800">
+<p class="text-sm text-slate-500">Hiển thị <span class="font-bold">1-4</span> của <span class="font-bold">156</span> bài thi</p>
+<div class="flex items-center gap-1">
+<button class="p-2 text-slate-400 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-30" disabled="">
+<span class="material-icons-round">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center text-xs font-bold rounded-lg bg-primary text-white">1</button>
+<button class="w-8 h-8 flex items-center justify-center text-xs font-bold rounded-lg text-slate-500 hover:bg-amber-50">2</button>
+<button class="w-8 h-8 flex items-center justify-center text-xs font-bold rounded-lg text-slate-500 hover:bg-amber-50">3</button>
+<span class="px-1 text-slate-300">...</span>
+<button class="w-8 h-8 flex items-center justify-center text-xs font-bold rounded-lg text-slate-500 hover:bg-amber-50">39</button>
+<button class="p-2 text-slate-400 hover:bg-amber-50 rounded-lg transition-colors">
+<span class="material-icons-round">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Stats Summary Section -->
+</section>
+</main>
+</div>
+</body></html>

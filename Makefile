@@ -1,38 +1,16 @@
-.PHONY: help build up down restart logs ps test-backend test-frontend clean
+.PHONY: dev-frontend dev-backend up down logs
 
-# Variables
-DC=docker-compose
+up:
+	docker-compose up -d
 
-help: ## Show this help message
-	@echo 'Usage: make [target]'
-	@echo ''
-	@echo 'Targets:'
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+down:
+	docker-compose down
 
-build: ## Build all docker images
-	$(DC) build
+logs:
+	docker-compose logs -f
 
-up: ## Start all services in background
-	$(DC) up -d
+dev-frontend:
+	cd frontend && npm run dev
 
-down: ## Stop and remove all containers
-	$(DC) down
-
-restart: ## Restart all services
-	$(DC) down && $(DC) up -d
-
-logs: ## Show logs from all services
-	$(DC) logs -f
-
-ps: ## List running containers
-	$(DC) ps
-
-test-backend: ## Run backend unit tests
-	docker exec -it exam_model_backend go test ./...
-
-test-frontend: ## Run frontend lint and tests
-	docker exec -it exam_model_frontend npm run lint
-
-clean: ## Clean up all temporary files and docker volumes
-	$(DC) down -v
-	rm -rf frontend/.next backend/main
+dev-backend:
+	cd backend && go run cmd/api/main.go

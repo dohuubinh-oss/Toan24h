@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Giải bài tập tự luận - Toán học 9</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2463eb",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#111621",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .math-symbol-btn:hover {
+            background-color: rgba(36, 99, 235, 0.1);
+        }
+
+        /* Question Map Sidebar Logic */
+        #qmap-panel {
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #qmap-trigger:hover #qmap-panel,
+        #qmap-toggle:checked ~ #qmap-panel {
+            transform: translateX(0);
+        }
+
+        #qmap-toggle:checked ~ #qmap-trigger #qmap-tab {
+            transform: translateX(-310px);
+            border-radius: 0.75rem 0 0 0.75rem;
+        }
+
+        .q-node {
+            transition: all 0.2s ease;
+        }
+        .q-node:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
+<input class="hidden" id="qmap-toggle" type="checkbox"/>
+<!-- Header / Gamification Bar -->
+<header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+<div class="flex items-center space-x-4">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-xl">Σ</div>
+<div class="hidden md:block">
+<nav class="flex items-center text-sm space-x-2 text-slate-500 dark:text-slate-400">
+<span class="hover:text-primary cursor-pointer">Lớp 9</span>
+<span class="material-icons text-xs">chevron_right</span>
+<span class="hover:text-primary cursor-pointer">Hình học</span>
+<span class="material-icons text-xs">chevron_right</span>
+<span class="text-slate-900 dark:text-slate-200 font-medium">Hệ thức lượng trong tam giác</span>
+</nav>
+</div>
+</div>
+<div class="flex items-center space-x-6">
+<div class="flex items-center space-x-2 bg-primary/10 dark:bg-primary/20 px-3 py-1.5 rounded-full">
+<span class="material-icons text-orange-500 text-sm">local_fire_department</span>
+<span class="text-xs font-bold text-primary">5 Ngày liên tiếp</span>
+</div>
+<div class="flex items-center space-x-2">
+<div class="text-right hidden sm:block">
+<div class="text-xs text-slate-500">Tiến độ hôm nay</div>
+<div class="w-24 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
+<div class="bg-primary h-full w-[65%]"></div>
+</div>
+</div>
+<img alt="Profile" class="w-10 h-10 rounded-full border-2 border-primary/20" data-alt="Avatar of a male student" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmVf07eJ9vY1UIYd85bODqTcOqlygg-4OejiTqjaFsl0aTpFEONw-3Me_LIpVjgYjXxYCpkLbza6RGrcv8szd9XVVfxkQ5WuUGkEhBBjPh6iz4FtPF6hwxxto8EGLGRZPXJWWO7yaiFnhKaZsKk7UyWyjL_-7pPQZxTvyeLVqc5TZYswb5k4f7nNh30T8uNgLffDojwz9QiRSSxYUUtGzd--T-GENRGZrYBOhyphuKgeJLtQapNkYtLEgza5ClDrpElmGOE9oeKP44"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="flex-1 flex overflow-hidden relative">
+<!-- Left Pane: Problem & Geometry -->
+<div class="w-1/2 overflow-y-auto p-8 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+<div class="max-w-xl ml-auto">
+<div class="inline-block px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-semibold mb-4 uppercase tracking-wider">
+                    Bài tập tự luận #42
+                </div>
+<h1 class="text-2xl font-bold mb-6">Tính độ dài đường cao trong tam giác</h1>
+<div class="prose prose-slate dark:prose-invert max-w-none mb-8">
+<p class="text-lg leading-relaxed">
+                        Cho tam giác $ABC$ vuông tại $A$ có đường cao $AH$. Biết rằng độ dài cạnh $AB = 6cm$ và $AC = 8cm$. 
+                    </p>
+<ul class="list-disc ml-5 space-y-2 mt-4">
+<li>Tính độ dài cạnh huyền $BC$.</li>
+<li>Tính độ dài đường cao $AH$.</li>
+<li>Tính diện tích tam giác $ABC$.</li>
+</ul>
+</div>
+<!-- Geometry Diagram Container -->
+<div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700 flex flex-col items-center">
+<div class="w-full aspect-video relative flex items-center justify-center">
+<!-- Simulated Geometry SVG -->
+<svg class="w-full h-full max-w-sm" viewbox="0 0 400 300">
+<!-- Triangle -->
+<path class="text-primary" d="M 50 250 L 350 250 L 50 50 Z" fill="none" stroke="currentColor" stroke-width="2"></path>
+<!-- Right angle marker at A -->
+<path class="text-primary/60" d="M 50 70 L 70 70 L 70 50" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+<!-- Altitude AH -->
+<line class="text-slate-400" stroke="currentColor" stroke-dasharray="4" stroke-width="2" x1="50" x2="158" y1="50" y2="250"></line>
+<!-- Right angle marker at H -->
+<rect class="text-slate-400" fill="none" height="15" stroke="currentColor" stroke-width="1" transform="rotate(-60 158 250)" width="15" x="150" y="235"></rect>
+<!-- Labels -->
+<text class="fill-slate-900 dark:fill-white font-medium" font-family="Inter" font-size="16" x="35" y="45">A</text>
+<text class="fill-slate-900 dark:fill-white font-medium" font-family="Inter" font-size="16" x="35" y="270">B</text>
+<text class="fill-slate-900 dark:fill-white font-medium" font-family="Inter" font-size="16" x="360" y="270">C</text>
+<text class="fill-slate-500 dark:fill-slate-400" font-family="Inter" font-size="16" x="165" y="270">H</text>
+<!-- Dimensions -->
+<text class="fill-primary italic" font-family="Inter" font-size="14" x="30" y="150">6cm</text>
+<text class="fill-primary italic" font-family="Inter" font-size="14" x="200" y="140">8cm</text>
+</svg>
+</div>
+<p class="mt-4 text-sm text-slate-500 dark:text-slate-400 italic">Hình 1.1: Mô phỏng tam giác ABC vuông tại A</p>
+</div>
+</div>
+</div>
+<!-- Right Pane: Solution Editor -->
+<div class="w-1/2 flex flex-col bg-background-light dark:bg-background-dark">
+<div class="flex-1 p-8 flex flex-col max-w-xl mr-auto w-full">
+<div class="flex items-center justify-between mb-4">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Lời giải của bạn</label>
+<div class="flex space-x-2">
+<span class="flex items-center text-xs text-green-600 dark:text-green-400 font-medium">
+<span class="material-icons text-sm mr-1">check_circle</span>
+                            Đã lưu tự động
+                        </span>
+</div>
+</div>
+<!-- Math Editor Container -->
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
+<!-- Toolbar -->
+<div class="border-b border-slate-200 dark:border-slate-800 p-2 flex flex-wrap gap-1 bg-slate-50 dark:bg-slate-900">
+<button class="math-symbol-btn w-8 h-8 rounded flex items-center justify-center font-serif font-bold text-primary">√</button>
+<button class="math-symbol-btn w-8 h-8 rounded flex items-center justify-center font-serif font-bold text-primary">π</button>
+<button class="math-symbol-btn w-8 h-8 rounded flex items-center justify-center font-serif font-bold text-primary">Δ</button>
+<button class="math-symbol-btn w-8 h-8 rounded flex items-center justify-center font-serif font-bold text-primary">⊥</button>
+<button class="math-symbol-btn w-8 h-8 rounded flex items-center justify-center font-serif font-bold text-primary">∠</button>
+<button class="math-symbol-btn w-8 h-8 rounded flex items-center justify-center font-serif font-bold text-primary">x²</button>
+<button class="math-symbol-btn w-8 h-8 rounded flex items-center justify-center font-serif font-bold text-primary">÷</button>
+<div class="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1 self-center"></div>
+<button class="math-symbol-btn w-8 h-8 rounded flex items-center justify-center text-slate-600 dark:text-slate-400"><span class="material-icons text-sm">format_bold</span></button>
+<button class="math-symbol-btn w-8 h-8 rounded flex items-center justify-center text-slate-600 dark:text-slate-400"><span class="material-icons text-sm">format_italic</span></button>
+<button class="math-symbol-btn w-8 h-8 rounded flex items-center justify-center text-slate-600 dark:text-slate-400"><span class="material-icons text-sm">functions</span></button>
+</div>
+<!-- Editor Textarea -->
+<textarea class="flex-1 p-6 w-full resize-none border-none focus:ring-0 bg-transparent text-slate-800 dark:text-slate-200 placeholder-slate-400 font-display leading-relaxed text-lg" placeholder="Nhập lời giải chi tiết tại đây (Sử dụng LaTeX hoặc các công cụ hỗ trợ trên)..."></textarea>
+<!-- Bottom Upload Zone -->
+<div class="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+<button class="w-full py-4 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex flex-col items-center justify-center hover:border-primary hover:bg-primary/5 transition-colors group">
+<span class="material-icons text-slate-400 group-hover:text-primary mb-1">camera_alt</span>
+<span class="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-primary">Tải ảnh lời giải bài làm tay</span>
+</button>
+</div>
+</div>
+<!-- Action Footer -->
+<div class="mt-6 flex flex-col space-y-4">
+<button class="w-full bg-primary hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center group">
+<span>XEM LỜI GIẢI CHI TIẾT</span>
+<span class="material-icons ml-2 group-hover:translate-x-1 transition-transform">auto_awesome</span>
+</button>
+<div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-2">
+<div class="flex items-center">
+<span class="material-icons text-xs mr-1">info</span>
+                            Lưu ý: Bạn chỉ có thể xem giải sau khi đã nhập nội dung
+                        </div>
+<div class="flex items-center hover:text-primary cursor-pointer">
+                            Báo cáo lỗi
+                        </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Question Map Sidebar (Interactive Right Reveal) -->
+<div class="fixed top-0 right-0 h-full flex items-center pointer-events-none z-[60]" id="qmap-trigger">
+<label class="pointer-events-auto cursor-pointer flex items-center justify-center w-10 h-24 bg-white dark:bg-slate-900 border border-r-0 border-slate-200 dark:border-slate-800 rounded-l-xl shadow-lg transition-transform duration-400 ease-in-out hover:w-12 active:scale-95" for="qmap-toggle" id="qmap-tab">
+<span class="material-icons text-slate-500 dark:text-slate-400 select-none">grid_view</span>
+</label>
+<aside class="pointer-events-auto absolute right-0 top-0 h-full w-[320px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col" id="qmap-panel">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+<h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+<span class="material-icons text-primary text-xl">map</span>
+                        Bản đồ câu hỏi
+                    </h3>
+<label class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer transition-colors text-slate-400" for="qmap-toggle">
+<span class="material-icons">close</span>
+</label>
+</div>
+<div class="p-6 overflow-y-auto">
+<div class="grid grid-cols-5 gap-3">
+<!-- Done -->
+<div class="q-node w-full aspect-square flex items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-bold border border-green-200 dark:border-green-800/50 text-sm cursor-pointer">1</div>
+<div class="q-node w-full aspect-square flex items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-bold border border-green-200 dark:border-green-800/50 text-sm cursor-pointer">2</div>
+<!-- Current -->
+<div class="q-node w-full aspect-square flex items-center justify-center rounded-lg bg-primary text-white font-bold shadow-md shadow-primary/30 text-sm cursor-pointer ring-4 ring-primary/20">3</div>
+<div class="q-node w-full aspect-square flex items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-bold border border-green-200 dark:border-green-800/50 text-sm cursor-pointer">4</div>
+<!-- Flagged / Thinking -->
+<div class="q-node relative w-full aspect-square flex items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-bold border border-amber-200 dark:border-amber-800/50 text-sm cursor-pointer">
+                            5
+                            <div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></div>
+</div>
+<div class="q-node w-full aspect-square flex items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-bold border border-green-200 dark:border-green-800/50 text-sm cursor-pointer">6</div>
+<div class="q-node w-full aspect-square flex items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-bold border border-green-200 dark:border-green-800/50 text-sm cursor-pointer">7</div>
+<!-- Unfinished -->
+<div class="q-node w-full aspect-square flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-bold border border-slate-200 dark:border-slate-700 text-sm cursor-pointer">8</div>
+<div class="q-node w-full aspect-square flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-bold border border-slate-200 dark:border-slate-700 text-sm cursor-pointer">9</div>
+<div class="q-node w-full aspect-square flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-bold border border-slate-200 dark:border-slate-700 text-sm cursor-pointer">10</div>
+</div>
+<div class="mt-8 space-y-4">
+<p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Chú thích</p>
+<div class="space-y-3">
+<div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+<div class="w-4 h-4 rounded bg-green-100 dark:bg-green-900/30 border border-green-200"></div>
+<span>Đã hoàn thành</span>
+</div>
+<div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+<div class="w-4 h-4 rounded bg-primary"></div>
+<span>Đang làm</span>
+</div>
+<div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+<div class="w-4 h-4 rounded bg-amber-100 dark:bg-amber-900/30 border border-amber-200"></div>
+<span>Đang phân vân</span>
+</div>
+<div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+<div class="w-4 h-4 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200"></div>
+<span>Chưa làm</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-auto p-6 bg-slate-50 dark:bg-slate-950/30 border-t border-slate-100 dark:border-slate-800">
+<button class="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:bg-blue-700 transition-all active:scale-95">Nộp bài ngay</button>
+</div>
+</aside>
+</div>
+</main>
+<!-- Success Feedback Overlay (Hidden by default) -->
+<div class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center">
+<div class="bg-white dark:bg-slate-900 p-8 rounded-2xl max-w-md w-full shadow-2xl">
+<div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+<span class="material-icons text-green-500 text-4xl">check_circle</span>
+</div>
+<h2 class="text-2xl font-bold text-center mb-2">Tuyệt vời!</h2>
+<p class="text-slate-600 dark:text-slate-400 text-center mb-8">Bạn đã hoàn thành bài tập này. Hãy cùng xem qua lời giải chi tiết nhé.</p>
+<button class="w-full bg-primary text-white font-bold py-3 rounded-xl">Tiếp tục</button>
+</div>
+</div>
+</body></html>

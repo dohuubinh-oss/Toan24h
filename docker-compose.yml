@@ -1,63 +1,26 @@
 version: '3.8'
 
 services:
-  db:
+  postgres:
     image: postgres:15-alpine
-    container_name: exam_model_db
-    restart: always
     environment:
-      POSTGRES_USER: exam_user
-      POSTGRES_PASSWORD: exam_password
-      POSTGRES_DB: exam_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: toan24h
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
-  cache:
+  redis:
     image: redis:7-alpine
-    container_name: exam_model_cache
-    restart: always
     ports:
       - "6379:6379"
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: ../docker/backend.Dockerfile
-    container_name: exam_model_backend
-    restart: always
-    # Removed public ports: internal communication only
-    environment:
-      DATABASE_URL: postgres://exam_user:exam_password@db:5432/exam_db?sslmode=disable
-      REDIS_URL: redis:6379
-    depends_on:
-      - db
-      - cache
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: ../docker/frontend.Dockerfile
-    container_name: exam_model_frontend
-    restart: always
-    # Removed public ports: internal communication only
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost/api
-    depends_on:
-      - backend
-
-  nginx:
-    image: nginx:alpine
-    container_name: exam_model_proxy
-    restart: always
-    ports:
-      - "80:80"
     volumes:
-      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - frontend
-      - backend
+      - redis_data:/data
+    restart: unless-stopped
 
 volumes:
-  db_data:
+  postgres_data:
+  redis_data:

@@ -1,27 +1,86 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Lexend:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Lexend:wght@300;400;500;600;700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/container-queries";
 
-:root {
-  --background: #F8FAFC;
-  --foreground: #1E293B;
+@theme {
+  --color-primary: #2563EB;
+  --color-on-primary: #FFFFFF;
+  --color-surface: #F8FAFC;
+  --color-page-bg: #FFFFFF;
+  --color-ink: #0F172A;
+  
+  --font-display: 'Lexend', sans-serif;
+  --font-body: 'Lexend', sans-serif;
+
+  --spacing-section-margin: 48px;
+  --spacing-card-gap: 24px;
+  --spacing-container-padding: 32px;
+
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 56px;
+  --text-display-lg--font-weight: 700;
+  --text-display-lg--letter-spacing: -0.02em;
+
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--font-weight: 600;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+  --text-body-lg--font-weight: 400;
+
+  --text-body-md: 16px;
+  --text-body-md--line-height: 24px;
+  --text-body-md--font-weight: 400;
+
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--font-weight: 600;
+  --text-label-sm--letter-spacing: 0.05em;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: 'Inter', sans-serif;
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  :root {
+    --background: var(--color-page-bg);
+    --foreground: var(--color-ink);
+  }
+
+  body {
+    color: var(--foreground);
+    background: var(--background);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Lexend', sans-serif;
+@layer components {
+  .card-premium {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    border-radius: 0.75rem; /* rounded.lg */
+    padding: var(--spacing-container-padding);
+    border: 1px solid rgba(226, 232, 240, 0.6); /* outline */
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* shadow-sm */
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .card-premium:hover {
+    border: 1px solid rgba(37, 99, 235, 0.3); /* primary/30 */
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); /* shadow-md */
+  }
+
+  .latex-font { 
+    font-family: 'Times New Roman', serif; 
+  }
 }
 
-/* No-Line Architecture: Shadow-based borders */
-.card-premium {
-  @apply bg-white rounded-lg p-container;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
