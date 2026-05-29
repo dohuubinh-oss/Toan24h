@@ -1,4 +1,5 @@
 import React from 'react';
+import { FolderOpen, Printer, Trash2, X } from 'lucide-react';
 
 interface FloatingActionBarProps {
   selectedCount: number;
@@ -19,20 +20,20 @@ export default function FloatingActionBar({ selectedCount, onClose }: FloatingAc
       <div className="h-6 w-px bg-slate-200"></div>
       <div className="flex items-center gap-4">
         <button className="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-primary transition-colors whitespace-nowrap">
-          <span className="material-symbols-outlined text-lg">folder_open</span>
+          <FolderOpen className="w-5 h-5" />
           Lưu vào thư mục
         </button>
         <button className="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-primary transition-colors whitespace-nowrap">
-          <span className="material-symbols-outlined text-lg">print</span>
+          <Printer className="w-5 h-5" />
           In đề thi
         </button>
         <button className="flex items-center gap-2 text-xs font-bold text-red-500 hover:text-red-600 transition-colors whitespace-nowrap">
-          <span className="material-symbols-outlined text-lg">delete</span>
+          <Trash2 className="w-5 h-5" />
           Xóa hàng loạt
         </button>
       </div>
       <button onClick={onClose} className="text-slate-400 hover:text-slate-600 ml-2">
-        <span className="material-symbols-outlined">close</span>
+        <X className="w-6 h-6" />
       </button>
     </div>
   );

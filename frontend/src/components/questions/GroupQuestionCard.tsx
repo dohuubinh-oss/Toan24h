@@ -1,4 +1,5 @@
 import React from 'react';
+import { Edit2, Check, ArrowRight } from 'lucide-react';
 import MathText from '../ui/MathText';
 
 export default function GroupQuestionCard() {
@@ -13,7 +14,7 @@ export default function GroupQuestionCard() {
             <span className="text-xs text-slate-400 font-medium">ID: #Q-CLUSTER-81</span>
           </div>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button className="p-2 w-10 h-10 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all cursor-pointer"><span className="material-symbols-outlined text-xl">edit</span></button>
+            <button className="p-2 w-10 h-10 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all cursor-pointer"><Edit2 className="w-5 h-5" /></button>
           </div>
         </div>
 
@@ -31,7 +32,7 @@ export default function GroupQuestionCard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <MathText content="A. $a\sqrt{2}$" className="text-sm p-2 border border-slate-100 rounded bg-white" />
               <div className="text-sm p-2 border border-slate-100 rounded bg-white font-bold text-primary flex justify-between items-center">
-                <MathText content="B. $a\sqrt{3}/2$" /> <span className="material-symbols-outlined text-sm">check</span>
+                <MathText content="B. $a\sqrt{3}/2$" /> <Check className="w-4 h-4" />
               </div>
             </div>
           </div>
@@ -48,7 +49,7 @@ export default function GroupQuestionCard() {
         </div>
         <button className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
           Xem đáp án mẫu
-          <span className="material-symbols-outlined text-xs">arrow_forward</span>
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </div>

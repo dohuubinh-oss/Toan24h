@@ -1,19 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import Sidebar from '../../components/layout/Sidebar';
-import QuestionCard from '../../components/questions/QuestionCard';
-import GroupQuestionCard from '../../components/questions/GroupQuestionCard';
-import FloatingActionBar from '../../components/questions/FloatingActionBar';
+import { ChevronRight, Upload, Plus, ChevronsLeft, ChevronLeft, ChevronsRight } from 'lucide-react';
+import QuestionCard from '../../../components/questions/QuestionCard';
+import GroupQuestionCard from '../../../components/questions/GroupQuestionCard';
+import FloatingActionBar from '../../../components/questions/FloatingActionBar';
 
 export default function QuestionsPage() {
   const [selectedCount, setSelectedCount] = useState(2);
 
   return (
     <div className="flex flex-1 overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar />
-
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto bg-page-bg p-6">
         <div className="flex flex-col gap-6 max-w-6xl mx-auto relative">
@@ -23,18 +20,18 @@ export default function QuestionsPage() {
             <div>
               <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
                 <span className="hover:text-primary cursor-pointer transition-colors">Admin</span>
-                <span className="material-symbols-outlined text-xs">chevron_right</span>
+                <ChevronRight className="w-3 h-3" />
                 <span className="text-primary font-bold">Ngân hàng câu hỏi</span>
               </div>
               <h3 className="text-2xl font-bold text-slate-900">Danh sách câu hỏi</h3>
             </div>
             <div className="flex flex-wrap gap-2">
               <button className="flex items-center gap-2 bg-card-bg border border-slate-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-100 transition-all text-slate-700">
-                <span className="material-symbols-outlined text-xl">upload_file</span>
+                <Upload className="w-5 h-5" />
                 Nhập từ JSON
               </button>
               <button className="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-all">
-                <span className="material-symbols-outlined text-xl">add</span>
+                <Plus className="w-5 h-5" />
                 Tạo đề thi
               </button>
             </div>
@@ -78,10 +75,10 @@ export default function QuestionsPage() {
             <p className="text-sm text-slate-500">Hiển thị <span className="font-bold text-slate-800">1 - 10</span> trong số <span className="font-bold text-slate-800">1,284</span> câu hỏi</p>
             <div className="flex items-center gap-1">
               <button className="p-2 text-slate-400 hover:text-primary disabled:opacity-30" disabled>
-                <span className="material-symbols-outlined">first_page</span>
+                <ChevronsLeft className="w-5 h-5" />
               </button>
               <button className="p-2 text-slate-400 hover:text-primary disabled:opacity-30" disabled>
-                <span className="material-symbols-outlined">chevron_left</span>
+                <ChevronLeft className="w-5 h-5" />
               </button>
               <button className="w-8 h-8 rounded bg-primary text-white text-xs font-bold">1</button>
               <button className="w-8 h-8 rounded hover:bg-slate-100 text-slate-600 text-xs font-bold">2</button>
@@ -89,10 +86,10 @@ export default function QuestionsPage() {
               <span className="px-1 text-slate-400">...</span>
               <button className="w-8 h-8 rounded hover:bg-slate-100 text-slate-600 text-xs font-bold">129</button>
               <button className="p-2 text-slate-400 hover:text-primary">
-                <span className="material-symbols-outlined">chevron_right</span>
+                <ChevronRight className="w-5 h-5" />
               </button>
               <button className="p-2 text-slate-400 hover:text-primary">
-                <span className="material-symbols-outlined">last_page</span>
+                <ChevronsRight className="w-5 h-5" />
               </button>
             </div>
           </div>
