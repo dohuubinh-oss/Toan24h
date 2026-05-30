@@ -1,4 +1,5 @@
 import React from 'react'
+import { ArrowLeft, Timer } from 'lucide-react'
 
 interface ExamProgressNavProps {
   title: string
@@ -28,7 +29,7 @@ export default function ExamProgressNav({
             aria-label="Trở lại"
             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-600 dark:text-slate-400"
           >
-            <span className="material-icons">arrow_back</span>
+            <ArrowLeft className="w-6 h-6" />
           </button>
           <div>
             <h1 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h1>
@@ -52,7 +53,7 @@ export default function ExamProgressNav({
         </div>
 
         <div className="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 dark:border-red-900/30">
-          <span className="material-icons text-red-500 animate-pulse text-xl">timer</span>
+          <Timer className="w-5 h-5 text-red-500 animate-pulse" />
           <span className="text-red-600 dark:text-red-400 font-bold tabular-nums text-lg">
             {timeLeft}
           </span>

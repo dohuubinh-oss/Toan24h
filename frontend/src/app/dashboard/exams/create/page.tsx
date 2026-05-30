@@ -1,10 +1,18 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import ExamHeader from '../../../../components/exams/ExamHeader'
 import ExamQuestionList from '../../../../components/exams/ExamQuestionList'
 import ExamConfigSidebar from '../../../../components/exams/ExamConfigSidebar'
 import { Grid, UploadCloud } from 'lucide-react'
 
 export default function CreateExamPage() {
+  return (
+    <Suspense fallback={<div className="p-8">Đang tải dữ liệu...</div>}>
+      <CreateExamPageContent />
+    </Suspense>
+  )
+}
+
+function CreateExamPageContent() {
   return (
     <div className="bg-slate-50 text-slate-900 min-h-screen pb-20 lg:pb-0 font-body">
       <ExamHeader />

@@ -7,16 +7,17 @@ import { Eye, EyeOff } from 'lucide-react'
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
-import { Checkbox } from '../ui/Checkbox'
 
-type LoginFormValues = {
+type RegisterFormValues = {
+  fullname: string
   identity: string
   password: string
-  rememberMe: boolean
+  confirmPassword: string
 }
 
-export default function LoginForm() {
+export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const router = useRouter()
@@ -24,29 +25,17 @@ export default function LoginForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors }
-  } = useForm<LoginFormValues>({
-    mode: 'onTouched',
-    defaultValues: {
-      rememberMe: false
-    }
+  } = useForm<RegisterFormValues>({
+    mode: 'onTouched'
   })
 
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true)
-    // Giả lập gọi API
+    // [TODO: WARNING] Hiện tại logic giả lập, cần API thật ở đây
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // [TODO: WARNING] Hiện tại dùng logic giả lập để phân quyền dựa vào text nhập ở Identity.
-    // KHI CÓ API THẬT, PHẢI THAY THẾ BẰNG RESPONSE PHÂN QUYỀN TỪ SERVER (roles/permissions).
-    // Nếu quên cập nhật phần này sẽ sinh lỗi nghiêm trọng về bảo mật & luồng dữ liệu!
-    
-    if (data.identity.toLowerCase().includes('student')) {
-      router.push('/dashboard/student')
-    } else {
-      router.push('/dashboard/questions')
-    }
-    
+    router.push('/login')
     setIsLoading(false)
   }
 
@@ -55,12 +44,26 @@ export default function LoginForm() {
       <div className="w-full max-w-[520px]">
         {/* Title */}
         <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold text-slate-800 mb-2">Đăng nhập</h2>
-          <p className="text-slate-500 text-base">Vui lòng nhập thông tin để truy cập bài học của bạn.</p>
+          <h2 className="text-3xl font-bold text-slate-800 mb-2">Đăng ký</h2>
+          <p className="text-slate-500 text-base">Tạo tài khoản để bắt đầu học tập.</p>
         </div>
 
         {/* Form */}
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div>
+            <Label htmlFor="fullname">Họ và Tên</Label>
+            <Input
+              {...register('fullname', { required: 'Vui lòng nhập họ tên' })}
+              id="fullname"
+              placeholder="Nhập họ và tên của bạn"
+              type="text"
+              error={!!errors.fullname}
+            />
+            {errors.fullname && (
+              <p className="text-red-500 text-xs mt-1 font-medium">{errors.fullname.message}</p>
+            )}
+          </div>
+
           <div>
             <Label htmlFor="identity">Số điện thoại hoặc Email</Label>
             <Input
@@ -82,15 +85,17 @@ export default function LoginForm() {
           </div>
 
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <Label htmlFor="password" className="mb-0">Mật khẩu</Label>
-              <a className="text-sm font-medium text-primary hover:underline transition-all duration-200" href="/forgot-password">
-                Quên mật khẩu?
-              </a>
-            </div>
-            <div className="relative">
+            <Label htmlFor="password">Mật khẩu</Label>
+            <div className="relative mt-2">
               <Input
-                {...register('password', { required: 'Vui lòng nhập mật khẩu' })}
+                {...register('password', {
+                  required: 'Vui lòng nhập mật khẩu',
+                  minLength: { value: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
+                  pattern: {
+                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/,
+                    message: 'Mật khẩu phải chứa chữ hoa, chữ thường, số và ký tự đặc biệt'
+                  }
+                })}
                 id="password"
                 placeholder="••••••••"
                 type={showPassword ? 'text' : 'password'}
@@ -110,12 +115,35 @@ export default function LoginForm() {
             )}
           </div>
 
-          <div className="flex items-center justify-between">
-            <Checkbox
-              {...register('rememberMe')}
-              id="rememberMe"
-              label="Ghi nhớ đăng nhập"
-            />
+          <div>
+            <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
+            <div className="relative mt-2">
+              <Input
+                {...register('confirmPassword', {
+                  required: 'Vui lòng xác nhận mật khẩu',
+                  validate: (val: string) => {
+                    if (watch('password') != val) {
+                      return "Mật khẩu không khớp"
+                    }
+                  }
+                })}
+                id="confirmPassword"
+                placeholder="••••••••"
+                type={showConfirmPassword ? 'text' : 'password'}
+                error={!!errors.confirmPassword}
+              />
+              <button
+                type="button"
+                data-testid="toggle-confirm-password"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1 font-medium">{errors.confirmPassword.message}</p>
+            )}
           </div>
 
           <Button
@@ -123,7 +151,7 @@ export default function LoginForm() {
             className="w-full gap-2 text-lg"
             isLoading={isLoading}
           >
-            Đăng nhập
+            Đăng ký
           </Button>
         </form>
 
@@ -151,8 +179,8 @@ export default function LoginForm() {
 
         {/* Footer */}
         <p className="text-center mt-10 text-slate-500 text-sm">
-          Bạn chưa có tài khoản?
-          <a className="text-primary font-bold hover:underline ml-1 transition-all duration-200" href="/register">Đăng ký ngay</a>
+          Bạn đã có tài khoản?
+          <a className="text-primary font-bold hover:underline ml-1 transition-all duration-200" href="/login">Đăng nhập</a>
         </p>
       </div>
     </div>

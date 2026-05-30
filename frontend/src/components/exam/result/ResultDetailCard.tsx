@@ -1,4 +1,5 @@
 import React from 'react'
+import { Circle, CheckCircle, XCircle, Brain } from 'lucide-react'
 
 interface Option {
   id: string
@@ -57,30 +58,30 @@ export default function ResultDetailCard({
 
                     let btnClass = 'border-slate-200 dark:border-slate-700'
                     let label = `${opt.id}. ${opt.text}`
-                    let icon = 'circle'
                     let iconColor = 'text-slate-300'
+                    let icon = <Circle className={`w-5 h-5 ${iconColor}`} />
 
                     if (isSelected && isRightAnswer) {
                       btnClass = 'border-2 border-success bg-success/5 font-bold text-success'
                       label = `${opt.id}. ${opt.text} (Lựa chọn của bạn & Đáp án đúng)`
-                      icon = 'check_circle'
                       iconColor = 'text-success'
+                      icon = <CheckCircle className={`w-5 h-5 ${iconColor}`} />
                     } else if (isSelected && !isRightAnswer) {
                       btnClass = 'border-2 border-error bg-error/5 font-bold text-error'
                       label = `${opt.id}. ${opt.text} (Lựa chọn của bạn)`
-                      icon = 'cancel'
                       iconColor = 'text-error'
+                      icon = <XCircle className={`w-5 h-5 ${iconColor}`} />
                     } else if (!isSelected && isRightAnswer) {
                       btnClass = 'border-2 border-success bg-success/5 font-bold text-success'
                       label = `${opt.id}. ${opt.text} (Đáp án đúng)`
-                      icon = 'check_circle'
                       iconColor = 'text-success'
+                      icon = <CheckCircle className={`w-5 h-5 ${iconColor}`} />
                     }
 
                     return (
                       <div key={opt.id} className={`p-4 rounded-lg border text-sm flex items-center justify-between ${btnClass}`}>
                         <span>{label}</span>
-                        <span className={`material-icons ${iconColor}`}>{icon}</span>
+                        {icon}
                       </div>
                     )
                   })}
@@ -114,7 +115,7 @@ export default function ResultDetailCard({
         <div className="bg-slate-50 dark:bg-slate-800/50 p-6 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-start gap-3">
             <div className="bg-primary/10 text-primary p-1.5 rounded-md mt-0.5">
-              <span className="material-icons text-lg">psychology</span>
+              <Brain className="w-5 h-5" />
             </div>
             <div>
               <p className="text-sm font-semibold mb-1">Giải thích từ AI</p>

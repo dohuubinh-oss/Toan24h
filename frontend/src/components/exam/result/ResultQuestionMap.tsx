@@ -1,4 +1,5 @@
 import React from 'react'
+import { LayoutGrid } from 'lucide-react'
 
 export interface ResultMCQuestion {
   id: number
@@ -30,7 +31,7 @@ export default function ResultQuestionMap({
     <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-6 border border-slate-200/60 dark:border-slate-800 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-bold text-lg flex items-center gap-2">
-          <span className="material-icons text-primary">grid_view</span>
+          <LayoutGrid className="w-6 h-6 text-primary" />
           Bản đồ câu hỏi
         </h3>
         <span className="text-xs font-medium text-slate-400">{totalQuestions} Câu hỏi</span>

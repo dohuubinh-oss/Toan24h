@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { X, LayoutGrid, Map } from 'lucide-react'
 
 export type QuestionStatus = 'done' | 'current' | 'unfinished'
 
@@ -25,22 +26,22 @@ export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubm
         className="absolute left-[-40px] w-10 h-24 bg-white dark:bg-slate-900 border border-r-0 border-slate-200 dark:border-slate-800 rounded-l-xl shadow-lg flex items-center justify-center hover:w-12 active:scale-95 transition-all cursor-pointer"
         aria-label="Toggle Question Map"
       >
-        <span className="material-icons text-slate-500 dark:text-slate-400 select-none">
-          {isOpen ? 'close' : 'grid_view'}
-        </span>
+        <div className="text-slate-500 dark:text-slate-400 select-none">
+          {isOpen ? <X className="w-6 h-6" /> : <LayoutGrid className="w-6 h-6" />}
+        </div>
       </button>
 
       <aside className="h-full w-[320px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            <span className="material-icons text-primary text-xl">map</span>
+            <Map className="w-5 h-5 text-primary" />
             Bản đồ câu hỏi
           </h3>
           <button
             onClick={() => setIsOpen(false)}
             className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer transition-colors text-slate-400"
           >
-            <span className="material-icons">close</span>
+            <X className="w-5 h-5" />
           </button>
         </div>
 

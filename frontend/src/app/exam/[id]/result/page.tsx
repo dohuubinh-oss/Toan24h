@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import { ChevronRight, Calendar, Timer, LayoutDashboard, CheckCheck } from 'lucide-react'
 import ResultScoreCircle from '@/components/exam/result/ResultScoreCircle'
 import ResultQuestionMap, { ResultMCQuestion, ResultEssayQuestion } from '@/components/exam/result/ResultQuestionMap'
 import ResultDetailCard from '@/components/exam/result/ResultDetailCard'
@@ -84,14 +85,14 @@ export default function ExamResultPage({ params }: { params: { id: string } }) {
         <div className="space-y-2">
           <nav className="flex items-center gap-2 text-xs text-slate-500 mb-2">
             <Link href="/dashboard" className="hover:text-primary">Dashboard</Link>
-            <span className="material-icons text-xs">chevron_right</span>
+            <ChevronRight className="w-4 h-4" />
             <span className="text-slate-900 dark:text-slate-100 font-medium">Kết quả bài thi</span>
           </nav>
           <h1 className="text-3xl font-black tracking-tight leading-none">Kết quả bài thi</h1>
           <p className="text-slate-500 text-sm flex items-center gap-2">
-            <span className="material-icons text-sm">calendar_today</span> Hoàn thành lúc: {new Date().toLocaleDateString('vi-VN')}
+            <Calendar className="w-4 h-4" /> Hoàn thành lúc: {new Date().toLocaleDateString('vi-VN')}
             <span className="mx-2">|</span>
-            <span className="material-icons text-sm">timer</span> Thời gian làm bài: 45 phút
+            <Timer className="w-4 h-4" /> Thời gian làm bài: 45 phút
           </p>
         </div>
         <div className="flex gap-3">
@@ -99,7 +100,7 @@ export default function ExamResultPage({ params }: { params: { id: string } }) {
             href="/dashboard"
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 text-sm font-semibold"
           >
-            <span className="material-icons text-lg">dashboard</span> Quay lại Dashboard
+            <LayoutDashboard className="w-5 h-5" /> Quay lại Dashboard
           </Link>
         </div>
       </div>
@@ -128,7 +129,7 @@ export default function ExamResultPage({ params }: { params: { id: string } }) {
           <section>
             <div className="flex items-center justify-between mb-4 px-2">
               <h2 className="text-xl font-bold flex items-center gap-2">
-                <span className="material-icons text-success">done_all</span>
+                <CheckCheck className="w-6 h-6 text-success" />
                 Chi tiết câu hỏi
               </h2>
             </div>

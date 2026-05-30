@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import { GraduationCap, User } from 'lucide-react'
 
 export default function ExamLayout({
   children,
@@ -14,7 +15,7 @@ export default function ExamLayout({
             <div className="flex items-center gap-8">
               <Link href="/dashboard" className="flex items-center gap-2">
                 <div className="bg-primary text-white p-1.5 rounded-lg flex items-center justify-center">
-                  <span className="material-icons">school</span>
+                  <GraduationCap className="w-5 h-5" />
                 </div>
                 <h2 className="text-xl font-bold tracking-tight text-primary">Toán 24h</h2>
               </Link>
@@ -25,7 +26,7 @@ export default function ExamLayout({
                   <p className="text-xs font-semibold">Học sinh</p>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-slate-200 border-2 border-primary/20 overflow-hidden flex items-center justify-center">
-                  <span className="material-icons text-slate-400">person</span>
+                  <User className="w-6 h-6 text-slate-400" />
                 </div>
               </div>
             </div>

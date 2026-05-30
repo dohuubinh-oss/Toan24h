@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Wand2, X, Lightbulb, Loader2 } from 'lucide-react'
 
 interface AIHintPanelProps {
   hint: string
@@ -22,19 +23,19 @@ export default function AIHintPanel({ hint, onGetHint, isHintLoading, remainingH
         className="absolute -right-12 top-4 w-12 h-12 bg-white dark:bg-slate-900 border border-l-0 border-slate-200 dark:border-slate-800 rounded-r-xl shadow-lg flex items-center justify-center cursor-pointer text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors"
         style={!isOpen ? { transform: 'translateX(48px)' } : { display: 'none' }}
       >
-        <span className="material-icons">auto_awesome</span>
+        <Wand2 className="w-6 h-6" />
       </button>
 
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex items-center justify-between">
         <h3 className="font-bold text-white flex items-center gap-2">
-          <span className="material-icons">auto_awesome</span>
+          <Wand2 className="w-5 h-5" />
           Trợ giảng AI
         </h3>
         <button
           onClick={() => setIsOpen(false)}
           className="text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
         >
-          <span className="material-icons text-xl">close</span>
+          <X className="w-5 h-5" />
         </button>
       </div>
 
@@ -45,7 +46,7 @@ export default function AIHintPanel({ hint, onGetHint, isHintLoading, remainingH
           </div>
         ) : (
           <div className="text-center py-6">
-            <span className="material-icons text-4xl text-slate-300 dark:text-slate-600 mb-2">lightbulb</span>
+            <Lightbulb className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Bạn đang gặp khó khăn? Hãy để AI gợi ý cách làm nhé.
             </p>
@@ -62,12 +63,12 @@ export default function AIHintPanel({ hint, onGetHint, isHintLoading, remainingH
         >
           {isHintLoading ? (
             <>
-              <span className="material-icons animate-spin text-lg">sync</span>
+              <Loader2 className="w-5 h-5 animate-spin" />
               Đang suy nghĩ...
             </>
           ) : (
             <>
-              <span className="material-icons text-lg">tips_and_updates</span>
+              <Lightbulb className="w-5 h-5" />
               Gợi ý từ AI
             </>
           )}

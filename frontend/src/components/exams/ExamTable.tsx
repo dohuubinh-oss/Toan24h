@@ -1,7 +1,9 @@
 import React from 'react'
 import { Calculator, Share2, Copy, Edit2, Trash2 } from 'lucide-react'
+import { Badge } from '../ui/Badge'
+import { Button } from '../ui/Button'
 
-export type ExamStatus = 'Published' | 'Draft' | 'Ended'
+export type ExamType = 'Giữa kỳ' | 'Cuối kỳ' | 'Chuyên'
 
 export interface Exam {
   id: string
@@ -9,7 +11,7 @@ export interface Exam {
   grade: number
   questionCount: number
   duration: number
-  status: ExamStatus
+  examType: ExamType
   updatedAt: string
 }
 
@@ -19,7 +21,7 @@ interface ExamTableProps {
 
 export default function ExamTable({ exams }: ExamTableProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -28,13 +30,13 @@ export default function ExamTable({ exams }: ExamTableProps) {
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Khối lớp</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Số câu hỏi</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Thời gian</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Loại đề</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {exams.map(exam => (
-              <tr key={exam.id} className="hover:bg-slate-50 transition-colors group">
+              <tr key={exam.id} className="hover:bg-slate-50 transition-colors group relative border-l-2 border-transparent hover:border-primary">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center text-primary">
@@ -47,48 +49,38 @@ export default function ExamTable({ exams }: ExamTableProps) {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">Lớp {exam.grade}</span>
+                  <span className="text-sm font-medium text-slate-700">Lớp {exam.grade}</span>
                 </td>
                 <td className="px-6 py-4 text-center text-sm font-medium">{exam.questionCount}</td>
                 <td className="px-6 py-4 text-center text-sm font-medium">{exam.duration} phút</td>
                 <td className="px-6 py-4">
-                  {exam.status === 'Published' && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
-                      Đã xuất bản
-                    </span>
-                  )}
-                  {exam.status === 'Draft' && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1.5"></span>
-                      Nháp
-                    </span>
-                  )}
-                  {exam.status === 'Ended' && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>
-                      Đã kết thúc
-                    </span>
-                  )}
+                  <span className="text-sm font-medium text-slate-700">{exam.examType}</span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all" title="Chia sẻ">
-                      <Share2 className="w-5 h-5" />
-                    </button>
-                    <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all" title="Nhân bản">
-                      <Copy className="w-5 h-5" />
-                    </button>
-                    <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all" title="Chỉnh sửa">
+                    <Button variant="ghost" size="icon" className="h-11 w-11 text-slate-400 hover:text-primary" title="Chỉnh sửa">
                       <Edit2 className="w-5 h-5" />
-                    </button>
-                    <button className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Xóa">
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-11 w-11 text-slate-400 hover:text-red-500 hover:bg-red-50" title="Xóa">
                       <Trash2 className="w-5 h-5" />
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>
             ))}
+            {exams.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-6 py-16 text-center">
+                  <div className="flex flex-col items-center justify-center text-slate-500">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                      <Calculator className="w-8 h-8 text-slate-300" />
+                    </div>
+                    <p className="text-base font-semibold text-slate-700">Không tìm thấy đề thi</p>
+                    <p className="text-sm mt-1">Hãy thử thay đổi bộ lọc hoặc từ khoá tìm kiếm.</p>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
