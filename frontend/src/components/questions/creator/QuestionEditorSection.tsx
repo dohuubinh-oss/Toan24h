@@ -15,7 +15,7 @@ interface QuestionEditorSectionProps {
 import SharedEditorCard from './editor/SharedEditorCard'
 import RichTextEditor from './editor/RichTextEditor'
 
-const QuestionEditorSection = React.memo(function QuestionEditorSection({
+function QuestionEditorSection({
   currentBlock = null,
   currentQuestion = null,
   updateBlock = () => { },
@@ -201,6 +201,6 @@ const QuestionEditorSection = React.memo(function QuestionEditorSection({
       </div>
     </div>
   )
-})
+}
 
-export default QuestionEditorSection;
+export default React.memo(QuestionEditorSection);

@@ -1,9 +1,13 @@
-import React, { Suspense } from 'react'
+'use client'
+
+import React, { useState, Suspense, useCallback } from 'react'
 import ExamHeader from '../../../../components/exams/ExamHeader'
 import ExamQuestionList from '../../../../components/exams/ExamQuestionList'
 import ExamConfigSidebar from '../../../../components/exams/ExamConfigSidebar'
 import { Grid, UploadCloud } from 'lucide-react'
 import { Button } from '../../../../components/ui/Button'
+import { MOCK_EXAM } from '../../../../lib/mock-data'
+import { Exam } from '../../../../types/exam'
 
 export default function CreateExamPage() {
   return (
@@ -14,13 +18,34 @@ export default function CreateExamPage() {
 }
 
 function CreateExamPageContent() {
+  const [exam, setExam] = useState<Exam>(MOCK_EXAM)
+
+  const handleConfigChange = useCallback((field: keyof Exam, value: any) => {
+    setExam(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }, [])
+
   return (
     <div className="bg-slate-50 text-slate-900 min-h-screen pb-20 lg:pb-0 font-body">
-      <ExamHeader />
+      <ExamHeader 
+        title={exam.title}
+        examCode={exam.examCode}
+      />
       
       <main className="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <ExamQuestionList />
-        <ExamConfigSidebar />
+        <ExamQuestionList questions={exam.questions} />
+        <ExamConfigSidebar 
+          config={{
+            title: exam.title,
+            examCode: exam.examCode,
+            grade: exam.grade,
+            duration: exam.duration
+          }}
+          onChange={handleConfigChange}
+          questions={exam.questions}
+        />
       </main>
 
       {/* Mobile Footer */}
