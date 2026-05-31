@@ -18,7 +18,13 @@ export default function CreateExamPage() {
 }
 
 function CreateExamPageContent() {
-  const [exam, setExam] = useState<Exam>(MOCK_EXAM)
+  const [exam, setExam] = useState<Exam>({
+    ...MOCK_EXAM,
+    title: '',
+    examCode: '',
+    grade: '',
+    duration: 0
+  })
 
   const handleConfigChange = useCallback((field: keyof Exam, value: any) => {
     setExam(prev => ({

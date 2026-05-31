@@ -47,7 +47,7 @@ export default function ExamQuestionList({ questions }: ExamQuestionListProps) {
                 content={q.content}
                 options={q.options}
                 correctAnswer={q.correct_answer}
-                solution={q.explanation || ''}
+                solution={q.solution_guide || ''}
                 isEssay={false}
               />
             </QuestionCard>
@@ -73,7 +73,7 @@ export default function ExamQuestionList({ questions }: ExamQuestionListProps) {
             >
               <ContentQuestion
                 content={q.content}
-                solution={q.explanation || ''}
+                solution={q.solution_guide || ''}
                 isEssay={true}
               />
             </QuestionCard>
