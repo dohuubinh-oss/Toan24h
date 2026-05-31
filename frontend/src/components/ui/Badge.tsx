@@ -1,7 +1,7 @@
 import React from 'react'
 import { cn } from '../../lib/utils'
 
-export type BadgeVariant = 'default' | 'success' | 'error' | 'warning' | 'info' | 'outline'
+export type BadgeVariant = 'default' | 'success' | 'error' | 'warning' | 'info' | 'outline' | 'diff-nb' | 'diff-th' | 'diff-vd' | 'diff-vdc'
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant
@@ -23,6 +23,10 @@ export function Badge({
     warning: "bg-warning/10 text-warning border border-warning/20",
     info: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50",
     outline: "border-2 border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-300",
+    'diff-nb': "bg-emerald-50 text-emerald-600 border border-emerald-200",
+    'diff-th': "bg-amber-50 text-amber-600 border border-amber-200",
+    'diff-vd': "bg-orange-50 text-orange-600 border border-orange-200",
+    'diff-vdc': "bg-rose-50 text-rose-600 border border-rose-200",
   }
 
   const sizes = {

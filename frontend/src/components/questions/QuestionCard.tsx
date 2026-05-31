@@ -22,9 +22,10 @@ export default function QuestionCard({
   
   const getDifficultyBadgeVariant = (diff: string): BadgeVariant => {
     switch (diff) {
-      case 'Nhận biết': return 'success';
-      case 'Thông hiểu': return 'warning';
-      case 'Vận dụng cao': return 'error';
+      case 'Nhận biết': return 'diff-nb';
+      case 'Thông hiểu': return 'diff-th';
+      case 'Vận dụng': return 'diff-vd';
+      case 'Vận dụng cao': return 'diff-vdc';
       default: return 'info';
     }
   };

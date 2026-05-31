@@ -38,6 +38,15 @@ export default function UILabPage() {
               </div>
             </div>
             <div>
+              <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">Độ khó (Difficulty)</h3>
+              <div className="flex flex-wrap gap-4">
+                <Badge variant="diff-nb">Nhận biết</Badge>
+                <Badge variant="diff-th">Thông hiểu</Badge>
+                <Badge variant="diff-vd">Vận dụng</Badge>
+                <Badge variant="diff-vdc">Vận dụng cao</Badge>
+              </div>
+            </div>
+            <div>
               <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">Sizes</h3>
               <div className="flex flex-wrap items-center gap-4">
                 <Badge size="sm">Small</Badge>
