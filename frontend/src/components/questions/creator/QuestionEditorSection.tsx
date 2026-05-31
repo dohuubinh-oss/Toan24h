@@ -21,18 +21,12 @@ function QuestionEditorSection({
   updateBlock = () => { },
   updateQuestion = () => { }
 }: QuestionEditorSectionProps) {
-  const [isEssay, setIsEssay] = useState(false)
-
-  // Sync isEssay state when currentQuestion changes
-  useEffect(() => {
-    if (currentQuestion) {
-      setIsEssay(currentQuestion.type === 'Tự luận');
-    }
-  }, [currentQuestion?.type]);
+  const isEssay = currentQuestion?.type === 'Tự luận';
 
   const handleSetEssay = (val: boolean) => {
-    setIsEssay(val);
-    updateQuestion('type', val ? 'Tự luận' : 'Trắc nghiệm');
+    if (updateQuestion) {
+      updateQuestion('type', val ? 'Tự luận' : 'Trắc nghiệm');
+    }
   };
 
   return (
