@@ -1,23 +1,36 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
-import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2 } from 'lucide-react'
+import React, { useState, useCallback, useRef } from 'react'
+import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2, Save } from 'lucide-react'
 import Link from 'next/link'
 import JsonInputSection from '../../../../components/questions/creator/JsonInputSection'
 import QuestionEditorSection from '../../../../components/questions/creator/QuestionEditorSection'
 import QuestionSettingsSidebar from '../../../../components/questions/creator/QuestionSettingsSidebar'
-
+import { Button } from '../../../../components/ui/Button'
 import { QuestionBlock, Question } from '../../../../types/question'
 
 export default function CreateQuestionPage() {
   const [questionBlocks, setQuestionBlocks] = useState<QuestionBlock[]>([])
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const editorRef = useRef<HTMLDivElement>(null)
+
+  const scrollToEditor = () => {
+    setTimeout(() => {
+      if (editorRef.current) {
+        const yOffset = -100; // offset for sticky header
+        const element = editorRef.current;
+        const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }, 50)
+  }
 
   const handleProcessJson = useCallback((blocks: QuestionBlock[]) => {
     setQuestionBlocks(blocks)
     setCurrentBlockIndex(0)
     setCurrentQuestionIndex(0)
+    scrollToEditor()
   }, [])
 
   const handleNext = useCallback(() => {
@@ -29,6 +42,7 @@ export default function CreateQuestionPage() {
       setCurrentBlockIndex(prev => prev + 1);
       setCurrentQuestionIndex(0);
     }
+    scrollToEditor()
   }, [questionBlocks, currentBlockIndex, currentQuestionIndex])
 
   const handlePrev = useCallback(() => {
@@ -39,6 +53,7 @@ export default function CreateQuestionPage() {
       setCurrentBlockIndex(prev => prev - 1);
       setCurrentQuestionIndex(questionBlocks[currentBlockIndex - 1].questions.length - 1);
     }
+    scrollToEditor()
   }, [questionBlocks, currentBlockIndex, currentQuestionIndex])
 
   const updateQuestion = useCallback((field: keyof Question, value: any) => {
@@ -81,6 +96,10 @@ export default function CreateQuestionPage() {
     });
   }, [currentBlockIndex])
 
+  const handleSave = useCallback(() => {
+    console.log("Saving to backend:", questionBlocks);
+    alert("Đã ghi log state ra console!");
+  }, [questionBlocks])
 
   const currentBlock = questionBlocks[currentBlockIndex] || null;
   const currentQuestion = currentBlock?.questions[currentQuestionIndex] || null;
@@ -100,6 +119,13 @@ export default function CreateQuestionPage() {
               <h1 className="text-xl font-semibold text-slate-800">Thêm câu hỏi thông minh</h1>
             </div>
           </div>
+          
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSave} className="px-6 flex items-center gap-2 shadow-sm shadow-primary/20">
+              <Save className="w-4 h-4" />
+              Lưu vào ngân hàng
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -117,12 +143,14 @@ export default function CreateQuestionPage() {
               onNext={handleNext}
               onPrev={handlePrev}
             />
-            <QuestionEditorSection 
-              currentBlock={currentBlock}
-              currentQuestion={currentQuestion}
-              updateBlock={updateBlock}
-              updateQuestion={updateQuestion}
-            />
+            <div ref={editorRef} className="scroll-mt-24">
+              <QuestionEditorSection 
+                currentBlock={currentBlock}
+                currentQuestion={currentQuestion}
+                updateBlock={updateBlock}
+                updateQuestion={updateQuestion}
+              />
+            </div>
           </div>
 
           {/* Right Column - Sidebar Settings */}
