@@ -87,3 +87,8 @@
   -ms-overflow-style: none; 
   scrollbar-width: none; 
 }
+
+/* Hide MathLive default icons */
+math-field::part(virtual-keyboard-toggle) {
+  display: none !important;
+}

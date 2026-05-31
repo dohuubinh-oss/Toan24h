@@ -75,7 +75,7 @@ export default function ResultScoreCircle({
         <div className="grid grid-cols-2 gap-4 mt-8">
           {multipleChoiceMax !== undefined && (
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center border border-slate-100 dark:border-slate-700">
-              <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Trắc nghiệm</p>
+              <p className="text-xs uppercase font-bold text-slate-400 tracking-wider mb-1">Trắc nghiệm</p>
               <p className="text-xl font-bold text-success">
                 {(multipleChoiceScore || 0).toFixed(1)}
                 <span className="text-xs text-slate-400">/{multipleChoiceMax.toFixed(1)}</span>
@@ -84,7 +84,7 @@ export default function ResultScoreCircle({
           )}
           {essayMax !== undefined && (
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center border border-slate-100 dark:border-slate-700">
-              <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">Tự luận</p>
+              <p className="text-xs uppercase font-bold text-slate-400 tracking-wider mb-1">Tự luận</p>
               <p className="text-xl font-bold text-warning">
                 {(essayScore || 0).toFixed(1)}
                 <span className="text-xs text-slate-400">/{essayMax.toFixed(1)}</span>

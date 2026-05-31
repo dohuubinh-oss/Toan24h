@@ -1,4 +1,5 @@
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { Calculator, Share2, Copy, Edit2, Trash2 } from 'lucide-react'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
@@ -20,6 +21,8 @@ interface ExamTableProps {
 }
 
 export default function ExamTable({ exams }: ExamTableProps) {
+  const router = useRouter()
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden">
       <div className="overflow-x-auto">
@@ -36,7 +39,11 @@ export default function ExamTable({ exams }: ExamTableProps) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {exams.map(exam => (
-              <tr key={exam.id} className="hover:bg-slate-50 transition-colors group relative border-l-2 border-transparent hover:border-primary">
+              <tr 
+                key={exam.id} 
+                onClick={() => router.push(`/exam/${exam.id}/take`)}
+                className="hover:bg-slate-50 transition-colors group relative border-l-2 border-transparent hover:border-primary cursor-pointer"
+              >
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center text-primary">
@@ -58,10 +65,28 @@ export default function ExamTable({ exams }: ExamTableProps) {
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-11 w-11 text-slate-400 hover:text-primary" title="Chỉnh sửa">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-11 w-11 text-slate-400 hover:text-primary" 
+                      title="Chỉnh sửa"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Edit logic
+                      }}
+                    >
                       <Edit2 className="w-5 h-5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-11 w-11 text-slate-400 hover:text-red-500 hover:bg-red-50" title="Xóa">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-11 w-11 text-slate-400 hover:text-red-500 hover:bg-red-50" 
+                      title="Xóa"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Delete logic
+                      }}
+                    >
                       <Trash2 className="w-5 h-5" />
                     </Button>
                   </div>

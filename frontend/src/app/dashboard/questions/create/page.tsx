@@ -1,53 +1,147 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useCallback } from 'react'
 import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
 import JsonInputSection from '../../../../components/questions/creator/JsonInputSection'
 import QuestionEditorSection from '../../../../components/questions/creator/QuestionEditorSection'
 import QuestionSettingsSidebar from '../../../../components/questions/creator/QuestionSettingsSidebar'
+import { Button } from '../../../../components/ui/Button'
+import { QuestionBlock, Question } from '../../../../types/question'
 
 export default function CreateQuestionPage() {
+  const [questionBlocks, setQuestionBlocks] = useState<QuestionBlock[]>([])
+  const [currentBlockIndex, setCurrentBlockIndex] = useState(0)
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+
+  const handleProcessJson = useCallback((blocks: QuestionBlock[]) => {
+    setQuestionBlocks(blocks)
+    setCurrentBlockIndex(0)
+    setCurrentQuestionIndex(0)
+  }, [])
+
+  const handleNext = useCallback(() => {
+    if (questionBlocks.length === 0) return;
+    const currentBlock = questionBlocks[currentBlockIndex];
+    if (currentQuestionIndex < currentBlock.questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    } else if (currentBlockIndex < questionBlocks.length - 1) {
+      setCurrentBlockIndex(prev => prev + 1);
+      setCurrentQuestionIndex(0);
+    }
+  }, [questionBlocks, currentBlockIndex, currentQuestionIndex])
+
+  const handlePrev = useCallback(() => {
+    if (questionBlocks.length === 0) return;
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+    } else if (currentBlockIndex > 0) {
+      setCurrentBlockIndex(prev => prev - 1);
+      setCurrentQuestionIndex(questionBlocks[currentBlockIndex - 1].questions.length - 1);
+    }
+  }, [questionBlocks, currentBlockIndex, currentQuestionIndex])
+
+  const updateQuestion = useCallback((field: keyof Question, value: any) => {
+    setQuestionBlocks(prev => {
+      const currentBlock = prev[currentBlockIndex];
+      if (!currentBlock || !currentBlock.questions[currentQuestionIndex]) {
+        return prev;
+      }
+      
+      const newQuestions = [...currentBlock.questions];
+      newQuestions[currentQuestionIndex] = {
+        ...newQuestions[currentQuestionIndex],
+        [field]: value
+      };
+      
+      const newBlocks = [...prev];
+      newBlocks[currentBlockIndex] = {
+        ...currentBlock,
+        questions: newQuestions
+      };
+      
+      return newBlocks;
+    });
+  }, [currentBlockIndex, currentQuestionIndex])
+
+  const updateBlock = useCallback((field: keyof QuestionBlock, value: any) => {
+    setQuestionBlocks(prev => {
+      const currentBlock = prev[currentBlockIndex];
+      if (!currentBlock) {
+        return prev;
+      }
+      
+      const newBlocks = [...prev];
+      newBlocks[currentBlockIndex] = {
+        ...currentBlock,
+        [field]: value
+      };
+      
+      return newBlocks;
+    });
+  }, [currentBlockIndex])
+
+  const handleSave = useCallback(() => {
+    console.log("Saving to backend:", questionBlocks);
+    alert("Đã ghi log state ra console!");
+  }, [questionBlocks])
+
+  const currentBlock = questionBlocks[currentBlockIndex] || null;
+  const currentQuestion = currentBlock?.questions[currentQuestionIndex] || null;
+  const totalQuestions = questionBlocks.reduce((acc, block) => acc + block.questions.length, 0);
+  const currentGlobalIndex = questionBlocks.slice(0, currentBlockIndex).reduce((acc, block) => acc + block.questions.length, 0) + currentQuestionIndex + 1;
+
   return (
-    <div className="bg-page-bg min-h-screen font-display pb-20 lg:pb-0">
+    <div className="bg-slate-50 min-h-screen font-display pb-20 lg:pb-0">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/questions" className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold text-slate-800">Smart Question Creator</h1>
-            <span className="px-2 py-0.5 bg-red-100 text-red-600 text-[10px] font-black rounded uppercase tracking-widest border border-red-200">
-              Câu hỏi chùm
-            </span>
+      <header className="sticky top-0 z-50 bg-white border-b border-slate-200 w-full">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard/questions" className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-semibold text-slate-800">Thêm câu hỏi thông minh</h1>
+            </div>
           </div>
-        </div>
-        
-        <div className="hidden lg:flex items-center gap-3">
-          <button className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors">
-            Xem trước
-          </button>
-          <button className="bg-primary hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all shadow-sm shadow-primary/20">
-            <Save className="w-4 h-4" />
-            Lưu vào ngân hàng
-          </button>
+          
+          <div className="hidden lg:flex items-center gap-3">
+            <Button onClick={handleSave} className="px-6 flex items-center gap-2 shadow-sm shadow-primary/20">
+              <Save className="w-4 h-4" />
+              Lưu vào ngân hàng
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Main Layout */}
-      <main className="max-w-[1920px] mx-auto p-6 lg:p-8">
+      <main className="max-w-7xl mx-auto p-4 lg:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column - Input and Editor */}
           <div className="lg:col-span-8 space-y-6">
-            <JsonInputSection />
-            <QuestionEditorSection />
+            <JsonInputSection 
+              onProcessJson={handleProcessJson}
+              currentGlobalIndex={currentGlobalIndex}
+              totalQuestions={totalQuestions}
+              currentQuestion={currentQuestion}
+              onNext={handleNext}
+              onPrev={handlePrev}
+            />
+            <QuestionEditorSection 
+              currentBlock={currentBlock}
+              currentQuestion={currentQuestion}
+              updateBlock={updateBlock}
+              updateQuestion={updateQuestion}
+            />
           </div>
 
           {/* Right Column - Sidebar Settings */}
           <div className="lg:col-span-4">
-            <QuestionSettingsSidebar />
+            <QuestionSettingsSidebar 
+              currentQuestion={currentQuestion}
+              updateQuestion={updateQuestion}
+            />
           </div>
 
         </div>
@@ -55,12 +149,9 @@ export default function CreateQuestionPage() {
 
       {/* Mobile Sticky Bottom Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 flex gap-3 z-50">
-        <button className="flex-1 py-4 border border-slate-200 rounded-xl font-bold text-sm uppercase tracking-widest text-slate-700">
-          Xem trước
-        </button>
-        <button className="flex-1 py-4 bg-primary text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-primary/20">
+        <Button onClick={handleSave} className="flex-1 h-[56px] rounded-xl font-bold uppercase tracking-widest shadow-lg shadow-primary/20">
           Lưu vào
-        </button>
+        </Button>
       </div>
     </div>
   )

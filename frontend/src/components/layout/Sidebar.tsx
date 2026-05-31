@@ -11,6 +11,11 @@ import SidebarFilter from '../shared/SidebarFilter';
 export default function Sidebar() {
   const pathname = usePathname();
 
+  // Hide sidebar on specific "create" pages to maximize focus area
+  if (pathname === '/dashboard/questions/create' || pathname === '/dashboard/exams/create') {
+    return null;
+  }
+
   return (
     <aside className="w-64 border-r border-slate-200 hidden md:block bg-white shrink-0">
       <nav className="p-4 space-y-6">
