@@ -1,7 +1,8 @@
 import React from 'react'
 import { ListOrdered, CheckCircle2 } from 'lucide-react'
 import { Question } from '../../types/question'
-import QuestionCard from './QuestionCard'
+import QuestionCard from '../questions/QuestionCard'
+import ContentQuestion from '../questions/ContentQuestion'
 
 interface ExamQuestionListProps {
   questions: Question[];
@@ -33,7 +34,23 @@ export default function ExamQuestionList({ questions }: ExamQuestionListProps) {
             <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{multipleChoiceQuestions.length} câu</span>
           </div>
           {multipleChoiceQuestions.map((q, idx) => (
-            <QuestionCard key={`mcq-${idx}`} question={q} index={idx} />
+            <QuestionCard 
+              key={`mcq-${idx}`} 
+              id={q.id || `Q-${idx}`}
+              grade={q.grade || 12}
+              topic={q.topic || 'Chưa phân loại'}
+              difficulty={q.difficulty_level || 'Nhận biết'}
+              index={idx}
+              onChangeQuestion={() => console.log('Đổi câu hỏi')}
+            >
+              <ContentQuestion
+                content={q.content}
+                options={q.options}
+                correctAnswer={q.correct_answer}
+                solution={q.explanation || ''}
+                isEssay={false}
+              />
+            </QuestionCard>
           ))}
         </div>
       )}
@@ -45,7 +62,21 @@ export default function ExamQuestionList({ questions }: ExamQuestionListProps) {
             <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{essayQuestions.length} câu</span>
           </div>
           {essayQuestions.map((q, idx) => (
-            <QuestionCard key={`essay-${idx}`} question={q} index={multipleChoiceQuestions.length + idx} />
+            <QuestionCard 
+              key={`essay-${idx}`} 
+              id={q.id || `Q-E${idx}`}
+              grade={q.grade || 12}
+              topic={q.topic || 'Chưa phân loại'}
+              difficulty={q.difficulty_level || 'Vận dụng'}
+              index={multipleChoiceQuestions.length + idx}
+              onChangeQuestion={() => console.log('Đổi câu hỏi')}
+            >
+              <ContentQuestion
+                content={q.content}
+                solution={q.explanation || ''}
+                isEssay={true}
+              />
+            </QuestionCard>
           ))}
         </div>
       )}
