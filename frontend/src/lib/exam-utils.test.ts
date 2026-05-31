@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { calculateExamDifficulty, validateExamConfig } from './exam-utils';
 import { Question } from '../types/question';
 
