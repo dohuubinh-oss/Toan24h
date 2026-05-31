@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Code2, Settings2, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2 } from 'lucide-react'
+import { Code2, Settings2 } from 'lucide-react'
 import { QuestionBlock, Question } from '../../../types/question'
 
 interface JsonInputSectionProps {
@@ -83,51 +83,6 @@ export default function JsonInputSection({
         </div>
       </div>
 
-      {/* Navigation Controls Card */}
-      <div className="flex justify-center">
-        <div className="bg-white rounded-full shadow-sm border border-slate-200 px-2 py-1.5 flex items-center gap-2">
-          <button className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 disabled:opacity-30" disabled>
-            <ChevronsLeft className="w-5 h-5" />
-          </button>
-          <button 
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors border border-slate-100 shadow-sm disabled:opacity-30" 
-            onClick={onPrev}
-            disabled={totalQuestions === 0 || currentGlobalIndex <= 1}
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          
-          <div className="px-4 py-1 flex items-center gap-2 border-x border-slate-100">
-            <span className="text-xs font-black text-primary uppercase tracking-widest">
-              Câu {totalQuestions > 0 ? currentGlobalIndex : 0}
-            </span>
-            {currentQuestion?.type_question === 'group' && (
-              <span className="px-2 py-0.5 bg-red-100 text-red-600 text-[10px] font-black rounded uppercase tracking-widest border border-red-200 ml-1">
-                Câu hỏi chùm
-              </span>
-            )}
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              / {totalQuestions}
-            </span>
-          </div>
-          
-          <button 
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors border border-slate-100 shadow-sm disabled:opacity-30"
-            onClick={onNext}
-            disabled={totalQuestions === 0 || currentGlobalIndex >= totalQuestions}
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-          <button className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 disabled:opacity-30" disabled>
-            <ChevronsRight className="w-5 h-5" />
-          </button>
-          
-          <div className="w-px h-4 bg-slate-200 mx-1"></div>
-          <button className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Xóa câu này">
-            <Trash2 className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
     </section>
   )
 }
