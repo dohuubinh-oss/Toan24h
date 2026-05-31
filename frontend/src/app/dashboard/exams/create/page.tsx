@@ -8,6 +8,7 @@ import { Grid, UploadCloud } from 'lucide-react'
 import { Button } from '../../../../components/ui/Button'
 import { MOCK_EXAM } from '../../../../lib/mock-data'
 import { Exam } from '../../../../types/exam'
+import { validateExamConfig, calculateExamDifficulty } from '../../../../lib/exam-utils'
 
 export default function CreateExamPage() {
   return (
@@ -26,18 +27,61 @@ function CreateExamPageContent() {
     duration: 0
   })
 
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
   const handleConfigChange = useCallback((field: keyof Exam, value: any) => {
     setExam(prev => ({
       ...prev,
       [field]: value
     }))
+    
+    // Clear error when user types
+    setErrors(prev => {
+      if (!prev[field]) return prev;
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    })
   }, [])
+
+  const handleSave = () => {
+    const newErrors = validateExamConfig(exam);
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      // Optional: scroll to top to show errors
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const { diffScore } = calculateExamDifficulty(exam.questions);
+    const questionIds = exam.questions.map(q => q.id).filter(Boolean);
+
+    const payload = {
+      title: exam.title,
+      examCode: exam.examCode,
+      grade: exam.grade,
+      duration: exam.duration,
+      diffScore: diffScore,
+      questionIds: questionIds,
+    };
+
+    console.log('Sending exam to backend (Mock):', payload);
+    
+    // Simulate API call promise
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        alert('Lưu đề thi thành công!');
+        resolve(payload);
+      }, 500);
+    });
+  }
 
   return (
     <div className="bg-slate-50 text-slate-900 min-h-screen pb-20 lg:pb-0 font-body">
       <ExamHeader 
         title={exam.title}
         examCode={exam.examCode}
+        onSave={handleSave}
       />
       
       <main className="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -51,6 +95,7 @@ function CreateExamPageContent() {
           }}
           onChange={handleConfigChange}
           questions={exam.questions}
+          errors={errors}
         />
       </main>
 
@@ -60,7 +105,10 @@ function CreateExamPageContent() {
           <Grid className="w-5 h-5" />
           Ma trận
         </Button>
-        <Button className="flex-1 h-12 rounded-xl text-sm font-bold gap-2 shadow-lg shadow-primary/30">
+        <Button 
+          onClick={handleSave}
+          className="flex-1 h-12 rounded-xl text-sm font-bold gap-2 shadow-lg shadow-primary/30"
+        >
           <UploadCloud className="w-5 h-5" />
           Lưu đề thi
         </Button>

@@ -7,12 +7,14 @@ interface ExamHeaderProps {
   title?: string
   subject?: string
   examCode?: string
+  onSave?: () => void
 }
 
 export default function ExamHeader({ 
   title = "Kiểm tra & Hoàn thiện đề thi",
   subject = "Toán học THCS",
-  examCode = ""
+  examCode = "",
+  onSave
 }: ExamHeaderProps) {
   const subtitle = examCode ? `${subject} • Mã đề: ${examCode}` : subject;
 
@@ -24,7 +26,7 @@ export default function ExamHeader({
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-lg font-bold leading-tight">{title}</h1>
+            <h1 className="text-lg font-bold leading-tight">{title || 'Đề thi mới'}</h1>
             <p className="text-xs text-slate-500">{subtitle}</p>
           </div>
         </div>
@@ -34,7 +36,10 @@ export default function ExamHeader({
             <FileText className="w-5 h-5" />
             Tải file PDF
           </Button>
-          <Button className="h-12 px-5 rounded-lg text-sm font-semibold gap-2 shadow-sm">
+          <Button 
+            onClick={onSave}
+            className="h-12 px-5 rounded-lg text-sm font-semibold gap-2 shadow-sm"
+          >
             <UploadCloud className="w-5 h-5" />
             Lưu & Xuất bản
           </Button>

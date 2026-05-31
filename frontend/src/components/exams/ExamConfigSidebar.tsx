@@ -5,39 +5,19 @@ import { Input } from '../ui/Input'
 import { Button } from '../ui/Button'
 import { Exam } from '../../types/exam'
 import { Question } from '../../types/question'
+import { calculateExamDifficulty } from '../../lib/exam-utils'
+import { cn } from '../../lib/utils'
 
 interface ExamConfigSidebarProps {
   config: Partial<Exam>;
   onChange: (field: keyof Exam, value: any) => void;
   questions: Question[];
+  errors?: Record<string, string>;
 }
 
-export default function ExamConfigSidebar({ config, onChange, questions }: ExamConfigSidebarProps) {
-  // Calculate matrix based on questions
-  const matrix = questions.reduce((acc, q) => {
-    const topic = q.topic || 'Chưa phân loại';
-    if (!acc[topic]) {
-      acc[topic] = { NB: 0, TH: 0, VD: 0, VDC: 0 };
-    }
-    if (q.difficulty_level === 'Nhận biết') acc[topic].NB++;
-    else if (q.difficulty_level === 'Thông hiểu') acc[topic].TH++;
-    else if (q.difficulty_level === 'Vận dụng') acc[topic].VD++;
-    else if (q.difficulty_level === 'Vận dụng cao') acc[topic].VDC++;
-    return acc;
-  }, {} as Record<string, { NB: number; TH: number; VD: number; VDC: number }>);
-
+export default function ExamConfigSidebar({ config, onChange, questions, errors = {} }: ExamConfigSidebarProps) {
+  const { diffScore, matrix, diffLabel, totalNB, totalTH, totalVD, totalVDC } = calculateExamDifficulty(questions);
   const topics = Object.keys(matrix);
-  const totalNB = topics.reduce((sum, t) => sum + matrix[t].NB, 0);
-  const totalTH = topics.reduce((sum, t) => sum + matrix[t].TH, 0);
-  const totalVD = topics.reduce((sum, t) => sum + matrix[t].VD, 0);
-  const totalVDC = topics.reduce((sum, t) => sum + matrix[t].VDC, 0);
-
-  // Difficulty calculation heuristic: NB=1, TH=2, VD=3, VDC=4
-  const totalQuestions = questions.length || 1;
-  const avgDifficulty = ((totalNB * 1) + (totalTH * 2) + (totalVD * 3) + (totalVDC * 4)) / totalQuestions;
-  // Map 1-4 scale to 1-10 scale
-  const diffScore = ((avgDifficulty - 1) / 3) * 10;
-  const diffLabel = diffScore < 4 ? 'Dễ' : diffScore < 7 ? 'Trung bình' : 'Khó';
 
   return (
     <div className="lg:col-span-4 space-y-6">
@@ -53,29 +33,39 @@ export default function ExamConfigSidebar({ config, onChange, questions }: ExamC
           </div>
           <div className="p-5 space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-xs ml-1 mb-1">Tên đề thi</Label>
+              <Label className="text-xs ml-1 mb-1" htmlFor="exam-title">Tên đề thi</Label>
               <Input 
+                id="exam-title"
                 placeholder="Nhập tên đề thi..." 
                 value={config.title || ''}
                 onChange={(e) => onChange('title', e.target.value)}
+                error={!!errors.title}
               />
+              {errors.title && <p className="text-red-500 text-xs mt-1 font-medium ml-1">{errors.title}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs ml-1 mb-1">Mã đề</Label>
+              <Label className="text-xs ml-1 mb-1" htmlFor="exam-code">Mã đề</Label>
               <Input 
+                id="exam-code"
                 placeholder="Ví dụ: 101, MATH-01..." 
                 value={config.examCode || ''}
                 onChange={(e) => onChange('examCode', e.target.value)}
+                error={!!errors.examCode}
               />
+              {errors.examCode && <p className="text-red-500 text-xs mt-1 font-medium ml-1">{errors.examCode}</p>}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs ml-1 mb-1">Khối lớp</Label>
+                <Label className="text-xs ml-1 mb-1" htmlFor="exam-grade">Khối lớp</Label>
                 <div className="relative">
                   <select 
+                    id="exam-grade"
                     value={config.grade || ''} 
                     onChange={(e) => onChange('grade', e.target.value)}
-                    className="w-full appearance-none bg-none px-3 h-12 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
+                    className={cn(
+                      "w-full appearance-none bg-none px-3 h-12 bg-white border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer",
+                      errors.grade ? "border-red-500" : "border-slate-200"
+                    )}
                   >
                     <option value="" disabled>Chọn khối lớp</option>
                     <option value="5">Lớp 5</option>
@@ -88,19 +78,23 @@ export default function ExamConfigSidebar({ config, onChange, questions }: ExamC
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none w-5 h-5" />
                 </div>
+                {errors.grade && <p className="text-red-500 text-xs mt-1 font-medium ml-1">{errors.grade}</p>}
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs ml-1 mb-1">Thời gian (phút)</Label>
+                <Label className="text-xs ml-1 mb-1" htmlFor="exam-duration">Thời gian (phút)</Label>
                 <div className="relative">
                   <Input 
+                    id="exam-duration"
                     className="pr-10" 
                     type="number" 
                     placeholder="90" 
                     value={config.duration || ''}
                     onChange={(e) => onChange('duration', parseInt(e.target.value) || 0)}
+                    error={!!errors.duration}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 uppercase">Min</span>
                 </div>
+                {errors.duration && <p className="text-red-500 text-xs mt-1 font-medium ml-1">{errors.duration}</p>}
               </div>
             </div>
           </div>
