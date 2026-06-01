@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import ExamsPage from './page'
 
 // Mock ExamTable
-vi.mock('../../../components/exams/ExamTable', () => ({
+vi.mock('@/components/exams/ExamTable', () => ({
   default: () => <div data-testid="exam-table-mock">ExamTable</div>
 }))
 

@@ -3,11 +3,11 @@
 import React, { useState, useCallback, useRef } from 'react'
 import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2, Save } from 'lucide-react'
 import Link from 'next/link'
-import JsonInputSection from '../../../../components/questions/creator/JsonInputSection'
-import QuestionEditorSection from '../../../../components/questions/creator/QuestionEditorSection'
-import QuestionSettingsSidebar from '../../../../components/questions/creator/QuestionSettingsSidebar'
-import { Button } from '../../../../components/ui/Button'
-import { QuestionBlock, Question } from '../../../../types/question'
+import JsonInputSection from '@/components/questions/creator/JsonInputSection'
+import QuestionEditorSection from '@/components/questions/creator/QuestionEditorSection'
+import QuestionSettingsSidebar from '@/components/questions/creator/QuestionSettingsSidebar'
+import { Button } from '@/components/ui/Button'
+import { QuestionBlock, Question } from '@/types/question'
 
 export default function CreateQuestionPage() {
   const [questionBlocks, setQuestionBlocks] = useState<QuestionBlock[]>([])

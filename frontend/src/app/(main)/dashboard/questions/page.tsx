@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import QuestionCard from '../../../components/questions/QuestionCard';
-import ContentQuestion from '../../../components/questions/ContentQuestion';
-import QuestionSkeleton from '../../../components/questions/QuestionSkeleton';
-import FloatingActionBar from '../../../components/questions/FloatingActionBar';
-import { Pagination } from '../../../components/ui/Pagination';
+import QuestionCard from '@/components/questions/QuestionCard';
+import ContentQuestion from '@/components/questions/ContentQuestion';
+import QuestionSkeleton from '@/components/questions/QuestionSkeleton';
+import FloatingActionBar from '@/components/questions/FloatingActionBar';
+import { Pagination } from '@/components/ui/Pagination';
 import { ChevronRight, Search } from 'lucide-react';
 
 export default function QuestionsPage() {

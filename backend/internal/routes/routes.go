@@ -11,10 +11,15 @@ func SetupRouter() *gin.Engine {
 
 	// Cấu hình CORS và các middleware khác có thể nằm ở đây
 
+	// Phục vụ các file tĩnh (ảnh đã upload)
+	r.Static("/uploads", "./uploads")
+
 	// API Version 1
 	v1 := r.Group("/api/v1")
 	{
-		v1.POST("/questions", handlers.CreateQuestion)
+		v1.POST("/uploads/temp", handlers.UploadTempImage)
+
+		v1.POST("/questions/bulk", handlers.BulkCreateQuestions)
 		v1.GET("/questions", handlers.GetQuestions)
 		v1.GET("/questions/:id", handlers.GetQuestionByID)
 		v1.PUT("/questions/:id", handlers.UpdateQuestion)

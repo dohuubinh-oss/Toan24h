@@ -4,8 +4,8 @@ import React, { Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ChevronRight, FileText, CheckCircle, TrendingUp, Search, Plus } from 'lucide-react'
-import ExamTable, { Exam } from '../../../components/exams/ExamTable'
-import { Pagination } from '../../../components/ui/Pagination'
+import ExamTable, { Exam } from '@/components/exams/ExamTable'
+import { Pagination } from '@/components/ui/Pagination'
 
 export default function ExamsPage() {
   return (

@@ -2,16 +2,16 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import UsersPage from './page'
 
-vi.mock('../../../components/users/UserFilters', () => ({
+vi.mock('@/components/users/UserFilters', () => ({
   default: () => <div data-testid="user-filters">Filters</div>
 }))
-vi.mock('../../../components/users/UserHeader', () => ({
+vi.mock('@/components/users/UserHeader', () => ({
   default: () => <div data-testid="user-header">Header</div>
 }))
-vi.mock('../../../components/users/UserTable', () => ({
+vi.mock('@/components/users/UserTable', () => ({
   default: () => <div data-testid="user-table">Table</div>
 }))
-vi.mock('../../../components/users/UserPagination', () => ({
+vi.mock('@/components/users/UserPagination', () => ({
   default: () => <div data-testid="user-pagination">Pagination</div>
 }))
 

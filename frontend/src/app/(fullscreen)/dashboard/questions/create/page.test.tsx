@@ -3,13 +3,13 @@ import { describe, it, expect, vi } from 'vitest'
 import CreateQuestionPage from './page'
 
 // Mocking children components
-vi.mock('../../../../components/questions/creator/JsonInputSection', () => ({
+vi.mock('@/components/questions/creator/JsonInputSection', () => ({
   default: () => <div data-testid="json-input">JsonInputSection</div>
 }))
-vi.mock('../../../../components/questions/creator/QuestionEditorSection', () => ({
+vi.mock('@/components/questions/creator/QuestionEditorSection', () => ({
   default: () => <div data-testid="question-editor">QuestionEditorSection</div>
 }))
-vi.mock('../../../../components/questions/creator/QuestionSettingsSidebar', () => ({
+vi.mock('@/components/questions/creator/QuestionSettingsSidebar', () => ({
   default: () => <div data-testid="question-settings">QuestionSettingsSidebar</div>
 }))
 

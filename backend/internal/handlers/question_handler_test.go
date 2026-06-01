@@ -71,24 +71,30 @@ func TestQuestionAPI_CRUD(t *testing.T) {
 	r, cleanup := setupTestApp(t)
 	defer cleanup()
 
-	// 1. POST /api/v1/questions (Tạo mới)
-	newQ := map[string]interface{}{
-		"typeQuestion":    "single",
-		"content":         "Solve x + 2 = 5",
-		"type":            "Tự luận",
-		"grade":           6,
-		"topic":           "Algebra",
-		"difficultyLevel": "Thông hiểu",
-		"difficultyPoint": 2.0,
-		"point":           1.0,
-		"tags":            `[]`,
-		"options":         `[]`,
-		"correctAnswer":   "x = 3",
-		"solutionGuide":   "x = 5 - 2",
+	// 1. POST /api/v1/questions/bulk (Tạo mới)
+	bulkReq := []map[string]interface{}{
+		{
+			"shared_content": "Shared passage context",
+			"questions": []map[string]interface{}{
+				{
+					"content": "Solve x + 2 = 5",
+					"type": "Tự luận",
+					"grade": 6,
+					"topic": "Algebra",
+					"difficulty_level": "Thông hiểu",
+					"difficulty_point": 2.0,
+					"point": 1.0,
+					"tags": []string{"math"},
+					"options": []string{},
+					"correct_answer": "x = 3",
+					"solution_guide": "x = 5 - 2",
+				},
+			},
+		},
 	}
-	body, _ := json.Marshal(newQ)
+	body, _ := json.Marshal(bulkReq)
 	
-	req, _ := http.NewRequest("POST", "/api/v1/questions", bytes.NewBuffer(body))
+	req, _ := http.NewRequest("POST", "/api/v1/questions/bulk", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -97,11 +103,12 @@ func TestQuestionAPI_CRUD(t *testing.T) {
 		t.Fatalf("Expected status 201 Created, got %d. Body: %s", w.Code, w.Body.String())
 	}
 
-	var createRes map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &createRes)
-	
-	data := createRes["data"].(map[string]interface{})
-	qID := data["id"].(string)
+	// Lấy 1 câu hỏi con vừa tạo để test GET, PUT, DELETE
+	var createdQ models.Question
+	if err := config.DB.Where("type_question = ?", "single").First(&createdQ).Error; err != nil {
+		t.Fatalf("Failed to find created question in DB: %v", err)
+	}
+	qID := createdQ.ID.String()
 
 	if qID == "" {
 		t.Fatalf("Expected valid ID, got empty string")

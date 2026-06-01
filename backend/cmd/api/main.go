@@ -6,10 +6,14 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/routes"
+	"github.com/modeptrai/exam-model-backend/internal/services"
 )
 
 func main() {
 	log.Println("Starting Toan24h API Server...")
+
+	// 0. Khởi chạy Cronjobs (dọn rác hệ thống)
+	services.StartCronJobs()
 
 	// 1. Load config
 	if err := config.LoadConfig(); err != nil {

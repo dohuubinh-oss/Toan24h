@@ -2,9 +2,9 @@
 
 import React, { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import UserHeader from '../../../components/users/UserHeader'
-import UserTable, { User } from '../../../components/users/UserTable'
-import { Pagination } from '../../../components/ui/Pagination'
+import UserHeader from '@/components/users/UserHeader'
+import UserTable, { User } from '@/components/users/UserTable'
+import { Pagination } from '@/components/ui/Pagination'
 
 const INITIAL_MOCK_USERS: User[] = [
   {

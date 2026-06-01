@@ -1,14 +1,14 @@
 'use client'
 
 import React, { useState, Suspense, useCallback } from 'react'
-import ExamHeader from '../../../../components/exams/ExamHeader'
-import ExamQuestionList from '../../../../components/exams/ExamQuestionList'
-import ExamConfigSidebar from '../../../../components/exams/ExamConfigSidebar'
+import ExamHeader from '@/components/exams/ExamHeader'
+import ExamQuestionList from '@/components/exams/ExamQuestionList'
+import ExamConfigSidebar from '@/components/exams/ExamConfigSidebar'
 import { Grid, UploadCloud } from 'lucide-react'
-import { Button } from '../../../../components/ui/Button'
-import { MOCK_EXAM } from '../../../../lib/mock-data'
-import { Exam } from '../../../../types/exam'
-import { validateExamConfig, calculateExamDifficulty } from '../../../../lib/exam-utils'
+import { Button } from '@/components/ui/Button'
+import { MOCK_EXAM } from '@/lib/mock-data'
+import { Exam } from '@/types/exam'
+import { validateExamConfig, calculateExamDifficulty } from '@/lib/exam-utils'
 
 export default function CreateExamPage() {
   return (

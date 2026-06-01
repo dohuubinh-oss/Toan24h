@@ -3,15 +3,15 @@ import { describe, it, expect, vi } from 'vitest'
 import CreateExamPage from './page'
 
 // Mock the child components
-vi.mock('../../../../components/exams/ExamHeader', () => ({
+vi.mock('@/components/exams/ExamHeader', () => ({
   default: () => <div data-testid="exam-header-mock">ExamHeader</div>
 }))
 
-vi.mock('../../../../components/exams/ExamQuestionList', () => ({
+vi.mock('@/components/exams/ExamQuestionList', () => ({
   default: () => <div data-testid="exam-question-list-mock">ExamQuestionList</div>
 }))
 
-vi.mock('../../../../components/exams/ExamConfigSidebar', () => ({
+vi.mock('@/components/exams/ExamConfigSidebar', () => ({
   default: () => <div data-testid="exam-config-sidebar-mock">ExamConfigSidebar</div>
 }))
 
