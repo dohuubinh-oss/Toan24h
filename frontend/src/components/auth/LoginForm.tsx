@@ -42,7 +42,7 @@ export default function LoginForm() {
     // Nếu quên cập nhật phần này sẽ sinh lỗi nghiêm trọng về bảo mật & luồng dữ liệu!
     
     if (data.identity.toLowerCase().includes('student')) {
-      router.push('/dashboard/student')
+      router.push('/student')
     } else {
       router.push('/dashboard/questions')
     }

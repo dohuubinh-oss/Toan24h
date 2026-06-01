@@ -11,7 +11,7 @@ import { Label } from '../../components/ui/Label'
 import { RadioOption } from '../../components/ui/RadioOption'
 import QuestionCard from '../../components/questions/QuestionCard'
 import ContentQuestion from '../../components/questions/ContentQuestion'
-import SidebarFilter from '../../components/shared/SidebarFilter'
+import { QuestionFilter } from '../../components/filters/QuestionFilter'
 
 export default function UILabPage() {
   return (
@@ -275,7 +275,7 @@ export default function UILabPage() {
           <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">9. Sidebar Filter</h2>
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 w-80">
             <Suspense fallback={<div className="p-4 text-slate-500">Đang tải...</div>}>
-              <SidebarFilter />
+              <QuestionFilter />
             </Suspense>
           </div>
         </section>

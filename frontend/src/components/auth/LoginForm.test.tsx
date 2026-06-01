@@ -59,7 +59,7 @@ describe('LoginForm Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /Đăng nhập/i }))
     
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith('/dashboard/student')
+      expect(pushMock).toHaveBeenCalledWith('/student')
     })
   })
 
