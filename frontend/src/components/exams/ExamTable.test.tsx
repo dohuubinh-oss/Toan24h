@@ -10,7 +10,7 @@ describe('ExamTable Component', () => {
       grade: 10,
       questionCount: 50,
       duration: 90,
-      status: 'Published' as const,
+      examType: 'Giữa kỳ' as const,
       updatedAt: '2 giờ trước'
     }
   ]

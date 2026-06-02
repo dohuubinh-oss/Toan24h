@@ -1,61 +1,9 @@
 import React from 'react';
-import { ChevronRight } from 'lucide-react';
-import { PracticeCard, PracticeStatus } from '@/components/practices/PracticeCard';
+import Link from 'next/link';
+import { ChevronRight, PenTool } from 'lucide-react';
+import { PracticeCard } from '@/components/practices/PracticeCard';
 import { Pagination } from '@/components/ui/Pagination';
-
-// Mock data: Toán lớp 8
-const MOCK_PRACTICES = [
-  {
-    id: 'P8-01',
-    title: 'Đề luyện tập: Nhân đơn thức với đa thức',
-    lectureName: 'Nhân đơn thức với đa thức',
-    duration: 15,
-    questionCount: 10,
-    status: 'completed' as PracticeStatus,
-    score: 8,
-  },
-  {
-    id: 'P8-02',
-    title: 'Đề kiểm tra 15 phút: Nhân đa thức',
-    lectureName: 'Nhân đa thức với đa thức',
-    duration: 15,
-    questionCount: 10,
-    status: 'completed' as PracticeStatus,
-    score: 3,
-  },
-  {
-    id: 'P8-03',
-    title: 'Bài tập vận dụng: Hằng đẳng thức (Phần 1)',
-    lectureName: 'Những hằng đẳng thức đáng nhớ (Phần 1)',
-    duration: 30,
-    questionCount: 20,
-    status: 'not_started' as PracticeStatus,
-  },
-  {
-    id: 'P8-04',
-    title: 'Bài tập nâng cao: Hằng đẳng thức',
-    lectureName: 'Những hằng đẳng thức đáng nhớ (Phần 2)',
-    duration: 45,
-    questionCount: 30,
-    status: 'not_started' as PracticeStatus,
-  },
-  {
-    id: 'P8-05',
-    title: 'Kiểm tra 1 tiết: Tứ giác',
-    lectureName: 'Tứ giác',
-    duration: 45,
-    questionCount: 30,
-    status: 'not_started' as PracticeStatus,
-  },
-  {
-    id: 'P8-06',
-    title: 'Luyện tập chung: Hình thang cân',
-    lectureName: 'Hình thang - Hình thang cân',
-    duration: 30,
-    questionCount: 20,
-    status: 'not_started' as PracticeStatus,
-  },
-];
+import { fetchPracticesByGrade } from '@/data/mockPracticeData';
 
 export default async function GradePracticesPage({
   params,
@@ -68,53 +16,84 @@ export default async function GradePracticesPage({
   const resolvedSearchParams = await searchParams;
   
   const grade = resolvedParams.grade;
-  const lectureId = resolvedSearchParams.lecture;
+  const lectureId = resolvedSearchParams.lecture as string | undefined;
+  
+  // Xử lý page params cho Pagination
+  const pageParam = resolvedSearchParams.page;
+  const currentPage = typeof pageParam === 'string' ? parseInt(pageParam, 10) : 1;
+  const limit = 6;
+
+  // Lấy dữ liệu
+  const { practices, totalItems, totalPages } = await fetchPracticesByGrade(grade, currentPage, limit, lectureId);
+
+  // Tính toán index hiển thị
+  const startIndex = (currentPage - 1) * limit + 1;
+  const endIndex = Math.min(currentPage * limit, totalItems);
 
   return (
     <div className="space-y-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-            <span className="hover:text-primary cursor-pointer transition-colors">Dashboard</span>
+            <Link href="/student" className="hover:text-primary transition-colors min-h-[44px] flex items-center">
+              Dashboard
+            </Link>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-primary font-bold">Luyện tập</span>
+            <span className="text-primary font-bold min-h-[44px] flex items-center">Luyện tập</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Danh sách Đề luyện tập Khối {grade}</h1>
         </div>
       </div>
 
       {lectureId && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl flex items-center justify-between">
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl flex items-center justify-between shadow-sm">
           <span className="font-medium text-sm">
             Đang hiển thị đề luyện tập thuộc Bài giảng ID: <strong className="ml-1">{lectureId}</strong>
           </span>
-          <a href={`/practices/lop/${grade}`} className="text-sm font-semibold hover:underline text-blue-600">
+          <Link href={`/practices/lop/${grade}`} className="text-sm font-semibold hover:underline text-blue-600 min-h-[44px] flex items-center">
             Bỏ lọc
-          </a>
+          </Link>
         </div>
       )}
 
       {/* Grid danh sách Luyện tập */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {MOCK_PRACTICES.map((practice) => (
+        {practices.map((practice) => (
           <PracticeCard 
             key={practice.id}
             {...practice}
           />
         ))}
+        {practices.length === 0 && (
+          <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-500 bg-white rounded-2xl border border-slate-200/60 shadow-sm">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+              <PenTool className="w-8 h-8 text-slate-300" />
+            </div>
+            <p className="text-lg font-bold text-slate-700">Chưa có đề luyện tập nào</p>
+            <p className="text-sm mt-1 mb-6 text-center max-w-md">Hiện tại chưa có đề luyện tập nào được đăng tải cho khối {grade}{lectureId ? ' với bộ lọc này' : ''}. Vui lòng quay lại sau.</p>
+            <Link 
+              href="/student" 
+              className="h-12 px-6 rounded-lg bg-primary text-white font-semibold flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm"
+            >
+              Quay về Dashboard
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Phân trang */}
-      <div className="mt-8">
-        <Pagination 
-          currentPage={1}
-          totalPages={8}
-          totalItems={48}
-          startIndex={1}
-          endIndex={6}
-          itemName="đề luyện tập"
-        />
-      </div>
+      {totalPages > 1 && practices.length > 0 && (
+        <div className="mt-8">
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            itemName="đề luyện tập"
+          />
+        </div>
+      )}
     </div>
   );
 }

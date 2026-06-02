@@ -1,8 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { BookOpen, PenTool, CheckCircle2, PlayCircle, Clock } from 'lucide-react';
-
-export type LectureStatus = 'not_started' | 'in_progress' | 'completed';
+import { BookOpen, PenTool, CheckCircle2, PlayCircle } from 'lucide-react';
+import { LectureStatus } from '@/types/lecture';
 
 export interface LectureCardProps {
   id: string;
@@ -25,7 +24,7 @@ export function LectureCard({
   const isInProgress = status === 'in_progress';
   
   return (
-    <Link href={`/lectures/${id}`} className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full hover:-translate-y-1 block cursor-pointer">
+    <Link href={`/lectures/${id}`} className="group bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-300 flex flex-col h-full hover:-translate-y-1 cursor-pointer">
       {/* Thumbnail Header */}
       <div className="relative h-40 bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center p-6 overflow-hidden">
         {thumbnailUrl ? (
@@ -39,13 +38,13 @@ export function LectureCard({
         {/* Status Badge */}
         <div className="absolute top-4 right-4 z-10">
           {isCompleted && (
-            <div className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm">
+            <div className="bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1 shadow-sm backdrop-blur-sm border border-emerald-500/20">
               <CheckCircle2 className="w-3.5 h-3.5" />
               Hoàn thành
             </div>
           )}
           {isInProgress && (
-            <div className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm">
+            <div className="bg-amber-500/10 text-amber-600 px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1 shadow-sm backdrop-blur-sm border border-amber-500/20">
               <PlayCircle className="w-3.5 h-3.5" />
               Đang học
             </div>
@@ -71,7 +70,7 @@ export function LectureCard({
             <span>{practiceCount} Đề luyện tập</span>
           </div>
           
-          <button className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 ${
+          <button className={`h-12 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
             isCompleted 
               ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' 
               : 'bg-primary text-white hover:bg-primary/90 shadow-sm'

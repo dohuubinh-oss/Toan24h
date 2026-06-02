@@ -4,7 +4,7 @@ import UserTable from './UserTable'
 
 describe('UserTable', () => {
   it('renders table columns', () => {
-    render(<UserTable />)
+    render(<UserTable users={[]} onSoftDelete={() => {}} />)
     expect(screen.getByText('Họ tên & Avatar')).toBeInTheDocument()
     expect(screen.getByText('Vai trò')).toBeInTheDocument()
     expect(screen.getByText('Khối lớp')).toBeInTheDocument()

@@ -1,70 +1,35 @@
 import React from 'react';
-import { ChevronRight } from 'lucide-react';
-import { LectureCard, LectureStatus } from '@/components/lectures/LectureCard';
+import Link from 'next/link';
+import { ChevronRight, BookOpen } from 'lucide-react';
+import { LectureCard } from '@/components/lectures/LectureCard';
 import { Pagination } from '@/components/ui/Pagination';
-
-// Mock data: Toán lớp 8
-const MOCK_LECTURES = [
-  {
-    id: 'L8-01',
-    title: 'Nhân đơn thức với đa thức',
-    chapter: 'Chương 1: Phép nhân và phép chia các đa thức',
-    status: 'completed' as LectureStatus,
-    practiceCount: 3,
-  },
-  {
-    id: 'L8-02',
-    title: 'Nhân đa thức với đa thức',
-    chapter: 'Chương 1: Phép nhân và phép chia các đa thức',
-    status: 'in_progress' as LectureStatus,
-    practiceCount: 4,
-  },
-  {
-    id: 'L8-03',
-    title: 'Những hằng đẳng thức đáng nhớ (Phần 1)',
-    chapter: 'Chương 1: Phép nhân và phép chia các đa thức',
-    status: 'not_started' as LectureStatus,
-    practiceCount: 5,
-  },
-  {
-    id: 'L8-04',
-    title: 'Những hằng đẳng thức đáng nhớ (Phần 2)',
-    chapter: 'Chương 1: Phép nhân và phép chia các đa thức',
-    status: 'not_started' as LectureStatus,
-    practiceCount: 2,
-  },
-  {
-    id: 'L8-05',
-    title: 'Tứ giác',
-    chapter: 'Chương 2: Tứ giác',
-    status: 'not_started' as LectureStatus,
-    practiceCount: 3,
-  },
-  {
-    id: 'L8-06',
-    title: 'Hình thang - Hình thang cân',
-    chapter: 'Chương 2: Tứ giác',
-    status: 'not_started' as LectureStatus,
-    practiceCount: 4,
-  },
-];
+import { fetchLecturesByGrade } from '@/data/mockLectureData';
 
 export default async function GradeLecturesPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ grade: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  
   const grade = resolvedParams.grade; // VD: '5', '8', '9'
+  const page = parseInt(resolvedSearchParams.page as string || '1', 10);
+
+  const { data: lectures, totalPages, totalItems, startIndex, endIndex, currentPage } = await fetchLecturesByGrade(grade, page, 6);
 
   return (
     <div className="space-y-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-            <span className="hover:text-primary cursor-pointer transition-colors">Dashboard</span>
+            <Link href="/student" className="hover:text-primary transition-colors min-h-[44px] flex items-center">
+              Dashboard
+            </Link>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-primary font-bold">Bài giảng</span>
+            <span className="text-primary font-bold min-h-[44px] flex items-center">Bài giảng</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Danh sách Bài giảng Khối {grade}</h1>
         </div>
@@ -72,25 +37,42 @@ export default async function GradeLecturesPage({
 
       {/* Grid danh sách Bài giảng */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {MOCK_LECTURES.map((lecture) => (
+        {lectures.map((lecture) => (
           <LectureCard 
             key={lecture.id}
             {...lecture}
           />
         ))}
+        {lectures.length === 0 && (
+          <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-500 bg-white rounded-2xl border border-slate-200/60 shadow-sm">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+              <BookOpen className="w-8 h-8 text-slate-300" />
+            </div>
+            <p className="text-lg font-bold text-slate-700">Chưa có bài giảng nào</p>
+            <p className="text-sm mt-1 mb-6 text-center max-w-md">Hiện tại chưa có bài giảng nào được đăng tải cho khối {grade}. Vui lòng quay lại sau hoặc chọn khối lớp khác.</p>
+            <Link 
+              href="/student" 
+              className="h-12 px-6 rounded-lg bg-primary text-white font-semibold flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm"
+            >
+              Quay về Dashboard
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Phân trang */}
-      <div className="mt-8">
-        <Pagination 
-          currentPage={1}
-          totalPages={10}
-          totalItems={60}
-          startIndex={1}
-          endIndex={6}
-          itemName="bài giảng"
-        />
-      </div>
+      {totalPages > 1 && (
+        <div className="mt-8">
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            itemName="bài giảng"
+          />
+        </div>
+      )}
     </div>
   );
 }

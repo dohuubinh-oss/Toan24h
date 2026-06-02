@@ -27,7 +27,7 @@ export function PracticeCard({
   const isFailed = isCompleted && !isPassed;
   
   return (
-    <div className={`group rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full hover:-translate-y-1 ${
+    <div className={`group rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-300 flex flex-col h-full hover:-translate-y-1 ${
       isPassed ? 'bg-emerald-50/30' : isFailed ? 'bg-rose-50/30' : 'bg-slate-50'
     }`}>
       {/* Header */}
@@ -89,7 +89,7 @@ export function PracticeCard({
             </div>
           )}
           
-          <button className={`px-5 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 ${
+          <button className={`h-12 px-5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
             isCompleted 
               ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' 
               : 'bg-primary text-white hover:bg-primary/90 shadow-sm'
