@@ -1,18 +1,28 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import LectureBasicSettings from './LectureBasicSettings'
+import { LectureCreatorProvider } from './LectureCreatorContext'
 
 describe('LectureBasicSettings', () => {
   it('renders settings title', () => {
-    render(<LectureBasicSettings />)
+    render(
+      <LectureCreatorProvider>
+        <LectureBasicSettings />
+      </LectureCreatorProvider>
+    )
     expect(screen.getByText('Cấu hình cơ bản')).toBeDefined()
   })
 
   it('renders fields', () => {
-    render(<LectureBasicSettings />)
+    render(
+      <LectureCreatorProvider>
+        <LectureBasicSettings />
+      </LectureCreatorProvider>
+    )
     expect(screen.getByPlaceholderText('Nhập tên bài giảng...')).toBeDefined()
     expect(screen.getByText('Khối lớp')).toBeDefined()
-    expect(screen.getByText('Lớp 12')).toBeDefined()
-    expect(screen.getByText('Danh mục')).toBeDefined()
+    // By default grade is not selected, so category is not rendered!
+    expect(screen.queryByText('Danh mục')).toBeNull()
   })
 })
+

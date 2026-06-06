@@ -1,9 +1,13 @@
+'use client'
 import React from 'react'
 import { ArrowLeft, FileText, Save } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
+import { useLectureCreator } from './LectureCreatorContext'
 
 export default function LectureCreatorHeader() {
+  const { validateAndSubmit } = useLectureCreator()
+
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 w-full">
       <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4 flex items-center justify-between">
@@ -22,7 +26,10 @@ export default function LectureCreatorHeader() {
             Tải file PDF đính kèm
           </Button>
           
-          <Button className="px-6 flex items-center gap-2 shadow-sm shadow-primary/20">
+          <Button 
+            className="px-6 flex items-center gap-2 shadow-sm shadow-primary/20"
+            onClick={validateAndSubmit}
+          >
             <Save className="w-4 h-4" />
             Lưu & Xuất bản
           </Button>

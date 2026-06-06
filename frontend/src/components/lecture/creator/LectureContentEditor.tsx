@@ -1,22 +1,19 @@
 'use client'
-import React, { useState } from 'react'
+import React from 'react'
 import { BookOpen } from 'lucide-react'
 import SharedEditorCard from '../../questions/creator/editor/SharedEditorCard'
-import ExampleExerciseCard, { ExampleExercise } from './ExampleExerciseCard'
-
-interface ExampleItem {
-  id: string;
-  exercise: ExampleExercise | null;
-  image: string | null;
-}
+import ExampleExerciseCard from './ExampleExerciseCard'
+import { useLectureCreator } from './LectureCreatorContext'
 
 export default function LectureContentEditor() {
-  const [basicConcept, setBasicConcept] = useState('<p>Nhập khái niệm cơ bản tại đây...</p>')
-  const [basicConceptImage, setBasicConceptImage] = useState<string | null>(null)
-
-  const [examples, setExamples] = useState<ExampleItem[]>([
-    { id: '1', exercise: null, image: null }
-  ])
+  const { 
+    basicConcept, 
+    setBasicConcept, 
+    basicConceptImage, 
+    setBasicConceptImage,
+    examples,
+    setExamples
+  } = useLectureCreator()
 
   const handleAddExercise = () => {
     setExamples([
@@ -25,7 +22,7 @@ export default function LectureContentEditor() {
     ])
   }
 
-  const updateExample = (id: string, updates: Partial<ExampleItem>) => {
+  const updateExample = (id: string, updates: Partial<typeof examples[0]>) => {
     setExamples(examples.map(ex => ex.id === id ? { ...ex, ...updates } : ex))
   }
 
