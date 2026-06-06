@@ -4,8 +4,8 @@ import { Lecture, PaginatedLectures } from '../types/lecture';
 const generateMockLectures = (): Record<string, Lecture[]> => {
   const data: Record<string, Lecture[]> = {};
   
-  // Lớp 5, 8, 9, etc.
-  const grades = ['5', '8', '9'];
+  // Lớp 5, 7, 8, 9, etc.
+  const grades = ['5', '7', '8', '9'];
   
   grades.forEach(grade => {
     const lectures: Lecture[] = [];
@@ -19,12 +19,18 @@ const generateMockLectures = (): Record<string, Lecture[]> => {
       if (i <= 3) status = 'completed';
       else if (i === 4) status = 'in_progress';
 
+      let thumbnailUrl: string | undefined;
+      if (grade === '7' && i === 25) {
+        thumbnailUrl = '/Kiến thức toán lớp 7 bài 25.jpg';
+      }
+
       lectures.push({
         id: `L${grade}-${i.toString().padStart(2, '0')}`,
         title: `Bài giảng số ${i} - Toán lớp ${grade}`,
         chapter: `Chương ${chapterNum}: Nội dung học chương ${chapterNum}`,
         status,
         practiceCount: Math.floor(Math.random() * 5) + 1,
+        thumbnailUrl,
       });
     }
     data[grade] = lectures;

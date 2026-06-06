@@ -4,18 +4,6 @@ import { Download, Bookmark, BookOpen, ArrowRight } from 'lucide-react'
 export default function LectureSidebar() {
   return (
     <div className="space-y-6">
-      {/* Action Cards */}
-      <div className="card-premium space-y-4">
-        <button className="w-full flex items-center justify-center gap-2 h-12 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/25">
-          <Download size={20} />
-          Tải tài liệu PDF
-        </button>
-        <button className="w-full flex items-center justify-center gap-2 h-12 bg-slate-100 text-ink font-bold rounded-lg hover:bg-slate-200 transition-all border border-slate-200">
-          <Bookmark size={20} />
-          Lưu bài viết
-        </button>
-      </div>
-
       {/* Related Lessons */}
       <div className="card-premium">
         <h3 className="font-bold text-lg mb-4 flex items-center gap-2">

@@ -5,17 +5,19 @@ import LectureContentEditor from '@/components/lecture/creator/LectureContentEdi
 
 export default function CreateLecturePage() {
   return (
-    <div className="bg-background-light text-slate-900 min-h-screen pb-12">
+    <div className="bg-slate-50 min-h-screen font-display pb-20 lg:pb-0">
       <LectureCreatorHeader />
       
-      <main className="max-w-[1440px] mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8 space-y-6">
-          <LectureContentEditor />
-        </div>
-        
-        <div className="lg:col-span-4 space-y-6">
-          <div className="sticky top-24 space-y-6">
-            <LectureBasicSettings />
+      <main className="max-w-7xl mx-auto p-4 lg:p-6 pb-28 lg:pb-28">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-8 space-y-6">
+            <LectureContentEditor />
+          </div>
+          
+          <div className="lg:col-span-4">
+            <div className="sticky top-24 space-y-6">
+              <LectureBasicSettings />
+            </div>
           </div>
         </div>
       </main>

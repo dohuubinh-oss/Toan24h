@@ -5,8 +5,8 @@ import LectureContentEditor from './LectureContentEditor'
 describe('LectureContentEditor', () => {
   it('renders editor sections', () => {
     render(<LectureContentEditor />)
-    expect(screen.getByText('Khái niệm cơ bản')).toBeDefined()
-    expect(screen.getByText('Phân tích bài tập mẫu')).toBeDefined()
+    expect(screen.getByText('1. Khái niệm cơ bản')).toBeDefined()
+    expect(screen.getByText('2.1. Phân tích bài tập mẫu')).toBeDefined()
   })
 
   it('renders tip tap toolbar buttons', () => {
