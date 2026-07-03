@@ -87,16 +87,18 @@ export const fetchPracticesByGrade = async (
   grade: string,
   page: number = 1,
   limit: number = 6,
-  lectureId?: string
+  lectureId?: string,
+  practiceIds?: string[]
 ): Promise<PaginatedPractices> => {
   // Giả lập network delay
   await new Promise((resolve) => setTimeout(resolve, 800));
 
   let data = practicesDB[grade] || [];
 
-  // Lọc theo lectureId nếu có (hiện tại mock bằng cách filter title/lectureName chứa ID để demo)
-  // Thực tế sẽ so sánh trường lectureId
-  if (lectureId) {
+  if (practiceIds && practiceIds.length > 0) {
+    data = data.filter(item => practiceIds.includes(item.id));
+  } else if (lectureId) {
+    // Lọc theo lectureId nếu có (hiện tại mock bằng cách filter title/lectureName chứa ID để demo)
     data = data.filter(item => item.id.includes(lectureId) || item.lectureName.includes(lectureId));
   }
 

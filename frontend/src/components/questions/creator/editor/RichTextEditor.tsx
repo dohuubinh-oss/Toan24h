@@ -2,7 +2,10 @@ import React, { useEffect, useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Bold, Italic, Strikethrough, List, ListOrdered, Sigma } from 'lucide-react'
+import { Bold, Italic, Strikethrough, List, ListOrdered, Sigma, ImagePlus, Image as ImageIcon, Video as YoutubeIcon } from 'lucide-react'
+import TiptapImage from '@tiptap/extension-image'
+import Youtube from '@tiptap/extension-youtube'
+import { uploadTempImage } from '@/lib/api'
 import { MathExtension } from './MathExtension'
 
 interface RichTextEditorProps {
@@ -64,6 +67,46 @@ const MenuBar = ({ editor }: { editor: any }) => {
       >
         <Sigma className="w-4 h-4" />
       </button>
+      <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
+      <button
+        onClick={() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.onchange = async (e: any) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              try {
+                const url = await uploadTempImage(file);
+                editor.chain().focus().setImage({ src: url }).run();
+              } catch (error) {
+                console.error("Error uploading image", error);
+              }
+            }
+          };
+          input.click();
+        }}
+        className="p-1.5 rounded transition-colors text-slate-600 hover:bg-white"
+        title="Chèn ảnh"
+      >
+        <ImagePlus className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => {
+          const url = prompt('Nhập URL YouTube (VD: https://www.youtube.com/watch?v=...)');
+          if (url) {
+            editor.commands.setYoutubeVideo({
+              src: url,
+              width: 640,
+              height: 480,
+            })
+          }
+        }}
+        className="p-1.5 rounded transition-colors text-red-600 hover:bg-white"
+        title="Chèn YouTube"
+      >
+        <YoutubeIcon className="w-4 h-4" />
+      </button>
     </div>
   )
 }
@@ -119,6 +162,20 @@ export default function RichTextEditor({
     extensions: [
       StarterKit,
       MathExtension,
+      TiptapImage.configure({
+        inline: true,
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'rounded-lg max-w-full my-2 object-contain mx-auto',
+        },
+      }),
+      Youtube.configure({
+        controls: false,
+        nocookie: true,
+        HTMLAttributes: {
+          class: 'w-full aspect-video rounded-xl my-4 shadow-sm border border-slate-200',
+        },
+      }),
       Placeholder.configure({
         placeholder: placeholder,
         emptyEditorClass: 'is-editor-empty before:content-[attr(data-placeholder)] before:text-slate-400 before:float-left before:pointer-events-none before:h-0',

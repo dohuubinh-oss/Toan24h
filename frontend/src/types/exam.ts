@@ -6,5 +6,6 @@ export interface Exam {
   examCode: string;
   grade: string;
   duration: number;
+  type?: 'exam' | 'practice';
   questions: Question[];
 }

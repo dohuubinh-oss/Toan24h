@@ -7,8 +7,8 @@ import ContentQuestion from '@/components/questions/ContentQuestion';
 import QuestionSkeleton from '@/components/questions/QuestionSkeleton';
 import FloatingActionBar from '@/components/questions/FloatingActionBar';
 import { Pagination } from '@/components/ui/Pagination';
-import { ChevronRight, Search } from 'lucide-react';
-
+import { ChevronRight, Search, Plus } from 'lucide-react';
+import Link from 'next/link';
 export default function QuestionsPage() {
   return (
     <Suspense fallback={<div className="p-8">Đang tải dữ liệu...</div>}>
@@ -75,6 +75,14 @@ function QuestionsPageContent() {
               </div>
               <h1 className="text-2xl font-bold text-slate-900">Danh sách Câu hỏi <span className="text-slate-500 font-normal text-lg">( {totalVisible} câu hỏi )</span></h1>
             </div>
+            
+            <Link 
+              href="/dashboard/questions/create" 
+              className="px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Plus size={18} />
+              Thêm câu hỏi
+            </Link>
           </div>
 
           {/* Question List */}

@@ -10,6 +10,7 @@ export interface LectureCardProps {
   status: LectureStatus;
   practiceCount: number;
   thumbnailUrl?: string;
+  grade?: string; // Tùy chọn để tương thích với các view khác
 }
 
 export function LectureCard({
@@ -19,18 +20,22 @@ export function LectureCard({
   status,
   practiceCount,
   thumbnailUrl,
+  grade,
 }: LectureCardProps) {
   const isCompleted = status === 'completed';
   const isInProgress = status === 'in_progress';
   
+  // Xây dựng URL động, nếu có grade thì chèn grade vào URL
+  const hrefUrl = grade ? `/lectures/lop/${grade}/${id}` : `/lectures/${id}`;
+  
   return (
-    <Link href={`/lectures/${id}`} className="group bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-300 flex flex-col h-full hover:-translate-y-1 cursor-pointer">
+    <Link href={hrefUrl} className="group bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-300 flex flex-col h-full hover:-translate-y-1 cursor-pointer">
       {/* Thumbnail Header */}
-      <div className="relative h-40 bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center p-6 overflow-hidden">
+      <div className="relative h-44 overflow-hidden">
         {thumbnailUrl ? (
           <img src={thumbnailUrl} alt={title} className="w-full h-full object-cover" />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center opacity-20 transition-transform duration-500 group-hover:scale-110">
+          <div className="w-full h-full flex items-center justify-center opacity-20 transition-transform duration-500 group-hover:scale-110 bg-gradient-to-br from-indigo-50 to-blue-50">
             <BookOpen className="w-32 h-32 text-indigo-500" />
           </div>
         )}
@@ -54,30 +59,18 @@ export function LectureCard({
 
       {/* Content */}
       <div className="p-5 flex flex-col flex-1">
-        <div className="text-xs font-medium text-indigo-600 mb-2 uppercase tracking-wider line-clamp-1">
-          {chapter}
+        <div className="flex items-center justify-between mb-3">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 line-clamp-1 max-w-[65%]">
+            {chapter}
+          </span>
+          <div className="flex items-center gap-1.5 text-slate-500 text-sm font-medium shrink-0">
+            <PenTool className="w-4 h-4" />
+            <span>{practiceCount} Đề</span>
+          </div>
         </div>
         <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
           {title}
         </h3>
-        
-        <div className="flex-1" /> {/* Spacer */}
-
-        {/* Info & Actions */}
-        <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-slate-500 text-sm">
-            <PenTool className="w-4 h-4" />
-            <span>{practiceCount} Đề luyện tập</span>
-          </div>
-          
-          <button className={`h-12 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
-            isCompleted 
-              ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' 
-              : 'bg-primary text-white hover:bg-primary/90 shadow-sm'
-          }`}>
-            {isCompleted ? 'Ôn tập lại' : (isInProgress ? 'Tiếp tục học' : 'Học ngay')}
-          </button>
-        </div>
       </div>
     </Link>
   );

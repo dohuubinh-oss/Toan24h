@@ -1,6 +1,5 @@
 import React from 'react'
 import Sidebar from '@/components/layout/Sidebar'
-import { StudentFilterManager } from '@/components/filters/StudentFilterManager'
 
 export default function DashboardStudentLayout({
   children,
@@ -9,7 +8,7 @@ export default function DashboardStudentLayout({
 }) {
   return (
     <div className="flex flex-1 max-w-7xl mx-auto w-full gap-4">
-      <Sidebar role="student" filterNode={<StudentFilterManager />} />
+      <Sidebar role="student" />
       <main className="flex-1 bg-slate-50 py-4 pr-4 min-w-0">
         {children}
       </main>

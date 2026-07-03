@@ -12,6 +12,7 @@ Dự án tuân thủ nghiêm ngặt các **Thiết luật (Iron Laws)** của Su
 - **Bite-sized Planning**: Kế hoạch chia nhỏ 2-5 phút.
 - **Strict TDD**: Test trước, code sau. Không test = Xóa code.
 - **Subagent SDD**: Chạy subagent cho từng task biệt lập.
+- **Karpathy Principles**: Code đơn giản nhất, thay đổi chính xác (surgical), không đoán mò. Xem: [.agent/rules/karpathy-guidelines.md](file:///Users/modeptrai/Desktop/Toan24h/.agent/rules/karpathy-guidelines.md)
 
 Xem chi tiết tại: [.agent/rules/superpowers.md](file:///Users/modeptrai/Desktop/Toan24h/.agent/rules/superpowers.md)
 

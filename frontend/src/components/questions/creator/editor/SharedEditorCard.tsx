@@ -1,8 +1,11 @@
 import React, { useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { Bold, Italic, Strikethrough, List, ListOrdered, ImagePlus, Sigma } from 'lucide-react'
+import TiptapImage from '@tiptap/extension-image'
+import Youtube from '@tiptap/extension-youtube'
+import { Bold, Italic, Strikethrough, List, ListOrdered, ImagePlus, Sigma, Image as ImageIcon, Video as YoutubeIcon } from 'lucide-react'
 import { MathExtension } from './MathExtension'
+import { uploadTempImage } from '@/lib/api'
 
 import Placeholder from '@tiptap/extension-placeholder'
 import { preprocessMath } from './RichTextEditor'
@@ -11,10 +14,7 @@ interface SharedEditorCardProps {
   title: string
   icon: React.ReactNode
   content: string
-  imageUrl?: string | null
   onContentChange: (content: string) => void
-  onImageChange: (image: string | null) => void
-  imageLabel?: string
   placeholder?: string
 }
 
@@ -61,6 +61,42 @@ const MenuBar = ({ editor }: { editor: any }) => {
       </button>
       <div className="w-px h-4 bg-slate-300 mx-1"></div>
       <button
+        onClick={() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.onchange = async (e: any) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              try {
+                const url = await uploadTempImage(file);
+                editor.chain().focus().setImage({ src: url }).run();
+              } catch (err) {
+                alert('Tải ảnh thất bại!');
+              }
+            }
+          };
+          input.click();
+        }}
+        className="p-1.5 rounded transition-colors text-slate-600 hover:bg-white"
+        title="Chèn ảnh"
+      >
+        <ImageIcon className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => {
+          const url = window.prompt('Nhập đường dẫn YouTube:');
+          if (url) {
+            editor.chain().focus().setYoutubeVideo({ src: url }).run();
+          }
+        }}
+        className="p-1.5 rounded transition-colors text-red-500 hover:bg-white"
+        title="Chèn YouTube"
+      >
+        <YoutubeIcon className="w-4 h-4" />
+      </button>
+      <div className="w-px h-4 bg-slate-300 mx-1"></div>
+      <button
         onClick={() => editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()}
         className="p-1.5 rounded transition-colors text-primary font-bold hover:bg-white flex items-center justify-center"
         title="Chèn công thức Toán (MathLive)"
@@ -75,13 +111,9 @@ export default function SharedEditorCard({
   title,
   icon,
   content,
-  imageUrl,
   onContentChange,
-  onImageChange,
-  imageLabel = "Kéo thả hoặc Tải ảnh",
-  placeholder = "Nhập nội dung..."
+  placeholder = "Nhập nội dung...",
 }: SharedEditorCardProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const lastEmittedHTML = useRef(content || '');
   
   const processedInitialContent = preprocessMath(content || '')
@@ -90,6 +122,20 @@ export default function SharedEditorCard({
     extensions: [
       StarterKit,
       MathExtension,
+      TiptapImage.configure({
+        inline: true,
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'rounded-lg max-w-full my-2 object-contain mx-auto',
+        },
+      }),
+      Youtube.configure({
+        controls: false,
+        nocookie: true,
+        HTMLAttributes: {
+          class: 'w-full aspect-video rounded-xl my-4 shadow-sm border border-slate-200',
+        },
+      }),
       Placeholder.configure({
         placeholder: placeholder,
         emptyEditorClass: 'is-editor-empty before:content-[attr(data-placeholder)] before:text-slate-400 before:float-left before:pointer-events-none before:h-0',
@@ -111,35 +157,12 @@ export default function SharedEditorCard({
 
   // Sync content when it changes from outside (e.g. switching between questions)
   React.useEffect(() => {
-    if (editor && content !== lastEmittedHTML.current) {
-      const processed = preprocessMath(content || '');
-      if (processed !== editor.getHTML()) {
-        // Use setTimeout to avoid "flushSync was called from inside a lifecycle method" in React 18+
-        setTimeout(() => {
-          if (editor.isDestroyed) return;
-          editor.commands.setContent(processed);
-          lastEmittedHTML.current = editor.getHTML();
-        }, 0);
+    if (editor && content !== undefined) {
+      if (content !== lastEmittedHTML.current) {
+        editor.commands.setContent(content)
       }
     }
   }, [content, editor])
-
-  const handleImageClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const url = URL.createObjectURL(file)
-      onImageChange(url)
-    }
-  }
-
-  const handleRemoveImage = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    onImageChange(null)
-  }
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
@@ -153,45 +176,9 @@ export default function SharedEditorCard({
         </div>
       </div>
       <div className="p-8 flex-grow">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch h-full">
-          <div className="flex flex-col gap-4">
-            <input 
-              type="file" 
-              accept="image/*" 
-              className="hidden" 
-              ref={fileInputRef} 
-              onChange={handleFileChange} 
-            />
-            <div 
-              onClick={handleImageClick}
-              className={`relative group border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center min-h-[250px] hover:border-primary/50 transition-colors cursor-pointer overflow-hidden ${imageUrl ? 'bg-white' : 'bg-slate-50/50'}`}
-            >
-              {imageUrl ? (
-                <>
-                  <img src={imageUrl} alt="Uploaded" className="w-full h-full object-contain p-2" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button 
-                      onClick={handleRemoveImage}
-                      className="px-4 py-2 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition-colors text-sm"
-                    >
-                      Xóa ảnh
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center p-4">
-                  <div className="text-center">
-                    <ImagePlus className="w-12 h-12 mx-auto text-slate-300 group-hover:text-primary transition-colors" />
-                    <p className="mt-3 text-xs text-slate-500 font-bold uppercase tracking-widest">{imageLabel}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col h-full">
-            <div className="flex-grow rounded-xl border border-slate-200 bg-slate-50/30 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/5 overflow-y-auto min-h-[250px] flex flex-col">
-              <EditorContent editor={editor} className="flex-grow flex flex-col" />
-            </div>
+        <div className="flex flex-col h-full">
+          <div className="flex-grow rounded-xl border border-slate-200 bg-slate-50/30 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/5 overflow-y-auto min-h-[250px] flex flex-col">
+            <EditorContent editor={editor} className="flex-grow flex flex-col" />
           </div>
         </div>
       </div>

@@ -7,14 +7,14 @@ import { StudentLectureFilter } from './StudentLectureFilter';
 export function StudentFilterManager() {
   const pathname = usePathname();
 
-  // Chỉ hiển thị Filter ở trang Danh sách Bài học và Luyện tập (đường dẫn chứa /lop/)
-  const isListPage = pathname?.includes('/lop/');
-  const isLectureOrPractice = pathname?.startsWith('/lectures') || pathname?.startsWith('/practices');
+  // Chỉ hiển thị Filter ở trang Danh sách Bài học (không phải trang chi tiết, không phải luyện tập)
+  const segments = pathname?.split('/') || [];
+  const isLectureList = pathname?.startsWith('/lectures') && pathname?.includes('/lop/') && segments.length <= 4;
 
-  if (isLectureOrPractice && isListPage) {
+  if (isLectureList) {
     return <StudentLectureFilter />;
   }
 
-  // Trang Dashboard, hoặc trang Chi tiết bài giảng (/lectures/[id]) sẽ không có bộ lọc
+  // Trang Dashboard, hoặc trang Chi tiết bài giảng sẽ không có bộ lọc
   return null;
 }

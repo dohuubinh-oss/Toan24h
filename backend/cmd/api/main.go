@@ -25,9 +25,21 @@ func main() {
 		log.Fatalf("Database connection failed: %v", err)
 	}
 
-	// 2.1. Auto Migrate Models
+	// 2.1. Drop unused columns before auto migrating to avoid constraint errors
+	if config.DB.Migrator().HasColumn(&models.LectureExample{}, "title") {
+		config.DB.Migrator().DropColumn(&models.LectureExample{}, "title")
+	}
+	if config.DB.Migrator().HasColumn(&models.LectureExample{}, "image") {
+		config.DB.Migrator().DropColumn(&models.LectureExample{}, "image")
+	}
+
+	// 2.2. Auto Migrate Models
 	log.Println("Running Auto Migration...")
-	if err := config.DB.AutoMigrate(&models.Question{}); err != nil {
+	if err := config.DB.AutoMigrate(
+		&models.Question{},
+		&models.Lecture{},
+		&models.LectureExample{},
+	); err != nil {
 		log.Fatalf("Auto Migrate failed: %v", err)
 	}
 

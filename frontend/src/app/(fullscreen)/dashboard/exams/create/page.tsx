@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, Suspense, useCallback } from 'react'
+import React, { useState, Suspense, useCallback, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import ExamHeader from '@/components/exams/ExamHeader'
 import ExamQuestionList from '@/components/exams/ExamQuestionList'
 import ExamConfigSidebar from '@/components/exams/ExamConfigSidebar'
@@ -19,12 +20,16 @@ export default function CreateExamPage() {
 }
 
 function CreateExamPageContent() {
+  const searchParams = useSearchParams()
+  const urlType = searchParams.get('type') === 'practice' ? 'practice' : 'exam'
+
   const [exam, setExam] = useState<Exam>({
     ...MOCK_EXAM,
     title: '',
     examCode: '',
     grade: '',
-    duration: 0
+    duration: 0,
+    type: urlType as 'exam' | 'practice'
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -91,7 +96,8 @@ function CreateExamPageContent() {
             title: exam.title,
             examCode: exam.examCode,
             grade: exam.grade,
-            duration: exam.duration
+            duration: exam.duration,
+            type: exam.type
           }}
           onChange={handleConfigChange}
           questions={exam.questions}

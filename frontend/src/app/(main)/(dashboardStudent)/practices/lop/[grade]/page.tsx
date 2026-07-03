@@ -17,6 +17,16 @@ export default async function GradePracticesPage({
   
   const grade = resolvedParams.grade;
   const lectureId = resolvedSearchParams.lecture as string | undefined;
+  const lectureName = resolvedSearchParams.lectureName as string | undefined;
+  const practiceIdsParam = resolvedSearchParams.practiceIds as string | undefined;
+  let practiceIdsArray: string[] | undefined = undefined;
+  if (practiceIdsParam) {
+    try {
+      practiceIdsArray = JSON.parse(practiceIdsParam);
+    } catch (e) {
+      console.error("Failed to parse practiceIdsParam", e);
+    }
+  }
   
   // Xử lý page params cho Pagination
   const pageParam = resolvedSearchParams.page;
@@ -24,7 +34,7 @@ export default async function GradePracticesPage({
   const limit = 6;
 
   // Lấy dữ liệu
-  const { practices, totalItems, totalPages } = await fetchPracticesByGrade(grade, currentPage, limit, lectureId);
+  const { practices, totalItems, totalPages } = await fetchPracticesByGrade(grade, currentPage, limit, lectureId, practiceIdsArray);
 
   // Tính toán index hiển thị
   const startIndex = (currentPage - 1) * limit + 1;
@@ -41,16 +51,18 @@ export default async function GradePracticesPage({
             <ChevronRight className="w-3 h-3" />
             <span className="text-primary font-bold min-h-[44px] flex items-center">Luyện tập</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Danh sách Đề luyện tập Khối {grade}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {lectureName ? `Đề luyện tập Khối ${grade} - Bài: ${lectureName}` : `Danh sách Đề luyện tập Khối ${grade}`}
+          </h1>
         </div>
       </div>
 
       {lectureId && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl flex items-center justify-between shadow-sm">
-          <span className="font-medium text-sm">
-            Đang hiển thị đề luyện tập thuộc Bài giảng ID: <strong className="ml-1">{lectureId}</strong>
+        <div className="bg-[#F4F9FF] border border-[#DCEBFF] text-blue-600 px-5 py-4 rounded-xl flex items-center justify-between">
+          <span className="text-[15px]">
+            Đang hiển thị đề luyện tập thuộc Bài giảng: <strong className="ml-1 font-bold">{lectureName || lectureId}</strong>
           </span>
-          <Link href={`/practices/lop/${grade}`} className="text-sm font-semibold hover:underline text-blue-600 min-h-[44px] flex items-center">
+          <Link href={`/practices/lop/${grade}`} className="text-[15px] font-semibold hover:underline text-blue-600">
             Bỏ lọc
           </Link>
         </div>

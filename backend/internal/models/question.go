@@ -12,6 +12,7 @@ type Question struct {
 	ID              uuid.UUID      `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	ParentID        *uuid.UUID     `gorm:"type:uuid;index" json:"parentId,omitempty"` // Dùng cho 'group' (Câu hỏi con tham chiếu câu hỏi cha)
 
+	Title           string         `gorm:"type:varchar(255)" json:"title"` // Tiêu đề câu hỏi, VD: Bài 1, Câu 1
 	TypeQuestion    string         `gorm:"type:varchar(20);not null" json:"typeQuestion"` // 'group', 'single'
 	Content         string         `gorm:"type:text;not null" json:"content"`
 	Type            string         `gorm:"type:varchar(50);not null" json:"type"`         // 'Trắc nghiệm', 'Tự luận'
@@ -38,4 +39,14 @@ type Question struct {
 	CreatedAt       time.Time      `json:"createdAt"`
 	UpdatedAt       time.Time      `json:"updatedAt"`
 	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+func (q *Question) BeforeCreate(tx *gorm.DB) (err error) {
+	if q.ID == uuid.Nil {
+		q.ID = uuid.New()
+	}
+	if q.Title == "" {
+		q.Title = q.ID.String()
+	}
+	return
 }

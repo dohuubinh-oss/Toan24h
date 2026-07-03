@@ -1,12 +1,12 @@
 'use client'
 import React from 'react'
-import { ArrowLeft, FileText, Save } from 'lucide-react'
+import { ArrowLeft, FileText, Save, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { useLectureCreator } from './LectureCreatorContext'
 
 export default function LectureCreatorHeader() {
-  const { validateAndSubmit } = useLectureCreator()
+  const { validateAndSubmit, isSubmitting } = useLectureCreator()
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 w-full">
@@ -21,7 +21,7 @@ export default function LectureCreatorHeader() {
         </div>
         
         <div className="flex items-center gap-3">
-          <Button variant="secondary" className="hidden md:flex items-center gap-2">
+          <Button variant="secondary" className="hidden md:flex items-center gap-2" disabled={isSubmitting}>
             <FileText className="w-4 h-4" />
             Tải file PDF đính kèm
           </Button>
@@ -29,9 +29,19 @@ export default function LectureCreatorHeader() {
           <Button 
             className="px-6 flex items-center gap-2 shadow-sm shadow-primary/20"
             onClick={validateAndSubmit}
+            disabled={isSubmitting}
           >
-            <Save className="w-4 h-4" />
-            Lưu & Xuất bản
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Đang lưu...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                Lưu & Xuất bản
+              </>
+            )}
           </Button>
         </div>
       </div>

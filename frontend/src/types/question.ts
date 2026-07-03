@@ -1,5 +1,6 @@
 export interface Question {
   id?: string;
+  title?: string;
   type_question: 'group' | 'single';
   content: string;
   type: 'Trắc nghiệm' | 'Tự luận';

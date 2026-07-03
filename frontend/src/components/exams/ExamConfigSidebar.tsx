@@ -54,6 +54,35 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
               />
               {errors.examCode && <p className="text-red-500 text-xs mt-1 font-medium ml-1">{errors.examCode}</p>}
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs ml-1 mb-1">Phân loại</Label>
+              <div className="flex bg-slate-100 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => onChange('type', 'exam')}
+                  className={cn(
+                    "flex-1 py-2.5 text-sm font-medium rounded-lg transition-all",
+                    (!config.type || config.type === 'exam') 
+                      ? "bg-white text-primary shadow-sm" 
+                      : "text-slate-500 hover:text-slate-700"
+                  )}
+                >
+                  Đề thi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onChange('type', 'practice')}
+                  className={cn(
+                    "flex-1 py-2.5 text-sm font-medium rounded-lg transition-all",
+                    config.type === 'practice' 
+                      ? "bg-white text-indigo-600 shadow-sm" 
+                      : "text-slate-500 hover:text-slate-700"
+                  )}
+                >
+                  Bài tập
+                </button>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs ml-1 mb-1" htmlFor="exam-grade">Khối lớp</Label>

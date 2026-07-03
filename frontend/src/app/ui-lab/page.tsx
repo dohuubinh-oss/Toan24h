@@ -12,6 +12,49 @@ import { RadioOption } from '../../components/ui/RadioOption'
 import QuestionCard from '../../components/questions/QuestionCard'
 import ContentQuestion from '../../components/questions/ContentQuestion'
 import { QuestionFilter } from '../../components/filters/QuestionFilter'
+import LectureContent from '../../components/lecture/LectureContent'
+import LectureHeader from '../../components/lecture/LectureHeader'
+
+const sampleLectureData = {
+  title: "Chuyên đề: Thể tích khối chóp và các bài toán thực tế nâng cao",
+  grade: "12",
+  category: "Hình học",
+  createdAt: "2024-05-15T00:00:00Z",
+  basicConcept: "<p>Thể tích của một khối chóp bất kỳ bằng một phần ba tích của diện tích mặt đáy và chiều cao tương ứng của nó. Đây là nền tảng quan trọng trong hình học không gian.</p><div class=\"bg-primary/5 border-l-4 border-primary p-6 rounded-r-lg my-6\"><p class=\"text-lg font-medium text-center latex-font\">V = <span class=\"inline-block px-1\">1</span>/<span class=\"inline-block px-1\">3</span> . B . h</p><p class=\"text-sm text-slate-500 mt-4 italic text-center\">Trong đó: B là diện tích đáy, h là chiều cao khối chóp.</p></div><p>Đối với khối chóp đều, việc tính toán trở nên đơn giản hơn nhờ các tính chất đối xứng, trong đó hình chiếu của đỉnh trùng với tâm của đa giác đáy.</p>",
+  examples: [
+    {
+      id: "ex1",
+      lectureId: "lec1",
+      problem: "Cho khối chóp S.ABC có đáy ABC là tam giác đều cạnh a. Cạnh bên SA vuông góc với đáy và SA = a√3. Tính thể tích khối chóp S.ABC.",
+      conclusion: "Thể tích khối chóp là a³/4.",
+      tips: "<ul><li>Cẩn thận nhầm lẫn giữa công thức diện tích và thể tích.</li><li>Quên nhân hệ số 1/3 là lỗi phổ biến nhất.</li></ul>",
+      problemImage: "",
+      solutionImage: "",
+      steps: JSON.stringify([
+        {
+          step: 1,
+          title: "Tính diện tích đáy B (Tam giác ABC)",
+          content: "Vì ABC là tam giác đều cạnh a nên diện tích đáy được tính theo công thức:",
+          formula: "B = S_{ABC} = (a^2\\sqrt{3}) / 4"
+        },
+        {
+          step: 2,
+          title: "Xác định chiều cao h",
+          content: "Theo giả thiết SA ⊥ (ABC), suy ra chiều cao h = SA = a√3.",
+          formula: ""
+        },
+        {
+          step: 3,
+          title: "Áp dụng công thức tính thể tích",
+          content: "V = 1/3 . B . h = 1/3 . (a²√3 / 4) . a√3 = a³/4.",
+          formula: ""
+        }
+      ]),
+      createdAt: "2024-05-15T00:00:00Z",
+      updatedAt: "2024-05-15T00:00:00Z"
+    }
+  ]
+};
 
 export default function UILabPage() {
   return (
@@ -181,13 +224,15 @@ export default function UILabPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">7. Pagination</h2>
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-            <Pagination 
-              currentPage={2}
-              totalPages={129}
-              totalItems={1284}
-              startIndex={11}
-              endIndex={20}
-            />
+            <Suspense fallback={<div className="p-4 text-slate-500">Đang tải...</div>}>
+              <Pagination 
+                currentPage={2}
+                totalPages={129}
+                totalItems={1284}
+                startIndex={11}
+                endIndex={20}
+              />
+            </Suspense>
           </div>
         </section>
 
@@ -277,6 +322,24 @@ export default function UILabPage() {
             <Suspense fallback={<div className="p-4 text-slate-500">Đang tải...</div>}>
               <QuestionFilter />
             </Suspense>
+          </div>
+        </section>
+
+        {/* === 10. LECTURE VIEWER === */}
+        <section className="space-y-4">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">10. Lecture Detail Viewer</h2>
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-8">
+            <LectureHeader 
+              title={sampleLectureData.title}
+              grade={sampleLectureData.grade}
+              category={sampleLectureData.category}
+              createdAt={sampleLectureData.createdAt}
+            />
+            <hr className="border-slate-200 dark:border-slate-800" />
+            <LectureContent 
+              basicConcept={sampleLectureData.basicConcept} 
+              examples={sampleLectureData.examples} 
+            />
           </div>
         </section>
         

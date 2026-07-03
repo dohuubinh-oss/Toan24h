@@ -37,10 +37,7 @@ function QuestionEditorSection({
           title="Nội dung dẫn chung (Shared Context)"
           icon={<AlignLeft className="text-primary w-5 h-5" />}
           content={currentBlock?.shared_content || ''}
-          imageUrl={currentBlock?.image_shared || null}
           onContentChange={(val) => updateBlock('shared_content', val)}
-          onImageChange={(val) => updateBlock('image_shared', val)}
-          imageLabel="Ảnh dùng chung"
           placeholder="Nhập ngữ cảnh chung cho các câu hỏi nhỏ..."
         />
       )}
@@ -50,9 +47,7 @@ function QuestionEditorSection({
         title="Nội dung câu hỏi"
         icon={<FileQuestion className="text-primary w-5 h-5" />}
         content={currentQuestion?.content || ''}
-        imageUrl={currentQuestion?.image_question || null}
         onContentChange={(val) => updateQuestion('content', val)}
-        onImageChange={(val) => updateQuestion('image_question', val)}
         placeholder="Nhập nội dung câu hỏi..."
       />
 
@@ -135,10 +130,7 @@ function QuestionEditorSection({
         title="Lời giải chi tiết"
         icon={<FileText className="text-primary w-5 h-5" />}
         content={currentQuestion?.solution_guide || ''}
-        imageUrl={currentQuestion?.image_solution || null}
         onContentChange={(val) => updateQuestion('solution_guide', val)}
-        onImageChange={(val) => updateQuestion('image_solution', val)}
-        imageLabel="Thêm ảnh minh họa lời giải"
         placeholder="Nhập lời giải chi tiết..."
       />
 

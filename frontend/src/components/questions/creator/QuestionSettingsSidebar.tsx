@@ -53,6 +53,17 @@ export default function QuestionSettingsSidebar({
         
         <div className="p-5 space-y-4">
           <div className="space-y-1.5">
+            <Label className="text-xs ml-1 mb-1">Tiêu đề (Tùy chọn)</Label>
+            <Input 
+              type="text"
+              placeholder="VD: Bài 1, Câu 1..."
+              className="text-sm placeholder:text-slate-400 font-medium"
+              value={currentQuestion?.title || ''}
+              onChange={(e) => updateQuestion('title', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1.5">
             <Label className="text-xs ml-1 mb-1">Khối lớp</Label>
             <div className="relative">
               <select 

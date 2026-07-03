@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ChevronRight, BookOpen } from 'lucide-react';
 import { LectureCard } from '@/components/lectures/LectureCard';
 import { Pagination } from '@/components/ui/Pagination';
-import { fetchLecturesByGrade } from '@/data/mockLectureData';
+import { getLecturesByGrade } from '@/lib/lectureApi';
 
 export default async function GradeLecturesPage({
   params,
@@ -18,7 +18,7 @@ export default async function GradeLecturesPage({
   const grade = resolvedParams.grade; // VD: '5', '8', '9'
   const page = parseInt(resolvedSearchParams.page as string || '1', 10);
 
-  const { data: lectures, totalPages, totalItems, startIndex, endIndex, currentPage } = await fetchLecturesByGrade(grade, page, 6);
+  const { data: lectures, totalPages, totalItems, startIndex, endIndex, currentPage } = await getLecturesByGrade(grade, page, 9);
 
   return (
     <div className="space-y-10">
@@ -40,6 +40,7 @@ export default async function GradeLecturesPage({
         {lectures.map((lecture) => (
           <LectureCard 
             key={lecture.id}
+            grade={grade}
             {...lecture}
           />
         ))}

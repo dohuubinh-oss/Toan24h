@@ -1,6 +1,5 @@
 import React from 'react'
 import { FileEdit, Flag, FlagOff } from 'lucide-react'
-import MathInput from '@/components/ui/MathInput'
 
 interface EssayQuestionProps {
   questionId: number
@@ -56,11 +55,14 @@ export default function EssayQuestion({
               </label>
             </div>
             <div className="bg-white dark:bg-slate-900 rounded-xl flex-1 flex flex-col">
-              {/* MathLive Editor */}
-              <div className="p-4 flex-1">
-                <MathInput 
-                  value={answer} 
-                  onChange={onAnswerChange} 
+              {/* Simple Input Editor */}
+              <div className="p-6 flex-1 flex flex-col justify-center">
+                <input
+                  type="text"
+                  value={answer}
+                  onChange={(e) => onAnswerChange(e.target.value)}
+                  placeholder="Nhập câu trả lời (VD: 5, x=2)..."
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-800 dark:text-slate-100 font-medium transition-all"
                 />
               </div>
             </div>

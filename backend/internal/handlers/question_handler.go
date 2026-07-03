@@ -102,6 +102,8 @@ func BulkCreateQuestions(c *gin.Context) {
 			parentQ := models.Question{
 				TypeQuestion: "group",
 				Content:      group.SharedContent,
+				Tags:         "[]",
+				Options:      "[]",
 			}
 			if group.ImageShared != nil && *group.ImageShared != "" {
 				processedUrl := processImageUrl(*group.ImageShared)
