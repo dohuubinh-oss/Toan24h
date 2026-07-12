@@ -1,10 +1,10 @@
 import React from 'react'
 import LectureHeader from '@/components/lecture/LectureHeader'
-import LectureContent from '@/components/lecture/LectureContent'
+import { LectureConcept, LectureExamples } from '@/components/lecture/LectureContent'
 import LectureSidebar from '@/components/lecture/LectureSidebar'
-import LectureMediaViewer from '@/components/lecture/LectureMediaViewer'
 import { getLectureById } from '@/lib/lectureApi'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { PenTool } from 'lucide-react'
 
@@ -16,16 +16,41 @@ export default async function GradeLecturePage({
   const resolvedParams = await params;
   const { grade, id } = resolvedParams;
 
+  const cookieStore = await cookies()
+  const token = cookieStore.get('accessToken')?.value
+
+  if (token) {
+    try {
+      const payloadBase64 = token.split('.')[1] || token
+      const payloadString = atob(payloadBase64)
+      const payload = JSON.parse(payloadString)
+
+      if (payload.role === 'student') {
+        // Mock progression lock: Giả lập học sinh phải hoàn thành bài 1 điểm > 7 mới được học bài khác
+        // Ở đây giả lập học sinh chỉ được vào bài có id === '1'
+        if (id !== '1' && id !== 'lecture-1') {
+          redirect(`/lectures/lop/${grade}?error=not_completed`)
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse token for progression check', e)
+    }
+  }
+
   let lecture;
+  let mediaItems = [];
+  let examples = [];
   try {
     lecture = await getLectureById(id);
+    mediaItems = JSON.parse(lecture.mediaItems || '[]');
+    examples = JSON.parse(lecture.examples || '[]');
   } catch (error) {
     console.error("Failed to load lecture:", error);
     notFound();
   }
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-7xl mx-auto w-full px-4 py-8 space-y-8">
       <LectureHeader 
         title={lecture.title}
         grade={lecture.grade}
@@ -34,18 +59,13 @@ export default async function GradeLecturePage({
         id={lecture.id}
       />
 
-      {lecture.videoUrl ? (
-        <LectureMediaViewer mediaType="youtube" url={lecture.videoUrl} />
-      ) : lecture.coverImage ? (
-        <LectureMediaViewer mediaType="image" url={lecture.coverImage} />
-      ) : null}
+      {/* Card Giải thích khái niệm chiếm 100% chiều rộng */}
+      <LectureConcept basicConcept={lecture.basicConcept} mediaItems={mediaItems} />
 
       <div className="grid grid-cols-12 gap-8">
         <div className="col-span-12 lg:col-span-8 space-y-8">
-          <LectureContent 
-            basicConcept={lecture.basicConcept}
-            examples={lecture.examples}
-          />
+          {/* Card Phân tích bài tập mẫu trong layout chia cột */}
+          <LectureExamples examples={examples} />
           {/* Nút Luyện tập cuối bài giảng */}
           <div className="pt-8 border-t border-slate-200">
             <Link 

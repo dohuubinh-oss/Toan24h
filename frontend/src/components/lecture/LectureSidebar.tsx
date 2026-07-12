@@ -23,7 +23,7 @@ export default function LectureSidebar() {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold group-hover:text-primary transition-colors line-clamp-2 text-ink">{lesson.title}</h4>
-                  <p className="text-[11px] text-slate-500 mt-1 uppercase font-bold tracking-wider">{lesson.category}</p>
+                  <p className="text-xs text-slate-500 mt-1 uppercase font-bold tracking-wider">{lesson.category}</p>
                 </div>
               </div>
             </a>
@@ -38,7 +38,7 @@ export default function LectureSidebar() {
       {/* Ad/Promo Card */}
       <div className="rounded-xl bg-ink p-6 text-white relative overflow-hidden group">
         <div className="relative z-10 space-y-4">
-          <span className="bg-primary px-2 py-1 rounded text-[10px] font-bold uppercase">ƯU ĐÃI 50%</span>
+          <span className="bg-primary px-2 py-1 rounded text-xs font-bold uppercase">ƯU ĐÃI 50%</span>
           <h3 className="text-xl font-bold leading-tight">Khóa học Luyện thi THPT Quốc gia 2024</h3>
           <p className="text-slate-400 text-sm">Hệ thống bài giảng từ cơ bản đến nâng cao cùng đội ngũ giáo viên top đầu.</p>
           <button className="bg-white text-ink px-6 py-2 rounded-lg font-bold text-sm w-full hover:bg-primary hover:text-white transition-all">

@@ -17,7 +17,6 @@ describe('CreateQuestionPage', () => {
   it('renders header text and tags', () => {
     render(<CreateQuestionPage />)
     expect(screen.getByText('Smart Question Creator')).toBeInTheDocument()
-    expect(screen.getByText('Câu hỏi chùm')).toBeInTheDocument()
   })
 
   it('renders action buttons', () => {

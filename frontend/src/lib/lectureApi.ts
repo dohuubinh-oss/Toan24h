@@ -21,10 +21,9 @@ export interface BackendLecture {
   grade: string;
   category: string;
   basicConcept: string;
-  coverImage: string;
-  videoUrl: string;
+  mediaItems: string; // JSON string array of MediaItem
   practiceIds: string; // JSON string array
-  examples: BackendLectureExample[];
+  examples: string; // JSON string array of DangToanItem
   createdAt: string;
   updatedAt: string;
 }
@@ -50,15 +49,22 @@ export async function getLecturesByGrade(grade: string, page: number = 1, limit:
 
   const result: BackendPaginatedLectures = await response.json();
 
-  // Map BackendLecture to UI Lecture type
-  const mappedData: Lecture[] = result.data.map(item => ({
-    id: item.id,
-    title: item.title,
-    chapter: item.category, // Map category to chapter for UI
-    status: 'not_started', // TODO: Implement real progress tracking
-    practiceCount: 0, // TODO: Implement real practice count
-    thumbnailUrl: item.coverImage ? `${process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '') : 'http://localhost:8080'}${item.coverImage}` : undefined,
-  }));
+  const mappedData: Lecture[] = result.data.map(item => {
+    let coverImage;
+    try {
+      const mediaItems = JSON.parse(item.mediaItems || '[]');
+      coverImage = mediaItems.find((m: any) => m.type === 'image')?.url;
+    } catch(e) {}
+    
+    return {
+      id: item.id,
+      title: item.title,
+      chapter: item.category, // Map category to chapter for UI
+      status: 'not_started', // TODO: Implement real progress tracking
+      practiceCount: 0, // TODO: Implement real practice count
+      thumbnailUrl: coverImage ? `${process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '') : 'http://localhost:8080'}${coverImage}` : undefined,
+    }
+  });
 
   return {
     ...result,
@@ -73,22 +79,9 @@ export async function getLectureById(id: string): Promise<BackendLecture> {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch lecture details: ${response.statusText}`);
+    throw new Error(`Failed to fetch lecture: ${response.statusText}`);
   }
 
   const result: BackendLecture = await response.json();
-
-  // Clean up image URLs
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '') : 'http://localhost:8080';
-  if (result.coverImage) {
-    result.coverImage = `${baseUrl}${result.coverImage}`;
-  }
-
-  result.examples = result.examples.map(ex => {
-    if (ex.problemImage) ex.problemImage = `${baseUrl}${ex.problemImage}`;
-    if (ex.solutionImage) ex.solutionImage = `${baseUrl}${ex.solutionImage}`;
-    return ex;
-  });
-
   return result;
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { X, LayoutGrid, Map } from 'lucide-react'
 
 export type QuestionStatus = 'done' | 'current' | 'unfinished'
@@ -17,9 +17,20 @@ interface QuestionMapSidebarProps {
 
 export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubmit }: QuestionMapSidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const sidebarRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (isOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isOpen])
 
   return (
-    <div className={`fixed top-0 right-0 h-full flex items-center z-[60] transition-transform duration-400 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+    <div ref={sidebarRef} className={`absolute top-0 bottom-0 right-0 flex items-center z-[60] transition-transform duration-400 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
       <button
         data-testid="qmap-toggle-btn"
         onClick={() => setIsOpen(!isOpen)}
@@ -32,17 +43,11 @@ export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubm
       </button>
 
       <aside className="h-full w-[320px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col">
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div className="p-6 border-b border-slate-100 dark:border-slate-800">
           <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
             <Map className="w-5 h-5 text-primary" />
             Bản đồ câu hỏi
           </h3>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer transition-colors text-slate-400"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         <div className="p-6 overflow-y-auto flex-1">
@@ -100,14 +105,6 @@ export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubm
           </div>
         </div>
 
-        <div className="mt-auto p-6 bg-slate-50 dark:bg-slate-950/30 border-t border-slate-100 dark:border-slate-800">
-          <button
-            onClick={onSubmit}
-            className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:bg-blue-700 transition-all active:scale-95"
-          >
-            Nộp bài ngay
-          </button>
-        </div>
       </aside>
     </div>
   )

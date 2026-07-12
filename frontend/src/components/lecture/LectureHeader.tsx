@@ -63,7 +63,7 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
             {id && (
               <Link 
                 href={`/practices/lop/${grade}?lecture=${id}&lectureName=${encodeURIComponent(title)}`}
-                className="flex items-center justify-center gap-2 px-4 py-2 font-bold rounded-lg transition-all border text-sm bg-primary text-white hover:bg-primary/90 border-transparent shadow-sm"
+                className="flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] font-bold rounded-lg transition-all border text-sm bg-primary text-white hover:bg-primary/90 border-transparent shadow-sm"
               >
                 <PenTool size={18} />
                 Luyện tập
@@ -71,7 +71,7 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
             )}
             <button 
               onClick={toggleBookmark}
-              className={`flex items-center justify-center gap-2 px-4 py-2 font-bold rounded-lg transition-all border text-sm ${
+              className={`flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] font-bold rounded-lg transition-all border text-sm ${
                 isBookmarked 
                   ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' 
                   : 'bg-slate-100 text-ink border-slate-200 hover:bg-slate-200'

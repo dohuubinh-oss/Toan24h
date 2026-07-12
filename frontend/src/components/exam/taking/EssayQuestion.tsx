@@ -1,75 +1,269 @@
 import React from 'react'
-import { FileEdit, Flag, FlagOff } from 'lucide-react'
+import { Camera, CheckCircle, Sparkles, Flag } from 'lucide-react'
+import MathText from '@/components/ui/MathText'
+import RichTextEditor from '@/components/questions/creator/editor/RichTextEditor'
+
+export interface SubQuestion {
+  id: number
+  type: 'mc' | 'essay'
+  content: React.ReactNode
+  options?: { id: string, text: string }[]
+}
 
 interface EssayQuestionProps {
   questionId: number
-  content: string
-  answer: string
+  index: number
+  content?: string
+  sharedContext?: React.ReactNode
+  subQuestions?: SubQuestion[]
+  answers: Record<number, string>
+  explanations?: Record<number, string>
+  isHintOpen: boolean
   isFlagged: boolean
-  onAnswerChange: (val: string) => void
+  onAnswerChange: (id: number, answer: string, explanation?: string) => void
+  onToggleHint: () => void
   onToggleFlag: () => void
+}
+
+function EditorItem({ 
+  q, 
+  answer, 
+  explanation, 
+  onAnswerChange, 
+  isGroup 
+}: { 
+  q: { id: number, label: string, type: string },
+  answer: string,
+  explanation: string,
+  onAnswerChange: (id: number, answer: string, explanation?: string) => void,
+  isGroup: boolean 
+}) {
+  const isMC = q.type === 'mc'
+  const editorContent = isMC ? explanation : answer
+  const handleEditorChange = (val: string) => {
+    if (isMC) {
+      onAnswerChange(q.id, answer, val)
+    } else {
+      onAnswerChange(q.id, val)
+    }
+  }
+
+  const [isOcrProcessing, setIsOcrProcessing] = React.useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      setIsOcrProcessing(true)
+      const { recognizeHandwriting } = await import('@/lib/api')
+      const text = await recognizeHandwriting(file)
+      handleEditorChange(editorContent + (editorContent ? '\n' : '') + text)
+    } catch (error) {
+      console.error('OCR failed', error)
+    } finally {
+      setIsOcrProcessing(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col flex-1 min-h-[400px]">
+      <div className="flex items-center justify-between mb-4">
+        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+          {isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`}
+        </label>
+        <div className="flex space-x-2">
+          {editorContent.trim().length > 0 && (
+            <span className="flex items-center text-xs text-green-600 dark:text-green-400 font-medium">
+              <CheckCircle className="w-4 h-4 mr-1" />
+              Đã lưu tự động
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Editor Container */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
+        <RichTextEditor
+          content={editorContent}
+          onChange={handleEditorChange}
+          placeholder={isMC ? "Nhập giải thích cho đáp án bạn chọn..." : (isGroup ? `Nhập lời giải chi tiết cho ${q.label.toLowerCase()}...` : "Nhập lời giải chi tiết tại đây (Sử dụng các công cụ hỗ trợ trên)...")}
+          className="flex-1 border-none rounded-none rounded-t-xl"
+          minHeight="300px"
+        />
+
+        {/* Bottom Upload Zone */}
+        <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+          <input 
+            type="file" 
+            hidden 
+            accept="image/*" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload}
+          />
+          <button 
+            type="button" 
+            disabled={isOcrProcessing}
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full py-4 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex flex-col items-center justify-center hover:border-primary hover:bg-primary/5 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Camera className={`mb-1 w-6 h-6 ${isOcrProcessing ? 'text-primary animate-pulse' : 'text-slate-400 group-hover:text-primary'}`} />
+            <span className={`text-sm font-medium ${isOcrProcessing ? 'text-primary' : 'text-slate-600 dark:text-slate-400 group-hover:text-primary'}`}>
+              {isOcrProcessing ? 'Đang nhận dạng chữ viết tay...' : 'Tải ảnh lời giải bài làm tay'}
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function EssayQuestion({
   questionId,
+  index,
   content,
-  answer,
+  sharedContext,
+  subQuestions,
+  answers,
+  explanations,
+  isHintOpen,
   isFlagged,
   onAnswerChange,
+  onToggleHint,
   onToggleFlag,
 }: EssayQuestionProps) {
-  return (
-    <div className="max-w-5xl mx-auto px-6 py-10 mt-10">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm mb-8 transition-shadow hover:shadow-md flex flex-col md:flex-row overflow-hidden">
-        
-        {/* Left Side: Question */}
-        <div className="w-full md:w-1/2 p-8 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
-          <div className="flex items-start justify-between mb-6">
-            <div className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-xl font-bold border border-blue-100 dark:border-blue-900/50">
-              <FileEdit className="w-4 h-4" />
-              Câu {questionId}
-            </div>
-            <button
-              onClick={onToggleFlag}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-colors border ${
-                isFlagged
-                  ? 'text-red-600 bg-red-50 hover:bg-red-100 border-red-200'
-                  : 'text-amber-600 bg-amber-50 hover:bg-amber-100 border-amber-200'
-              }`}
-            >
-              {isFlagged ? <Flag className="w-4 h-4" /> : <FlagOff className="w-4 h-4" />}
-              <span>{isFlagged ? 'Bỏ đánh dấu' : 'Đánh dấu'}</span>
-            </button>
-          </div>
-          <div className="prose prose-slate dark:prose-invert max-w-none prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:text-lg prose-p:leading-relaxed font-medium">
-            <p>{content}</p>
-          </div>
-        </div>
+  
+  const isGroup = subQuestions && subQuestions.length > 0;
 
-        {/* Right Side: Editor */}
-        <div className="w-full md:w-1/2 flex flex-col bg-slate-50 dark:bg-slate-950/50">
-          <div className="p-8 flex flex-col h-full">
-            <div className="flex items-center justify-between mb-4">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                Lời giải của bạn
-              </label>
-            </div>
-            <div className="bg-white dark:bg-slate-900 rounded-xl flex-1 flex flex-col">
-              {/* Simple Input Editor */}
-              <div className="p-6 flex-1 flex flex-col justify-center">
-                <input
-                  type="text"
-                  value={answer}
-                  onChange={(e) => onAnswerChange(e.target.value)}
-                  placeholder="Nhập câu trả lời (VD: 5, x=2)..."
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-800 dark:text-slate-100 font-medium transition-all"
-                />
-              </div>
-            </div>
+  // Determine what to render on the left side
+  const renderLeftContent = () => {
+    if (isGroup) {
+      return (
+        <div className="prose prose-slate dark:prose-invert max-w-none mb-8">
+          <div className="text-lg leading-relaxed">
+            {typeof sharedContext === 'string' ? <MathText content={sharedContext} /> : sharedContext}
           </div>
+          <ul className="list-disc ml-5 space-y-2 mt-4 text-lg leading-relaxed">
+            {subQuestions.map((q) => (
+              <li key={q.id}>
+                <MathText content={q.content as string} />
+                {q.type === 'mc' && q.options && (
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {q.options.map((opt) => {
+                      const isSelected = answers[q.id] === opt.id;
+                      return (
+                        <button 
+                          key={opt.id}
+                          onClick={() => onAnswerChange(q.id, opt.id, explanations?.[q.id] || '')}
+                          className={`group relative flex items-center gap-4 p-4 rounded-xl border-2 transition-all shadow-sm text-left
+                            ${isSelected 
+                              ? 'bg-white dark:bg-slate-900 border-primary shadow-primary/5' 
+                              : 'bg-white dark:bg-slate-900 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
+                            }
+                          `}
+                        >
+                          <div className={`w-10 h-10 flex items-center justify-center font-bold rounded-lg transition-colors text-lg
+                            ${isSelected
+                              ? 'bg-primary text-white shadow-sm'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-white'
+                            }
+                          `}>
+                            {opt.id}
+                          </div>
+                          <div className="flex-1">
+                            <span className="text-lg font-medium text-slate-900 dark:text-white">
+                              <MathText content={opt.text} />
+                            </span>
+                          </div>
+                          {isSelected && (
+                            <div className="absolute top-3 right-3 text-primary">
+                              <CheckCircle className="w-5 h-5" />
+                            </div>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
+      )
+    }
 
+    return (
+      <div className="prose prose-slate dark:prose-invert max-w-none mb-8 text-lg leading-relaxed">
+        <MathText content={content || ''} />
       </div>
-    </div>
+    )
+  }
+
+  // Determine what to render on the right side
+  const renderEditors = () => {
+    const questionsToRender = isGroup 
+      ? subQuestions.map((q, i) => ({ id: q.id, label: `Ý ${i + 1}`, type: q.type }))
+      : [{ id: questionId, label: 'của bạn', type: 'essay' }];
+
+    return (
+      <div className="flex-1 p-8 flex flex-col max-w-xl mr-auto w-full space-y-8">
+        {questionsToRender.map((q) => (
+          <EditorItem 
+            key={q.id}
+            q={q}
+            answer={answers[q.id] || ''}
+            explanation={explanations?.[q.id] || ''}
+            onAnswerChange={onAnswerChange}
+            isGroup={!!isGroup}
+          />
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <main className={`flex-1 flex overflow-hidden relative transition-all duration-500 ${isHintOpen ? 'mr-[340px]' : ''}`}>
+      {/* Left Pane: Problem & Geometry */}
+      <div className="w-1/2 overflow-y-auto p-8 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+        <div className="max-w-xl ml-auto">
+          <div className="flex items-center justify-between mb-6">
+            <span className="px-3 py-1 bg-primary/10 text-primary text-sm font-bold rounded-lg uppercase">
+              Câu hỏi {index + 1}
+            </span>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onToggleFlag}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer transition-all active:scale-95 ${
+                  isFlagged 
+                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400'
+                }`}
+                title="Đánh dấu câu hỏi này để xem lại sau"
+              >
+                <Flag className={`w-5 h-5 ${isFlagged ? 'fill-amber-500' : ''}`} />
+                <span className="hidden sm:inline">{isFlagged ? 'Đã đánh dấu' : 'Đánh dấu'}</span>
+              </button>
+              
+              <button 
+                data-hint-toggle="true"
+                onClick={onToggleHint}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full font-semibold text-sm cursor-pointer hover:bg-blue-700 transition-all shadow-md shadow-primary/20 active:scale-95"
+              >
+                <Sparkles className="w-5 h-5" />
+                <span>Gợi ý từ AI</span>
+              </button>
+            </div>
+          </div>
+          
+          {renderLeftContent()}
+        </div>
+      </div>
+
+      {/* Right Pane: Solution Editor */}
+      <div className="w-1/2 overflow-y-auto bg-slate-50 dark:bg-slate-950">
+        {renderEditors()}
+      </div>
+    </main>
   )
 }

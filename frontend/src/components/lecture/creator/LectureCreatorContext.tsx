@@ -1,34 +1,57 @@
 'use client'
 import React, { createContext, useContext, useState } from 'react'
-import { ExampleExercise } from './ExampleExerciseCard'
 
-interface ExampleItem {
+export interface ExampleStep {
+  step: number;
+  title: string;
+  content: string;
+  formula?: string;
+}
+
+export interface ExampleExercise {
+  problem: string;
+  steps: ExampleStep[];
+  conclusion?: string;
+  tips?: string;
+}
+
+export interface MethodItem {
   id: string;
+  methodName: string;
+  methodContent: string;
   exercise: ExampleExercise | null;
   problemImage: string | null;
   solutionImage: string | null;
+}
+
+export interface DangToanItem {
+  id: string;
+  dangToanName: string;
+  methods: MethodItem[];
+}
+
+export interface MediaItem {
+  id: string;
+  type: 'image' | 'video';
+  url: string;
 }
 
 interface LectureCreatorState {
   title: string;
   grade: string;
   category: string;
-  basicConcept: string;
-  coverImage: string | null;
-  videoUrl: string;
+  mediaItems: MediaItem[];
   practiceIds: string[];
-  examples: ExampleItem[];
+  dangToanList: DangToanItem[];
   setTitle: (val: string) => void;
   setGrade: (val: string) => void;
   setCategory: (val: string) => void;
-  setBasicConcept: (val: string) => void;
-  setCoverImage: (val: string | null) => void;
-  setVideoUrl: (val: string) => void;
+  setMediaItems: (val: MediaItem[]) => void;
   setPracticeIds: (val: string[]) => void;
-  setExamples: (val: ExampleItem[]) => void;
+  setDangToanList: (val: DangToanItem[]) => void;
   validateAndSubmit: () => void;
   resetForm: () => void;
-  removeExample: (id: string) => void;
+  removeDangToan: (id: string) => void;
   isSubmitting: boolean;
 }
 
@@ -38,12 +61,16 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
   const [title, setTitle] = useState('')
   const [grade, setGrade] = useState('')
   const [category, setCategory] = useState('')
-  const [basicConcept, setBasicConcept] = useState('')
-  const [coverImage, setCoverImage] = useState<string | null>(null)
-  const [videoUrl, setVideoUrl] = useState('')
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
   const [practiceIds, setPracticeIds] = useState<string[]>([])
-  const [examples, setExamples] = useState<ExampleItem[]>([
-    { id: '1', exercise: null, problemImage: null, solutionImage: null }
+  const [dangToanList, setDangToanList] = useState<DangToanItem[]>([
+    { 
+      id: '1', 
+      dangToanName: '', 
+      methods: [
+        { id: '1-1', methodName: '', methodContent: '', exercise: null, problemImage: null, solutionImage: null }
+      ] 
+    }
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -60,44 +87,61 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
       alert('Vui lòng chọn danh mục')
       return
     }
-    const textOnly = basicConcept.replace(/<[^>]*>?/gm, '').trim()
-    if (!textOnly && !coverImage && !videoUrl) {
-      alert('Vui lòng nhập ít nhất một trong hai: Khái niệm cơ bản hoặc Đa phương tiện (Ảnh bìa / Video)')
-      return
-    }
 
-    // check examples
-    for (let i = 0; i < examples.length; i++) {
-      const ex = examples[i]
-      if (!ex.exercise) {
-        alert(`Bài tập mẫu ${i + 1} chưa có nội dung`)
+    // check dangToanList
+    for (let i = 0; i < dangToanList.length; i++) {
+      const dt = dangToanList[i]
+      if (!dt.dangToanName.trim()) {
+        alert(`Dạng toán ${i + 1} chưa có tên`)
         return
       }
-      if (!ex.exercise.problem.trim()) {
-        alert(`Bài tập mẫu ${i + 1} thiếu đề bài`)
-        return
-      }
-      if (!ex.exercise.steps || ex.exercise.steps.length === 0) {
-        alert(`Bài tập mẫu ${i + 1} cần ít nhất 1 bước giải`)
-        return
+      for (let j = 0; j < dt.methods.length; j++) {
+        const m = dt.methods[j]
+
+        if (!m.exercise) {
+          alert(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có nội dung bài tập (JSON)`)
+          return
+        }
+        if (!m.exercise.problem.trim()) {
+          alert(`Dạng toán ${i + 1} - Phương pháp ${j + 1} thiếu đề bài`)
+          return
+        }
+        if (!m.exercise.steps || m.exercise.steps.length === 0) {
+          alert(`Dạng toán ${i + 1} - Phương pháp ${j + 1} cần ít nhất 1 bước giải`)
+          return
+        }
       }
     }
 
     setIsSubmitting(true)
 
     try {
-      // Dynamic import to avoid SSR issues if api.ts has client-only features
       const { apiFetch, uploadObjectUrlIfNeeded } = await import('@/lib/api')
 
-      // Process images
-      const coverImgUrl = await uploadObjectUrlIfNeeded(coverImage)
+      const processedMediaItems = await Promise.all(
+        mediaItems.map(async (item) => {
+          if (item.type === 'image') {
+            const uploadedUrl = await uploadObjectUrlIfNeeded(item.url)
+            return { ...item, url: uploadedUrl || item.url }
+          }
+          return item
+        })
+      )
 
-      const processedExamples = await Promise.all(
-        examples.map(async (ex) => ({
-          id: ex.id,
-          exercise: ex.exercise!,
-          problemImage: await uploadObjectUrlIfNeeded(ex.problemImage),
-          solutionImage: await uploadObjectUrlIfNeeded(ex.solutionImage)
+      const processedDangToanList = await Promise.all(
+        dangToanList.map(async (dt) => ({
+          id: dt.id,
+          dangToanName: dt.dangToanName,
+          methods: await Promise.all(
+            dt.methods.map(async (m) => ({
+              id: m.id,
+              methodName: m.methodName,
+              methodContent: m.methodContent,
+              exercise: m.exercise!,
+              problemImage: await uploadObjectUrlIfNeeded(m.problemImage),
+              solutionImage: await uploadObjectUrlIfNeeded(m.solutionImage)
+            }))
+          )
         }))
       )
 
@@ -105,11 +149,10 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
         title,
         grade,
         category,
-        basicConcept,
-        coverImage: coverImgUrl || '',
-        videoUrl: videoUrl,
+        basicConcept: "", // Send empty string for backend compat
+        mediaItems: processedMediaItems,
         practiceIds: practiceIds,
-        examples: processedExamples
+        examples: processedDangToanList // Backend now receives the new structure in 'examples' field
       }
 
       await apiFetch('/lectures', {
@@ -131,17 +174,21 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
     setTitle('')
     setGrade('')
     setCategory('')
-    setBasicConcept('')
-    setCoverImage(null)
-    setVideoUrl('')
+    setMediaItems([])
     setPracticeIds([])
-    setExamples([{ id: Math.random().toString(36).substr(2, 9), exercise: null, problemImage: null, solutionImage: null }])
+    setDangToanList([{ 
+      id: Math.random().toString(36).substr(2, 9), 
+      dangToanName: '', 
+      methods: [
+        { id: Math.random().toString(36).substr(2, 9), methodName: '', methodContent: '', exercise: null, problemImage: null, solutionImage: null }
+      ] 
+    }])
   }
 
-  const removeExample = (id: string) => {
-    setExamples(prev => {
+  const removeDangToan = (id: string) => {
+    setDangToanList(prev => {
       if (prev.length <= 1) return prev
-      return prev.filter(ex => ex.id !== id)
+      return prev.filter(dt => dt.id !== id)
     })
   }
 
@@ -150,22 +197,18 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
       title,
       grade,
       category,
-      basicConcept,
-      coverImage,
-      videoUrl,
+      mediaItems,
       practiceIds,
-      examples,
+      dangToanList,
       setTitle,
       setGrade,
       setCategory,
-      setBasicConcept,
-      setCoverImage,
-      setVideoUrl,
+      setMediaItems,
       setPracticeIds,
-      setExamples,
+      setDangToanList,
       validateAndSubmit,
       resetForm,
-      removeExample,
+      removeDangToan,
       isSubmitting
     }}>
       {children}

@@ -18,11 +18,13 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
             Math<span className="text-primary">AI</span>
           </span>
         </Link>
-        <div className="hidden md:flex items-center gap-8 font-medium">
-          <a className="hover:text-primary transition-colors text-slate-700" href="#">Tính năng</a>
-          <a className="hover:text-primary transition-colors text-slate-700" href="#">Lộ trình</a>
-          <a className="hover:text-primary transition-colors text-slate-700" href="#">Bảng giá</a>
-          <a className="hover:text-primary transition-colors text-slate-700" href="#">Cộng đồng</a>
+        <div className="hidden lg:flex items-center gap-8 font-medium">
+          <Link className="hover:text-primary transition-colors text-slate-700" href="/">Trang chủ</Link>
+          <Link className="hover:text-primary transition-colors text-slate-700" href="/lectures">Khoá học</Link>
+          <Link className="hover:text-primary transition-colors text-slate-700" href="/practices">Luyện thi</Link>
+          <Link className="hover:text-primary transition-colors text-slate-700" href="/blog">Blog</Link>
+          <Link className="hover:text-primary transition-colors text-slate-700" href="/pricing">Bảng giá</Link>
+          <Link className="hover:text-primary transition-colors text-slate-700" href="/community">Cộng đồng</Link>
         </div>
         <div className="flex items-center gap-4">
           {isLoggedIn ? (

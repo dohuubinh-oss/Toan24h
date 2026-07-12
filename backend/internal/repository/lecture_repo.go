@@ -50,7 +50,7 @@ func (r *lectureRepository) GetLecturesByGrade(ctx context.Context, grade string
 
 func (r *lectureRepository) GetLectureByID(ctx context.Context, id string) (*models.Lecture, error) {
 	var lecture models.Lecture
-	if err := r.db.WithContext(ctx).Preload("Examples").First(&lecture, "id = ?", id).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&lecture, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &lecture, nil

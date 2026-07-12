@@ -62,3 +62,11 @@ export async function uploadObjectUrlIfNeeded(url: string | null): Promise<strin
     return url // fallback to original
   }
 }
+
+// Mockup for AI handwriting recognition
+export async function recognizeHandwriting(file: File): Promise<string> {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1500))
+  // Return some mockup text/latex
+  return 'Gợi ý từ AI: $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$'
+}

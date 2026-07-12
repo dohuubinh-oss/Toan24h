@@ -1,80 +1,88 @@
-import React, { useState } from 'react'
-import { Wand2, X, Lightbulb, Loader2 } from 'lucide-react'
+import React, { useEffect, useRef } from 'react'
+import { Sparkles, X, Lightbulb, CheckCircle2, Lock } from 'lucide-react'
+import MathText from '@/components/ui/MathText'
 
-interface AIHintPanelProps {
-  hint: string
-  onGetHint: () => void
-  isHintLoading: boolean
-  remainingHints: number
+interface AiHintPanelProps {
+  isOpen: boolean
+  onClose: () => void
 }
 
-export default function AIHintPanel({ hint, onGetHint, isHintLoading, remainingHints }: AIHintPanelProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export default function AIHintPanel({ isOpen, onClose }: AiHintPanelProps) {
+  const panelRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node
+      const isToggleButton = target instanceof Element && target.closest('[data-hint-toggle="true"]')
+      if (isOpen && panelRef.current && !panelRef.current.contains(target) && !isToggleButton) {
+        onClose()
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isOpen, onClose])
 
   return (
-    <div
-      className={`fixed top-24 left-6 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl flex flex-col pointer-events-auto transition-transform duration-300 z-50 overflow-hidden ${
-        isOpen ? 'translate-x-0' : '-translate-x-[calc(100%+24px)]'
-      }`}
+    <aside 
+      ref={panelRef}
+      className={`absolute top-0 bottom-0 right-0 w-[340px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl transition-transform duration-500 z-40 flex flex-col
+        ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
     >
-      <button
-        data-testid="ai-toggle-btn"
-        onClick={() => setIsOpen(!isOpen)}
-        className="absolute -right-12 top-4 w-12 h-12 bg-white dark:bg-slate-900 border border-l-0 border-slate-200 dark:border-slate-800 rounded-r-xl shadow-lg flex items-center justify-center cursor-pointer text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors"
-        style={!isOpen ? { transform: 'translateX(48px)' } : { display: 'none' }}
-      >
-        <Wand2 className="w-6 h-6" />
-      </button>
-
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex items-center justify-between">
-        <h3 className="font-bold text-white flex items-center gap-2">
-          <Wand2 className="w-5 h-5" />
-          Trợ giảng AI
-        </h3>
-        <button
-          onClick={() => setIsOpen(false)}
-          className="text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
+      <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-primary" />
+          </div>
+          <h3 className="font-bold text-slate-800 dark:text-white">Trợ lý AI</h3>
+        </div>
+        <button 
+          onClick={onClose}
+          className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg cursor-pointer text-slate-500 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="p-4 max-h-[400px] overflow-y-auto">
-        {hint ? (
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50">
-            <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{hint}</p>
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30">
+          <div className="flex items-start gap-3">
+            <Lightbulb className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm mb-1">Gợi ý 1: Phân tích đề</h4>
+              <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
+                Đọc kỹ đề bài và xác định phương pháp giải phù hợp. Nếu là hàm số, xem xét việc tính đạo hàm.
+              </p>
+            </div>
           </div>
-        ) : (
-          <div className="text-center py-6">
-            <Lightbulb className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Bạn đang gặp khó khăn? Hãy để AI gợi ý cách làm nhé.
-            </p>
-          </div>
-        )}
-      </div>
+        </div>
 
-      <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-        <button
-          data-testid="get-hint-btn"
-          onClick={onGetHint}
-          disabled={isHintLoading || remainingHints <= 0}
-          className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-        >
-          {isHintLoading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Đang suy nghĩ...
-            </>
-          ) : (
-            <>
-              <Lightbulb className="w-5 h-5" />
-              Gợi ý từ AI
-            </>
-          )}
-        </button>
-        <p className="text-center text-xs text-slate-500 mt-3 font-semibold">Còn {remainingHints} lượt</p>
+        <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex items-start gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-slate-800 dark:text-slate-200 text-sm mb-1">Gợi ý 2: Thực hiện các bước</h4>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Áp dụng công thức và tính toán cẩn thận từng bước một.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Locked Hint Placeholder */}
+        <div className="relative group overflow-hidden rounded-xl">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] z-10 flex items-center justify-center flex-col gap-2 transition-all">
+            <div className="p-3 bg-white/90 dark:bg-slate-800/90 rounded-full shadow-lg">
+              <Lock className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+            </div>
+            <span className="text-white font-medium text-sm drop-shadow-md">Mở khóa gợi ý cuối</span>
+          </div>
+          <div className="bg-slate-50 dark:bg-slate-800/50 p-4 border border-slate-200 dark:border-slate-700 blur-[2px] select-none">
+            <div className="w-3/4 h-4 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+            <div className="w-full h-4 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+            <div className="w-5/6 h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+          </div>
+        </div>
       </div>
-    </div>
+    </aside>
   )
 }

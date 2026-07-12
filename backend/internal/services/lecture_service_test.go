@@ -50,16 +50,22 @@ func TestCreateLectureService(t *testing.T) {
 			Grade:             "10",
 			Category:          "Math",
 			BasicConcept:      "Concept",
-			Examples: []ExampleRequest{
+			Examples: []DangToanRequest{
 				{
-					ProblemImage:  "example_problem_image",
-					SolutionImage: "example_solution_image",
-					Exercise: ExerciseRequest{
-						Problem: "Solve x",
-						Conclusion: "example_conclusion",
-						Tips: "example_tips",
-						Steps: []StepRequest{
-							{StepOrder: 1, Title: "Step 1", Content: "Do this"},
+					DangToanName: "Dang 1",
+					Methods: []MethodRequest{
+						{
+							MethodName: "Phuong phap 1",
+							ProblemImage:  "example_problem_image",
+							SolutionImage: "example_solution_image",
+							Exercise: &ExerciseRequest{
+								Problem: "Solve x",
+								Conclusion: "example_conclusion",
+								Tips: "example_tips",
+								Steps: []StepRequest{
+									{StepOrder: 1, Title: "Step 1", Content: "Do this"},
+								},
+							},
 						},
 					},
 				},

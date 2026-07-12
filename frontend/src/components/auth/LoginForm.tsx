@@ -38,13 +38,18 @@ export default function LoginForm() {
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     // [TODO: WARNING] Hiện tại dùng logic giả lập để phân quyền dựa vào text nhập ở Identity.
-    // KHI CÓ API THẬT, PHẢI THAY THẾ BẰNG RESPONSE PHÂN QUYỀN TỪ SERVER (roles/permissions).
-    // Nếu quên cập nhật phần này sẽ sinh lỗi nghiêm trọng về bảo mật & luồng dữ liệu!
+    // KHI CÓ API THẬT, PHẢI THAY THẾ BẰNG RESPONSE TỪ SERVER (lưu JWT thật vào cookies).
     
     if (data.identity.toLowerCase().includes('student')) {
-      router.push('/student')
+      // Giả lập token JWT của học sinh (Role student, Grade 9)
+      const mockStudentToken = btoa(JSON.stringify({ role: 'student', grade: '9' }))
+      document.cookie = `accessToken=${mockStudentToken}; path=/; max-age=86400`
+      router.push('/lectures')
     } else {
-      router.push('/dashboard/questions')
+      // Giả lập token JWT của admin
+      const mockAdminToken = btoa(JSON.stringify({ role: 'admin' }))
+      document.cookie = `accessToken=${mockAdminToken}; path=/; max-age=86400`
+      router.push('/dashboard/lectures')
     }
     
     setIsLoading(false)

@@ -14,7 +14,6 @@ describe('LoginForm Component', () => {
   it('renders the login form', () => {
     render(<LoginForm />)
     expect(screen.getByRole('heading', { name: /Đăng nhập/i })).toBeInTheDocument()
-    expect(screen.getByLabelText(/Họ và Tên/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Số điện thoại hoặc Email/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Mật khẩu/i)).toBeInTheDocument()
   })
@@ -26,7 +25,6 @@ describe('LoginForm Component', () => {
     fireEvent.click(submitBtn)
     
     await waitFor(() => {
-      expect(screen.getByText(/Vui lòng nhập họ tên/i)).toBeInTheDocument()
       expect(screen.getByText(/Vui lòng nhập email hoặc số điện thoại/i)).toBeInTheDocument()
       expect(screen.getByText(/Vui lòng nhập mật khẩu/i)).toBeInTheDocument()
     })
@@ -46,37 +44,37 @@ describe('LoginForm Component', () => {
     expect(passwordInput).toHaveAttribute('type', 'password')
   })
 
-  it('redirects to student dashboard when identity contains student', async () => {
+  it('redirects to lectures and sets cookies when identity contains student', async () => {
     const pushMock = vi.fn()
     vi.mocked(useRouter).mockReturnValue({ push: pushMock } as any)
     
     render(<LoginForm />)
     
-    fireEvent.change(screen.getByLabelText(/Họ và Tên/i), { target: { value: 'Nam' } })
     fireEvent.change(screen.getByLabelText(/Số điện thoại hoặc Email/i), { target: { value: 'student@mathed.vn' } })
     fireEvent.change(screen.getByLabelText(/Mật khẩu/i), { target: { value: 'password123' } })
     
     fireEvent.click(screen.getByRole('button', { name: /Đăng nhập/i }))
     
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith('/student')
+      expect(pushMock).toHaveBeenCalledWith('/lectures')
+      expect(document.cookie).toContain('accessToken=')
     })
   })
 
-  it('redirects to questions dashboard when identity does not contain student', async () => {
+  it('redirects to dashboard/lectures and sets cookies when identity does not contain student', async () => {
     const pushMock = vi.fn()
     vi.mocked(useRouter).mockReturnValue({ push: pushMock } as any)
     
     render(<LoginForm />)
     
-    fireEvent.change(screen.getByLabelText(/Họ và Tên/i), { target: { value: 'Admin' } })
     fireEvent.change(screen.getByLabelText(/Số điện thoại hoặc Email/i), { target: { value: 'admin@mathed.vn' } })
     fireEvent.change(screen.getByLabelText(/Mật khẩu/i), { target: { value: 'password123' } })
     
     fireEvent.click(screen.getByRole('button', { name: /Đăng nhập/i }))
     
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith('/dashboard/questions')
+      expect(pushMock).toHaveBeenCalledWith('/dashboard/lectures')
+      expect(document.cookie).toContain('accessToken=')
     })
   })
 })

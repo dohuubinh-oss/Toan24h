@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
@@ -31,22 +30,35 @@ type ExerciseRequest struct {
 	Steps      []StepRequest `json:"steps"`
 }
 
-type ExampleRequest struct {
-	ID            string          `json:"id"`
-	Exercise      ExerciseRequest `json:"exercise"`
-	ProblemImage  string          `json:"problemImage"`
-	SolutionImage string          `json:"solutionImage"`
+type MediaItemRequest struct {
+	ID   string `json:"id"`
+	Type string `json:"type"`
+	Url  string `json:"url"`
+}
+
+type MethodRequest struct {
+	ID            string           `json:"id"`
+	MethodName    string           `json:"methodName"`
+	MethodContent string           `json:"methodContent"`
+	Exercise      *ExerciseRequest `json:"exercise"`
+	ProblemImage  string           `json:"problemImage"`
+	SolutionImage string           `json:"solutionImage"`
+}
+
+type DangToanRequest struct {
+	ID           string          `json:"id"`
+	DangToanName string          `json:"dangToanName"`
+	Methods      []MethodRequest `json:"methods"`
 }
 
 type CreateLectureRequest struct {
-	Title        string           `json:"title"`
-	Grade        string           `json:"grade"`
-	Category     string           `json:"category"`
-	BasicConcept string           `json:"basicConcept"`
-	CoverImage   string           `json:"coverImage"`
-	VideoUrl     string           `json:"videoUrl"`
-	PracticeIds  []string         `json:"practiceIds"`
-	Examples     []ExampleRequest `json:"examples"`
+	Title        string             `json:"title"`
+	Grade        string             `json:"grade"`
+	Category     string             `json:"category"`
+	BasicConcept string             `json:"basicConcept"`
+	MediaItems   []MediaItemRequest `json:"mediaItems"`
+	PracticeIds  []string           `json:"practiceIds"`
+	Examples     []DangToanRequest  `json:"examples"`
 }
 
 type PaginatedLectures struct {
@@ -85,16 +97,17 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 	}
 
 	hasBasicConcept := req.BasicConcept != "" && req.BasicConcept != "<p>Nhập khái niệm cơ bản tại đây...</p>" && req.BasicConcept != "<p></p>"
-	hasMedia := req.CoverImage != "" || req.VideoUrl != ""
+	hasMedia := len(req.MediaItems) > 0
+	hasExamples := len(req.Examples) > 0
 
-	if !hasBasicConcept && !hasMedia {
-		return errors.New("must provide at least basic concept or multimedia")
+	if !hasBasicConcept && !hasMedia && !hasExamples {
+		return errors.New("must provide at least basic concept, multimedia or examples")
 	}
 
 	lectureID := uuid.New()
 
 	processLectureImageUrl := func(originalUrl string) string {
-		if !strings.HasPrefix(originalUrl, "/uploads/temp/") {
+		if originalUrl == "" || !strings.HasPrefix(originalUrl, "/uploads/temp/") {
 			return originalUrl
 		}
 
@@ -105,9 +118,7 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		baseName := strings.TrimSuffix(fileName, ext)
 		newFileName := fmt.Sprintf("%s_%s%s", baseName, uuid.New().String()[:8], ext)
 
-		currentTime := time.Now()
-		folderName := fmt.Sprintf("%02d-%d", currentTime.Month(), currentTime.Year())
-		finalDir := filepath.Join(".", "uploads", "lectures", folderName)
+		finalDir := filepath.Join(".", "uploads", "lop", req.Grade)
 
 		if err := os.MkdirAll(finalDir, os.ModePerm); err != nil {
 			return originalUrl
@@ -118,7 +129,7 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 			return originalUrl
 		}
 
-		return fmt.Sprintf("/uploads/lectures/%s/%s", folderName, newFileName)
+		return fmt.Sprintf("/uploads/lop/%s/%s", req.Grade, newFileName)
 	}
 
 	processHtmlImages := func(htmlContent string) string {
@@ -138,6 +149,37 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 	if len(req.PracticeIds) == 0 {
 		practiceIdsJson = []byte("[]")
 	}
+	
+	// Process MediaItems
+	for i := range req.MediaItems {
+		if req.MediaItems[i].Type == "image" {
+			req.MediaItems[i].Url = processLectureImageUrl(req.MediaItems[i].Url)
+		}
+	}
+	mediaItemsJson, _ := json.Marshal(req.MediaItems)
+	if len(req.MediaItems) == 0 {
+		mediaItemsJson = []byte("[]")
+	}
+
+	// Process Examples (DangToanList)
+	for i := range req.Examples {
+		for j := range req.Examples[i].Methods {
+			if req.Examples[i].Methods[j].ProblemImage != "" {
+				req.Examples[i].Methods[j].ProblemImage = processLectureImageUrl(req.Examples[i].Methods[j].ProblemImage)
+			}
+			if req.Examples[i].Methods[j].SolutionImage != "" {
+				req.Examples[i].Methods[j].SolutionImage = processLectureImageUrl(req.Examples[i].Methods[j].SolutionImage)
+			}
+			// Process images inside method content if any
+			if req.Examples[i].Methods[j].MethodContent != "" {
+				req.Examples[i].Methods[j].MethodContent = processHtmlImages(req.Examples[i].Methods[j].MethodContent)
+			}
+		}
+	}
+	examplesJson, _ := json.Marshal(req.Examples)
+	if len(req.Examples) == 0 {
+		examplesJson = []byte("[]")
+	}
 
 	// Mapping DTO to Model
 	lecture := &models.Lecture{
@@ -146,34 +188,9 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		Grade:        req.Grade,
 		Category:     req.Category,
 		BasicConcept: processHtmlImages(req.BasicConcept),
-		CoverImage:   processLectureImageUrl(req.CoverImage),
-		VideoUrl:     req.VideoUrl,
+		MediaItems:   string(mediaItemsJson),
+		Examples:     string(examplesJson),
 		PracticeIDs:  string(practiceIdsJson),
-	}
-
-	for _, exReq := range req.Examples {
-		example := models.LectureExample{
-			Problem:       processHtmlImages(exReq.Exercise.Problem),
-			Conclusion:    processHtmlImages(exReq.Exercise.Conclusion),
-			Tips:          processHtmlImages(exReq.Exercise.Tips),
-			ProblemImage:  processLectureImageUrl(exReq.ProblemImage),
-			SolutionImage: processLectureImageUrl(exReq.SolutionImage),
-		}
-
-		var stepsToSave []StepRequest
-		for _, stepReq := range exReq.Exercise.Steps {
-			stepsToSave = append(stepsToSave, StepRequest{
-				StepOrder: stepReq.StepOrder,
-				Title:     stepReq.Title,
-				Content:   processHtmlImages(stepReq.Content),
-				Formula:   stepReq.Formula,
-			})
-		}
-
-		stepsJson, _ := json.Marshal(stepsToSave)
-		example.Steps = string(stepsJson)
-
-		lecture.Examples = append(lecture.Examples, example)
 	}
 
 	return s.repo.CreateLecture(ctx, lecture)
