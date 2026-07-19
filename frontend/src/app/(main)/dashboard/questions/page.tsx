@@ -31,11 +31,11 @@ function QuestionsPageContent() {
       setIsFiltering(true);
       try {
         const page = parseInt(searchParams.get('page') || '1');
-        const data = await getQuestions(page, 10);
+        const response = await getQuestions(page, 10);
         
         // Cần lọc theo filter ở Frontend hoặc truyền xuống Backend.
-        // Tạm thời hiển thị toàn bộ kết quả trả về từ Backend.
-        let filtered = data;
+        // Tạm thời hiển thị kết quả trả về từ Backend.
+        let filtered = response.data;
         const currentGrade = searchParams.get('grade');
         const currentType = searchParams.get('type');
         const currentDiff = searchParams.get('difficulty');
@@ -48,6 +48,10 @@ function QuestionsPageContent() {
           filtered = filtered.filter(q => {
             if (currentType === 'Câu hỏi chùm') return q.type_question === 'group';
             if (currentType === 'Câu đơn') return q.type_question === 'single';
+            
+            if (q.type_question === 'group' && q.subQuestions) {
+              return q.subQuestions.some((sub: any) => sub.type === currentType);
+            }
             return q.type === currentType;
           });
         }
@@ -59,7 +63,7 @@ function QuestionsPageContent() {
         }
 
         setQuestions(filtered);
-        setTotalVisible(filtered.length);
+        setTotalVisible(response.total);
       } catch (error) {
         console.error("Failed to load questions:", error);
         setQuestions([]);
@@ -121,6 +125,8 @@ function QuestionsPageContent() {
                     grade={Number(q.grade) || 0}
                     topic={q.topic}
                     difficulty={q.difficulty_level}
+                    typeQuestion={q.type_question}
+                    type={q.type}
                   >
                     <ContentQuestion 
                       content={q.type_question === 'single' ? q.content : undefined}
@@ -161,11 +167,11 @@ function QuestionsPageContent() {
         {totalVisible > 0 && (
           <div className="pt-0">
             <Pagination 
-              currentPage={1} 
+              currentPage={parseInt(searchParams.get('page') || '1')} 
               totalPages={Math.ceil(totalVisible / 10) || 1} 
               totalItems={totalVisible} 
-              startIndex={totalVisible > 0 ? 1 : 0} 
-              endIndex={Math.min(10, totalVisible)} 
+              startIndex={(parseInt(searchParams.get('page') || '1') - 1) * 10 + (totalVisible > 0 ? 1 : 0)} 
+              endIndex={Math.min(parseInt(searchParams.get('page') || '1') * 10, totalVisible)} 
               itemName="câu hỏi"
             />
           </div>

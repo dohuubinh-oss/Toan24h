@@ -73,10 +73,13 @@ export async function recognizeHandwriting(file: File): Promise<string> {
   return 'Gợi ý từ AI: $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$'
 }
 
-export async function getQuestions(page: number = 1, limit: number = 20): Promise<Question[]> {
+export async function getQuestions(page: number = 1, limit: number = 20): Promise<{data: Question[], total: number}> {
   const response = await apiFetch(`/questions?page=${page}&limit=${limit}`)
-  if (response.status === 'success' && Array.isArray(response.data)) {
-    return response.data.map((q: any) => {
+  if (response.status === 'success' && response.data) {
+    const items = response.data.items || (Array.isArray(response.data) ? response.data : [])
+    const total = response.data.total || items.length
+
+    const questions = items.map((q: any) => {
       // Parse tags and options if they are stringified JSON (from Go backend)
       let parsedTags = []
       let parsedOptions = []
@@ -135,6 +138,8 @@ export async function getQuestions(page: number = 1, limit: number = 20): Promis
         subQuestions: subQuestions
       } as Question
     })
+
+    return { data: questions, total }
   }
-  return []
+  return { data: [], total: 0 }
 }

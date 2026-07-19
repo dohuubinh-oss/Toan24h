@@ -181,17 +181,33 @@ func BulkCreateQuestions(c *gin.Context) {
 // GetQuestions xử lý lấy danh sách câu hỏi có phân trang
 func GetQuestions(c *gin.Context) {
 	var questions []models.Question
+	var total int64
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	offset := (page - 1) * limit
 
-	if err := config.DB.Preload("SubQuestions").Where("parent_id IS NULL").Limit(limit).Offset(offset).Order("created_at desc").Find(&questions).Error; err != nil {
+	query := config.DB.Model(&models.Question{}).Where("parent_id IS NULL")
+	
+	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{Status: "success", Data: questions})
+	if err := query.Preload("SubQuestions").Limit(limit).Offset(offset).Order("created_at desc").Find(&questions).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Status: "success", 
+		Data: map[string]interface{}{
+			"items": questions,
+			"total": total,
+			"page":  page,
+			"limit": limit,
+		},
+	})
 }
 
 // GetQuestionByID xử lý lấy chi tiết 1 câu hỏi

@@ -14,10 +14,12 @@ export interface QuestionCardProps {
   children?: React.ReactNode;
   index?: number;
   onChangeQuestion?: () => void;
+  typeQuestion?: 'group' | 'single' | string;
+  type?: 'Trắc nghiệm' | 'Tự luận' | string;
 }
 
 export default function QuestionCard({
-  id, grade, topic, difficulty, isSelected, onToggle, children, index, onChangeQuestion
+  id, grade, topic, difficulty, isSelected, onToggle, children, index, onChangeQuestion, typeQuestion, type
 }: QuestionCardProps) {
   
   const getDifficultyBadgeVariant = (diff: string): BadgeVariant => {
@@ -62,6 +64,16 @@ export default function QuestionCard({
               <Badge variant={getDifficultyBadgeVariant(difficulty)} className="text-[10px] uppercase tracking-wider">
                 {difficulty}
               </Badge>
+              {typeQuestion && (
+                <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-slate-300 text-slate-600 bg-white">
+                  {typeQuestion === 'group' ? 'CÂU HỎI CHÙM' : 'CÂU ĐƠN'}
+                </Badge>
+              )}
+              {type && (
+                <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-primary/30 text-primary bg-primary/5">
+                  {type}
+                </Badge>
+              )}
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                 ID: {id}
               </span>
