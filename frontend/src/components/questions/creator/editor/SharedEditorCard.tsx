@@ -3,12 +3,56 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import TiptapImage from '@tiptap/extension-image'
 import Youtube from '@tiptap/extension-youtube'
-import { Bold, Italic, Strikethrough, List, ListOrdered, ImagePlus, Sigma, Image as ImageIcon, Video as YoutubeIcon } from 'lucide-react'
+import { Bold, Italic, Strikethrough, List, ListOrdered, ImagePlus, Sigma, Image as ImageIcon, Video as YoutubeIcon, WrapText } from 'lucide-react'
 import { MathExtension } from './MathExtension'
 import { uploadTempImage } from '@/lib/api'
 
 import Placeholder from '@tiptap/extension-placeholder'
 import { preprocessMath } from './RichTextEditor'
+import { Node, Mark, mergeAttributes, Extension } from '@tiptap/core'
+
+export const DivNode = Node.create({
+  name: 'div',
+  group: 'block',
+  content: 'block*',
+  parseHTML() {
+    return [{ tag: 'div' }]
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['div', mergeAttributes(HTMLAttributes), 0]
+  },
+})
+
+export const SpanMark = Mark.create({
+  name: 'span',
+  parseHTML() {
+    return [{ tag: 'span' }]
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['span', mergeAttributes(HTMLAttributes), 0]
+  },
+})
+
+export const ClassExtension = Extension.create({
+  name: 'classExtension',
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['div', 'orderedList', 'bulletList', 'listItem', 'heading', 'paragraph', 'bold', 'span', 'horizontalRule'],
+        attributes: {
+          class: {
+            default: null,
+            parseHTML: element => element.getAttribute('class'),
+            renderHTML: attributes => {
+              if (!attributes.class) return {}
+              return { class: attributes.class }
+            },
+          },
+        },
+      },
+    ]
+  },
+})
 
 interface SharedEditorCardProps {
   title: string
@@ -16,6 +60,7 @@ interface SharedEditorCardProps {
   content: string
   onContentChange: (content: string) => void
   placeholder?: string
+  headerRightExtra?: React.ReactNode
 }
 
 const MenuBar = ({ editor }: { editor: any }) => {
@@ -62,6 +107,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       <div className="w-px h-4 bg-slate-300 mx-1"></div>
       <button
         onClick={() => {
+          const selection = editor.state.selection;
           const input = document.createElement('input');
           input.type = 'file';
           input.accept = 'image/*';
@@ -70,7 +116,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
             if (file) {
               try {
                 const url = await uploadTempImage(file);
-                editor.chain().focus().setImage({ src: url }).run();
+                editor.chain().focus().insertContentAt(selection.to, { type: 'image', attrs: { src: url } }).run();
               } catch (err) {
                 alert('Tải ảnh thất bại!');
               }
@@ -113,6 +159,7 @@ export default function SharedEditorCard({
   content,
   onContentChange,
   placeholder = "Nhập nội dung...",
+  headerRightExtra,
 }: SharedEditorCardProps) {
   const lastEmittedHTML = useRef(content || '');
   
@@ -122,6 +169,9 @@ export default function SharedEditorCard({
     extensions: [
       StarterKit,
       MathExtension,
+      DivNode,
+      SpanMark,
+      ClassExtension,
       TiptapImage.configure({
         inline: true,
         allowBase64: true,
@@ -149,7 +199,7 @@ export default function SharedEditorCard({
     },
     editorProps: {
       attributes: {
-        class: 'flex-grow min-h-[200px] focus:outline-none text-sm leading-relaxed p-5 max-w-none [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_strong]:font-bold [&_em]:italic [&_s]:line-through [&_li>p]:mb-0 outline-none',
+        class: 'flex-grow min-h-[200px] focus:outline-none text-sm leading-relaxed p-5 max-w-none [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_strong]:font-bold [&_em]:italic [&_s]:line-through [&_li>p]:mb-0 outline-none [&_.exercise-content]:!bg-transparent [&_.rounded-full]:!m-0 [&_h4]:!mt-0',
         'data-placeholder': placeholder,
       },
     },
@@ -159,25 +209,32 @@ export default function SharedEditorCard({
   React.useEffect(() => {
     if (editor && content !== undefined) {
       if (content !== lastEmittedHTML.current) {
-        editor.commands.setContent(content)
+        const processed = preprocessMath(content || '')
+        // Use setTimeout to avoid "flushSync was called from inside a lifecycle method" in React 18+
+        setTimeout(() => {
+          if (editor.isDestroyed) return;
+          editor.commands.setContent(processed);
+          lastEmittedHTML.current = editor.getHTML();
+        }, 0);
       }
     }
   }, [content, editor])
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-      <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between">
+      <div className="p-4 bg-white flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2 px-2">
           {icon}
           <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">{title}</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
+          {headerRightExtra}
           <MenuBar editor={editor} />
         </div>
       </div>
       <div className="p-8 flex-grow">
         <div className="flex flex-col h-full">
-          <div className="flex-grow rounded-xl border border-slate-200 bg-slate-50/30 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/5 overflow-y-auto min-h-[250px] flex flex-col">
+          <div className="flex-grow rounded-xl border border-slate-200 bg-slate-50 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/5 overflow-y-auto min-h-[250px] flex flex-col">
             <EditorContent editor={editor} className="flex-grow flex flex-col" />
           </div>
         </div>

@@ -23,8 +23,6 @@ describe('ExamQuestionList Component', () => {
       quick_solve_tips: '',
       general_method: '',
       mistakes: '',
-      image_question: null,
-      image_solution: null,
     }
   ]
 

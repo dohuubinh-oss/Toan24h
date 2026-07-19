@@ -24,8 +24,6 @@ export const MOCK_QUESTIONS: Question[] = [
     quick_solve_tips: '',
     general_method: '',
     mistakes: '',
-    image_question: null,
-    image_solution: null,
   },
   {
     type_question: 'single',
@@ -49,8 +47,6 @@ export const MOCK_QUESTIONS: Question[] = [
     quick_solve_tips: '',
     general_method: '',
     mistakes: '',
-    image_question: null,
-    image_solution: null,
   },
   {
     type_question: 'single',
@@ -69,8 +65,6 @@ export const MOCK_QUESTIONS: Question[] = [
     quick_solve_tips: '',
     general_method: '',
     mistakes: '',
-    image_question: null,
-    image_solution: null,
   }
 ];
 

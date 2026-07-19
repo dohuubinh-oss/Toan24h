@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -25,6 +25,7 @@ type APIResponse struct {
 
 // QuestionDetail DTO cho từng câu hỏi con
 type QuestionDetail struct {
+	BookName        string   `json:"book_name"`
 	Content         string   `json:"content"`
 	Type            string   `json:"type"`
 	Grade           int      `json:"grade"`
@@ -40,19 +41,16 @@ type QuestionDetail struct {
 	QuickSolveTips  string   `json:"quick_solve_tips"`
 	GeneralMethod   string   `json:"general_method"`
 	Mistakes        string   `json:"mistakes"`
-	ImageQuestion   *string  `json:"image_question"`
-	ImageSolution   *string  `json:"image_solution"`
 }
 
 // QuestionGroup DTO cho nhóm câu hỏi
 type QuestionGroup struct {
 	SharedContent string           `json:"shared_content"`
-	ImageShared   *string          `json:"image_shared"`
 	Questions     []QuestionDetail `json:"questions"`
 }
 
 // processImageUrl checks if an image is in the temp folder, moves it to the final folder, and returns the new URL
-func processImageUrl(originalUrl string) string {
+func processImageUrl(originalUrl string, grade int) string {
 	if !strings.HasPrefix(originalUrl, "/uploads/temp/") {
 		return originalUrl
 	}
@@ -60,10 +58,9 @@ func processImageUrl(originalUrl string) string {
 	fileName := strings.TrimPrefix(originalUrl, "/uploads/temp/")
 	sourcePath := filepath.Join(".", "uploads", "temp", fileName)
 
-	// Thư mục đích: uploads/Question/MM-YYYY
-	currentTime := time.Now()
-	folderName := fmt.Sprintf("%02d-%d", currentTime.Month(), currentTime.Year())
-	finalDir := filepath.Join(".", "uploads", "Question", folderName)
+	// Thư mục đích: uploads/questions/grade/{grade}
+	folderName := fmt.Sprintf("%d", grade)
+	finalDir := filepath.Join(".", "uploads", "questions", "grade", folderName)
 
 	if err := os.MkdirAll(finalDir, os.ModePerm); err != nil {
 		return originalUrl
@@ -76,7 +73,25 @@ func processImageUrl(originalUrl string) string {
 		return originalUrl
 	}
 
-	return fmt.Sprintf("/uploads/Question/%s/%s", folderName, fileName)
+	return fmt.Sprintf("/uploads/questions/grade/%s/%s", folderName, fileName)
+}
+
+// processHtmlImages quét và chuyển tất cả ảnh trong mã HTML
+func processHtmlImages(htmlContent string, grade int) string {
+	if htmlContent == "" {
+		return htmlContent
+	}
+	re := regexp.MustCompile(`src="/uploads/temp/([^"]+)"`)
+	updatedContent := re.ReplaceAllStringFunc(htmlContent, func(match string) string {
+		parts := re.FindStringSubmatch(match)
+		if len(parts) > 1 {
+			originalUrl := "/uploads/temp/" + parts[1]
+			newUrl := processImageUrl(originalUrl, grade)
+			return fmt.Sprintf(`src="%s"`, newUrl)
+		}
+		return match
+	})
+	return updatedContent
 }
 
 // BulkCreateQuestions xử lý tạo hàng loạt câu hỏi (bao gồm câu đơn và câu chùm)
@@ -101,13 +116,9 @@ func BulkCreateQuestions(c *gin.Context) {
 		if group.SharedContent != "" {
 			parentQ := models.Question{
 				TypeQuestion: "group",
-				Content:      group.SharedContent,
+				Content:      processHtmlImages(group.SharedContent, group.Questions[0].Grade), // Dùng grade của câu hỏi đầu tiên
 				Tags:         "[]",
 				Options:      "[]",
-			}
-			if group.ImageShared != nil && *group.ImageShared != "" {
-				processedUrl := processImageUrl(*group.ImageShared)
-				parentQ.ImageQuestion = processedUrl
 			}
 
 			if err := tx.Create(&parentQ).Error; err != nil {
@@ -125,8 +136,9 @@ func BulkCreateQuestions(c *gin.Context) {
 
 			childQ := models.Question{
 				ParentID:        parentID,
+				BookName:        detail.BookName,
 				TypeQuestion:    "single",
-				Content:         detail.Content,
+				Content:         processHtmlImages(detail.Content, detail.Grade),
 				Type:            detail.Type,
 				Grade:           detail.Grade,
 				Topic:           detail.Topic,
@@ -135,19 +147,12 @@ func BulkCreateQuestions(c *gin.Context) {
 				Point:           detail.Point,
 				Tags:            string(tagsBytes),
 				Options:         string(optionsBytes),
-				CorrectAnswer:   detail.CorrectAnswer,
-				SolutionGuide:   detail.SolutionGuide,
-				Hint:            detail.Hint,
-				QuickSolveTips:  detail.QuickSolveTips,
-				GeneralMethod:   detail.GeneralMethod,
-				Mistakes:        detail.Mistakes,
-			}
-
-			if detail.ImageQuestion != nil && *detail.ImageQuestion != "" {
-				childQ.ImageQuestion = processImageUrl(*detail.ImageQuestion)
-			}
-			if detail.ImageSolution != nil && *detail.ImageSolution != "" {
-				childQ.ImageSolution = processImageUrl(*detail.ImageSolution)
+				CorrectAnswer:   processHtmlImages(detail.CorrectAnswer, detail.Grade),
+				SolutionGuide:   processHtmlImages(detail.SolutionGuide, detail.Grade),
+				Hint:            processHtmlImages(detail.Hint, detail.Grade),
+				QuickSolveTips:  processHtmlImages(detail.QuickSolveTips, detail.Grade),
+				GeneralMethod:   processHtmlImages(detail.GeneralMethod, detail.Grade),
+				Mistakes:        processHtmlImages(detail.Mistakes, detail.Grade),
 			}
 
 			if err := tx.Create(&childQ).Error; err != nil {

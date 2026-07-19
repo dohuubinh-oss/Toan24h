@@ -24,10 +24,7 @@ type StepRequest struct {
 }
 
 type ExerciseRequest struct {
-	Problem    string        `json:"problem"`
-	Conclusion string        `json:"conclusion"`
-	Tips       string        `json:"tips"`
-	Steps      []StepRequest `json:"steps"`
+	Content string `json:"content"`
 }
 
 type MediaItemRequest struct {
@@ -118,7 +115,7 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		baseName := strings.TrimSuffix(fileName, ext)
 		newFileName := fmt.Sprintf("%s_%s%s", baseName, uuid.New().String()[:8], ext)
 
-		finalDir := filepath.Join(".", "uploads", "lop", req.Grade)
+		finalDir := filepath.Join(".", "uploads", "lectures", req.Grade)
 
 		if err := os.MkdirAll(finalDir, os.ModePerm); err != nil {
 			return originalUrl
@@ -129,7 +126,7 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 			return originalUrl
 		}
 
-		return fmt.Sprintf("/uploads/lop/%s/%s", req.Grade, newFileName)
+		return fmt.Sprintf("/uploads/lectures/%s/%s", req.Grade, newFileName)
 	}
 
 	processHtmlImages := func(htmlContent string) string {
@@ -173,6 +170,13 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 			// Process images inside method content if any
 			if req.Examples[i].Methods[j].MethodContent != "" {
 				req.Examples[i].Methods[j].MethodContent = processHtmlImages(req.Examples[i].Methods[j].MethodContent)
+			}
+			// Process images inside Exercise
+			if req.Examples[i].Methods[j].Exercise != nil {
+				ex := req.Examples[i].Methods[j].Exercise
+				if ex.Content != "" {
+					ex.Content = processHtmlImages(ex.Content)
+				}
 			}
 		}
 	}

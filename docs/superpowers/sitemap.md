@@ -22,5 +22,5 @@ Danh sách câu hỏi: http://localhost:3000/dashboard/questions
 Tạo câu hỏi mới: http://localhost:3000/dashboard/questions/create
 Danh sách đề thi: http://localhost:3000/dashboard/exams
 Tạo đề thi mới: http://localhost:3000/dashboard/exams/create
-Tạo bài giảng mới: http://localhost:3000/lectures/create
+Tạo bài giảng mới: http://localhost:3000/dashboard/lectures/create
 Bạn có thể bấm trực tiếp vào các đường dẫn trên để mở các trang tương ứng khi ứng dụng đang chạy nhé! Mặc định cổng của Next.js sẽ là 3000. Mọi thứ đã sẵn sàng để kiểm tra!

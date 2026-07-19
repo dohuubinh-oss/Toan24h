@@ -59,12 +59,7 @@ func TestCreateLectureService(t *testing.T) {
 							ProblemImage:  "example_problem_image",
 							SolutionImage: "example_solution_image",
 							Exercise: &ExerciseRequest{
-								Problem: "Solve x",
-								Conclusion: "example_conclusion",
-								Tips: "example_tips",
-								Steps: []StepRequest{
-									{StepOrder: 1, Title: "Step 1", Content: "Do this"},
-								},
+								Content: "Solve x",
 							},
 						},
 					},

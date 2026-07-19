@@ -3,17 +3,22 @@
 import React, { useState, useCallback, useRef } from 'react'
 import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2, Save } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import JsonInputSection from '@/components/questions/creator/JsonInputSection'
 import QuestionEditorSection from '@/components/questions/creator/QuestionEditorSection'
 import QuestionSettingsSidebar from '@/components/questions/creator/QuestionSettingsSidebar'
 import { Button } from '@/components/ui/Button'
 import { QuestionBlock, Question } from '@/types/question'
+import { apiFetch } from '@/lib/api'
+import { Loader2 } from 'lucide-react'
 
 export default function CreateQuestionPage() {
   const [questionBlocks, setQuestionBlocks] = useState<QuestionBlock[]>([])
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [isSaving, setIsSaving] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   const scrollToEditor = () => {
     setTimeout(() => {
@@ -63,17 +68,33 @@ export default function CreateQuestionPage() {
         return prev;
       }
       
-      const newQuestions = [...currentBlock.questions];
-      newQuestions[currentQuestionIndex] = {
-        ...newQuestions[currentQuestionIndex],
-        [field]: value
-      };
-      
       const newBlocks = [...prev];
-      newBlocks[currentBlockIndex] = {
-        ...currentBlock,
-        questions: newQuestions
-      };
+      
+      if (field === 'book_name') {
+        let updateFromNowOn = false;
+        for (let bIdx = 0; bIdx < newBlocks.length; bIdx++) {
+           const block = { ...newBlocks[bIdx], questions: [...newBlocks[bIdx].questions] };
+           newBlocks[bIdx] = block;
+           for (let qIdx = 0; qIdx < block.questions.length; qIdx++) {
+             if (bIdx === currentBlockIndex && qIdx === currentQuestionIndex) {
+               updateFromNowOn = true;
+             }
+             if (updateFromNowOn) {
+               block.questions[qIdx] = { ...block.questions[qIdx], book_name: value };
+             }
+           }
+        }
+      } else {
+        const newQuestions = [...currentBlock.questions];
+        newQuestions[currentQuestionIndex] = {
+          ...newQuestions[currentQuestionIndex],
+          [field]: value
+        };
+        newBlocks[currentBlockIndex] = {
+          ...currentBlock,
+          questions: newQuestions
+        };
+      }
       
       return newBlocks;
     });
@@ -96,10 +117,38 @@ export default function CreateQuestionPage() {
     });
   }, [currentBlockIndex])
 
-  const handleSave = useCallback(() => {
-    console.log("Saving to backend:", questionBlocks);
-    alert("Đã ghi log state ra console!");
-  }, [questionBlocks])
+  const handleSave = useCallback(async () => {
+    if (questionBlocks.length === 0) {
+      alert("Không có câu hỏi nào để lưu!");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const payload = questionBlocks.map(block => ({
+        shared_content: block.shared_content,
+        questions: block.questions.map(q => ({
+          ...q,
+          grade: typeof q.grade === 'string' ? parseInt(q.grade) : (q.grade || 0),
+          difficulty_point: q.difficulty_point || 0,
+          point: q.point || 0,
+        }))
+      }));
+
+      await apiFetch('/questions/bulk', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      
+      alert('Lưu vào ngân hàng thành công!');
+      router.push('/dashboard/questions');
+    } catch (error: any) {
+      console.error("Lỗi khi lưu:", error);
+      alert("Lỗi khi lưu: " + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [questionBlocks, router])
 
   const currentBlock = questionBlocks[currentBlockIndex] || null;
   const currentQuestion = currentBlock?.questions[currentQuestionIndex] || null;
@@ -121,9 +170,9 @@ export default function CreateQuestionPage() {
           </div>
           
           <div className="flex items-center gap-3">
-            <Button onClick={handleSave} className="px-6 flex items-center gap-2 shadow-sm shadow-primary/20">
-              <Save className="w-4 h-4" />
-              Lưu vào ngân hàng
+            <Button onClick={handleSave} disabled={isSaving || questionBlocks.length === 0} className="px-6 flex items-center gap-2 shadow-sm shadow-primary/20">
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {isSaving ? "Đang lưu..." : "Lưu vào ngân hàng"}
             </Button>
           </div>
         </div>
@@ -182,7 +231,7 @@ export default function CreateQuestionPage() {
             <span className="text-sm font-black text-primary uppercase tracking-widest">
               Câu {totalQuestions > 0 ? currentGlobalIndex : 0}
             </span>
-            {currentQuestion?.type_question === 'group' && (
+            {(currentQuestion?.type_question?.toString().toLowerCase() === 'group' || (currentBlock && currentBlock.questions.length > 1) || (currentBlock?.shared_content && currentBlock.shared_content.length > 0)) && (
               <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-black rounded uppercase tracking-widest border border-red-200 hidden sm:inline-block">
                 Câu hỏi chùm
               </span>

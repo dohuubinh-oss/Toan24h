@@ -9,10 +9,7 @@ export interface ExampleStep {
 }
 
 export interface ExampleExercise {
-  problem: string;
-  steps: ExampleStep[];
-  conclusion?: string;
-  tips?: string;
+  content: string;
 }
 
 export interface MethodItem {
@@ -102,12 +99,8 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
           alert(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có nội dung bài tập (JSON)`)
           return
         }
-        if (!m.exercise.problem.trim()) {
-          alert(`Dạng toán ${i + 1} - Phương pháp ${j + 1} thiếu đề bài`)
-          return
-        }
-        if (!m.exercise.steps || m.exercise.steps.length === 0) {
-          alert(`Dạng toán ${i + 1} - Phương pháp ${j + 1} cần ít nhất 1 bước giải`)
+        if (!m.exercise.content.trim()) {
+          alert(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có đề bài / nội dung`)
           return
         }
       }

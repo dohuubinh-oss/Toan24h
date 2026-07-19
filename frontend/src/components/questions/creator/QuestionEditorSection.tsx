@@ -29,12 +29,18 @@ function QuestionEditorSection({
     }
   };
 
+
+
+  const isGroup = currentQuestion?.type_question?.toString().toLowerCase() === 'group' || 
+                  (currentBlock?.questions && currentBlock.questions.length > 1) || 
+                  (currentBlock?.shared_content && currentBlock.shared_content.length > 0);
+
   return (
     <div className="space-y-6">
       {/* Shared Context Card - Only show if group */}
-      {currentQuestion?.type_question === 'group' && (
+      {isGroup && (
         <SharedEditorCard
-          title="Nội dung dẫn chung (Shared Context)"
+          title="Nội dung dẫn chung"
           icon={<AlignLeft className="text-primary w-5 h-5" />}
           content={currentBlock?.shared_content || ''}
           onContentChange={(val) => updateBlock('shared_content', val)}
@@ -76,25 +82,29 @@ function QuestionEditorSection({
 
         {!isEssay ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {['A', 'B', 'C', 'D'].map((opt, idx) => (
+            {['A', 'B', 'C', 'D'].map((opt, idx) => {
+              const currentOptValue = currentQuestion?.options?.[idx] || '';
+              const isSelected = currentQuestion?.correct_answer !== undefined && currentQuestion.correct_answer !== '' && currentQuestion.correct_answer === currentOptValue;
+              
+              return (
               <div key={opt} className="flex items-center gap-4 group">
                 <div className="flex-shrink-0">
                   <input
                     className="w-6 h-6 text-primary border-slate-300 focus:ring-primary rounded-full"
                     name="correct-ans"
                     type="radio"
-                    checked={currentQuestion?.correct_answer === opt}
-                    onChange={() => updateQuestion('correct_answer', opt)}
+                    checked={isSelected}
+                    onChange={() => updateQuestion('correct_answer', currentOptValue)}
                   />
                 </div>
                 <div
-                  onClick={() => updateQuestion('correct_answer', opt)}
-                  className={`flex-grow flex items-center rounded-2xl px-4 py-2.5 transition-all cursor-text ${currentQuestion?.correct_answer === opt
+                  onClick={() => updateQuestion('correct_answer', currentOptValue)}
+                  className={`flex-grow flex items-center rounded-2xl px-4 py-2.5 transition-all cursor-text ${isSelected
                       ? 'bg-white border-[1.5px] border-primary/50 ring-[3px] ring-primary/10 shadow-sm'
                       : 'bg-[#F8FAFC] border border-slate-100 hover:border-slate-200/80 focus-within:bg-white focus-within:border-primary/30 focus-within:shadow-sm'
                     }`}
                 >
-                  <span className={`font-bold mr-3 text-sm ${currentQuestion?.correct_answer === opt ? 'text-primary' : 'text-slate-400'}`}>
+                  <span className={`font-bold mr-3 text-sm ${isSelected ? 'text-primary' : 'text-slate-400'}`}>
                     {opt}.
                   </span>
                   <div className="flex-grow">
@@ -102,26 +112,30 @@ function QuestionEditorSection({
                       inline={true}
                       hideToolbar={true}
                       placeholder={`Nhập đáp án ${opt}...`}
-                      content={currentQuestion?.options?.[idx] || ''}
+                      content={currentOptValue}
                       onChange={(val) => {
                         const newOptions = [...(currentQuestion?.options || ['', '', '', ''])];
+                        const oldVal = newOptions[idx];
                         newOptions[idx] = val;
                         updateQuestion('options', newOptions);
+                        
+                        if (currentQuestion?.correct_answer === oldVal && oldVal !== '') {
+                           updateQuestion('correct_answer', val);
+                        }
                       }}
                     />
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         ) : (
-          <div className="border rounded-xl p-2 bg-slate-50 border-slate-200">
-            <RichTextEditor
-              hideToolbar={true}
-              content={currentQuestion?.correct_answer || ''}
-              onChange={(val) => updateQuestion('correct_answer', val)}
-            />
-          </div>
+          <RichTextEditor
+            hideToolbar={true}
+            inline={true}
+            content={currentQuestion?.correct_answer || ''}
+            onChange={(val) => updateQuestion('correct_answer', val)}
+          />
         )}
       </div>
 
@@ -136,7 +150,7 @@ function QuestionEditorSection({
 
       {/* Support Info */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between">
+        <div className="p-4 bg-white flex flex-wrap items-center justify-between">
           <div className="flex items-center gap-2 px-2">
             <Info className="text-primary w-5 h-5" />
             <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">Thông tin bổ trợ cho học sinh</h2>
@@ -185,6 +199,8 @@ function QuestionEditorSection({
           </div>
         </div>
       </div>
+
+
     </div>
   )
 }

@@ -1,6 +1,6 @@
 export interface Question {
   id?: string;
-  title?: string;
+  book_name?: string;
   type_question: 'group' | 'single';
   content: string;
   type: 'Trắc nghiệm' | 'Tự luận';
@@ -17,12 +17,9 @@ export interface Question {
   quick_solve_tips: string;
   general_method: string;
   mistakes: string;
-  image_question: string | null;
-  image_solution: string | null;
 }
 
 export interface QuestionBlock {
   shared_content: string;
-  image_shared: string | null;
   questions: Question[];
 }

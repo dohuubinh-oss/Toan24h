@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react'
-import { Microscope, ImagePlus, Code, Plus, Trash2, ChevronDown, ChevronRight, GripVertical } from 'lucide-react'
+import { Microscope, ImagePlus, Code, Plus, Trash2, ChevronDown, ChevronRight, GripVertical, CheckCircle2 } from 'lucide-react'
 import { Button } from '../../ui/Button'
 import MathText from '@/components/ui/MathText'
+import SharedEditorCard from '@/components/questions/creator/editor/SharedEditorCard'
 import { DangToanItem, MethodItem, ExampleExercise, ExampleStep } from './LectureCreatorContext'
 
 interface DangToanCardProps {
@@ -89,27 +90,98 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
       setJsonError('')
       const parsed = JSON.parse(jsonInput)
       
-      let newExercise = method.exercise ? { ...method.exercise } : { problem: '', steps: [] }
-      const stepsData = parsed.Steps || parsed.steps;
-      
-      if (stepsData && Array.isArray(stepsData)) {
-        newExercise.steps = stepsData;
-        if (parsed.conclusion !== undefined) {
-          newExercise.conclusion = parsed.conclusion;
-        }
-        if (parsed.problem !== undefined) {
-          newExercise.problem = parsed.problem;
-        }
-        if (parsed.tips !== undefined) {
-          newExercise.tips = parsed.tips;
-        }
-      } else if (parsed.exercise) {
-        newExercise = { ...newExercise, ...parsed.exercise }
-      } else {
-        throw new Error('JSON cần chứa mảng "Steps" (hoặc "steps").')
+      const stepsData = parsed.steps || parsed.Steps;
+      if (!stepsData || !Array.isArray(stepsData)) {
+         throw new Error('JSON cần chứa mảng "Steps" (hoặc "steps").')
       }
 
-      onChange({ ...method, exercise: newExercise })
+      let html = `<div class="exercise-content bg-white p-4">`
+      
+      if (parsed.problem) {
+         html += `<div class="bg-slate-50 p-5 rounded-lg border border-slate-200 mb-8">
+            <p class="font-bold text-slate-900 mb-2 mt-0">Đề bài:</p>
+            <p class="italic text-slate-700 m-0">${parsed.problem}</p>
+          </div>`
+      }
+
+      const hasTimeline = (stepsData && Array.isArray(stepsData) && stepsData.length > 0) || parsed.conclusion || parsed.tips;
+
+      if (hasTimeline) {
+        html += `<div class="space-y-0">`
+        
+        let timelineItems: any[] = [];
+        if (stepsData && Array.isArray(stepsData)) {
+            stepsData.forEach((step: any, idx: number) => {
+                timelineItems.push({
+                    type: 'step',
+                    idx: step.step || idx + 1,
+                    title: step.title,
+                    content: step.content,
+                    formula: step.formula
+                });
+            });
+        }
+        if (parsed.conclusion) {
+            timelineItems.push({
+                type: 'conclusion',
+                content: parsed.conclusion
+            });
+        }
+        if (parsed.tips) {
+            timelineItems.push({
+                type: 'tips',
+                content: parsed.tips
+            });
+        }
+
+        timelineItems.forEach((item: any, i: number) => {
+            const isLast = i === timelineItems.length - 1;
+            
+            html += `<div class="flex gap-4">
+                <div class="flex-none flex flex-col items-center">`
+                
+            if (item.type === 'step') {
+                html += `<p class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm m-0">${item.idx}</p>`
+            } else if (item.type === 'conclusion') {
+                html += `<p class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm m-0">✓</p>`
+            } else if (item.type === 'tips') {
+                html += `<p class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm m-0">💡</p>`
+            }
+
+            if (!isLast) {
+                html += `<div class="w-0.5 h-full bg-slate-200 my-1"></div>`
+            }
+            
+            html += `</div>
+                <div class="${isLast ? '' : 'pb-8'} flex-1 pt-1">`
+                
+            if (item.type === 'step') {
+                if (item.title) {
+                    html += `<h4 class="font-bold text-slate-900 m-0">${item.title}</h4>`
+                }
+                if (item.content) {
+                    html += `<p class="text-slate-600 mt-1 mb-0">${item.content}</p>`
+                }
+                if (item.formula) {
+                    html += `<p class="mt-3 text-blue-600 font-bold m-0">${item.formula.includes('$') ? item.formula : '$$' + item.formula + '$$'}</p>`
+                }
+            } else if (item.type === 'conclusion') {
+                html += `<h4 class="font-bold text-slate-900 m-0">Kết luận</h4>
+                         <p class="text-slate-600 mt-1 mb-0">${item.content}</p>`
+            } else if (item.type === 'tips') {
+                html += `<h4 class="font-bold text-slate-900 m-0">Gợi ý</h4>
+                         <p class="text-slate-600 mt-1 mb-0">${item.content}</p>`
+            }
+
+            html += `</div></div>`
+        });
+
+        html += `</div>`
+      }
+
+      html += `</div>`
+
+      onChange({ ...method, exercise: { content: html } })
       setIsModalOpen(false)
       setJsonInput('')
     } catch (e: any) {
@@ -117,7 +189,7 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
     }
   }
 
-  const exercise = method.exercise
+  const exercise = method.exercise || { content: '' }
 
   return (
     <div className="border border-slate-200 rounded-xl overflow-hidden bg-white mb-4">
@@ -166,97 +238,24 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
           </div>
 
           <div className="border-t border-slate-100 pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="font-bold text-slate-700">Bài tập (Đề bài & Lời giải)</h4>
+            <div className="flex justify-end mb-3">
               <Button
                 variant="outline"
                 onClick={() => setIsModalOpen(true)}
-                className="border-slate-300 hover:border-primary hover:text-primary transition-colors text-xs h-8 px-3"
+                className="border-slate-300 hover:border-primary hover:text-primary transition-colors text-xs font-medium h-8 px-3 bg-white shadow-sm"
               >
                 <Code className="w-3 h-3 mr-1.5" />
                 Nhập JSON
               </Button>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-              {/* Left Column: Images */}
-              <div className="flex flex-col gap-4">
-                <ImageUploadArea 
-                  imageUrl={method.problemImage} 
-                  onChange={(url) => onChange({ ...method, problemImage: url })} 
-                  label="1. Ảnh Đề Bài" 
-                />
-                <ImageUploadArea 
-                  imageUrl={method.solutionImage} 
-                  onChange={(url) => onChange({ ...method, solutionImage: url })} 
-                  label="2. Ảnh Lời Giải" 
-                />
-              </div>
-
-              {/* Right Column: Preview */}
-              <div className="flex flex-col h-full rounded-xl border border-slate-200 bg-slate-50/50 p-5 overflow-y-auto min-h-[300px] max-h-[600px]">
-                {!exercise || (!exercise.problem && (!exercise.steps || exercise.steps.length === 0)) ? (
-                  <div className="flex-grow flex items-center justify-center text-slate-400 italic">
-                    Chưa có nội dung. Hãy nhập bằng JSON.
-                  </div>
-                ) : (
-                  <div className="space-y-6 w-full">
-                    {exercise.problem && (
-                      <div className="pb-4 border-b border-slate-200">
-                        <h4 className="font-bold text-slate-700 mb-2">Đề bài</h4>
-                        <MathText content={exercise.problem} className="text-slate-800" />
-                      </div>
-                    )}
-                    
-                    <div className="space-y-4">
-                      <h4 className="font-bold text-slate-700 mb-2">Các bước giải</h4>
-                      {exercise.steps?.map((step) => (
-                        <div className="flex gap-4" key={step.step}>
-                          <div className="flex-none flex flex-col items-center">
-                            <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
-                              {step.step}
-                            </div>
-                            <div className="w-0.5 h-full bg-slate-200 my-1"></div>
-                          </div>
-                          <div className="pb-4">
-                            <MathText content={step.title} className="font-bold text-slate-800 text-base" />
-                            <MathText content={step.content} className="text-slate-600 mt-1" />
-                            {step.formula && <MathText content={step.formula.includes('$') ? step.formula : `$$${step.formula}$$`} className="mt-2 text-primary font-bold" />}
-                          </div>
-                        </div>
-                      ))}
-
-                      {exercise.conclusion && (
-                        <div className="flex gap-4 mt-4">
-                          <div className="flex-none flex flex-col items-center">
-                            <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-sm">
-                              ✓
-                            </div>
-                          </div>
-                          <div className="pb-4 pt-1">
-                            <h4 className="font-bold text-green-600">Kết luận</h4>
-                            <MathText content={exercise.conclusion} className="text-slate-600 mt-1" />
-                          </div>
-                        </div>
-                      )}
-
-                      {exercise.tips && (
-                        <div className="flex gap-4 mt-4">
-                          <div className="flex-none flex flex-col items-center">
-                            <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm">
-                              💡
-                            </div>
-                          </div>
-                          <div className="pb-4 pt-1">
-                            <h4 className="font-bold text-amber-600">Mẹo giải / Gợi ý</h4>
-                            <MathText content={exercise.tips} className="text-slate-600 mt-1" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div className="flex flex-col gap-6">
+              <SharedEditorCard
+                title="BÀI TẬP MẪU"
+                icon={<CheckCircle2 className="w-5 h-5 text-green-500" />}
+                content={exercise.content || ''}
+                onContentChange={(html) => onChange({ ...method, exercise: { content: html } })}
+                placeholder="Nhập nội dung bài tập (Đề bài và Các bước giải)..."
+              />
             </div>
           </div>
         </div>

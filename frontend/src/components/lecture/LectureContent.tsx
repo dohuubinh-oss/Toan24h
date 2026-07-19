@@ -100,71 +100,12 @@ export function LectureExamples({ examples = [] }: LectureExamplesProps) {
                         )}
                       </div>
                       
-                      {method.exercise && (
-                        <div className="space-y-6 w-full mt-4">
-                          {method.exercise.problem && (
-                            <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                              <h5 className="font-bold text-slate-900 dark:text-white mb-3">Đề bài:</h5>
-                              <MathText content={method.exercise.problem} className="text-slate-800 dark:text-slate-200" />
-                              {method.problemImage && (
-                                 <img src={getMediaUrl(method.problemImage)} alt="Problem" className="mt-4 w-full h-auto rounded-lg" />
-                              )}
-                            </div>
-                          )}
-                          
-                          <div className="space-y-4 px-2">
-                            <h4 className="font-bold text-slate-700 dark:text-slate-300 mb-2">Các bước giải</h4>
-                            {method.exercise.steps && method.exercise.steps.map((step, k) => (
-                              <div className="flex gap-4" key={k}>
-                                <div className="flex-none flex flex-col items-center">
-                                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-md shadow-primary/20">
-                                    {step.step}
-                                  </div>
-                                  {k < method.exercise!.steps.length - 1 && (
-                                    <div className="w-0.5 h-full bg-slate-200 dark:bg-slate-700 my-1"></div>
-                                  )}
-                                </div>
-                                <div className="pb-4 w-full pt-1">
-                                  <MathText content={step.title} className="font-bold text-slate-800 dark:text-slate-200 text-base" />
-                                  <MathText content={step.content} className="text-slate-600 dark:text-slate-400 mt-1" />
-                                  {step.formula && <MathText content={step.formula.includes('$') ? step.formula : `$$${step.formula}$$`} className="mt-2 text-primary font-bold" />}
-                                </div>
-                              </div>
-                            ))}
-
-                            {(method.exercise.conclusion || method.solutionImage) && (
-                              <div className="flex gap-4 mt-4">
-                                <div className="flex-none flex flex-col items-center">
-                                  <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-green-500/20">
-                                    ✓
-                                  </div>
-                                </div>
-                                <div className="pb-4 pt-1 w-full">
-                                  <h4 className="font-bold text-green-600 dark:text-green-500">Kết luận</h4>
-                                  {method.exercise.conclusion && (
-                                    <MathText content={method.exercise.conclusion} className="text-slate-600 dark:text-slate-300 mt-1 font-medium" />
-                                  )}
-                                  {method.solutionImage && (
-                                    <img src={getMediaUrl(method.solutionImage)} alt="Solution" className="mt-4 w-full h-auto rounded-lg" />
-                                  )}
-                                </div>
-                              </div>
-                            )}
-
-                            {method.exercise.tips && (
-                              <div className="flex gap-4 mt-4">
-                                <div className="flex-none flex flex-col items-center">
-                                  <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-amber-500/20">
-                                    💡
-                                  </div>
-                                </div>
-                                <div className="pb-4 pt-1 w-full">
-                                  <h4 className="font-bold text-amber-600 dark:text-amber-500">Mẹo giải / Gợi ý</h4>
-                                  <MathText content={method.exercise.tips} className="text-slate-600 dark:text-slate-300 mt-1" />
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                      {method.exercise && method.exercise.content && (
+                        <div className="space-y-6 w-full mt-4 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                          <div 
+                            className="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200"
+                            dangerouslySetInnerHTML={{ __html: method.exercise.content }}
+                          />
                         </div>
                       )}
                     </div>

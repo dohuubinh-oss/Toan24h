@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Bold, Italic, Strikethrough, List, ListOrdered, Sigma, ImagePlus, Image as ImageIcon, Video as YoutubeIcon } from 'lucide-react'
+import { Bold, Italic, Strikethrough, List, ListOrdered, Sigma, ImagePlus, Image as ImageIcon, Video as YoutubeIcon, WrapText } from 'lucide-react'
 import TiptapImage from '@tiptap/extension-image'
 import Youtube from '@tiptap/extension-youtube'
 import { uploadTempImage } from '@/lib/api'
@@ -16,10 +16,25 @@ interface RichTextEditorProps {
   className?: string
   hideToolbar?: boolean
   inline?: boolean
+  mathOnlyToolbar?: boolean
 }
 
-const MenuBar = ({ editor }: { editor: any }) => {
+const MenuBar = ({ editor, mathOnlyToolbar }: { editor: any, mathOnlyToolbar?: boolean }) => {
   if (!editor) return null
+
+  if (mathOnlyToolbar) {
+    return (
+      <div className="flex items-center gap-1 p-1 bg-slate-50 border-b border-slate-200 rounded-t-xl overflow-x-auto">
+        <button
+          onClick={() => editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()}
+          className="p-1.5 rounded transition-colors text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0"
+          title="Chèn công thức Toán (MathLive)"
+        >
+          <Sigma className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-1 p-1 bg-slate-50 border-b border-slate-200 rounded-t-xl overflow-x-auto">
@@ -70,6 +85,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
       <button
         onClick={() => {
+          const selection = editor.state.selection;
           const input = document.createElement('input');
           input.type = 'file';
           input.accept = 'image/*';
@@ -78,7 +94,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
             if (file) {
               try {
                 const url = await uploadTempImage(file);
-                editor.chain().focus().setImage({ src: url }).run();
+                editor.chain().focus().insertContentAt(selection.to, { type: 'image', attrs: { src: url } }).run();
               } catch (error) {
                 console.error("Error uploading image", error);
               }
@@ -126,14 +142,19 @@ export const preprocessMath = (html: string) => {
     return `__MATH_PLACEHOLDER_${placeholders.length - 1}__`;
   });
 
+  // Avoid matching across HTML block tags
+  const blockTags = 'p|div|h[1-6]|ul|ol|li|br|table|tr|td|th|tbody|thead|math-inline';
+  const inlineRegex = new RegExp(`\\$((?:(?!\\$|<\\/?(?:${blockTags})(?:>|\\s|$))[\\s\\S])+?)\\$`, 'gi');
+  const blockRegex = new RegExp(`\\$\\$((?:(?!\\$\\$|<\\/?(?:${blockTags})(?:>|\\s|$))[\\s\\S])+?)\\$\\$`, 'gi');
+
   // Replace $$...$$
-  processed = processed.replace(/\$\$([\s\S]*?)\$\$/g, (match, p1) => {
+  processed = processed.replace(blockRegex, (match, p1) => {
     const escaped = p1.replace(/"/g, '&quot;');
     return `<math-inline data-latex="${escaped}">${match}</math-inline>`;
   });
 
   // Replace $...$
-  processed = processed.replace(/\$([^$]+?)\$/g, (match, p1) => {
+  processed = processed.replace(inlineRegex, (match, p1) => {
     const escaped = p1.replace(/"/g, '&quot;');
     return `<math-inline data-latex="${escaped}">${match}</math-inline>`;
   });
@@ -153,7 +174,8 @@ export default function RichTextEditor({
   minHeight = "100px",
   className = "",
   hideToolbar = false,
-  inline = false
+  inline = false,
+  mathOnlyToolbar = false
 }: RichTextEditorProps) {
   const lastEmittedHTML = useRef(content || '');
   const processedInitialContent = preprocessMath(content || '');
@@ -213,8 +235,8 @@ export default function RichTextEditor({
 
   return (
     <div className={`flex flex-col transition-all overflow-hidden ${inline ? 'bg-transparent' : 'border border-slate-200 rounded-xl bg-slate-50 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5'} ${className}`}>
-      {!hideToolbar && <MenuBar editor={editor} />}
-      <EditorContent editor={editor} className={`flex-grow flex flex-col overflow-y-auto ${inline ? 'bg-transparent' : 'bg-white'}`} />
+      {!hideToolbar && <MenuBar editor={editor} mathOnlyToolbar={mathOnlyToolbar} />}
+      <EditorContent editor={editor} className={`flex-grow flex flex-col overflow-y-auto bg-transparent`} />
     </div>
   )
 }

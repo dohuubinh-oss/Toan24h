@@ -12,7 +12,7 @@ type Question struct {
 	ID              uuid.UUID      `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	ParentID        *uuid.UUID     `gorm:"type:uuid;index" json:"parentId,omitempty"` // Dùng cho 'group' (Câu hỏi con tham chiếu câu hỏi cha)
 
-	Title           string         `gorm:"type:varchar(255)" json:"title"` // Tiêu đề câu hỏi, VD: Bài 1, Câu 1
+	BookName        string         `gorm:"type:varchar(255)" json:"bookName"` // Tiêu đề câu hỏi, VD: Bài 1, Câu 1
 	TypeQuestion    string         `gorm:"type:varchar(20);not null" json:"typeQuestion"` // 'group', 'single'
 	Content         string         `gorm:"type:text;not null" json:"content"`
 	Type            string         `gorm:"type:varchar(50);not null" json:"type"`         // 'Trắc nghiệm', 'Tự luận'
@@ -32,9 +32,6 @@ type Question struct {
 	QuickSolveTips  string         `gorm:"type:text" json:"quickSolveTips"`
 	GeneralMethod   string         `gorm:"type:text" json:"generalMethod"`
 	Mistakes        string         `gorm:"type:text" json:"mistakes"`
-	
-	ImageQuestion   string         `gorm:"type:varchar(255)" json:"imageQuestion"`
-	ImageSolution   string         `gorm:"type:varchar(255)" json:"imageSolution"`
 
 	CreatedAt       time.Time      `json:"createdAt"`
 	UpdatedAt       time.Time      `json:"updatedAt"`
@@ -45,8 +42,8 @@ func (q *Question) BeforeCreate(tx *gorm.DB) (err error) {
 	if q.ID == uuid.Nil {
 		q.ID = uuid.New()
 	}
-	if q.Title == "" {
-		q.Title = q.ID.String()
+	if q.BookName == "" {
+		q.BookName = q.ID.String()
 	}
 	return
 }
