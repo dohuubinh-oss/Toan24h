@@ -186,7 +186,7 @@ func GetQuestions(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset := (page - 1) * limit
 
-	if err := config.DB.Limit(limit).Offset(offset).Order("created_at desc").Find(&questions).Error; err != nil {
+	if err := config.DB.Preload("SubQuestions").Where("parent_id IS NULL").Limit(limit).Offset(offset).Order("created_at desc").Find(&questions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: err.Error()})
 		return
 	}

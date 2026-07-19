@@ -1,5 +1,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1'
 
+import { Question } from '@/types/question'
+
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`
   const headers = new Headers(options.headers || {})
@@ -69,4 +71,54 @@ export async function recognizeHandwriting(file: File): Promise<string> {
   await new Promise(resolve => setTimeout(resolve, 1500))
   // Return some mockup text/latex
   return 'Gợi ý từ AI: $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$'
+}
+
+export async function getQuestions(page: number = 1, limit: number = 20): Promise<Question[]> {
+  const response = await apiFetch(`/questions?page=${page}&limit=${limit}`)
+  if (response.status === 'success' && Array.isArray(response.data)) {
+    return response.data.map((q: any) => {
+      // Parse tags and options if they are stringified JSON (from Go backend)
+      let parsedTags = []
+      let parsedOptions = []
+      
+      try {
+        parsedTags = typeof q.tags === 'string' ? JSON.parse(q.tags || '[]') : (q.tags || [])
+      } catch(e) {
+        console.error("Failed to parse tags", q.tags)
+      }
+
+      try {
+        parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options || '[]') : (q.options || [])
+      } catch(e) {
+        console.error("Failed to parse options", q.options)
+      }
+
+      let subQuestions = []
+      if (q.subQuestions && Array.isArray(q.subQuestions)) {
+        subQuestions = q.subQuestions.map((sub: any) => {
+          let pTags = []
+          let pOpts = []
+          try {
+            pTags = typeof sub.tags === 'string' ? JSON.parse(sub.tags || '[]') : (sub.tags || [])
+          } catch(e) {}
+          try {
+            pOpts = typeof sub.options === 'string' ? JSON.parse(sub.options || '[]') : (sub.options || [])
+          } catch(e) {}
+          return {
+            ...sub,
+            tags: pTags,
+            options: pOpts
+          }
+        })
+      }
+
+      return {
+        ...q,
+        tags: parsedTags,
+        options: parsedOptions,
+        subQuestions: subQuestions
+      } as Question
+    })
+  }
+  return []
 }

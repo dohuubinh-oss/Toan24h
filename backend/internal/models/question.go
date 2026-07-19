@@ -11,6 +11,7 @@ import (
 type Question struct {
 	ID              uuid.UUID      `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	ParentID        *uuid.UUID     `gorm:"type:uuid;index" json:"parentId,omitempty"` // Dùng cho 'group' (Câu hỏi con tham chiếu câu hỏi cha)
+	SubQuestions    []Question     `gorm:"foreignKey:ParentID" json:"subQuestions,omitempty"` // Dùng cho 'group' để tự động nạp các câu con
 
 	BookName        string         `gorm:"type:varchar(255)" json:"bookName"` // Tiêu đề câu hỏi, VD: Bài 1, Câu 1
 	TypeQuestion    string         `gorm:"type:varchar(20);not null" json:"typeQuestion"` // 'group', 'single'

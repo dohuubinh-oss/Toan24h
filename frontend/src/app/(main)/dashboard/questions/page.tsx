@@ -9,6 +9,8 @@ import FloatingActionBar from '@/components/questions/FloatingActionBar';
 import { Pagination } from '@/components/ui/Pagination';
 import { ChevronRight, Search, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { getQuestions } from '@/lib/api';
+import { Question } from '@/types/question';
 export default function QuestionsPage() {
   return (
     <Suspense fallback={<div className="p-8">Đang tải dữ liệu...</div>}>
@@ -20,14 +22,54 @@ export default function QuestionsPage() {
 function QuestionsPageContent() {
   const searchParams = useSearchParams();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isFiltering, setIsFiltering] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(true);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [totalVisible, setTotalVisible] = useState(0);
 
   useEffect(() => {
-    setIsFiltering(true);
-    const timer = setTimeout(() => {
-      setIsFiltering(false);
-    }, 400); // Giả lập độ trễ API 400ms
-    return () => clearTimeout(timer);
+    async function loadQuestions() {
+      setIsFiltering(true);
+      try {
+        const page = parseInt(searchParams.get('page') || '1');
+        const data = await getQuestions(page, 10);
+        
+        // Cần lọc theo filter ở Frontend hoặc truyền xuống Backend.
+        // Tạm thời hiển thị toàn bộ kết quả trả về từ Backend.
+        let filtered = data;
+        const currentGrade = searchParams.get('grade');
+        const currentType = searchParams.get('type');
+        const currentDiff = searchParams.get('difficulty');
+        const q = searchParams.get('q') || '';
+
+        if (currentGrade) {
+          filtered = filtered.filter(q => q.grade?.toString() === currentGrade.replace(/\D/g, ''));
+        }
+        if (currentType) {
+          filtered = filtered.filter(q => {
+            if (currentType === 'Câu hỏi chùm') return q.type_question === 'group';
+            if (currentType === 'Câu đơn') return q.type_question === 'single';
+            return q.type === currentType;
+          });
+        }
+        if (currentDiff) {
+          filtered = filtered.filter(q => q.difficulty_level === currentDiff);
+        }
+        if (q) {
+          filtered = filtered.filter(item => item.content.toLowerCase().includes(q.toLowerCase()));
+        }
+
+        setQuestions(filtered);
+        setTotalVisible(filtered.length);
+      } catch (error) {
+        console.error("Failed to load questions:", error);
+        setQuestions([]);
+        setTotalVisible(0);
+      } finally {
+        setIsFiltering(false);
+      }
+    }
+
+    loadQuestions();
   }, [searchParams]);
 
   const toggleSelection = (id: string) => {
@@ -35,31 +77,6 @@ function QuestionsPageContent() {
   };
 
   const clearSelection = () => setSelectedIds([]);
-
-  const currentGrade = searchParams.get('grade');
-  const currentType = searchParams.get('type');
-  const currentDiff = searchParams.get('difficulty');
-  const q = searchParams.get('q') || '';
-  
-  const matchQ1 = !q || "Giải tích".toLowerCase().includes(q.toLowerCase()) || "Cho hàm số".toLowerCase().includes(q.toLowerCase());
-  const showCard1 = (!currentGrade || currentGrade === 'Lớp 9') && 
-                    (!currentType || currentType === 'Trắc nghiệm') && 
-                    (!currentDiff || currentDiff === 'Thông hiểu') &&
-                    matchQ1;
-                    
-  const matchQ2 = !q || "Chuyển động đều".toLowerCase().includes(q.toLowerCase()) || "Một người đi xe máy".toLowerCase().includes(q.toLowerCase());
-  const showCard2 = (!currentGrade || currentGrade === 'Lớp 5') && 
-                    (!currentType || currentType === 'Câu hỏi chùm') && 
-                    (!currentDiff || currentDiff === 'Thông hiểu') &&
-                    matchQ2;
-                    
-  const matchQ3 = !q || "Đại số".toLowerCase().includes(q.toLowerCase()) || "bất phương trình".toLowerCase().includes(q.toLowerCase());
-  const showCard3 = (!currentGrade || currentGrade === 'Lớp 7') && 
-                    (!currentType || currentType === 'Tự luận') && 
-                    (!currentDiff || currentDiff === 'Nhận biết') &&
-                    matchQ3;
-
-  const totalVisible = [showCard1, showCard2, showCard3].filter(Boolean).length;
 
   return (
     <>
@@ -95,81 +112,39 @@ function QuestionsPageContent() {
               </>
             ) : (
               <>
-                {showCard1 && (
-              <QuestionCard 
-                id="Q-7721"
-                isSelected={selectedIds.includes("Q-7721")}
-                onToggle={() => toggleSelection("Q-7721")}
-                grade={9}
-                topic="Giải tích"
-                difficulty="Thông hiểu"
-              >
-                <ContentQuestion 
-                  content="Cho hàm số $f(x) = \frac{x^2 - 4}{x - 2}$. Tính giá trị của giới hạn $\lim_{x \to 2} f(x)$."
-                  options={[
-                    "$\\lim_{x \\to 2} f(x) = 0$",
-                    "$\\lim_{x \\to 2} f(x) = 4$",
-                    "$\\lim_{x \\to 2} f(x) = 2$",
-                    "Giới hạn không tồn tại"
-                  ]}
-                  correctAnswer="B"
-                  solution="Chữ số 1 nằm ở hàng phần trăm nên có giá trị là 1/100."
-                />
-              </QuestionCard>
-            )}
-
-            {showCard2 && (
-              <QuestionCard 
-                id="Q-CLUSTER-81"
-                isSelected={selectedIds.includes("Q-CLUSTER-81")}
-                onToggle={() => toggleSelection("Q-CLUSTER-81")}
-                grade={5}
-                topic="Chuyển động đều"
-                difficulty="Thông hiểu"
-              >
-                <ContentQuestion
-                  sharedContext="Một người đi xe máy từ A đến B với vận tốc 40 km/giờ. Cùng lúc đó, một người đi xe đạp từ B về A với vận tốc 15 km/giờ. Quãng đường AB dài 110 km."
-                  subQuestions={[
-                    {
-                      content: "Tổng vận tốc của hai người là bao nhiêu?",
-                      options: ["55 km/giờ", "25 km/giờ", "40 km/giờ", "15 km/giờ"],
-                      correctAnswer: "A",
-                      solution: "Tổng vận tốc = v1 + v2 = 40 + 15 = 55 (km/giờ)"
-                    },
-                    {
-                      content: "Sau bao lâu thì hai người gặp nhau?",
-                      options: ["2 giờ", "2,5 giờ", "3 giờ", "1,5 giờ"],
-                      correctAnswer: "A",
-                      solution: "Thời gian gặp nhau = Quãng đường / Tổng vận tốc = 110 / 55 = 2 (giờ)"
-                    },
-                    {
-                      content: "Tính quãng đường người đi xe máy đã đi được cho đến lúc gặp.",
-                      solution: "Quãng đường = Vận tốc × Thời gian = 40 × 2 = 80 (km)",
-                      isEssay: true
-                    }
-                  ]}
-                />
-              </QuestionCard>
-            )}
-
-            {showCard3 && (
-              <QuestionCard 
-                id="Q-4491"
-                isSelected={selectedIds.includes("Q-4491")}
-                onToggle={() => toggleSelection("Q-4491")}
-                grade={7}
-                topic="Đại số"
-                difficulty="Nhận biết"
-              >
-                <ContentQuestion
-                  content="Giải bất phương trình: $x^2 - 5x + 6 > 0$"
-                  solution="Ta có $x^2 - 5x + 6 = (x-2)(x-3)$. Để tích dương thì $x < 2$ hoặc $x > 3$."
-                  isEssay={true}
-                />
-              </QuestionCard>
-            )}
+                {questions.map((q) => (
+                  <QuestionCard 
+                    key={q.id}
+                    id={q.id || ""}
+                    isSelected={selectedIds.includes(q.id || "")}
+                    onToggle={() => toggleSelection(q.id || "")}
+                    grade={Number(q.grade) || 0}
+                    topic={q.topic}
+                    difficulty={q.difficulty_level}
+                  >
+                    <ContentQuestion 
+                      content={q.type_question === 'single' ? q.content : undefined}
+                      sharedContext={q.type_question === 'group' ? q.content : undefined}
+                      options={q.options?.length > 0 ? q.options : undefined}
+                      correctAnswer={q.correct_answer}
+                      solution={q.solution_guide}
+                      isEssay={q.type === 'Tự luận'}
+                      subQuestions={
+                        q.type_question === 'group' && q.subQuestions 
+                          ? q.subQuestions.map(sub => ({
+                              content: sub.content,
+                              options: sub.options?.length > 0 ? sub.options : undefined,
+                              correctAnswer: sub.correct_answer,
+                              solution: sub.solution_guide,
+                              isEssay: sub.type === 'Tự luận'
+                            }))
+                          : undefined
+                      }
+                    />
+                  </QuestionCard>
+                ))}
             
-            {(!showCard1 && !showCard2 && !showCard3) && (
+            {questions.length === 0 && (
               <div className="bg-white rounded-xl border border-slate-200/60 p-16 flex flex-col items-center justify-center text-slate-500 text-center">
                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                   <Search className="w-8 h-8 text-slate-300" />

@@ -17,6 +17,7 @@ export interface Question {
   quick_solve_tips: string;
   general_method: string;
   mistakes: string;
+  subQuestions?: Question[];
 }
 
 export interface QuestionBlock {
