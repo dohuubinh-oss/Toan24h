@@ -106,6 +106,14 @@ export async function getQuestions(page: number = 1, limit: number = 20): Promis
           } catch(e) {}
           return {
             ...sub,
+            type_question: sub.typeQuestion,
+            correct_answer: sub.correctAnswer,
+            solution_guide: sub.solutionGuide,
+            difficulty_level: sub.difficultyLevel,
+            difficulty_point: sub.difficultyPoint,
+            quick_solve_tips: sub.quickSolveTips,
+            general_method: sub.generalMethod,
+            book_name: sub.bookName,
             tags: pTags,
             options: pOpts
           }
@@ -114,6 +122,14 @@ export async function getQuestions(page: number = 1, limit: number = 20): Promis
 
       return {
         ...q,
+        type_question: q.typeQuestion,
+        correct_answer: q.correctAnswer,
+        solution_guide: q.solutionGuide,
+        difficulty_level: q.difficultyLevel,
+        difficulty_point: q.difficultyPoint,
+        quick_solve_tips: q.quickSolveTips,
+        general_method: q.generalMethod,
+        book_name: q.bookName,
         tags: parsedTags,
         options: parsedOptions,
         subQuestions: subQuestions
