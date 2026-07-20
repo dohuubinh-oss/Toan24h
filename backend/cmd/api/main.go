@@ -30,6 +30,7 @@ func main() {
 	if err := config.DB.AutoMigrate(
 		&models.Question{},
 		&models.Lecture{},
+		&models.Exam{},
 	); err != nil {
 		log.Fatalf("Auto Migrate failed: %v", err)
 	}

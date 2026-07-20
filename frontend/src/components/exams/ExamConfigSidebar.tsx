@@ -116,10 +116,11 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
                     id="exam-duration"
                     className="pr-10" 
                     type="number" 
-                    placeholder="90" 
-                    value={config.duration || ''}
+                    placeholder={config.type === 'practice' ? "--" : "90"} 
+                    value={config.type === 'practice' ? '' : (config.duration || '')}
                     onChange={(e) => onChange('duration', parseInt(e.target.value) || 0)}
                     error={!!errors.duration}
+                    disabled={config.type === 'practice'}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 uppercase">Min</span>
                 </div>

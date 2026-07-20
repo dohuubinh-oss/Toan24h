@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import QuestionCard from '@/components/questions/QuestionCard';
 import ContentQuestion from '@/components/questions/ContentQuestion';
 import QuestionSkeleton from '@/components/questions/QuestionSkeleton';
@@ -9,8 +9,9 @@ import FloatingActionBar from '@/components/questions/FloatingActionBar';
 import { Pagination } from '@/components/ui/Pagination';
 import { ChevronRight, Search, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { getQuestions } from '@/lib/api';
+import { getQuestions, deleteQuestion } from '@/lib/api';
 import { Question } from '@/types/question';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 export default function QuestionsPage() {
   return (
     <Suspense fallback={<div className="p-8">Đang tải dữ liệu...</div>}>
@@ -21,17 +22,18 @@ export default function QuestionsPage() {
 
 function QuestionsPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isFiltering, setIsFiltering] = useState(true);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [totalVisible, setTotalVisible] = useState(0);
-
-  useEffect(() => {
-    async function loadQuestions() {
-      setIsFiltering(true);
-      try {
-        const page = parseInt(searchParams.get('page') || '1');
-        const response = await getQuestions(page, 10);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  
+  const loadQuestions = async () => {
+    setIsFiltering(true);
+    try {
+      const page = parseInt(searchParams.get('page') || '1');
+      const response = await getQuestions(page, 10);
         
         // Cần lọc theo filter ở Frontend hoặc truyền xuống Backend.
         // Tạm thời hiển thị kết quả trả về từ Backend.
@@ -71,16 +73,35 @@ function QuestionsPageContent() {
       } finally {
         setIsFiltering(false);
       }
-    }
+  };
 
+  useEffect(() => {
     loadQuestions();
   }, [searchParams]);
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    const success = await deleteQuestion(deleteId);
+    if (success) {
+      loadQuestions();
+    }
+    setDeleteId(null);
+  };
 
   const toggleSelection = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
   const clearSelection = () => setSelectedIds([]);
+
+  const handleSelectAllOnPage = () => {
+    const pageIds = questions.map(q => q.id);
+    setSelectedIds(prev => {
+      const newIds = new Set(prev);
+      pageIds.forEach(id => newIds.add(id));
+      return Array.from(newIds);
+    });
+  };
 
   return (
     <>
@@ -121,12 +142,21 @@ function QuestionsPageContent() {
                     key={q.id}
                     id={q.id || ""}
                     isSelected={selectedIds.includes(q.id || "")}
-                    onToggle={() => toggleSelection(q.id || "")}
-                    grade={Number(q.grade) || 0}
-                    topic={q.topic}
-                    difficulty={q.difficulty_level}
+                    onToggle={() => {
+                      if (!q.id) return;
+                      setSelectedIds(prev => 
+                        prev.includes(q.id!) 
+                          ? prev.filter(id => id !== q.id)
+                          : [...prev, q.id!]
+                      )
+                    }}
+                    onEdit={() => router.push(`/dashboard/questions/create?id=${q.id}`)}
+                    onDelete={() => setDeleteId(q.id || null)}
+                    grade={Number(q.grade) || (q.type_question === 'group' && q.subQuestions?.[0]?.grade ? Number(q.subQuestions[0].grade) : 0)}
+                    topic={q.topic || (q.type_question === 'group' && q.subQuestions?.[0]?.topic) || ''}
+                    difficulty={q.difficulty_level || (q.type_question === 'group' && q.subQuestions?.[0]?.difficulty_level) || ''}
                     typeQuestion={q.type_question}
-                    type={q.type}
+                    type={q.type || (q.type_question === 'group' && q.subQuestions?.[0]?.type) || ''}
                   >
                     <ContentQuestion 
                       content={q.type_question === 'single' ? q.content : undefined}
@@ -179,7 +209,21 @@ function QuestionsPageContent() {
         </div>
 
       {/* Floating Action Bar */}
-      <FloatingActionBar selectedIds={selectedIds} onClose={clearSelection} />
+      <FloatingActionBar 
+        selectedIds={selectedIds} 
+        onClose={clearSelection} 
+        onSelectAll={questions.length > 0 ? handleSelectAllOnPage : undefined}
+      />
+
+      <ConfirmModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Xóa câu hỏi"
+        description="Bạn có chắc chắn muốn xóa câu hỏi này? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        isDestructive={true}
+      />
     </>
   );
 }

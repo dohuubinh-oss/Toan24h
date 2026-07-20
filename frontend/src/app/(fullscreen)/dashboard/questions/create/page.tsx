@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useRef } from 'react'
 import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2, Save } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import JsonInputSection from '@/components/questions/creator/JsonInputSection'
 import QuestionEditorSection from '@/components/questions/creator/QuestionEditorSection'
 import QuestionSettingsSidebar from '@/components/questions/creator/QuestionSettingsSidebar'
@@ -11,14 +11,49 @@ import { Button } from '@/components/ui/Button'
 import { QuestionBlock, Question } from '@/types/question'
 import { apiFetch } from '@/lib/api'
 import { Loader2 } from 'lucide-react'
+import { getQuestion, updateQuestion as apiUpdateQuestion } from '@/lib/api'
+import { Suspense, useEffect } from 'react'
 
 export default function CreateQuestionPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+      <CreateQuestionContent />
+    </Suspense>
+  )
+}
+
+function CreateQuestionContent() {
   const [questionBlocks, setQuestionBlocks] = useState<QuestionBlock[]>([])
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isSaving, setIsSaving] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
   const editorRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const id = searchParams.get('id')
+    if (id) {
+      setEditId(id)
+      getQuestion(id).then(q => {
+        if (q) {
+          // Wrap in QuestionBlock for compatibility with the editor format
+          if (q.type_question === 'group' && q.subQuestions) {
+            setQuestionBlocks([{
+              shared_content: q.content,
+              questions: q.subQuestions
+            }])
+          } else {
+            setQuestionBlocks([{
+              shared_content: '',
+              questions: [q]
+            }])
+          }
+        }
+      })
+    }
+  }, [searchParams])
 
   const scrollToEditor = () => {
     setTimeout(() => {
@@ -125,22 +160,48 @@ export default function CreateQuestionPage() {
 
     try {
       setIsSaving(true);
-      const payload = questionBlocks.map(block => ({
-        shared_content: block.shared_content,
-        questions: block.questions.map(q => ({
-          ...q,
-          grade: typeof q.grade === 'string' ? parseInt(q.grade) : (q.grade || 0),
-          difficulty_point: q.difficulty_point || 0,
-          point: q.point || 0,
-        }))
-      }));
 
-      await apiFetch('/questions/bulk', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
+      if (editId) {
+        // If editing a group question, we assume the backend endpoint handles the whole hierarchy or we just send the single root Question if 'single'
+        const block = questionBlocks[0];
+        const isGroup = block.questions.length > 1 || block.shared_content;
+        
+        let payload: Partial<Question>;
+        if (isGroup) {
+          payload = {
+            id: editId,
+            type_question: 'group',
+            content: block.shared_content,
+            subQuestions: block.questions
+          };
+        } else {
+          payload = {
+            ...block.questions[0],
+            id: editId,
+            type_question: 'single'
+          };
+        }
+        
+        await apiUpdateQuestion(editId, payload);
+        alert('Cập nhật câu hỏi thành công!');
+      } else {
+        const payload = questionBlocks.map(block => ({
+          shared_content: block.shared_content,
+          questions: block.questions.map(q => ({
+            ...q,
+            grade: typeof q.grade === 'string' ? parseInt(q.grade) : (q.grade || 0),
+            difficulty_point: q.difficulty_point || 0,
+            point: q.point || 0,
+          }))
+        }));
+
+        await apiFetch('/questions/bulk', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        alert('Lưu vào ngân hàng thành công!');
+      }
       
-      alert('Lưu vào ngân hàng thành công!');
       router.push('/dashboard/questions');
     } catch (error: any) {
       console.error("Lỗi khi lưu:", error);
@@ -165,14 +226,14 @@ export default function CreateQuestionPage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-semibold text-slate-800">Thêm câu hỏi thông minh</h1>
+              <h1 className="text-xl font-semibold text-slate-800">{editId ? 'Sửa câu hỏi' : 'Thêm câu hỏi thông minh'}</h1>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
             <Button onClick={handleSave} disabled={isSaving || questionBlocks.length === 0} className="px-6 flex items-center gap-2 shadow-sm shadow-primary/20">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {isSaving ? "Đang lưu..." : "Lưu vào ngân hàng"}
+              {isSaving ? "Đang lưu..." : (editId ? "Cập nhật" : "Lưu vào ngân hàng")}
             </Button>
           </div>
         </div>

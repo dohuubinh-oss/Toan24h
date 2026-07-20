@@ -13,13 +13,14 @@ export interface QuestionCardProps {
   onToggle?: () => void;
   children?: React.ReactNode;
   index?: number;
-  onChangeQuestion?: () => void;
   typeQuestion?: 'group' | 'single' | string;
   type?: 'Trắc nghiệm' | 'Tự luận' | string;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export default function QuestionCard({
-  id, grade, topic, difficulty, isSelected, onToggle, children, index, onChangeQuestion, typeQuestion, type
+  id, grade, topic, difficulty, isSelected, onToggle, children, index, typeQuestion, type, onEdit, onDelete
 }: QuestionCardProps) {
   
   const getDifficultyBadgeVariant = (diff: string): BadgeVariant => {
@@ -55,15 +56,21 @@ export default function QuestionCard({
               />
             )}
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="default" className="text-[10px] uppercase tracking-wider">
-                LỚP {grade}
-              </Badge>
-              <Badge variant="info" className="text-[10px] uppercase tracking-wider">
-                {topic}
-              </Badge>
-              <Badge variant={getDifficultyBadgeVariant(difficulty)} className="text-[10px] uppercase tracking-wider">
-                {difficulty}
-              </Badge>
+              {grade !== undefined && grade !== null && grade !== '' && grade !== 0 && (
+                <Badge variant="default" className="text-[10px] uppercase tracking-wider">
+                  LỚP {grade}
+                </Badge>
+              )}
+              {topic && (
+                <Badge variant="info" className="text-[10px] uppercase tracking-wider">
+                  {topic}
+                </Badge>
+              )}
+              {difficulty && (
+                <Badge variant={getDifficultyBadgeVariant(difficulty)} className="text-[10px] uppercase tracking-wider">
+                  {difficulty}
+                </Badge>
+              )}
               {typeQuestion && (
                 <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-slate-300 text-slate-600 bg-white">
                   {typeQuestion === 'group' ? 'CÂU HỎI CHÙM' : 'CÂU ĐƠN'}
@@ -79,24 +86,16 @@ export default function QuestionCard({
               </span>
             </div>
           </div>
-          <div className={`flex items-center gap-1 ${onChangeQuestion ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
-            {onChangeQuestion ? (
-              <button 
-                onClick={onChangeQuestion}
-                className="flex items-center justify-center gap-1 text-primary hover:bg-primary/5 px-3 min-h-[40px] rounded-lg text-sm font-medium transition-all border border-transparent hover:border-primary/20 shrink-0"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Đổi câu hỏi
-              </button>
-            ) : (
-              <>
-                <Button variant="ghost" size="icon" className="w-10 h-10 text-slate-400 hover:text-primary hover:bg-primary/10" title="Chỉnh sửa">
-                  <Edit2 className="w-5 h-5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="w-10 h-10 text-slate-400 hover:text-red-500 hover:bg-red-500/10" title="Xóa">
-                  <Trash2 className="w-5 h-5" />
-                </Button>
-              </>
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onEdit && (
+              <Button variant="ghost" size="icon" className="w-10 h-10 text-slate-400 hover:text-primary hover:bg-primary/10" title="Chỉnh sửa" onClick={onEdit}>
+                <Edit2 className="w-5 h-5" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button variant="ghost" size="icon" className="w-10 h-10 text-slate-400 hover:text-red-500 hover:bg-red-500/10" title="Xóa" onClick={onDelete}>
+                <Trash2 className="w-5 h-5" />
+              </Button>
             )}
           </div>
         </div>

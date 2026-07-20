@@ -8,13 +8,15 @@ interface ExamHeaderProps {
   subject?: string
   examCode?: string
   onSave?: () => void
+  isSaving?: boolean
 }
 
 export default function ExamHeader({ 
   title = "Kiểm tra & Hoàn thiện đề thi",
   subject = "Toán học THCS",
   examCode = "",
-  onSave
+  onSave,
+  isSaving = false
 }: ExamHeaderProps) {
   const subtitle = examCode ? `${subject} • Mã đề: ${examCode}` : subject;
 
@@ -38,10 +40,11 @@ export default function ExamHeader({
           </Button>
           <Button 
             onClick={onSave}
+            disabled={isSaving}
             className="h-12 px-5 rounded-lg text-sm font-semibold gap-2 shadow-sm"
           >
-            <UploadCloud className="w-5 h-5" />
-            Lưu & Xuất bản
+            <UploadCloud className={`w-5 h-5 ${isSaving ? 'animate-bounce' : ''}`} />
+            {isSaving ? 'Đang lưu...' : 'Lưu & Xuất bản'}
           </Button>
 
         </div>

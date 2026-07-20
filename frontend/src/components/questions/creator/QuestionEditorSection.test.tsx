@@ -4,8 +4,9 @@ import QuestionEditorSection from './QuestionEditorSection'
 
 describe('QuestionEditorSection Component', () => {
   it('renders all editor sections', () => {
-    render(<QuestionEditorSection />)
-    expect(screen.getByText('Nội dung dẫn chung (Shared Context)')).toBeInTheDocument()
+    const mockQuestion = { type_question: 'group' } as any;
+    render(<QuestionEditorSection currentQuestion={mockQuestion} />)
+    expect(screen.getByText('Nội dung dẫn chung')).toBeInTheDocument()
     expect(screen.getByText('Nội dung câu hỏi')).toBeInTheDocument()
     expect(screen.getByText('Đáp án')).toBeInTheDocument()
     expect(screen.getByText('Lời giải chi tiết')).toBeInTheDocument()

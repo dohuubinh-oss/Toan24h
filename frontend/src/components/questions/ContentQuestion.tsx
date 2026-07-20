@@ -66,10 +66,10 @@ export default function ContentQuestion({
             <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 ${isSubQuestion ? '' : ''}`}>
               {qOptions.map((opt, idx) => {
                 const label = String.fromCharCode(65 + idx); // A, B, C, D
-                const isCorrect = label === qCorrect;
+                const isCorrect = opt === qCorrect && qCorrect !== undefined && qCorrect !== '';
                 
                 return (
-                  <div key={idx} className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${isCorrect ? 'bg-primary/5 border-primary/30 shadow-sm font-bold text-primary' : 'bg-white border-slate-200 hover:border-primary/30 hover:shadow-sm hover:bg-slate-50'}`}>
+                  <div key={idx} className={`flex items-center p-3 rounded-xl border transition-all ${isCorrect ? 'bg-primary/5 border-primary/30 shadow-sm font-bold text-primary' : 'bg-white border-slate-200'}`}>
                     <span className={`font-bold mr-3 shrink-0 ${isCorrect ? 'text-primary' : 'text-slate-700'}`}>{label}.</span>
                     <MathText content={opt} className={`text-sm ${isCorrect ? 'font-medium' : 'text-slate-700 font-medium'}`} />
                     {isCorrect && <CheckCircle className="w-4 h-4 text-primary ml-auto shrink-0" />}
@@ -97,7 +97,7 @@ export default function ContentQuestion({
       {sharedContext && (
         <div className="pl-4 border-l-[3px] border-primary mb-8 ml-2">
           <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Nội dung dẫn chung</h4>
-          <MathText content={sharedContext} className="text-base text-slate-700 leading-relaxed" />
+          <MathText content={sharedContext} className="text-lg font-bold text-slate-800 leading-relaxed" />
         </div>
       )}
 

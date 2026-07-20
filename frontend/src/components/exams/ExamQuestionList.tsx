@@ -6,11 +6,30 @@ import ContentQuestion from '../questions/ContentQuestion'
 
 interface ExamQuestionListProps {
   questions: Question[];
+  onRemoveQuestion?: (id: string) => void;
 }
 
-export default function ExamQuestionList({ questions }: ExamQuestionListProps) {
-  const multipleChoiceQuestions = questions.filter(q => q.type !== 'Tự luận');
-  const essayQuestions = questions.filter(q => q.type === 'Tự luận');
+export default function ExamQuestionList({ questions, onRemoveQuestion }: ExamQuestionListProps) {
+  const difficultyWeight: Record<string, number> = {
+    'Nhận biết': 1,
+    'Thông hiểu': 2,
+    'Vận dụng': 3,
+    'Vận dụng cao': 4
+  };
+
+  const sortByDifficulty = (a: Question, b: Question) => {
+    const wA = difficultyWeight[a.difficulty_level || 'Nhận biết'] || 1;
+    const wB = difficultyWeight[b.difficulty_level || 'Nhận biết'] || 1;
+    return wA - wB;
+  };
+
+  const multipleChoiceQuestions = questions
+    .filter(q => q.type !== 'Tự luận' && q.type_question !== 'group')
+    .sort(sortByDifficulty);
+    
+  const essayQuestions = questions
+    .filter(q => q.type === 'Tự luận' || q.type_question === 'group')
+    .sort(sortByDifficulty);
 
   return (
     <div className="lg:col-span-8 space-y-8">
@@ -19,12 +38,6 @@ export default function ExamQuestionList({ questions }: ExamQuestionListProps) {
           <ListOrdered className="text-primary w-6 h-6" />
           Danh sách câu hỏi ({questions.length} câu)
         </h2>
-        <div className="flex gap-2">
-          <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full flex items-center gap-1">
-            <CheckCircle2 className="w-4 h-4" />
-            Đã kiểm tra {questions.length}/{questions.length}
-          </span>
-        </div>
       </div>
 
       {multipleChoiceQuestions.length > 0 && (
@@ -41,7 +54,7 @@ export default function ExamQuestionList({ questions }: ExamQuestionListProps) {
               topic={q.topic || 'Chưa phân loại'}
               difficulty={q.difficulty_level || 'Nhận biết'}
               index={idx}
-              onChangeQuestion={() => console.log('Đổi câu hỏi')}
+              onDelete={onRemoveQuestion ? () => onRemoveQuestion(q.id) : undefined}
             >
               <ContentQuestion
                 content={q.content}
@@ -65,16 +78,32 @@ export default function ExamQuestionList({ questions }: ExamQuestionListProps) {
             <QuestionCard 
               key={`essay-${idx}`} 
               id={q.id || `Q-E${idx}`}
-              grade={q.grade || 12}
-              topic={q.topic || 'Chưa phân loại'}
-              difficulty={q.difficulty_level || 'Vận dụng'}
+              grade={q.grade || (q.type_question === 'group' && q.subQuestions?.[0]?.grade ? Number(q.subQuestions[0].grade) : 12)}
+              topic={q.topic || (q.type_question === 'group' && q.subQuestions?.[0]?.topic) || 'Chưa phân loại'}
+              difficulty={q.difficulty_level || (q.type_question === 'group' && q.subQuestions?.[0]?.difficulty_level) || 'Vận dụng'}
+              typeQuestion={q.type_question}
+              type={q.type || (q.type_question === 'group' && q.subQuestions?.[0]?.type) || ''}
               index={multipleChoiceQuestions.length + idx}
-              onChangeQuestion={() => console.log('Đổi câu hỏi')}
+              onDelete={onRemoveQuestion ? () => onRemoveQuestion(q.id) : undefined}
             >
               <ContentQuestion
-                content={q.content}
+                content={q.type_question === 'single' ? q.content : undefined}
+                sharedContext={q.type_question === 'group' ? q.content : undefined}
+                options={q.options?.length > 0 ? q.options : undefined}
+                correctAnswer={q.correct_answer}
                 solution={q.solution_guide || ''}
-                isEssay={true}
+                isEssay={q.type === 'Tự luận'}
+                subQuestions={
+                  q.type_question === 'group' && q.subQuestions
+                    ? q.subQuestions.map(sub => ({
+                        content: sub.content,
+                        options: sub.options?.length > 0 ? sub.options : undefined,
+                        correctAnswer: sub.correct_answer,
+                        solution: sub.solution_guide,
+                        isEssay: sub.type === 'Tự luận'
+                      }))
+                    : undefined
+                }
               />
             </QuestionCard>
           ))}

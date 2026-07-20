@@ -8,12 +8,17 @@ import (
 	"log"
 
 	"github.com/modeptrai/exam-model-backend/internal/config"
+	"github.com/modeptrai/exam-model-backend/internal/models"
 )
 
 func main() {
-    config.LoadConfig()
+	config.LoadConfig()
 	config.ConnectDB(config.Env.DBDSN)
-	
+
+	if err := config.DB.AutoMigrate(&models.Question{}, &models.Lecture{}, &models.Exam{}); err != nil {
+		log.Fatalf("Failed to migrate: %v", err)
+	}
+
 	if err := config.DB.Exec("TRUNCATE TABLE lectures CASCADE").Error; err != nil {
 		log.Fatalf("Failed to truncate lectures: %v", err)
 	}

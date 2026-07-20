@@ -1,13 +1,12 @@
 'use client'
 
 import React, { useState, Suspense, useCallback, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import ExamHeader from '@/components/exams/ExamHeader'
 import ExamQuestionList from '@/components/exams/ExamQuestionList'
 import ExamConfigSidebar from '@/components/exams/ExamConfigSidebar'
 import { Grid, UploadCloud } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { MOCK_EXAM } from '@/lib/mock-data'
 import { Exam } from '@/types/exam'
 import { validateExamConfig, calculateExamDifficulty } from '@/lib/exam-utils'
 
@@ -21,24 +20,46 @@ export default function CreateExamPage() {
 
 function CreateExamPageContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const urlType = searchParams.get('type') === 'practice' ? 'practice' : 'exam'
 
   const [exam, setExam] = useState<Exam>({
-    ...MOCK_EXAM,
     title: '',
     examCode: '',
     grade: '',
     duration: 0,
-    type: urlType as 'exam' | 'practice'
+    type: urlType as 'exam' | 'practice',
+    questions: []
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    const qidsParam = searchParams.get('qids');
+    if (qidsParam) {
+      const ids = qidsParam.split(',').filter(Boolean);
+      if (ids.length > 0) {
+        // Fetch questions from backend
+        import('@/lib/api').then(({ getQuestions }) => {
+          getQuestions(1, 1000, ids).then(res => {
+            if (res.data) {
+              setExam(prev => ({ ...prev, questions: res.data }));
+            }
+          }).catch(err => console.error("Failed to fetch questions for exam:", err));
+        });
+      }
+    }
+  }, [searchParams]);
 
   const handleConfigChange = useCallback((field: keyof Exam, value: any) => {
-    setExam(prev => ({
-      ...prev,
-      [field]: value
-    }))
+    setExam(prev => {
+      const newExam = { ...prev, [field]: value }
+      if (field === 'type' && value === 'practice') {
+        newExam.duration = 0
+      }
+      return newExam
+    })
     
     // Clear error when user types
     setErrors(prev => {
@@ -49,12 +70,34 @@ function CreateExamPageContent() {
     })
   }, [])
 
-  const handleSave = () => {
+  const handleRemoveQuestion = useCallback((idToRemove: string) => {
+    setExam(prev => {
+      const newQuestions = prev.questions.filter(q => q.id !== idToRemove);
+      
+      // Cập nhật lại URL qids
+      const newIds = newQuestions.map(q => q.id).filter(Boolean);
+      const params = new URLSearchParams(searchParams.toString());
+      if (newIds.length > 0) {
+        params.set('qids', newIds.join(','));
+      } else {
+        params.delete('qids');
+      }
+      router.replace(`?${params.toString()}`, { scroll: false });
+      
+      return { ...prev, questions: newQuestions };
+    });
+  }, [router, searchParams]);
+
+  const handleSave = async () => {
     const newErrors = validateExamConfig(exam);
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      // Optional: scroll to top to show errors
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (exam.questions.length === 0) {
+      alert('Vui lòng chọn ít nhất 1 câu hỏi để tạo đề thi!');
       return;
     }
 
@@ -64,21 +107,25 @@ function CreateExamPageContent() {
     const payload = {
       title: exam.title,
       examCode: exam.examCode,
+      type: exam.type,
       grade: exam.grade,
       duration: exam.duration,
       diffScore: diffScore,
       questionIds: questionIds,
     };
 
-    console.log('Sending exam to backend (Mock):', payload);
-    
-    // Simulate API call promise
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        alert('Lưu đề thi thành công!');
-        resolve(payload);
-      }, 500);
-    });
+    setIsSaving(true);
+    try {
+      const { createExam } = await import('@/lib/api');
+      await createExam(payload);
+      alert('Lưu đề thi thành công!');
+      // router.push('/dashboard/exams') // Navigate to exam list later
+    } catch (err) {
+      console.error('Lưu đề thi thất bại:', err);
+      alert('Lưu đề thi thất bại. Vui lòng thử lại.');
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -87,10 +134,11 @@ function CreateExamPageContent() {
         title={exam.title}
         examCode={exam.examCode}
         onSave={handleSave}
+        isSaving={isSaving}
       />
       
       <main className="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <ExamQuestionList questions={exam.questions} />
+        <ExamQuestionList questions={exam.questions} onRemoveQuestion={handleRemoveQuestion} />
         <ExamConfigSidebar 
           config={{
             title: exam.title,

@@ -185,10 +185,22 @@ func GetQuestions(c *gin.Context) {
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	offset := (page - 1) * limit
+	
+	idsParam := c.Query("ids")
+	var ids []string
+	if idsParam != "" {
+		ids = strings.Split(idsParam, ",")
+	}
 
 	query := config.DB.Model(&models.Question{}).Where("parent_id IS NULL")
 	
+	if len(ids) > 0 {
+		query = query.Where("id IN ?", ids)
+		limit = 1000 // If specific IDs are requested, override limit to fetch them all
+	}
+	
+	offset := (page - 1) * limit
+
 	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: err.Error()})
 		return

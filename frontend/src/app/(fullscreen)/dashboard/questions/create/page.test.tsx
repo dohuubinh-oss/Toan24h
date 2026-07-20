@@ -13,16 +13,24 @@ vi.mock('@/components/questions/creator/QuestionSettingsSidebar', () => ({
   default: () => <div data-testid="question-settings">QuestionSettingsSidebar</div>
 }))
 
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    back: vi.fn(),
+  })),
+  useSearchParams: vi.fn(() => ({
+    get: vi.fn(),
+  })),
+}))
+
 describe('CreateQuestionPage', () => {
   it('renders header text and tags', () => {
     render(<CreateQuestionPage />)
-    expect(screen.getByText('Smart Question Creator')).toBeInTheDocument()
+    expect(screen.getByText('Thêm câu hỏi thông minh')).toBeInTheDocument()
   })
 
   it('renders action buttons', () => {
     render(<CreateQuestionPage />)
-    const previewButtons = screen.getAllByRole('button', { name: /Xem trước/i })
-    expect(previewButtons.length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: /Lưu vào ngân hàng/i })).toBeInTheDocument()
   })
 

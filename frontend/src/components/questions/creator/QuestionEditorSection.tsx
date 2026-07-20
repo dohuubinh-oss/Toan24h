@@ -84,7 +84,7 @@ function QuestionEditorSection({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {['A', 'B', 'C', 'D'].map((opt, idx) => {
               const currentOptValue = currentQuestion?.options?.[idx] || '';
-              const isSelected = currentQuestion?.correct_answer !== undefined && currentQuestion.correct_answer !== '' && currentQuestion.correct_answer === currentOptValue;
+              const isSelected = currentQuestion?.correct_answer === currentOptValue && currentOptValue !== '';
               
               return (
               <div key={opt} className="flex items-center gap-4 group">
@@ -119,6 +119,7 @@ function QuestionEditorSection({
                         newOptions[idx] = val;
                         updateQuestion('options', newOptions);
                         
+                        // Update correct_answer if the changed option was the correct one
                         if (currentQuestion?.correct_answer === oldVal && oldVal !== '') {
                            updateQuestion('correct_answer', val);
                         }

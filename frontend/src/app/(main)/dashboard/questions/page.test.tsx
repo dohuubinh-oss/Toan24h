@@ -53,7 +53,7 @@ describe('QuestionsPage', () => {
   })
 
   it('renders standalone single questions correctly', async () => {
-    vi.spyOn(api, 'getQuestions').mockResolvedValue([
+    vi.spyOn(api, 'getQuestions').mockResolvedValue({ data: [
       {
         id: '1',
         book_name: 'Q1',
@@ -74,7 +74,7 @@ describe('QuestionsPage', () => {
         general_method: '',
         mistakes: '',
       },
-    ])
+    ], totalPages: 1, totalQuestions: 1})
 
     render(<QuestionsPage />)
     
@@ -84,7 +84,7 @@ describe('QuestionsPage', () => {
   })
 
   it('renders grouped questions correctly', async () => {
-    vi.spyOn(api, 'getQuestions').mockResolvedValue([
+    vi.spyOn(api, 'getQuestions').mockResolvedValue({ data: [
       {
         id: '2',
         book_name: 'Group 1',
@@ -116,9 +116,9 @@ describe('QuestionsPage', () => {
             difficulty_point: 8,
             point: 1,
             tags: [],
-            options: ['X', 'Y', 'Z'],
+            options: ['X', 'Y', 'Z', 'W'],
             correct_answer: 'X',
-            solution_guide: 'Sol',
+            solution_guide: 'Sub Solution 1',
             hint: '',
             quick_solve_tips: '',
             general_method: '',
@@ -126,7 +126,7 @@ describe('QuestionsPage', () => {
           }
         ]
       },
-    ])
+    ], totalPages: 1, totalQuestions: 1})
 
     render(<QuestionsPage />)
     
@@ -137,7 +137,7 @@ describe('QuestionsPage', () => {
   })
 
   it('renders empty state when no questions found', async () => {
-    vi.spyOn(api, 'getQuestions').mockResolvedValue([])
+    vi.spyOn(api, 'getQuestions').mockResolvedValue({ data: [], totalPages: 0, totalQuestions: 0 })
 
     render(<QuestionsPage />)
     

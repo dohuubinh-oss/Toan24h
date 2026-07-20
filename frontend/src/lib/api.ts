@@ -73,8 +73,12 @@ export async function recognizeHandwriting(file: File): Promise<string> {
   return 'Gợi ý từ AI: $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$'
 }
 
-export async function getQuestions(page: number = 1, limit: number = 20): Promise<{data: Question[], total: number}> {
-  const response = await apiFetch(`/questions?page=${page}&limit=${limit}`)
+export async function getQuestions(page: number = 1, limit: number = 20, ids?: string[]): Promise<{data: Question[], total: number, totalPages?: number}> {
+  let url = `/questions?page=${page}&limit=${limit}`
+  if (ids && ids.length > 0) {
+    url += `&ids=${ids.join(',')}`
+  }
+  const response = await apiFetch(url)
   if (response.status === 'success' && response.data) {
     const items = response.data.items || (Array.isArray(response.data) ? response.data : [])
     const total = response.data.total || items.length
@@ -139,7 +143,115 @@ export async function getQuestions(page: number = 1, limit: number = 20): Promis
       } as Question
     })
 
-    return { data: questions, total }
+    const totalPages = response.data.totalPages || response.data.pages || Math.ceil(total / limit);
+    return { data: questions, total, totalPages }
   }
-  return { data: [], total: 0 }
+  return { data: [], total: 0, totalPages: 0 }
+}
+
+export async function deleteQuestion(id: string): Promise<boolean> {
+  try {
+    const response = await apiFetch(`/questions/${id}`, {
+      method: 'DELETE'
+    })
+    return response.status === 'success'
+  } catch (error) {
+    console.error(`Failed to delete question ${id}:`, error)
+    return false
+  }
+}
+
+export async function getQuestion(id: string): Promise<Question | null> {
+  try {
+    const response = await apiFetch(`/questions/${id}`)
+    if (response.status === 'success' && response.data) {
+      const q = response.data
+      
+      let parsedTags = []
+      let parsedOptions = []
+      try { parsedTags = typeof q.tags === 'string' ? JSON.parse(q.tags || '[]') : (q.tags || []) } catch(e) {}
+      try { parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options || '[]') : (q.options || []) } catch(e) {}
+      
+      let subQuestions = []
+      if (q.subQuestions && Array.isArray(q.subQuestions)) {
+        subQuestions = q.subQuestions.map((sub: any) => {
+          let pTags = []
+          let pOpts = []
+          try { pTags = typeof sub.tags === 'string' ? JSON.parse(sub.tags || '[]') : (sub.tags || []) } catch(e) {}
+          try { pOpts = typeof sub.options === 'string' ? JSON.parse(sub.options || '[]') : (sub.options || []) } catch(e) {}
+          return {
+            ...sub,
+            type_question: sub.typeQuestion,
+            correct_answer: sub.correctAnswer,
+            solution_guide: sub.solutionGuide,
+            difficulty_level: sub.difficultyLevel,
+            difficulty_point: sub.difficultyPoint,
+            quick_solve_tips: sub.quickSolveTips,
+            general_method: sub.generalMethod,
+            book_name: sub.bookName,
+            tags: pTags,
+            options: pOpts
+          }
+        })
+      }
+
+      return {
+        ...q,
+        type_question: q.typeQuestion,
+        correct_answer: q.correctAnswer,
+        solution_guide: q.solutionGuide,
+        difficulty_level: q.difficultyLevel,
+        difficulty_point: q.difficultyPoint,
+        quick_solve_tips: q.quickSolveTips,
+        general_method: q.generalMethod,
+        book_name: q.bookName,
+        tags: parsedTags,
+        options: parsedOptions,
+        subQuestions: subQuestions
+      } as Question
+    }
+    return null
+  } catch (error) {
+    console.error(`Failed to get question ${id}:`, error)
+    return null
+  }
+}
+
+export async function updateQuestion(id: string, data: Partial<Question>): Promise<Question | null> {
+  try {
+    // Convert snake_case back to camelCase for backend
+    const payload = {
+      ...data,
+      typeQuestion: data.type_question,
+      correctAnswer: data.correct_answer,
+      solutionGuide: data.solution_guide,
+      difficultyLevel: data.difficulty_level,
+      difficultyPoint: data.difficulty_point,
+      quickSolveTips: data.quick_solve_tips,
+      generalMethod: data.general_method,
+      bookName: data.book_name,
+    }
+    
+    // Clean up snake_case keys if necessary, or just send both. The backend will map properly if JSON tags align.
+    const response = await apiFetch(`/questions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    })
+    
+    if (response.status === 'success') {
+      return getQuestion(id) // Re-fetch to ensure mapped format is correct
+    }
+    return null
+  } catch (error) {
+    console.error(`Failed to update question ${id}:`, error)
+    return null
+  }
+}
+
+export async function createExam(payload: any): Promise<any> {
+  const response = await apiFetch('/exams', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  return response
 }
