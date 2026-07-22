@@ -194,7 +194,7 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
   return (
     <div className="border border-slate-200 rounded-xl overflow-hidden bg-white mb-4">
       <div 
-        className="flex items-center justify-between p-3 bg-slate-50 border-b border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors"
+        className="flex items-center justify-between p-3 bg-white cursor-pointer hover:bg-slate-50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-2">

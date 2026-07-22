@@ -18,6 +18,7 @@ type Exam struct {
 	Duration    int            `gorm:"not null;default:0" json:"duration"` // in minutes
 	DiffScore   float64        `gorm:"not null;default:0" json:"diffScore"`
 	QuestionIDs pq.StringArray `gorm:"type:text[]" json:"questionIds"`
+	LectureID   *uuid.UUID     `gorm:"type:uuid;index" json:"lectureId,omitempty"`
 
 	CreatedAt   time.Time      `json:"createdAt"`
 	UpdatedAt   time.Time      `json:"updatedAt"`

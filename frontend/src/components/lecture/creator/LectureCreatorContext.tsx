@@ -34,13 +34,11 @@ interface LectureCreatorState {
   grade: string;
   category: string;
   basicConcept: string;
-  practiceIds: string[];
   dangToanList: DangToanItem[];
   setTitle: (val: string) => void;
   setGrade: (val: string) => void;
   setCategory: (val: string) => void;
   setBasicConcept: (val: string) => void;
-  setPracticeIds: (val: string[]) => void;
   setDangToanList: (val: DangToanItem[]) => void;
   validateAndSubmit: () => void;
   resetForm: () => void;
@@ -55,7 +53,6 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
   const [grade, setGrade] = useState('')
   const [category, setCategory] = useState('')
   const [basicConcept, setBasicConcept] = useState('')
-  const [practiceIds, setPracticeIds] = useState<string[]>([])
   const [dangToanList, setDangToanList] = useState<DangToanItem[]>([
     { 
       id: '1', 
@@ -131,7 +128,6 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
         grade,
         category,
         basicConcept,
-        practiceIds: practiceIds,
         examples: processedDangToanList // Backend now receives the new structure in 'examples' field
       }
 
@@ -155,7 +151,6 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
     setGrade('')
     setCategory('')
     setBasicConcept('')
-    setPracticeIds([])
     setDangToanList([{ 
       id: Math.random().toString(36).substr(2, 9), 
       dangToanName: '', 
@@ -178,13 +173,11 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
       grade,
       category,
       basicConcept,
-      practiceIds,
       dangToanList,
       setTitle,
       setGrade,
       setCategory,
       setBasicConcept,
-      setPracticeIds,
       setDangToanList,
       validateAndSubmit,
       resetForm,

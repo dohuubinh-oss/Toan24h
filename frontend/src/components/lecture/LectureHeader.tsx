@@ -33,7 +33,7 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
 
       {/* Article Header */}
       <div className="space-y-4">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-ink leading-tight">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-ink leading-tight pl-8">
           {title}
         </h1>
         <div className="flex flex-wrap items-center justify-between gap-4">

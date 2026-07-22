@@ -112,6 +112,7 @@ function CreateExamPageContent() {
       duration: exam.duration,
       diffScore: diffScore,
       questionIds: questionIds,
+      lectureId: exam.lectureId,
     };
 
     setIsSaving(true);
@@ -145,7 +146,8 @@ function CreateExamPageContent() {
             examCode: exam.examCode,
             grade: exam.grade,
             duration: exam.duration,
-            type: exam.type
+            type: exam.type,
+            lectureId: exam.lectureId
           }}
           onChange={handleConfigChange}
           questions={exam.questions}

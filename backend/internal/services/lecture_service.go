@@ -49,7 +49,6 @@ type CreateLectureRequest struct {
 	Grade        string             `json:"grade"`
 	Category     string             `json:"category"`
 	BasicConcept string             `json:"basicConcept"`
-	PracticeIds  []string           `json:"practiceIds"`
 	Examples     []DangToanRequest  `json:"examples"`
 }
 
@@ -136,10 +135,7 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		})
 	}
 
-	practiceIdsJson, _ := json.Marshal(req.PracticeIds)
-	if len(req.PracticeIds) == 0 {
-		practiceIdsJson = []byte("[]")
-	}
+
 	
 
 
@@ -178,7 +174,6 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		Category:     req.Category,
 		BasicConcept: processHtmlImages(req.BasicConcept),
 		Examples:     string(examplesJson),
-		PracticeIDs:  string(practiceIdsJson),
 	}
 
 	return s.repo.CreateLecture(ctx, lecture)

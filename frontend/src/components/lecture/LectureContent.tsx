@@ -51,9 +51,9 @@ export function LectureExamples({ examples = [] }: LectureExamplesProps) {
     <section className="bg-[#F8FAFC] dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-primary/30 transition-all overflow-hidden">
       <details className="group" open>
         <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
-          <div className="flex items-center gap-2 text-primary">
-            <FileEdit size={24} />
-            <h3 className="text-xl font-bold">2. Phân tích bài tập mẫu</h3>
+          <div className="flex items-center gap-2">
+            <FileEdit size={24} className="text-primary" />
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">2. Phân tích bài tập mẫu</h3>
           </div>
           <ChevronDown className="text-slate-400 transition-transform duration-300 group-open:rotate-180" size={24} />
         </summary>
@@ -71,9 +71,9 @@ export function LectureExamples({ examples = [] }: LectureExamplesProps) {
                   {dt.methods.map((method, j) => (
                     <div key={method.id} className="space-y-6 border-t border-slate-200 dark:border-slate-700 pt-6 mt-6 first:border-0 first:pt-0 first:mt-0">
                       <div className="space-y-3 mb-6">
-                        <div className="flex items-center gap-2 text-primary">
-                          <Lightbulb size={20} />
-                          <h4 className="font-bold">{method.methodName || `Phương pháp ${j + 1}`}</h4>
+                        <div className="flex items-center gap-2">
+                          <Lightbulb size={20} className="text-primary" />
+                          <h4 className="font-bold text-slate-800 dark:text-slate-200">{method.methodName || `Phương pháp ${j + 1}`}</h4>
                         </div>
                         {method.methodContent && (
                            <div 

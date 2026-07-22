@@ -25,7 +25,11 @@ func CreateExam(c *gin.Context) {
 
 func GetExams(c *gin.Context) {
 	var exams []models.Exam
-	if err := config.DB.Order("created_at desc").Find(&exams).Error; err != nil {
+	query := config.DB.Order("created_at desc")
+	if lectureID := c.Query("lecture_id"); lectureID != "" {
+		query = query.Where("lecture_id = ?", lectureID)
+	}
+	if err := query.Find(&exams).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch exams: " + err.Error()})
 		return
 	}

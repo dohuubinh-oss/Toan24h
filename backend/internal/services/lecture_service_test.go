@@ -48,14 +48,16 @@ func TestCreateLectureService(t *testing.T) {
 		payload := CreateLectureRequest{
 			Title:             "Test Lecture",
 			Grade:             "10",
-			Category:          "Math",
-			BasicConcept:      "Concept",
+			Title:        "Test Lecture",
+			Grade:        "10",
+			Category:     "Math",
+			BasicConcept: "Concept",
 			Examples: []DangToanRequest{
 				{
 					DangToanName: "Dang 1",
 					Methods: []MethodRequest{
 						{
-							MethodName: "Phuong phap 1",
+							MethodName:    "Phuong phap 1",
 							ProblemImage:  "example_problem_image",
 							SolutionImage: "example_solution_image",
 							Exercise: &ExerciseRequest{

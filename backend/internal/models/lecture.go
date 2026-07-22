@@ -14,7 +14,6 @@ type Lecture struct {
 	Category     string         `gorm:"type:varchar(100);not null" json:"category"`
 	BasicConcept string         `gorm:"type:text" json:"basicConcept"`
 	Examples     string         `gorm:"type:jsonb;default:'[]'" json:"examples"`
-	PracticeIDs  string         `gorm:"type:jsonb;default:'[]'" json:"practiceIds"`
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
