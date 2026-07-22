@@ -21,7 +21,6 @@ export interface BackendLecture {
   grade: string;
   category: string;
   basicConcept: string;
-  mediaItems: string; // JSON string array of MediaItem
   practiceIds: string; // JSON string array
   examples: string; // JSON string array of DangToanItem
   createdAt: string;
@@ -50,10 +49,12 @@ export async function getLecturesByGrade(grade: string, page: number = 1, limit:
   const result: BackendPaginatedLectures = await response.json();
 
   const mappedData: Lecture[] = result.data.map(item => {
-    let coverImage;
+    let coverImage: string | undefined;
     try {
-      const mediaItems = JSON.parse(item.mediaItems || '[]');
-      coverImage = mediaItems.find((m: any) => m.type === 'image')?.url;
+      const match = item.basicConcept?.match(/<img[^>]+src="([^">]+)"/);
+      if (match) {
+        coverImage = match[1];
+      }
     } catch(e) {}
     
     return {

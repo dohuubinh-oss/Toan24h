@@ -1,6 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, Plus } from 'lucide-react'
 
 export default function AdminLecturesDashboard() {
   const grades = [
@@ -14,9 +14,19 @@ export default function AdminLecturesDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto w-full px-4 py-8 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Quản lý bài giảng theo khối lớp</h1>
-        <p className="text-slate-500 mt-2">Chọn một khối lớp để xem và quản lý danh sách bài giảng (Admin Access).</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Quản lý bài giảng theo khối lớp</h1>
+          <p className="text-slate-500 mt-2">Chọn một khối lớp để xem và quản lý danh sách bài giảng (Admin Access).</p>
+        </div>
+        
+        <Link 
+          href="/dashboard/lectures/create" 
+          className="px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2 shadow-sm"
+        >
+          <Plus size={18} />
+          Tạo bài giảng
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

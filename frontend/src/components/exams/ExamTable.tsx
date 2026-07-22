@@ -9,11 +9,14 @@ export type ExamType = 'Giữa kỳ' | 'Cuối kỳ' | 'Chuyên'
 export interface Exam {
   id: string
   title: string
-  grade: number
-  questionCount: number
+  grade: number | string
+  questionIds?: string[]
   duration: number
-  examType: ExamType
-  updatedAt: string
+  type?: string
+  examCode?: string
+  diffScore?: number
+  createdAt?: string
+  updatedAt?: string
 }
 
 interface ExamTableProps {
@@ -33,7 +36,8 @@ export default function ExamTable({ exams }: ExamTableProps) {
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Khối lớp</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Số câu hỏi</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Thời gian</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Loại đề</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Loại đề</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Độ khó</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Thao tác</th>
             </tr>
           </thead>
@@ -51,17 +55,20 @@ export default function ExamTable({ exams }: ExamTableProps) {
                     </div>
                     <div>
                       <p className="font-bold text-slate-800">{exam.title}</p>
-                      <p className="text-xs text-slate-400">Cập nhật {exam.updatedAt}</p>
+                      <p className="text-xs text-slate-400">Mã đề: {exam.examCode || 'N/A'}</p>
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
                   <span className="text-sm font-medium text-slate-700">Lớp {exam.grade}</span>
                 </td>
-                <td className="px-6 py-4 text-center text-sm font-medium">{exam.questionCount}</td>
+                <td className="px-6 py-4 text-center text-sm font-medium">{exam.questionIds?.length || 0}</td>
                 <td className="px-6 py-4 text-center text-sm font-medium">{exam.duration} phút</td>
-                <td className="px-6 py-4">
-                  <span className="text-sm font-medium text-slate-700">{exam.examType}</span>
+                <td className="px-6 py-4 text-center">
+                  <span className="text-sm font-medium text-slate-700">{exam.type === 'practice' ? 'Luyện tập' : 'Đề thi'}</span>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <span className="text-sm font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">{Number(exam.diffScore || 0).toFixed(1)}</span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-1">

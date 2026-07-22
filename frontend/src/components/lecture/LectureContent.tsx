@@ -1,11 +1,10 @@
 import React from 'react'
 import { BookOpen, ChevronDown, Play, FileEdit, Lightbulb } from 'lucide-react'
-import { DangToanItem, MediaItem } from '@/components/lecture/creator/LectureCreatorContext'
+import { DangToanItem } from '@/components/lecture/creator/LectureCreatorContext'
 import MathText from '@/components/ui/MathText'
 
 interface LectureConceptProps {
-  basicConcept?: string;
-  mediaItems?: MediaItem[];
+  basicConcept: string;
 }
 
 interface LectureExamplesProps {
@@ -19,8 +18,8 @@ const getMediaUrl = (url: string) => {
   return baseUrl + url;
 }
 
-export function LectureConcept({ basicConcept, mediaItems = [] }: LectureConceptProps) {
-  if (!basicConcept && mediaItems.length === 0) return null;
+export function LectureConcept({ basicConcept }: LectureConceptProps) {
+  if (!basicConcept) return null;
 
   return (
     <section className="bg-[#F8FAFC] dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-primary/30 transition-all overflow-hidden">
@@ -34,26 +33,10 @@ export function LectureConcept({ basicConcept, mediaItems = [] }: LectureConcept
         </summary>
         <div className="px-6 pb-6 pt-0">
           <div className="space-y-4">
-            {basicConcept && (
-               <div 
-                 className="prose dark:prose-invert max-w-none mb-6"
-                 dangerouslySetInnerHTML={{ __html: basicConcept }}
-               />
-            )}
-            
-            {mediaItems.map((item, idx) => (
-              <div key={idx} className="group flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <div className="flex flex-col w-full">
-                  <div className={`relative w-full rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 group-hover:border-primary/30 transition-colors ${item.type === 'video' ? 'aspect-video' : ''}`}>
-                    {item.type === 'video' ? (
-                       <iframe src={item.url} className="absolute inset-0 w-full h-full" allowFullScreen></iframe>
-                    ) : (
-                       <img src={getMediaUrl(item.url)} alt="Media" className="w-full h-auto object-contain" />
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+            <div 
+              className="prose dark:prose-invert max-w-none mb-6"
+              dangerouslySetInnerHTML={{ __html: basicConcept }}
+            />
           </div>
         </div>
       </details>

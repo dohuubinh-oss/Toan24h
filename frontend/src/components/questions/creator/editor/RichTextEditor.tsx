@@ -188,7 +188,7 @@ export default function RichTextEditor({
         inline: true,
         allowBase64: true,
         HTMLAttributes: {
-          class: 'rounded-lg max-w-full my-2 object-contain mx-auto',
+          class: 'rounded-lg w-full my-2 object-contain mx-auto',
         },
       }),
       Youtube.configure({

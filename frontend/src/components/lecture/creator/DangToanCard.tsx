@@ -214,7 +214,7 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
 
       {isExpanded && (
         <div className="p-5 flex flex-col gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-4">
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Tên Phương pháp giải</label>
               <input
@@ -226,13 +226,12 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Nội dung phương pháp</label>
-              <input
-                type="text"
+              <SharedEditorCard
+                title="Nội dung phương pháp"
+                icon={<></>}
+                content={method.methodContent || ''}
+                onContentChange={(html) => onChange({ ...method, methodContent: html })}
                 placeholder="VD: Đơn thức là biểu thức..."
-                value={method.methodContent}
-                onChange={(e) => onChange({ ...method, methodContent: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-primary/50 transition-colors"
               />
             </div>
           </div>
@@ -367,7 +366,7 @@ export default function DangToanCard({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-      <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between">
+      <div className="p-4 bg-white flex flex-wrap items-center justify-between">
         <div className="flex items-center gap-2 px-2">
           <Microscope className="text-primary w-5 h-5" />
           <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">Dạng Toán {index + 1}</h2>
@@ -377,10 +376,10 @@ export default function DangToanCard({
             <Button
               variant="ghost"
               onClick={onRemove}
-              className="text-red-500 hover:text-red-600 hover:bg-red-50 text-xs h-8 px-3"
+              className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 px-2"
+              title="Xóa Dạng Toán"
             >
-              <Trash2 className="w-3 h-3 mr-1.5" />
-              Xóa Dạng Toán
+              <Trash2 className="w-4 h-4" />
             </Button>
           )}
         </div>

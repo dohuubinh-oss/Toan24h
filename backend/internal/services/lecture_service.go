@@ -27,11 +27,7 @@ type ExerciseRequest struct {
 	Content string `json:"content"`
 }
 
-type MediaItemRequest struct {
-	ID   string `json:"id"`
-	Type string `json:"type"`
-	Url  string `json:"url"`
-}
+
 
 type MethodRequest struct {
 	ID            string           `json:"id"`
@@ -53,7 +49,6 @@ type CreateLectureRequest struct {
 	Grade        string             `json:"grade"`
 	Category     string             `json:"category"`
 	BasicConcept string             `json:"basicConcept"`
-	MediaItems   []MediaItemRequest `json:"mediaItems"`
 	PracticeIds  []string           `json:"practiceIds"`
 	Examples     []DangToanRequest  `json:"examples"`
 }
@@ -94,11 +89,10 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 	}
 
 	hasBasicConcept := req.BasicConcept != "" && req.BasicConcept != "<p>Nhập khái niệm cơ bản tại đây...</p>" && req.BasicConcept != "<p></p>"
-	hasMedia := len(req.MediaItems) > 0
 	hasExamples := len(req.Examples) > 0
 
-	if !hasBasicConcept && !hasMedia && !hasExamples {
-		return errors.New("must provide at least basic concept, multimedia or examples")
+	if !hasBasicConcept && !hasExamples {
+		return errors.New("must provide at least basic concept or examples")
 	}
 
 	lectureID := uuid.New()
@@ -147,16 +141,7 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		practiceIdsJson = []byte("[]")
 	}
 	
-	// Process MediaItems
-	for i := range req.MediaItems {
-		if req.MediaItems[i].Type == "image" {
-			req.MediaItems[i].Url = processLectureImageUrl(req.MediaItems[i].Url)
-		}
-	}
-	mediaItemsJson, _ := json.Marshal(req.MediaItems)
-	if len(req.MediaItems) == 0 {
-		mediaItemsJson = []byte("[]")
-	}
+
 
 	// Process Examples (DangToanList)
 	for i := range req.Examples {
@@ -192,7 +177,6 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		Grade:        req.Grade,
 		Category:     req.Category,
 		BasicConcept: processHtmlImages(req.BasicConcept),
-		MediaItems:   string(mediaItemsJson),
 		Examples:     string(examplesJson),
 		PracticeIDs:  string(practiceIdsJson),
 	}

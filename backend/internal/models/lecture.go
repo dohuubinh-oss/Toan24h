@@ -13,7 +13,6 @@ type Lecture struct {
 	Grade        string         `gorm:"type:varchar(50);not null" json:"grade"`
 	Category     string         `gorm:"type:varchar(100);not null" json:"category"`
 	BasicConcept string         `gorm:"type:text" json:"basicConcept"`
-	MediaItems   string         `gorm:"type:jsonb;default:'[]'" json:"mediaItems"`
 	Examples     string         `gorm:"type:jsonb;default:'[]'" json:"examples"`
 	PracticeIDs  string         `gorm:"type:jsonb;default:'[]'" json:"practiceIds"`
 	CreatedAt    time.Time      `json:"createdAt"`

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { Suspense } from 'react'
+import React, { Suspense, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ChevronRight, FileText, CheckCircle, TrendingUp, Search, Plus } from 'lucide-react'
@@ -17,42 +17,31 @@ export default function ExamsPage() {
 
 function ExamsPageContent() {
   const searchParams = useSearchParams();
-  const mockExams: Exam[] = [
-    {
-      id: 'E-01',
-      title: 'Kiểm tra Giữa kỳ I - Đại số 10',
-      grade: 10,
-      questionCount: 50,
-      duration: 90,
-      examType: 'Giữa kỳ',
-      updatedAt: '2 giờ trước'
-    },
-    {
-      id: 'E-02',
-      title: 'Ôn tập Hình học Giải tích',
-      grade: 12,
-      questionCount: 35,
-      duration: 60,
-      examType: 'Cuối kỳ',
-      updatedAt: 'Hôm qua'
-    },
-    {
-      id: 'E-03',
-      title: 'Kiểm tra 15p - Đạo hàm',
-      grade: 11,
-      questionCount: 20,
-      duration: 15,
-      examType: 'Chuyên',
-      updatedAt: '3 ngày trước'
+  const [exams, setExams] = useState<Exam[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchExams = async () => {
+      try {
+        setIsLoading(true)
+        const { getExams } = await import('@/lib/api')
+        const data = await getExams()
+        setExams(data || [])
+      } catch (err) {
+        console.error('Failed to fetch exams:', err)
+      } finally {
+        setIsLoading(false)
+      }
     }
-  ]
+    fetchExams()
+  }, [])
 
   const gradeFilter = searchParams.get('grade') || '';
   const durationFilter = searchParams.get('duration') || '';
   const examTypeFilter = searchParams.get('examType') || '';
   const q = searchParams.get('q') || '';
 
-  let filteredExams = mockExams;
+  let filteredExams = exams;
 
   if (q) {
     filteredExams = filteredExams.filter(exam => 
@@ -77,7 +66,7 @@ function ExamsPageContent() {
   }
 
   if (examTypeFilter) {
-    filteredExams = filteredExams.filter(exam => exam.examType === examTypeFilter);
+    filteredExams = filteredExams.filter(exam => exam.type === examTypeFilter);
   }
 
   return (
@@ -94,9 +83,15 @@ function ExamsPageContent() {
         </div>
       </div>
 
-          <ExamTable exams={filteredExams} />
+          {isLoading ? (
+            <div className="flex justify-center p-12">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <ExamTable exams={filteredExams} />
+          )}
           
-          {filteredExams.length > 0 && (
+          {!isLoading && filteredExams.length > 0 && (
             <div className="pt-0">
               <Pagination 
                 currentPage={1} 

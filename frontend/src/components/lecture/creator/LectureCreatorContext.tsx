@@ -27,23 +27,19 @@ export interface DangToanItem {
   methods: MethodItem[];
 }
 
-export interface MediaItem {
-  id: string;
-  type: 'image' | 'video';
-  url: string;
-}
+
 
 interface LectureCreatorState {
   title: string;
   grade: string;
   category: string;
-  mediaItems: MediaItem[];
+  basicConcept: string;
   practiceIds: string[];
   dangToanList: DangToanItem[];
   setTitle: (val: string) => void;
   setGrade: (val: string) => void;
   setCategory: (val: string) => void;
-  setMediaItems: (val: MediaItem[]) => void;
+  setBasicConcept: (val: string) => void;
   setPracticeIds: (val: string[]) => void;
   setDangToanList: (val: DangToanItem[]) => void;
   validateAndSubmit: () => void;
@@ -58,7 +54,7 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
   const [title, setTitle] = useState('')
   const [grade, setGrade] = useState('')
   const [category, setCategory] = useState('')
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
+  const [basicConcept, setBasicConcept] = useState('')
   const [practiceIds, setPracticeIds] = useState<string[]>([])
   const [dangToanList, setDangToanList] = useState<DangToanItem[]>([
     { 
@@ -111,15 +107,7 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
     try {
       const { apiFetch, uploadObjectUrlIfNeeded } = await import('@/lib/api')
 
-      const processedMediaItems = await Promise.all(
-        mediaItems.map(async (item) => {
-          if (item.type === 'image') {
-            const uploadedUrl = await uploadObjectUrlIfNeeded(item.url)
-            return { ...item, url: uploadedUrl || item.url }
-          }
-          return item
-        })
-      )
+
 
       const processedDangToanList = await Promise.all(
         dangToanList.map(async (dt) => ({
@@ -142,8 +130,7 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
         title,
         grade,
         category,
-        basicConcept: "", // Send empty string for backend compat
-        mediaItems: processedMediaItems,
+        basicConcept,
         practiceIds: practiceIds,
         examples: processedDangToanList // Backend now receives the new structure in 'examples' field
       }
@@ -167,7 +154,7 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
     setTitle('')
     setGrade('')
     setCategory('')
-    setMediaItems([])
+    setBasicConcept('')
     setPracticeIds([])
     setDangToanList([{ 
       id: Math.random().toString(36).substr(2, 9), 
@@ -190,13 +177,13 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
       title,
       grade,
       category,
-      mediaItems,
+      basicConcept,
       practiceIds,
       dangToanList,
       setTitle,
       setGrade,
       setCategory,
-      setMediaItems,
+      setBasicConcept,
       setPracticeIds,
       setDangToanList,
       validateAndSubmit,

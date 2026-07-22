@@ -255,3 +255,16 @@ export async function createExam(payload: any): Promise<any> {
   })
   return response
 }
+
+export async function getExams(): Promise<any[]> {
+  try {
+    const response = await apiFetch('/exams')
+    if (response.data) {
+      return response.data
+    }
+    return []
+  } catch (error) {
+    console.error("Failed to fetch exams:", error)
+    return []
+  }
+}

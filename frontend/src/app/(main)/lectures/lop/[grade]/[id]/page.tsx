@@ -38,11 +38,9 @@ export default async function GradeLecturePage({
   }
 
   let lecture;
-  let mediaItems = [];
   let examples = [];
   try {
     lecture = await getLectureById(id);
-    mediaItems = JSON.parse(lecture.mediaItems || '[]');
     examples = JSON.parse(lecture.examples || '[]');
   } catch (error) {
     console.error("Failed to load lecture:", error);
@@ -60,7 +58,7 @@ export default async function GradeLecturePage({
       />
 
       {/* Card Giải thích khái niệm chiếm 100% chiều rộng */}
-      <LectureConcept basicConcept={lecture.basicConcept} mediaItems={mediaItems} />
+      <LectureConcept basicConcept={lecture.basicConcept} />
 
       <div className="grid grid-cols-12 gap-8">
         <div className="col-span-12 lg:col-span-8 space-y-8">

@@ -119,7 +119,7 @@ function CreateExamPageContent() {
       const { createExam } = await import('@/lib/api');
       await createExam(payload);
       alert('Lưu đề thi thành công!');
-      // router.push('/dashboard/exams') // Navigate to exam list later
+      router.push('/dashboard/exams');
     } catch (err) {
       console.error('Lưu đề thi thất bại:', err);
       alert('Lưu đề thi thất bại. Vui lòng thử lại.');
