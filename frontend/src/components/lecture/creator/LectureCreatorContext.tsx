@@ -1,5 +1,6 @@
 'use client'
 import React, { createContext, useContext, useState } from 'react'
+import { toast } from '@/components/ui/ToastProvider'
 
 export interface ExampleStep {
   step: number;
@@ -66,15 +67,15 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
 
   const validateAndSubmit = async () => {
     if (!title.trim()) {
-      alert('Vui lòng nhập tiêu đề bài giảng')
+      toast.error('Vui lòng nhập tiêu đề bài giảng')
       return
     }
     if (!grade) {
-      alert('Vui lòng chọn khối lớp')
+      toast.error('Vui lòng chọn khối lớp')
       return
     }
     if (!category) {
-      alert('Vui lòng chọn danh mục')
+      toast.error('Vui lòng chọn danh mục')
       return
     }
 
@@ -82,18 +83,18 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
     for (let i = 0; i < dangToanList.length; i++) {
       const dt = dangToanList[i]
       if (!dt.dangToanName.trim()) {
-        alert(`Dạng toán ${i + 1} chưa có tên`)
+        toast.error(`Dạng toán ${i + 1} chưa có tên`)
         return
       }
       for (let j = 0; j < dt.methods.length; j++) {
         const m = dt.methods[j]
 
         if (!m.exercise) {
-          alert(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có nội dung bài tập (JSON)`)
+          toast.error(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có nội dung bài tập (JSON)`)
           return
         }
         if (!m.exercise.content.trim()) {
-          alert(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có đề bài / nội dung`)
+          toast.error(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có đề bài / nội dung`)
           return
         }
       }
@@ -136,11 +137,10 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
         body: JSON.stringify(payload)
       })
 
-      alert('Đã lưu bài giảng thành công!')
       resetForm()
     } catch (error: any) {
       console.error('Submit error:', error)
-      alert(`Có lỗi xảy ra: ${error.message}`)
+      toast.error(`Có lỗi xảy ra: ${error.message}`)
     } finally {
       setIsSubmitting(false)
     }

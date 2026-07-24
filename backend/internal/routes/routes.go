@@ -5,6 +5,7 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/controllers"
 	"github.com/modeptrai/exam-model-backend/internal/handlers"
+	"github.com/modeptrai/exam-model-backend/internal/middleware"
 	"github.com/modeptrai/exam-model-backend/internal/repository"
 	"github.com/modeptrai/exam-model-backend/internal/services"
 )
@@ -33,9 +34,17 @@ func SetupRouter() *gin.Engine {
 	lectureService := services.NewLectureService(lectureRepo)
 	lectureController := controllers.NewLectureController(lectureService)
 
+	// Auth & other Handlers
+	authHandler := handlers.NewAuthHandler(config.DB)
+
 	// API Version 1
 	v1 := r.Group("/api/v1")
 	{
+		// Auth routes
+		v1.POST("/auth/register", authHandler.Register)
+		v1.POST("/auth/login", authHandler.Login)
+		v1.POST("/auth/refresh", authHandler.Refresh)
+
 		v1.POST("/uploads/temp", handlers.UploadTempImage)
 
 		v1.POST("/questions/bulk", handlers.BulkCreateQuestions)
@@ -50,8 +59,24 @@ func SetupRouter() *gin.Engine {
 		
 		// Lectures
 		v1.POST("/lectures", lectureController.CreateLecture)
+		v1.GET("/lectures", lectureController.GetAllLectures)
 		v1.GET("/lectures/grade/:grade", lectureController.GetLecturesByGrade)
 		v1.GET("/lectures/:id", lectureController.GetLectureByID)
+	}
+
+	// Protected API routes
+	protected := r.Group("/api/v1")
+	protected.Use(middleware.AuthMiddleware())
+	{
+		// User Routes
+		users := protected.Group("/users")
+		{
+			users.PUT("/me/grade", authHandler.UpdateGrade)
+		}
+
+		bookmarkHandler := handlers.NewBookmarkHandler(config.DB)
+		protected.POST("/lectures/:id/bookmark", bookmarkHandler.ToggleLectureBookmark)
+		protected.GET("/bookmarks/lectures", bookmarkHandler.GetBookmarkedLectures)
 	}
 
 	return r

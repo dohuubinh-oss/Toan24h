@@ -9,6 +9,8 @@ import { Grid, UploadCloud } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Exam } from '@/types/exam'
 import { validateExamConfig, calculateExamDifficulty } from '@/lib/exam-utils'
+import { toast } from '@/components/ui/ToastProvider'
+import { apiFetch } from '@/lib/api'
 
 export default function CreateExamPage() {
   return (
@@ -97,7 +99,7 @@ function CreateExamPageContent() {
     }
 
     if (exam.questions.length === 0) {
-      alert('Vui lòng chọn ít nhất 1 câu hỏi để tạo đề thi!');
+      toast.error('Vui lòng chọn ít nhất 1 câu hỏi để tạo đề thi!');
       return;
     }
 
@@ -117,13 +119,11 @@ function CreateExamPageContent() {
 
     setIsSaving(true);
     try {
-      const { createExam } = await import('@/lib/api');
-      await createExam(payload);
-      alert('Lưu đề thi thành công!');
+      await apiFetch('/exams', { method: 'POST', body: JSON.stringify(payload) })
       router.push('/dashboard/exams');
     } catch (err) {
       console.error('Lưu đề thi thất bại:', err);
-      alert('Lưu đề thi thất bại. Vui lòng thử lại.');
+      toast.error('Lưu đề thi thất bại. Vui lòng thử lại.');
     } finally {
       setIsSaving(false);
     }

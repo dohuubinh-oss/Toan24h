@@ -64,6 +64,7 @@ type PaginatedLectures struct {
 type LectureService interface {
 	CreateLecture(ctx context.Context, req CreateLectureRequest) error
 	GetLecturesByGrade(ctx context.Context, grade string, page, limit int) (*PaginatedLectures, error)
+	GetAllLectures(ctx context.Context) ([]models.Lecture, error)
 	GetLectureByID(ctx context.Context, id string) (*models.Lecture, error)
 }
 
@@ -209,6 +210,10 @@ func (s *lectureService) GetLecturesByGrade(ctx context.Context, grade string, p
 		StartIndex:  startIndex,
 		EndIndex:    endIndex,
 	}, nil
+}
+
+func (s *lectureService) GetAllLectures(ctx context.Context) ([]models.Lecture, error) {
+	return s.repo.GetAllLectures(ctx)
 }
 
 func (s *lectureService) GetLectureByID(ctx context.Context, id string) (*models.Lecture, error) {

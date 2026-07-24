@@ -19,19 +19,15 @@ export default async function GradeLecturePage({
   const cookieStore = await cookies()
   const token = cookieStore.get('accessToken')?.value
 
+  let shouldRedirect = false;
+
   if (token) {
     try {
+      // Temporarily disabled progression lock
       const payloadBase64 = token.split('.')[1] || token
       const payloadString = atob(payloadBase64)
       const payload = JSON.parse(payloadString)
-
-      if (payload.role === 'student') {
-        // Mock progression lock: Giả lập học sinh phải hoàn thành bài 1 điểm > 7 mới được học bài khác
-        // Ở đây giả lập học sinh chỉ được vào bài có id === '1'
-        if (id !== '1' && id !== 'lecture-1') {
-          redirect(`/lectures/lop/${grade}?error=not_completed`)
-        }
-      }
+      // Removed the redirect logic for now to allow viewing all lectures
     } catch (e) {
       console.error('Failed to parse token for progression check', e)
     }
@@ -65,7 +61,7 @@ export default async function GradeLecturePage({
           {/* Card Phân tích bài tập mẫu trong layout chia cột */}
           <LectureExamples examples={examples} />
           {/* Nút Luyện tập cuối bài giảng */}
-          <div className="pt-8 border-t border-slate-200">
+          <div className="pt-2">
             <Link 
               href={`/practices/lop/${grade}?lecture=${id}&lectureName=${encodeURIComponent(lecture.title)}${lecture.practiceIds ? `&practiceIds=${encodeURIComponent(lecture.practiceIds)}` : ''}`}
               className="w-full flex items-center justify-center gap-3 px-6 py-4 font-bold rounded-xl transition-all text-lg bg-primary text-white hover:bg-primary/90 shadow-md hover:shadow-lg hover:-translate-y-1"

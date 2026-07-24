@@ -5,13 +5,15 @@ export default function LectureSidebar() {
   return (
     <div className="space-y-6">
       {/* Related Lessons */}
-      <div className="card-premium">
-        <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-          <BookOpen className="text-primary" size={24} />
-          Bài giảng liên quan
-        </h3>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+        <div className="p-4 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2 px-2 text-primary">
+            <BookOpen size={20} />
+            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300">Bài giảng liên quan</h3>
+          </div>
+        </div>
         
-        <div className="space-y-4">
+        <div className="p-6 space-y-4">
           {[
             { title: 'Thể tích khối lăng trụ đứng và lăng trụ xiên', category: 'Hình học lớp 12', color: 'bg-blue-100' },
             { title: 'Góc và khoảng cách trong không gian 3D', category: 'Luyện đề THPT', color: 'bg-green-100' },
@@ -28,11 +30,11 @@ export default function LectureSidebar() {
               </div>
             </a>
           ))}
+          
+          <button className="w-full mt-6 text-sm font-bold text-primary hover:underline flex items-center justify-center gap-1">
+            Xem tất cả bài giảng <ArrowRight size={16} />
+          </button>
         </div>
-        
-        <button className="w-full mt-6 text-sm font-bold text-primary hover:underline flex items-center justify-center gap-1">
-          Xem tất cả bài giảng <ArrowRight size={16} />
-        </button>
       </div>
 
       {/* Ad/Promo Card */}

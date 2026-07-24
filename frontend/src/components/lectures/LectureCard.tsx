@@ -59,18 +59,20 @@ export function LectureCard({
 
       {/* Content */}
       <div className="p-5 flex flex-col flex-1">
-        <div className="flex items-center justify-between mb-3">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 line-clamp-1 max-w-[65%]">
+        <div className="mb-3">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 line-clamp-1 max-w-[100%]">
             {chapter}
           </span>
+        </div>
+        <h3 className="text-lg font-bold text-slate-800 mb-3 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+          {title}
+        </h3>
+        <div className="flex justify-end mt-auto pt-2">
           <div className="flex items-center gap-1.5 text-slate-500 text-sm font-medium shrink-0">
             <PenTool className="w-4 h-4" />
             <span>{practiceCount} Đề</span>
           </div>
         </div>
-        <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
-          {title}
-        </h3>
       </div>
     </Link>
   );

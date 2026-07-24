@@ -15,10 +15,10 @@ export default function MathText({ content, className = '' }: MathTextProps) {
   const renderedHtml = useMemo(() => {
     if (!hasHtml) return content;
     
-    // Thay thế các công thức $$...$$ hoặc $...$ bằng chuỗi HTML của KaTeX
-    return content.replace(/\$\$([\s\S]*?)\$\$|\$([^$]+)\$/g, (match, math1, math2) => {
-      const math = math1 || math2;
-      const isBlock = !!math1;
+    // Thay thế các công thức $$...$$, \[...\], $...$, \(...\) bằng chuỗi HTML của KaTeX
+    return content.replace(/\$\$([\s\S]*?)\$\$|\\\[([\s\S]*?)\\\]|\$([^$]+)\$|\\\(([\s\S]*?)\\\)/g, (match, b1, b2, i1, i2) => {
+      const math = b1 || b2 || i1 || i2;
+      const isBlock = !!(b1 || b2);
       try {
         return katex.renderToString(math, { throwOnError: false, displayMode: isBlock });
       } catch (e) {
@@ -36,18 +36,18 @@ export default function MathText({ content, className = '' }: MathTextProps) {
     );
   }
 
-  // Hàm đơn giản phân tách text thường và text latex bọc trong $$...$$ hoặc $...$
-  const parts = content.split(/(\$\$[\s\S]*?\$\$|\$.*?\$)/g);
+  // Hàm đơn giản phân tách text thường và text latex
+  const parts = content.split(/(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^$]+\$|\\\([\s\S]*?\\\))/g);
 
   return (
     <div className={`latex-font ${className}`}>
       {parts.map((part, index) => {
-        if (part.startsWith('$$') && part.endsWith('$$')) {
-          const math = part.slice(2, -2);
+        if ((part.startsWith('$$') && part.endsWith('$$')) || (part.startsWith('\\[') && part.endsWith('\\]'))) {
+          const math = part.startsWith('$$') ? part.slice(2, -2) : part.slice(2, -2);
           return <BlockMath math={math} key={index} />;
         }
-        if (part.startsWith('$') && part.endsWith('$')) {
-          const math = part.slice(1, -1);
+        if ((part.startsWith('$') && part.endsWith('$')) || (part.startsWith('\\(') && part.endsWith('\\)'))) {
+          const math = part.startsWith('$') ? part.slice(1, -1) : part.slice(2, -2);
           return <InlineMath math={math} key={index} />;
         }
         return <span key={index}>{part}</span>;

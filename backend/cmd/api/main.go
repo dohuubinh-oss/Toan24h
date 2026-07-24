@@ -28,8 +28,10 @@ func main() {
 	// 2.2. Auto Migrate Models
 	log.Println("Running Auto Migration...")
 	if err := config.DB.AutoMigrate(
+		&models.User{},
 		&models.Question{},
 		&models.Lecture{},
+		&models.LectureBookmark{},
 		&models.Exam{},
 	); err != nil {
 		log.Fatalf("Auto Migrate failed: %v", err)

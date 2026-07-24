@@ -4,6 +4,7 @@ import React, { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import UserHeader from '@/components/users/UserHeader'
 import UserTable, { User } from '@/components/users/UserTable'
+import { toast } from '@/components/ui/ToastProvider'
 import { Pagination } from '@/components/ui/Pagination'
 
 const INITIAL_MOCK_USERS: User[] = [
@@ -71,7 +72,6 @@ function UsersPageContent() {
     setUsers(prevUsers => 
       prevUsers.map(u => u.id === id ? { ...u, status: 'Bị khóa' } : u)
     );
-    alert(`Đã khóa tài khoản người dùng ${name} thành công!`);
   }
   
   // Filter

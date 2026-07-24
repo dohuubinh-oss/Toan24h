@@ -53,6 +53,15 @@ func (ctrl *LectureController) GetLecturesByGrade(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func (ctrl *LectureController) GetAllLectures(c *gin.Context) {
+	res, err := ctrl.service.GetAllLectures(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": res})
+}
+
 func (ctrl *LectureController) GetLectureByID(c *gin.Context) {
 	id := c.Param("id")
 	res, err := ctrl.service.GetLectureByID(c.Request.Context(), id)

@@ -2,13 +2,30 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/a
 
 import { Question } from '@/types/question'
 
-export async function apiFetch(endpoint: string, options: RequestInit = {}) {
-  const url = `${API_BASE_URL}${endpoint}`
+export interface ApiOptions extends RequestInit {
+  url_is_refresh?: boolean;
+}
+
+export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
+  let url = `${API_BASE_URL}${endpoint}`
+  // Support absolute URLs for retry mechanism
+  if (endpoint.startsWith('http')) {
+    url = endpoint
+  }
+  
   const headers = new Headers(options.headers || {})
   
   // Set default content type to JSON if not uploading FormData
   if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json')
+  }
+
+  // Inject Access Token
+  if (typeof window !== 'undefined') {
+    const accessToken = localStorage.getItem('accessToken')
+    if (accessToken && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${accessToken}`)
+    }
   }
 
   const response = await fetch(url, {
@@ -17,13 +34,64 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
   })
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== 'undefined' && !options.url_is_refresh) {
+      // Try refresh token
+      const refreshToken = localStorage.getItem('refreshToken')
+      if (refreshToken) {
+        try {
+          const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken })
+          })
+          
+          if (refreshRes.ok) {
+            const refreshData = await refreshRes.json()
+            localStorage.setItem('accessToken', refreshData.accessToken)
+            
+            // Retry original request
+            const newHeaders = new Headers(options.headers || {})
+            newHeaders.set('Authorization', `Bearer ${refreshData.accessToken}`)
+            if (!newHeaders.has('Content-Type') && !(options.body instanceof FormData)) {
+              newHeaders.set('Content-Type', 'application/json')
+            }
+            
+            const retryRes = await fetch(url, {
+              ...options,
+              headers: newHeaders,
+            })
+            if (retryRes.ok) {
+              return retryRes.json()
+            }
+          } else {
+            // Refresh failed, clear tokens
+            localStorage.removeItem('accessToken')
+            localStorage.removeItem('refreshToken')
+            window.location.href = '/login'
+          }
+        } catch (e) {
+          console.error("Refresh token error", e)
+        }
+      }
+    }
+
     let errorData
     try {
       errorData = await response.json()
     } catch (e) {
       errorData = response.statusText
     }
-    throw new Error(`API Error: ${response.status} - ${JSON.stringify(errorData)}`)
+    
+    let errorMessage = `API Error: ${response.status}`
+    if (errorData && typeof errorData === 'object' && errorData.error) {
+      errorMessage = errorData.error
+    } else if (typeof errorData === 'string') {
+      errorMessage = errorData
+    } else {
+      errorMessage = `${errorMessage} - ${JSON.stringify(errorData)}`
+    }
+    
+    throw new Error(errorMessage)
   }
 
   return response.json()

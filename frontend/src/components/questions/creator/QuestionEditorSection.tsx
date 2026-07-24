@@ -31,9 +31,7 @@ function QuestionEditorSection({
 
 
 
-  const isGroup = currentQuestion?.type_question?.toString().toLowerCase() === 'group' || 
-                  (currentBlock?.questions && currentBlock.questions.length > 1) || 
-                  (currentBlock?.shared_content && currentBlock.shared_content.length > 0);
+  const isGroup = currentBlock?.is_group === true;
 
   return (
     <div className="space-y-6">

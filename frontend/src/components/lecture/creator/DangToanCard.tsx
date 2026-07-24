@@ -263,25 +263,25 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
       {/* JSON Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col border-0">
+            <div className="p-5 flex items-center justify-between bg-white">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <Code className="w-5 h-5 text-primary" />
                 Nhập JSON
               </h3>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200"
+                className="text-slate-400 hover:text-slate-600 transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100"
               >
                 ✕
               </button>
             </div>
             
-            <div className="p-6">
+            <div className="p-6 bg-white">
               <textarea
                 value={jsonInput}
                 onChange={(e) => setJsonInput(e.target.value)}
-                className="w-full h-64 p-4 rounded-xl border border-slate-200 font-mono text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none whitespace-pre"
+                className="w-full h-64 p-4 rounded-xl border border-slate-200 font-mono text-sm bg-slate-50 focus:bg-slate-50 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 focus:outline-none transition-all resize-none whitespace-pre"
                 placeholder={`{
   "problem": "Nội dung đề bài (hỗ trợ LaTex với cặp $$)",
   "steps": [
@@ -303,11 +303,11 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
               )}
             </div>
 
-            <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+            <div className="p-5 bg-white flex justify-end gap-3">
               <Button
                 variant="ghost"
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-600 hover:bg-slate-200"
+                className="text-slate-600 hover:bg-slate-100"
               >
                 Hủy bỏ
               </Button>

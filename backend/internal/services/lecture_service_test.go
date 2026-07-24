@@ -12,6 +12,7 @@ import (
 type mockLectureRepository struct {
 	SaveFunc               func(ctx context.Context, lecture *models.Lecture) error
 	GetLecturesByGradeFunc func(ctx context.Context, grade string, limit, offset int) ([]models.Lecture, int64, error)
+	GetAllLecturesFunc     func(ctx context.Context) ([]models.Lecture, error)
 	GetLectureByIDFunc     func(ctx context.Context, id string) (*models.Lecture, error)
 }
 
@@ -27,6 +28,13 @@ func (m *mockLectureRepository) GetLecturesByGrade(ctx context.Context, grade st
 		return m.GetLecturesByGradeFunc(ctx, grade, limit, offset)
 	}
 	return nil, 0, nil
+}
+
+func (m *mockLectureRepository) GetAllLectures(ctx context.Context) ([]models.Lecture, error) {
+	if m.GetAllLecturesFunc != nil {
+		return m.GetAllLecturesFunc(ctx)
+	}
+	return nil, nil
 }
 
 func (m *mockLectureRepository) GetLectureByID(ctx context.Context, id string) (*models.Lecture, error) {
@@ -46,8 +54,6 @@ func TestCreateLectureService(t *testing.T) {
 
 	t.Run("Valid Payload", func(t *testing.T) {
 		payload := CreateLectureRequest{
-			Title:             "Test Lecture",
-			Grade:             "10",
 			Title:        "Test Lecture",
 			Grade:        "10",
 			Category:     "Math",

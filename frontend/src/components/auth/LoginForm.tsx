@@ -8,6 +8,7 @@ import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
 import { Checkbox } from '../ui/Checkbox'
+import { login } from '@/lib/authApi'
 
 type LoginFormValues = {
   identity: string
@@ -18,6 +19,7 @@ type LoginFormValues = {
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   const router = useRouter()
 
@@ -28,31 +30,41 @@ export default function LoginForm() {
   } = useForm<LoginFormValues>({
     mode: 'onTouched',
     defaultValues: {
+      identity: '',
+      password: '',
       rememberMe: false
     }
   })
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true)
-    // Giả lập gọi API
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // [TODO: WARNING] Hiện tại dùng logic giả lập để phân quyền dựa vào text nhập ở Identity.
-    // KHI CÓ API THẬT, PHẢI THAY THẾ BẰNG RESPONSE TỪ SERVER (lưu JWT thật vào cookies).
-    
-    if (data.identity.toLowerCase().includes('student')) {
-      // Giả lập token JWT của học sinh (Role student, Grade 9)
-      const mockStudentToken = btoa(JSON.stringify({ role: 'student', grade: '9' }))
-      document.cookie = `accessToken=${mockStudentToken}; path=/; max-age=86400`
-      router.push('/lectures')
-    } else {
-      // Giả lập token JWT của admin
-      const mockAdminToken = btoa(JSON.stringify({ role: 'admin' }))
-      document.cookie = `accessToken=${mockAdminToken}; path=/; max-age=86400`
-      router.push('/dashboard/lectures')
+    setErrorMessage('')
+    try {
+      const res = await login({
+        email: data.identity,
+        password: data.password
+      })
+      
+      // Update cookie so middleware in nextjs allows access to protected routes
+      // Note: For real security, HTTPOnly cookie from backend is better, but this handles Next.js middleware requirement for now
+      document.cookie = `accessToken=${res.accessToken}; path=/; max-age=86400`
+      document.cookie = `userRole=${res.user?.role || ''}; path=/; max-age=86400`
+      document.cookie = `userGrade=${res.user?.grade || ''}; path=/; max-age=86400`
+      
+      if (res.user?.role === 'admin') {
+        router.push('/dashboard')
+      } else {
+        router.push('/lectures')
+      }
+    } catch (error: any) {
+      let msg = error.message
+      if (msg.includes('Invalid email or password')) {
+        msg = 'Email hoặc mật khẩu không chính xác.'
+      }
+      setErrorMessage(msg || 'Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.')
+    } finally {
+      setIsLoading(false)
     }
-    
-    setIsLoading(false)
   }
 
   return (
@@ -66,6 +78,12 @@ export default function LoginForm() {
 
         {/* Form */}
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
+          {errorMessage && (
+            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+              {errorMessage}
+            </div>
+          )}
+          
           <div>
             <Label htmlFor="identity">Số điện thoại hoặc Email</Label>
             <Input

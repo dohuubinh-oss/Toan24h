@@ -35,8 +35,10 @@ export default function JsonInputSection({
       }
       
       const processedBlocks = parsed.map(block => {
+        const isGroup = block.questions.length > 1 || block.questions.some(q => q.type_question?.toString().toLowerCase() === 'group');
         return {
           ...block,
+          is_group: isGroup,
           questions: block.questions.map(q => {
             const processedQ = { ...q };
 

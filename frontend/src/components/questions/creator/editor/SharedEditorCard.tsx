@@ -6,6 +6,7 @@ import Youtube from '@tiptap/extension-youtube'
 import { Bold, Italic, Strikethrough, List, ListOrdered, ImagePlus, Sigma, Image as ImageIcon, Video as YoutubeIcon, WrapText } from 'lucide-react'
 import { MathExtension } from './MathExtension'
 import { uploadTempImage } from '@/lib/api'
+import { toast } from '@/components/ui/ToastProvider'
 
 import Placeholder from '@tiptap/extension-placeholder'
 import { preprocessMath } from './RichTextEditor'
@@ -118,7 +119,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 const url = await uploadTempImage(file);
                 editor.chain().focus().insertContentAt(selection.to, { type: 'image', attrs: { src: url } }).run();
               } catch (err) {
-                alert('Tải ảnh thất bại!');
+                toast.error('Tải ảnh thất bại!');
               }
             }
           };

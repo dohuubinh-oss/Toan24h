@@ -46,6 +46,7 @@ type QuestionDetail struct {
 // QuestionGroup DTO cho nhóm câu hỏi
 type QuestionGroup struct {
 	SharedContent string           `json:"shared_content"`
+	IsGroup       bool             `json:"is_group"`
 	Questions     []QuestionDetail `json:"questions"`
 }
 
@@ -58,9 +59,9 @@ func processImageUrl(originalUrl string, grade int) string {
 	fileName := strings.TrimPrefix(originalUrl, "/uploads/temp/")
 	sourcePath := filepath.Join(".", "uploads", "temp", fileName)
 
-	// Thư mục đích: uploads/questions/grade/{grade}
+	// Thư mục đích: uploads/questions/{grade}
 	folderName := fmt.Sprintf("%d", grade)
-	finalDir := filepath.Join(".", "uploads", "questions", "grade", folderName)
+	finalDir := filepath.Join(".", "uploads", "questions", folderName)
 
 	if err := os.MkdirAll(finalDir, os.ModePerm); err != nil {
 		return originalUrl
@@ -73,7 +74,7 @@ func processImageUrl(originalUrl string, grade int) string {
 		return originalUrl
 	}
 
-	return fmt.Sprintf("/uploads/questions/grade/%s/%s", folderName, fileName)
+	return fmt.Sprintf("/uploads/questions/%s/%s", folderName, fileName)
 }
 
 // processHtmlImages quét và chuyển tất cả ảnh trong mã HTML
@@ -113,7 +114,7 @@ func BulkCreateQuestions(c *gin.Context) {
 	for _, group := range payload {
 		var parentID *uuid.UUID
 
-		if group.SharedContent != "" {
+		if group.IsGroup || group.SharedContent != "" {
 			parentQ := models.Question{
 				TypeQuestion: "group",
 				Content:      processHtmlImages(group.SharedContent, group.Questions[0].Grade), // Dùng grade của câu hỏi đầu tiên
@@ -206,7 +207,7 @@ func GetQuestions(c *gin.Context) {
 		return
 	}
 
-	if err := query.Preload("SubQuestions").Limit(limit).Offset(offset).Order("created_at desc").Find(&questions).Error; err != nil {
+	if err := query.Preload("SubQuestions").Order("created_at desc, id desc").Limit(limit).Offset(offset).Find(&questions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: err.Error()})
 		return
 	}

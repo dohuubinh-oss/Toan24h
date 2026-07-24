@@ -10,6 +10,7 @@ import (
 type LectureRepository interface {
 	CreateLecture(ctx context.Context, lecture *models.Lecture) error
 	GetLecturesByGrade(ctx context.Context, grade string, limit, offset int) ([]models.Lecture, int64, error)
+	GetAllLectures(ctx context.Context) ([]models.Lecture, error)
 	GetLectureByID(ctx context.Context, id string) (*models.Lecture, error)
 }
 
@@ -41,11 +42,19 @@ func (r *lectureRepository) GetLecturesByGrade(ctx context.Context, grade string
 		return nil, 0, err
 	}
 
-	if err := query.Order("created_at desc").Limit(limit).Offset(offset).Find(&lectures).Error; err != nil {
+	if err := query.Order("created_at asc").Limit(limit).Offset(offset).Find(&lectures).Error; err != nil {
 		return nil, 0, err
 	}
 
 	return lectures, total, nil
+}
+
+func (r *lectureRepository) GetAllLectures(ctx context.Context) ([]models.Lecture, error) {
+	var lectures []models.Lecture
+	if err := r.db.WithContext(ctx).Model(&models.Lecture{}).Order("created_at asc").Find(&lectures).Error; err != nil {
+		return nil, err
+	}
+	return lectures, nil
 }
 
 func (r *lectureRepository) GetLectureByID(ctx context.Context, id string) (*models.Lecture, error) {

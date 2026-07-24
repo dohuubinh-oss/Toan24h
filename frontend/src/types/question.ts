@@ -22,5 +22,6 @@ export interface Question {
 
 export interface QuestionBlock {
   shared_content: string;
+  is_group?: boolean;
   questions: Question[];
 }

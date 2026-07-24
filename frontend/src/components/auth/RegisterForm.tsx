@@ -7,6 +7,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
+import { registerUser } from '@/lib/authApi'
 
 type RegisterFormValues = {
   fullname: string
@@ -19,6 +20,7 @@ export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   const router = useRouter()
 
@@ -33,10 +35,23 @@ export default function RegisterForm() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true)
-    // [TODO: WARNING] Hiện tại logic giả lập, cần API thật ở đây
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    router.push('/login')
-    setIsLoading(false)
+    setErrorMessage('')
+    try {
+      await registerUser({
+        fullName: data.fullname,
+        email: data.identity,
+        password: data.password
+      })
+      router.push('/login?registered=true')
+    } catch (error: any) {
+      let msg = error.message
+      if (msg.includes('Email already in use') || msg.includes('email')) {
+        msg = 'Đăng ký thất bại. Email hoặc số điện thoại có thể đã tồn tại.'
+      }
+      setErrorMessage(msg || 'Đăng ký thất bại. Vui lòng thử lại sau.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -50,6 +65,12 @@ export default function RegisterForm() {
 
         {/* Form */}
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
+          {errorMessage && (
+            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+              {errorMessage}
+            </div>
+          )}
+          
           <div>
             <Label htmlFor="fullname">Họ và Tên</Label>
             <Input

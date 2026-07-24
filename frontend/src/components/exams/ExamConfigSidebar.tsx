@@ -232,13 +232,13 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
 
       </div>
 
-      <LectureSelectorModal 
-        isOpen={isLectureModalOpen} 
-        onClose={() => setIsLectureModalOpen(false)} 
+      <LectureSelectorModal
+        isOpen={isLectureModalOpen}
+        onClose={() => setIsLectureModalOpen(false)}
         onSelect={(lecture) => {
           onChange('lectureId', lecture.id)
           setSelectedLectureName(lecture.title)
-        }} 
+        }}
       />
     </div>
   )

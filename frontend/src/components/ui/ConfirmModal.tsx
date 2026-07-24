@@ -12,6 +12,7 @@ interface ConfirmModalProps {
   confirmText?: string;
   cancelText?: string;
   isDestructive?: boolean;
+  hideCancel?: boolean;
 }
 
 export function ConfirmModal({
@@ -22,12 +23,13 @@ export function ConfirmModal({
   description,
   confirmText = 'Xác nhận',
   cancelText = 'Hủy',
-  isDestructive = false
+  isDestructive = false,
+  hideCancel = false
 }: ConfirmModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div 
         className="fixed inset-0" 
         onClick={onClose}
@@ -50,12 +52,14 @@ export function ConfirmModal({
           </div>
           
           <div className="flex items-center justify-end gap-3 p-4 bg-slate-50/50 border-t border-slate-100">
-            <Button 
-              variant="outline" 
-              onClick={onClose}
-            >
-              {cancelText}
-            </Button>
+            {!hideCancel && (
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+              >
+                {cancelText}
+              </Button>
+            )}
             <Button 
               variant={isDestructive ? 'danger' : 'primary'} 
               onClick={() => {

@@ -1,6 +1,8 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Lexend } from 'next/font/google'
+import GradeSelectionModal from '@/components/auth/GradeSelectionModal'
+import { ToastProvider } from '@/components/ui/ToastProvider'
 
 const lexend = Lexend({ 
   subsets: ['latin', 'vietnamese'],
@@ -28,7 +30,10 @@ export default function RootLayout({
         <link href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" rel="stylesheet" />
       </head>
       <body className="bg-page-bg text-slate-900 min-h-screen flex flex-col font-sans">
-        {children}
+        <ToastProvider>
+          <GradeSelectionModal />
+          {children}
+        </ToastProvider>
       </body>
     </html>
   )

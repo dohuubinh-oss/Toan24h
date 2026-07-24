@@ -5,6 +5,9 @@ import { LectureCard } from '@/components/lectures/LectureCard';
 import { Pagination } from '@/components/ui/Pagination';
 import { getLecturesByGrade } from '@/lib/lectureApi';
 
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+
 export default async function GradeLecturesPage({
   params,
   searchParams,
@@ -17,6 +20,15 @@ export default async function GradeLecturesPage({
   
   const grade = resolvedParams.grade; // VD: '5', '8', '9'
   const page = parseInt(resolvedSearchParams.page as string || '1', 10);
+
+  // Lấy userGrade từ cookie để tự động redirect
+  const cookieStore = await cookies();
+  const userGradeCookie = cookieStore.get('userGrade');
+  const userRoleCookie = cookieStore.get('userRole');
+  
+  if (userRoleCookie?.value === 'student' && userGradeCookie && userGradeCookie.value !== grade && userGradeCookie.value !== '') {
+    redirect(`/lectures/lop/${userGradeCookie.value}`);
+  }
 
   const { data: lectures, totalPages, totalItems, startIndex, endIndex, currentPage } = await getLecturesByGrade(grade, page, 9);
 

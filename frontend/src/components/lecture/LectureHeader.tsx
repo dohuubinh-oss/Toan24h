@@ -1,7 +1,9 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ChevronRight, Calendar, Bookmark, Tags, PenTool } from 'lucide-react'
 import Link from 'next/link'
+import { toggleBookmark as toggleBookmarkApi, getBookmarkedLectures } from '@/lib/bookmarkApi'
+import { toast } from '@/components/ui/ToastProvider'
 
 interface LectureHeaderProps {
   initialBookmarked?: boolean;
@@ -14,10 +16,38 @@ interface LectureHeaderProps {
 
 export default function LectureHeader({ initialBookmarked = false, title, grade, category, createdAt, id }: LectureHeaderProps) {
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const toggleBookmark = () => {
-    // In the future, this is where you'd call an API to save to the database
-    setIsBookmarked(!isBookmarked);
+  useEffect(() => {
+    if (id && typeof window !== 'undefined' && localStorage.getItem('accessToken')) {
+      getBookmarkedLectures().then(bookmarks => {
+        const found = bookmarks.some((b: any) => b.lectureId === id)
+        setIsBookmarked(found)
+      }).catch(err => console.error("Failed to fetch bookmarks:", err))
+    }
+  }, [id])
+
+  const toggleBookmark = async () => {
+    if (!id) return;
+    if (typeof window !== 'undefined' && !localStorage.getItem('accessToken')) {
+      toast.error("Vui lòng đăng nhập để lưu bài viết.")
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const res = await toggleBookmarkApi(id);
+      if (res.is_bookmarked) {
+        setIsBookmarked(true);
+      } else {
+        setIsBookmarked(false);
+      }
+    } catch (error) {
+      console.error("Failed to toggle bookmark", error);
+      toast.error("Có lỗi xảy ra, vui lòng thử lại sau.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -71,11 +101,12 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
             )}
             <button 
               onClick={toggleBookmark}
+              disabled={isLoading}
               className={`flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] font-bold rounded-lg transition-all border text-sm ${
                 isBookmarked 
                   ? 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100' 
                   : 'bg-slate-100 text-ink border-slate-200 hover:bg-slate-200'
-              }`}
+              } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Bookmark 
                 size={18} 

@@ -4,6 +4,8 @@ import { ChevronRight, PenTool } from 'lucide-react';
 import { PracticeCard } from '@/components/practices/PracticeCard';
 import { Pagination } from '@/components/ui/Pagination';
 import { fetchPracticesByGrade } from '@/data/mockPracticeData';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export default async function GradePracticesPage({
   params,
@@ -32,6 +34,15 @@ export default async function GradePracticesPage({
   const pageParam = resolvedSearchParams.page;
   const currentPage = typeof pageParam === 'string' ? parseInt(pageParam, 10) : 1;
   const limit = 6;
+
+  // Lấy userGrade từ cookie để tự động redirect
+  const cookieStore = await cookies();
+  const userGradeCookie = cookieStore.get('userGrade');
+  const userRoleCookie = cookieStore.get('userRole');
+  
+  if (userRoleCookie?.value === 'student' && userGradeCookie && userGradeCookie.value !== grade && userGradeCookie.value !== '') {
+    redirect(`/practices/lop/${userGradeCookie.value}`);
+  }
 
   // Lấy dữ liệu
   const { practices, totalItems, totalPages } = await fetchPracticesByGrade(grade, currentPage, limit, lectureId, practiceIdsArray);

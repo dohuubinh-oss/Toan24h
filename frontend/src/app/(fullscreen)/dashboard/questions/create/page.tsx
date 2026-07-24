@@ -13,6 +13,7 @@ import { apiFetch } from '@/lib/api'
 import { Loader2 } from 'lucide-react'
 import { getQuestion, updateQuestion as apiUpdateQuestion } from '@/lib/api'
 import { Suspense, useEffect } from 'react'
+import { toast } from '@/components/ui/ToastProvider'
 
 export default function CreateQuestionPage() {
   return (
@@ -42,12 +43,14 @@ function CreateQuestionContent() {
           if (q.type_question === 'group' && q.subQuestions) {
             setQuestionBlocks([{
               shared_content: q.content,
-              questions: q.subQuestions
+              questions: q.subQuestions,
+              is_group: true
             }])
           } else {
             setQuestionBlocks([{
               shared_content: '',
-              questions: [q]
+              questions: [q],
+              is_group: false
             }])
           }
         }
@@ -154,7 +157,7 @@ function CreateQuestionContent() {
 
   const handleSave = useCallback(async () => {
     if (questionBlocks.length === 0) {
-      alert("Không có câu hỏi nào để lưu!");
+      toast.error("Không có câu hỏi nào để lưu!");
       return;
     }
 
@@ -164,7 +167,7 @@ function CreateQuestionContent() {
       if (editId) {
         // If editing a group question, we assume the backend endpoint handles the whole hierarchy or we just send the single root Question if 'single'
         const block = questionBlocks[0];
-        const isGroup = block.questions.length > 1 || block.shared_content;
+        const isGroup = block.is_group === true;
         
         let payload: Partial<Question>;
         if (isGroup) {
@@ -183,10 +186,11 @@ function CreateQuestionContent() {
         }
         
         await apiUpdateQuestion(editId, payload);
-        alert('Cập nhật câu hỏi thành công!');
+        toast.success('Cập nhật câu hỏi thành công!');
       } else {
         const payload = questionBlocks.map(block => ({
           shared_content: block.shared_content,
+          is_group: block.is_group === true,
           questions: block.questions.map(q => ({
             ...q,
             grade: typeof q.grade === 'string' ? parseInt(q.grade) : (q.grade || 0),
@@ -199,17 +203,16 @@ function CreateQuestionContent() {
           method: 'POST',
           body: JSON.stringify(payload)
         });
-        alert('Lưu vào ngân hàng thành công!');
       }
       
       router.push('/dashboard/questions');
     } catch (error: any) {
       console.error("Lỗi khi lưu:", error);
-      alert("Lỗi khi lưu: " + error.message);
+      toast.error("Lỗi khi lưu: " + error.message);
     } finally {
       setIsSaving(false);
     }
-  }, [questionBlocks, router])
+  }, [questionBlocks, router, editId])
 
   const currentBlock = questionBlocks[currentBlockIndex] || null;
   const currentQuestion = currentBlock?.questions[currentQuestionIndex] || null;
@@ -292,11 +295,15 @@ function CreateQuestionContent() {
             <span className="text-sm font-black text-primary uppercase tracking-widest">
               Câu {totalQuestions > 0 ? currentGlobalIndex : 0}
             </span>
-            {(currentQuestion?.type_question?.toString().toLowerCase() === 'group' || (currentBlock && currentBlock.questions.length > 1) || (currentBlock?.shared_content && currentBlock.shared_content.length > 0)) && (
-              <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-black rounded uppercase tracking-widest border border-red-200 hidden sm:inline-block">
-                Câu hỏi chùm
-              </span>
-            )}
+            {(() => {
+              const isGroup = currentBlock?.is_group === true;
+                              
+              return isGroup && (
+                <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-black rounded uppercase tracking-widest border border-red-200 hidden sm:inline-block">
+                  Câu hỏi chùm
+                </span>
+              );
+            })()}
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
               / {totalQuestions}
             </span>
