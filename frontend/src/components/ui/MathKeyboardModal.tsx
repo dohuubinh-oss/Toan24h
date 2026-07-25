@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { X, Keyboard, CheckCircle2 } from 'lucide-react'
 import MathInput from './MathInput'
 import MathText from './MathText'
+import { createPortal } from 'react-dom'
 
 interface MathKeyboardModalProps {
   initialValue: string
@@ -13,6 +14,11 @@ interface MathKeyboardModalProps {
 
 export default function MathKeyboardModal({ initialValue, onSave, onCancel }: MathKeyboardModalProps) {
   const [latex, setLatex] = useState(initialValue || '')
+  const [mounted, setMounted] = useState(false)
+  
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   
   // Xử lý phím Enter và Esc
   useEffect(() => {
@@ -33,87 +39,42 @@ export default function MathKeyboardModal({ initialValue, onSave, onCancel }: Ma
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [latex, onCancel, onSave])
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
-        onClick={onCancel}
-      />
-      
+  if (!mounted) return null
+
+  return createPortal(
+    <div className="fixed top-[546px] right-8 z-[100] flex flex-col w-[400px] pointer-events-none">
       {/* Modal Container */}
-      <div className="relative bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="px-8 py-6 border-b border-slate-100 flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-              <Keyboard className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-slate-800 uppercase tracking-wide">Bàn phím ảo toán học</h2>
-              <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider font-semibold">Sửa hoặc tạo công thức toán chuyên nghiệp</p>
-            </div>
-          </div>
-          <button 
-            onClick={onCancel}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
+      <div className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl w-full rounded-[20px] shadow-[0_24px_48px_-12px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col h-fit pointer-events-auto border border-white/50 dark:border-slate-700/50">
+        
         {/* Body */}
-        <div className="p-8 overflow-y-auto flex-grow flex flex-col gap-8">
-          {/* Editor Section */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-3">Nhập công thức</label>
-            <div className="relative">
-              <MathInput 
-                value={latex}
-                onChange={setLatex}
-              />
-            </div>
-          </div>
-
-          {/* Preview Section */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-3">Xem trước công thức</label>
-            <div className="min-h-[120px] rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 flex items-center justify-center relative">
-              {latex ? (
-                <div className="text-2xl text-slate-800">
-                  <MathText content={`$${latex}$`} />
-                </div>
-              ) : (
-                <span className="text-slate-400 italic font-medium">Bắt đầu gõ để xem trước công thức...</span>
-              )}
-            </div>
+        <div className="p-4 flex flex-col min-h-0">
+          <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-widest text-center">Nhập công thức</label>
+          <div className="relative rounded-xl overflow-y-auto max-h-[200px] border border-slate-200 dark:border-slate-700/50 shadow-inner bg-slate-50/80 dark:bg-slate-800/50">
+            <MathInput 
+              value={latex}
+              onChange={setLatex}
+            />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between mt-auto">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-            <span className="w-4 h-4 rounded-full border border-slate-300 flex items-center justify-center text-[10px]">i</span>
-            Mẹo: Nhấn Enter để lưu
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={onCancel}
-              className="px-6 py-2.5 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm"
-            >
-              HỦY BỎ
-            </button>
-            <button 
-              onClick={() => onSave(latex)}
-              className="px-6 py-2.5 rounded-xl font-bold text-white bg-primary hover:bg-primary/90 transition-all shadow-sm shadow-primary/25 flex items-center gap-2"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              LƯU CÔNG THỨC
-            </button>
-          </div>
+        <div className="px-4 py-3 bg-slate-50/80 dark:bg-slate-800/80 backdrop-blur-md flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50 shrink-0">
+          <button 
+            onClick={onCancel}
+            className="px-4 py-2 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-white/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all text-sm flex-1 mr-2"
+          >
+            Hủy
+          </button>
+          <button 
+            onClick={() => onSave(latex)}
+            className="px-4 py-2 rounded-xl font-bold text-white bg-primary hover:bg-primary/90 transition-all shadow-sm shadow-primary/25 flex items-center justify-center gap-2 text-sm flex-1 ml-2"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Lưu
+          </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

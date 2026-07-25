@@ -4,14 +4,15 @@ import { X, LayoutGrid, Map } from 'lucide-react'
 export type QuestionStatus = 'done' | 'current' | 'unfinished'
 
 export interface QuestionMapItem {
-  id: number
+  id: string
+  index: number
   status: QuestionStatus
   isFlagged: boolean
 }
 
 interface QuestionMapSidebarProps {
   questions: QuestionMapItem[]
-  onSelectQuestion: (id: number) => void
+  onSelectQuestion: (id: string) => void
   onSubmit: () => void
 }
 
@@ -30,7 +31,7 @@ export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubm
   }, [isOpen])
 
   return (
-    <div ref={sidebarRef} className={`absolute top-0 bottom-0 right-0 flex items-center z-[60] transition-transform duration-400 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+    <div ref={sidebarRef} className={`absolute top-0 bottom-0 right-0 flex items-center z-[10000] transition-transform duration-400 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
       <button
         data-testid="qmap-toggle-btn"
         onClick={() => setIsOpen(!isOpen)}
@@ -73,7 +74,7 @@ export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubm
                   onClick={() => onSelectQuestion(q.id)}
                   className={`relative w-full aspect-square flex items-center justify-center rounded-lg font-bold text-sm cursor-pointer transition-all hover:scale-110 ${btnClass}`}
                 >
-                  {q.id}
+                  {q.index + 1}
                   {q.isFlagged && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></div>
                   )}

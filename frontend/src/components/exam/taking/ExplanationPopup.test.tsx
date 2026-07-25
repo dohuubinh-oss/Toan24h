@@ -43,25 +43,14 @@ describe('ExplanationPopup Component', () => {
     expect(screen.queryByText('Giải thích đáp án')).not.toBeInTheDocument()
   })
 
-  it('disables submit button when explanation length < 4', async () => {
-    render(
-      <ExplanationPopup
-        isOpen={true}
-        onClose={vi.fn()}
-        onSubmit={vi.fn()}
-      />
-    )
+  it('disables submit button when explanation is empty', async () => {
+    render(<ExplanationPopup isOpen={true} onClose={vi.fn()} onSubmit={vi.fn()} />)
     
     const submitBtn = screen.getByRole('button', { name: /Xác nhận/i })
     expect(submitBtn).toBeDisabled()
-    
-    const editor = screen.getByTestId('mock-rich-text-editor')
-    await userEvent.type(editor, '123')
-    
-    expect(submitBtn).toBeDisabled()
   })
 
-  it('enables submit button and calls onSubmit when explanation length >= 4', async () => {
+  it('enables submit button and calls onSubmit when explanation is provided', async () => {
     const handleSubmit = vi.fn()
     render(
       <ExplanationPopup

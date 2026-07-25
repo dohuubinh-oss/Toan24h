@@ -1,12 +1,14 @@
 import React from 'react'
-import { ArrowLeft, Timer } from 'lucide-react'
+import { ArrowLeft, Timer, Coins } from 'lucide-react'
 
 interface ExamProgressNavProps {
   title: string
   subject: string
   completedQuestions: number
   totalQuestions: number
-  timeLeft: string
+  timeLeft?: string
+  examType?: string
+  points?: number
   onBack: () => void
 }
 
@@ -15,7 +17,9 @@ export default function ExamProgressNav({
   subject,
   completedQuestions,
   totalQuestions,
-  timeLeft,
+  timeLeft = '00:00',
+  examType = 'test',
+  points = 0,
   onBack,
 }: ExamProgressNavProps) {
   const progressPercent = totalQuestions > 0 ? Math.round((completedQuestions / totalQuestions) * 100) : 0
@@ -52,12 +56,21 @@ export default function ExamProgressNav({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 dark:border-red-900/30">
-          <Timer className="w-5 h-5 text-red-500 animate-pulse" />
-          <span className="text-red-600 dark:text-red-400 font-bold tabular-nums text-lg">
-            {timeLeft}
-          </span>
-        </div>
+        {examType === 'test' ? (
+          <div className="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 dark:border-red-900/30">
+            <Timer className="w-5 h-5 text-red-500 animate-pulse" />
+            <span className="text-red-600 dark:text-red-400 font-bold tabular-nums text-lg">
+              {timeLeft}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 px-4 py-2 rounded-xl border border-amber-100 dark:border-amber-900/30">
+            <Coins className="w-5 h-5 text-amber-500" />
+            <span className="text-amber-600 dark:text-amber-400 font-bold tabular-nums text-lg">
+              {points} điểm
+            </span>
+          </div>
+        )}
       </div>
     </nav>
   )

@@ -2,6 +2,8 @@ import React from 'react'
 import { Camera, CheckCircle, Sparkles, Flag } from 'lucide-react'
 import MathText from '@/components/ui/MathText'
 import RichTextEditor from '@/components/questions/creator/editor/RichTextEditor'
+import { useToast } from '@/components/ui/ToastProvider'
+import { recognizeHandwriting } from '@/lib/api'
 
 export interface SubQuestion {
   id: number
@@ -19,9 +21,11 @@ interface EssayQuestionProps {
   answers: Record<number, string>
   explanations?: Record<number, string>
   isHintOpen: boolean
+  activeHintQuestionId?: number
   isFlagged: boolean
+  examType?: string
   onAnswerChange: (id: number, answer: string, explanation?: string) => void
-  onToggleHint: () => void
+  onToggleHint: (id?: number) => void
   onToggleFlag: () => void
 }
 
@@ -30,13 +34,17 @@ function EditorItem({
   answer, 
   explanation, 
   onAnswerChange, 
-  isGroup 
+  isGroup,
+  examType,
+  onToggleHint
 }: { 
   q: { id: number, label: string, type: string },
   answer: string,
   explanation: string,
   onAnswerChange: (id: number, answer: string, explanation?: string) => void,
-  isGroup: boolean 
+  isGroup: boolean,
+  examType?: string,
+  onToggleHint: (id: number) => void
 }) {
   const isMC = q.type === 'mc'
   const editorContent = isMC ? explanation : answer
@@ -50,19 +58,24 @@ function EditorItem({
 
   const [isOcrProcessing, setIsOcrProcessing] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const toast = useToast()
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     try {
       setIsOcrProcessing(true)
-      const { recognizeHandwriting } = await import('@/lib/api')
       const text = await recognizeHandwriting(file)
       handleEditorChange(editorContent + (editorContent ? '\n' : '') + text)
+      toast.success('Nhận dạng thành công')
     } catch (error) {
       console.error('OCR failed', error)
+      toast.error('Lỗi khi nhận dạng chữ viết tay')
     } finally {
       setIsOcrProcessing(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 
@@ -73,6 +86,16 @@ function EditorItem({
           {isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`}
         </label>
         <div className="flex space-x-2">
+          {examType === 'practice' && (
+            <button 
+              data-hint-toggle="true"
+              onClick={() => onToggleHint(q.id)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg font-semibold text-xs cursor-pointer transition-all"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Gợi ý</span>
+            </button>
+          )}
           {editorContent.trim().length > 0 && (
             <span className="flex items-center text-xs text-green-600 dark:text-green-400 font-medium">
               <CheckCircle className="w-4 h-4 mr-1" />
@@ -127,7 +150,9 @@ export default function EssayQuestion({
   answers,
   explanations,
   isHintOpen,
+  activeHintQuestionId,
   isFlagged,
+  examType = 'test',
   onAnswerChange,
   onToggleHint,
   onToggleFlag,
@@ -206,15 +231,17 @@ export default function EssayQuestion({
       : [{ id: questionId, label: 'của bạn', type: 'essay' }];
 
     return (
-      <div className="flex-1 p-8 flex flex-col max-w-xl mr-auto w-full space-y-8">
+      <div className="flex-1 py-8 pr-8 pl-4 flex flex-col max-w-xl mr-auto w-full space-y-8">
         {questionsToRender.map((q) => (
           <EditorItem 
             key={q.id}
-            q={q}
+            q={q as any}
             answer={answers[q.id] || ''}
             explanation={explanations?.[q.id] || ''}
             onAnswerChange={onAnswerChange}
             isGroup={!!isGroup}
+            examType={examType}
+            onToggleHint={onToggleHint}
           />
         ))}
       </div>
@@ -222,7 +249,7 @@ export default function EssayQuestion({
   }
 
   return (
-    <main className={`flex-1 flex overflow-hidden relative transition-all duration-500 ${isHintOpen ? 'mr-[340px]' : ''}`}>
+    <main className={`flex-1 flex overflow-hidden relative transition-all duration-500 ${isHintOpen ? 'mr-[460px]' : ''}`}>
       {/* Left Pane: Problem & Geometry */}
       <div className="w-1/2 overflow-y-auto p-8 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
         <div className="max-w-xl ml-auto">
@@ -243,15 +270,6 @@ export default function EssayQuestion({
               >
                 <Flag className={`w-5 h-5 ${isFlagged ? 'fill-amber-500' : ''}`} />
                 <span className="hidden sm:inline">{isFlagged ? 'Đã đánh dấu' : 'Đánh dấu'}</span>
-              </button>
-              
-              <button 
-                data-hint-toggle="true"
-                onClick={onToggleHint}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full font-semibold text-sm cursor-pointer hover:bg-blue-700 transition-all shadow-md shadow-primary/20 active:scale-95"
-              >
-                <Sparkles className="w-5 h-5" />
-                <span>Gợi ý từ AI</span>
               </button>
             </div>
           </div>

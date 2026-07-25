@@ -188,6 +188,8 @@ export async function getQuestions(page: number = 1, limit: number = 20, ids?: s
             difficulty_point: sub.difficultyPoint,
             quick_solve_tips: sub.quickSolveTips,
             general_method: sub.generalMethod,
+            hint: sub.hint,
+            mistakes: sub.mistakes,
             book_name: sub.bookName,
             tags: pTags,
             options: pOpts
@@ -204,6 +206,8 @@ export async function getQuestions(page: number = 1, limit: number = 20, ids?: s
         difficulty_point: q.difficultyPoint,
         quick_solve_tips: q.quickSolveTips,
         general_method: q.generalMethod,
+        hint: q.hint,
+        mistakes: q.mistakes,
         book_name: q.bookName,
         tags: parsedTags,
         options: parsedOptions,
@@ -256,6 +260,8 @@ export async function getQuestion(id: string): Promise<Question | null> {
             difficulty_point: sub.difficultyPoint,
             quick_solve_tips: sub.quickSolveTips,
             general_method: sub.generalMethod,
+            hint: sub.hint,
+            mistakes: sub.mistakes,
             book_name: sub.bookName,
             tags: pTags,
             options: pOpts
@@ -272,6 +278,8 @@ export async function getQuestion(id: string): Promise<Question | null> {
         difficulty_point: q.difficultyPoint,
         quick_solve_tips: q.quickSolveTips,
         general_method: q.generalMethod,
+        hint: q.hint,
+        mistakes: q.mistakes,
         book_name: q.bookName,
         tags: parsedTags,
         options: parsedOptions,
@@ -297,6 +305,8 @@ export async function updateQuestion(id: string, data: Partial<Question>): Promi
       difficultyPoint: data.difficulty_point,
       quickSolveTips: data.quick_solve_tips,
       generalMethod: data.general_method,
+      hint: data.hint,
+      mistakes: data.mistakes,
       bookName: data.book_name,
     }
     
@@ -331,8 +341,21 @@ export async function getExams(): Promise<any[]> {
       return response.data
     }
     return []
+	} catch (error) {
+		console.error("Failed to fetch exams:", error)
+		return []
+	}
+}
+
+export async function getExamById(id: string): Promise<any> {
+  try {
+    const response = await apiFetch(`/exams/${id}`)
+    if (response.data) {
+      return response.data
+    }
+    return null
   } catch (error) {
-    console.error("Failed to fetch exams:", error)
-    return []
+    console.error(`Failed to fetch exam ${id}:`, error)
+    return null
   }
 }

@@ -18,6 +18,7 @@ interface MultipleChoiceQuestionProps {
   selectedExplanation?: string
   isHintOpen: boolean
   isFlagged: boolean
+  examType?: string
   onSelectOption: (optionId: string, explanation?: string) => void
   onToggleHint: () => void
   onToggleFlag: () => void
@@ -32,6 +33,7 @@ export default function MultipleChoiceQuestion({
   selectedExplanation,
   isHintOpen,
   isFlagged,
+  examType = 'test',
   onSelectOption,
   onToggleHint,
   onToggleFlag,
@@ -56,7 +58,7 @@ export default function MultipleChoiceQuestion({
 
   return (
     <main className="flex-grow flex flex-row items-start justify-center p-6 sm:p-12 relative w-full">
-      <div className={`w-full max-w-4xl space-y-8 transition-all duration-500 ${isHintOpen ? 'mr-[340px]' : ''}`}>
+      <div className={`w-full max-w-4xl space-y-8 transition-all duration-500 ${isHintOpen ? 'mr-[460px]' : ''}`}>
         <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 p-10 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary"></div>
           <div className="space-y-6">
@@ -77,14 +79,16 @@ export default function MultipleChoiceQuestion({
                   <Flag className={`w-5 h-5 ${isFlagged ? 'fill-amber-500' : ''}`} />
                   <span className="hidden sm:inline">{isFlagged ? 'Đã đánh dấu' : 'Đánh dấu'}</span>
                 </button>
-                <button 
-                  data-hint-toggle="true"
-                  onClick={onToggleHint}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full font-semibold text-sm cursor-pointer hover:bg-blue-700 transition-all shadow-md shadow-primary/20 active:scale-95"
-                >
-                  <Sparkles className="w-5 h-5" />
-                  <span>Gợi ý từ AI</span>
-                </button>
+                {examType === 'practice' && (
+                  <button 
+                    data-hint-toggle="true"
+                    onClick={onToggleHint}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full font-semibold text-sm cursor-pointer hover:bg-blue-700 transition-all shadow-md shadow-primary/20 active:scale-95"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    <span>Gợi ý từ AI</span>
+                  </button>
+                )}
               </div>
             </div>
             

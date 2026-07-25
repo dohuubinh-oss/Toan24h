@@ -40,5 +40,28 @@ export function logout() {
     document.cookie = 'userRole=; path=/; max-age=0'
     document.cookie = 'userGrade=; path=/; max-age=0'
     window.location.href = '/login'
-  }
+	}
 }
+
+export async function deductPoints(amount: number) {
+  const res = await apiFetch('/users/me/deduct-points', {
+    method: 'POST',
+    body: JSON.stringify({ amount })
+  })
+  
+  // Update local storage user points if successful
+  if (res && res.points !== undefined) {
+    if (typeof window !== 'undefined') {
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr)
+          user.points = res.points
+          localStorage.setItem('user', JSON.stringify(user))
+        } catch (e) {}
+      }
+    }
+  }
+  return res
+}
+

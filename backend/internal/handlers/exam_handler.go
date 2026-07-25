@@ -36,3 +36,15 @@ func GetExams(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": exams})
 }
+
+func GetExamByID(c *gin.Context) {
+	id := c.Param("id")
+
+	var exam models.Exam
+	if err := config.DB.Where("id = ?", id).First(&exam).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Exam not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": exam})
+}

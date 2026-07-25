@@ -3,7 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import TiptapImage from '@tiptap/extension-image'
 import Youtube from '@tiptap/extension-youtube'
-import { Bold, Italic, Strikethrough, List, ListOrdered, ImagePlus, Sigma, Image as ImageIcon, Video as YoutubeIcon, WrapText } from 'lucide-react'
+import { Bold, List, ListOrdered, ImagePlus, Sigma, Image as ImageIcon, Video as YoutubeIcon, WrapText } from 'lucide-react'
 import { MathExtension } from './MathExtension'
 import { uploadTempImage } from '@/lib/api'
 import { toast } from '@/components/ui/ToastProvider'
@@ -76,21 +76,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       >
         <Bold className="w-4 h-4" />
       </button>
-      <button
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`p-1.5 rounded transition-colors ${editor.isActive('italic') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
-        title="In nghiêng"
-      >
-        <Italic className="w-4 h-4" />
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={`p-1.5 rounded transition-colors ${editor.isActive('strike') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
-        title="Gạch ngang"
-      >
-        <Strikethrough className="w-4 h-4" />
-      </button>
-      <div className="w-px h-4 bg-slate-300 mx-1"></div>
+      <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
       <button
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         className={`p-1.5 rounded transition-colors ${editor.isActive('bulletList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}

@@ -56,6 +56,7 @@ func SetupRouter() *gin.Engine {
 		// Exams
 		v1.POST("/exams", handlers.CreateExam)
 		v1.GET("/exams", handlers.GetExams)
+		v1.GET("/exams/:id", handlers.GetExamByID)
 		
 		// Lectures
 		v1.POST("/lectures", lectureController.CreateLecture)
@@ -72,6 +73,7 @@ func SetupRouter() *gin.Engine {
 		users := protected.Group("/users")
 		{
 			users.PUT("/me/grade", authHandler.UpdateGrade)
+			users.POST("/me/deduct-points", authHandler.DeductPoints)
 		}
 
 		bookmarkHandler := handlers.NewBookmarkHandler(config.DB)

@@ -11,12 +11,12 @@ export interface Question {
   point: number | null;
   tags: string[];
   options: string[];
-  correct_answer: string;
-  solution_guide: string;
-  hint: string;
-  quick_solve_tips: string;
-  general_method: string;
-  mistakes: string;
+  correct_answer?: string;
+  solution_guide?: string;
+  hint?: string;
+  mistakes?: string;
+  quick_solve_tips?: string;
+  general_method?: string;
   subQuestions?: Question[];
 }
 

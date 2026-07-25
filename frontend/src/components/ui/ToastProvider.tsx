@@ -40,17 +40,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     }, delay)
   }, [removeToast])
 
-  // Expose toast functions globally without hooks (for places where we can't use context directly)
-  if (!toastFn) {
-    toastFn = {
-      success: (msg: string) => addToast('success', msg),
-      error: (msg: string) => addToast('error', msg),
-      info: (msg: string) => addToast('info', msg),
-    }
-  }
+  const toastMethods = React.useMemo(() => ({
+    success: (msg: string) => addToast('success', msg),
+    error: (msg: string) => addToast('error', msg),
+    info: (msg: string) => addToast('info', msg),
+  }), [addToast])
+
+  React.useEffect(() => {
+    toastFn = toastMethods
+  }, [toastMethods])
 
   return (
-    <ToastContext.Provider value={{ toast: toastFn }}>
+    <ToastContext.Provider value={{ toast: toastMethods }}>
       {children}
       <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
         {toasts.map(t => (

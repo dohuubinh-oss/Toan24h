@@ -110,6 +110,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			"fullName": user.FullName,
 			"role":     user.Role,
 			"grade":    user.Grade,
+			"points":   user.Points,
 		},
 	})
 }
@@ -195,5 +196,45 @@ func (h *AuthHandler) UpdateGrade(c *gin.Context) {
 		"accessToken":  accessToken,
 		"refreshToken": refreshToken,
 		"grade":        user.Grade,
+	})
+}
+
+type DeductPointsRequest struct {
+	Amount int `json:"amount" binding:"required,min=1"`
+}
+
+func (h *AuthHandler) DeductPoints(c *gin.Context) {
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req DeductPointsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var user models.User
+	if err := h.db.Where("id = ?", userIDStr).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	if user.Points < req.Amount {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Không đủ điểm"})
+		return
+	}
+
+	user.Points -= req.Amount
+	if err := h.db.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to deduct points"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Points deducted successfully",
+		"points":  user.Points,
 	})
 }

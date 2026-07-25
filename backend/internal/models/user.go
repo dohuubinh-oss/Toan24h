@@ -14,6 +14,7 @@ type User struct {
 	FullName     string         `gorm:"type:varchar(255);not null" json:"fullName"`
 	Role         string         `gorm:"type:varchar(50);not null;default:'student'" json:"role"`
 	Grade        string         `gorm:"type:varchar(50)" json:"grade"`
+	Points       int            `gorm:"not null;default:0" json:"points"`
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`

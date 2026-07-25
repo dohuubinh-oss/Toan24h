@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Bold, Italic, Strikethrough, List, ListOrdered, Sigma, ImagePlus, Image as ImageIcon, Video as YoutubeIcon, WrapText } from 'lucide-react'
+import { Bold, List, ListOrdered, Sigma, ImagePlus, Image as ImageIcon, Video as YoutubeIcon, WrapText } from 'lucide-react'
 import TiptapImage from '@tiptap/extension-image'
 import Youtube from '@tiptap/extension-youtube'
 import { uploadTempImage } from '@/lib/api'
@@ -17,20 +17,24 @@ interface RichTextEditorProps {
   hideToolbar?: boolean
   inline?: boolean
   mathOnlyToolbar?: boolean
+  smallToolbar?: boolean
 }
 
-const MenuBar = ({ editor, mathOnlyToolbar }: { editor: any, mathOnlyToolbar?: boolean }) => {
+const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar }: { editor: any, mathOnlyToolbar?: boolean, smallToolbar?: boolean }) => {
   if (!editor) return null
+
+  const btnClass = smallToolbar ? "p-1 rounded transition-colors" : "p-1.5 rounded transition-colors"
+  const iconClass = smallToolbar ? "w-3 h-3" : "w-4 h-4"
 
   if (mathOnlyToolbar) {
     return (
       <div className="flex items-center gap-1 p-1 bg-slate-50 border-b border-slate-200 rounded-t-xl overflow-x-auto">
         <button
           onClick={() => editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()}
-          className="p-1.5 rounded transition-colors text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0"
+          className={`${btnClass} text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0`}
           title="Chèn công thức Toán (MathLive)"
         >
-          <Sigma className="w-4 h-4" />
+          <Sigma className={iconClass} />
         </button>
       </div>
     );
@@ -40,47 +44,33 @@ const MenuBar = ({ editor, mathOnlyToolbar }: { editor: any, mathOnlyToolbar?: b
     <div className="flex items-center gap-1 p-1 bg-slate-50 border-b border-slate-200 rounded-t-xl overflow-x-auto">
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`p-1.5 rounded transition-colors ${editor.isActive('bold') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
+        className={`${btnClass} ${editor.isActive('bold') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
         title="In đậm"
       >
-        <Bold className="w-4 h-4" />
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`p-1.5 rounded transition-colors ${editor.isActive('italic') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
-        title="In nghiêng"
-      >
-        <Italic className="w-4 h-4" />
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={`p-1.5 rounded transition-colors ${editor.isActive('strike') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
-        title="Gạch ngang"
-      >
-        <Strikethrough className="w-4 h-4" />
+        <Bold className={iconClass} />
       </button>
       <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
       <button
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={`p-1.5 rounded transition-colors ${editor.isActive('bulletList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
+        className={`${btnClass} ${editor.isActive('bulletList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
         title="Danh sách"
       >
-        <List className="w-4 h-4" />
+        <List className={iconClass} />
       </button>
       <button
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={`p-1.5 rounded transition-colors ${editor.isActive('orderedList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
+        className={`${btnClass} ${editor.isActive('orderedList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
         title="Danh sách số"
       >
-        <ListOrdered className="w-4 h-4" />
+        <ListOrdered className={iconClass} />
       </button>
       <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
       <button
         onClick={() => editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()}
-        className="p-1.5 rounded transition-colors text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0"
+        className={`${btnClass} text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0`}
         title="Chèn công thức Toán (MathLive)"
       >
-        <Sigma className="w-4 h-4" />
+        <Sigma className={iconClass} />
       </button>
       <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
       <button
@@ -102,10 +92,10 @@ const MenuBar = ({ editor, mathOnlyToolbar }: { editor: any, mathOnlyToolbar?: b
           };
           input.click();
         }}
-        className="p-1.5 rounded transition-colors text-slate-600 hover:bg-white"
+        className={`${btnClass} text-slate-600 hover:bg-white flex items-center justify-center flex-shrink-0`}
         title="Chèn ảnh"
       >
-        <ImagePlus className="w-4 h-4" />
+        <ImageIcon className={iconClass} />
       </button>
       <button
         onClick={() => {
@@ -118,10 +108,10 @@ const MenuBar = ({ editor, mathOnlyToolbar }: { editor: any, mathOnlyToolbar?: b
             })
           }
         }}
-        className="p-1.5 rounded transition-colors text-red-600 hover:bg-white"
+        className={`${btnClass} text-red-600 hover:bg-white flex items-center justify-center flex-shrink-0`}
         title="Chèn YouTube"
       >
-        <YoutubeIcon className="w-4 h-4" />
+        <YoutubeIcon className={iconClass} />
       </button>
     </div>
   )
