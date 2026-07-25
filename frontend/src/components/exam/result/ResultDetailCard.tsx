@@ -24,6 +24,7 @@ interface ResultDetailCardProps {
   
   // Common
   aiExplanation?: React.ReactNode
+  errorLocation?: string
 }
 
 export default function ResultDetailCard({
@@ -37,7 +38,8 @@ export default function ResultDetailCard({
   studentAnswer,
   score,
   maxScore,
-  aiExplanation
+  aiExplanation,
+  errorLocation
 }: ResultDetailCardProps) {
   return (
     <div className="bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
@@ -122,6 +124,11 @@ export default function ResultDetailCard({
               <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                 {aiExplanation}
               </div>
+              {errorLocation && (
+                <div className="mt-3 p-3 bg-error/10 border border-error/20 rounded-md text-error text-sm">
+                  <strong>Vị trí sai:</strong> {errorLocation}
+                </div>
+              )}
             </div>
           </div>
         </div>

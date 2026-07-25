@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"github.com/modeptrai/exam-model-backend/internal/models"
 )
 
 var DB *gorm.DB
@@ -17,6 +18,20 @@ func ConnectDB(dsn string) error {
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return fmt.Errorf("failed to connect database: %w", err)
+	}
+
+	err = DB.AutoMigrate(
+		&models.User{},
+		&models.Lecture{},
+		&models.Question{},
+		&models.Exam{},
+		&models.ExamResult{},
+		&models.ResultDetail{},
+		&models.LectureBookmark{},
+		&models.Notification{},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 
 	sqlDB, err := DB.DB()

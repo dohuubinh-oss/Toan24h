@@ -8,6 +8,7 @@ export function useSidebarFilter() {
 
   const currentGrade = searchParams.get('grade') || '';
   const currentTopic = searchParams.get('topic') || '';
+
   const currentType = searchParams.get('type') || '';
   const currentDifficulty = searchParams.get('difficulty') || '';
   const currentDuration = searchParams.get('duration') || '';
@@ -60,8 +61,18 @@ export function useSidebarFilter() {
   };
 
   return {
-    currentGrade, currentTopic, currentType, currentDifficulty,
-    currentDuration, currentExamType, currentRole, searchQuery,
-    localSearch, setFilter, clearFilters, handleSearch
+    currentGrade,
+    currentTopic,
+
+    currentType,
+    currentDifficulty,
+    currentDuration,
+    currentExamType,
+    currentRole,
+    searchQuery,
+    localSearch,
+    setFilter,
+    clearFilters,
+    handleSearch
   };
 }

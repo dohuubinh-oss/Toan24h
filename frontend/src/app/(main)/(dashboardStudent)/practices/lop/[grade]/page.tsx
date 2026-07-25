@@ -1,9 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight, PenTool } from 'lucide-react';
-import { PracticeCard } from '@/components/practices/PracticeCard';
+import PracticeTable from '@/components/practices/PracticeTable';
 import { Pagination } from '@/components/ui/Pagination';
-import { fetchPracticesByGrade } from '@/data/mockPracticeData';
+import { getExams } from '@/lib/api';
+import { Practice } from '@/types/practice';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
@@ -45,11 +46,41 @@ export default async function GradePracticesPage({
   }
 
   // Lấy dữ liệu
-  const { practices, totalItems, totalPages } = await fetchPracticesByGrade(grade, currentPage, limit, lectureId, practiceIdsArray);
+  let allExams = [];
+  try {
+    allExams = await getExams();
+  } catch (error) {
+    console.error("Failed to load exams", error);
+  }
 
-  // Tính toán index hiển thị
-  const startIndex = (currentPage - 1) * limit + 1;
+  // Filter for practice and grade
+  let practicesData = allExams.filter((exam: any) => exam.type === 'practice' && String(exam.grade) === String(grade));
+
+  if (practiceIdsArray && practiceIdsArray.length > 0) {
+    practicesData = practicesData.filter((item: any) => practiceIdsArray.includes(item.id));
+  } else if (lectureId) {
+    practicesData = practicesData.filter((item: any) => item.lectureId === lectureId);
+  }
+
+  const totalItems = practicesData.length;
+  const totalPages = Math.ceil(totalItems / limit) || 1;
+  const startIndex = totalItems > 0 ? (currentPage - 1) * limit + 1 : 0;
   const endIndex = Math.min(currentPage * limit, totalItems);
+
+  // Apply pagination
+  const paginatedData = practicesData.slice((currentPage - 1) * limit, currentPage * limit);
+
+  // Map to Practice format
+  const practices: Practice[] = paginatedData.map((exam: any) => ({
+    id: exam.id,
+    title: exam.title,
+    lectureName: lectureName || exam.lectureName || 'Bài giảng liên kết', 
+    duration: exam.duration || 0,
+    questionCount: exam.questionIds ? exam.questionIds.length : 0,
+    status: 'not_started', // Chờ API lưu trạng thái thật (TODO)
+    score: undefined, 
+    grade: String(exam.grade),
+  }));
 
   return (
     <div className="space-y-10">
@@ -63,46 +94,15 @@ export default async function GradePracticesPage({
             <span className="text-primary font-bold min-h-[44px] flex items-center">Luyện tập</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900">
-            {lectureName ? `Đề luyện tập Khối ${grade} - Bài: ${lectureName}` : `Danh sách Đề luyện tập Khối ${grade}`}
+            {lectureName ? `Đề luyện tập Khối ${grade} - ${lectureName}` : `Danh sách Đề luyện tập Khối ${grade}`}
           </h1>
         </div>
       </div>
 
-      {lectureId && (
-        <div className="bg-[#F4F9FF] border border-[#DCEBFF] text-blue-600 px-5 py-4 rounded-xl flex items-center justify-between">
-          <span className="text-[15px]">
-            Đang hiển thị đề luyện tập thuộc Bài giảng: <strong className="ml-1 font-bold">{lectureName || lectureId}</strong>
-          </span>
-          <Link href={`/practices/lop/${grade}`} className="text-[15px] font-semibold hover:underline text-blue-600">
-            Bỏ lọc
-          </Link>
-        </div>
-      )}
 
-      {/* Grid danh sách Luyện tập */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {practices.map((practice) => (
-          <PracticeCard 
-            key={practice.id}
-            {...practice}
-          />
-        ))}
-        {practices.length === 0 && (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-500 bg-white rounded-2xl border border-slate-200/60 shadow-sm">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-              <PenTool className="w-8 h-8 text-slate-300" />
-            </div>
-            <p className="text-lg font-bold text-slate-700">Chưa có đề luyện tập nào</p>
-            <p className="text-sm mt-1 mb-6 text-center max-w-md">Hiện tại chưa có đề luyện tập nào được đăng tải cho khối {grade}{lectureId ? ' với bộ lọc này' : ''}. Vui lòng quay lại sau.</p>
-            <Link 
-              href="/student" 
-              className="h-12 px-6 rounded-lg bg-primary text-white font-semibold flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm"
-            >
-              Quay về Dashboard
-            </Link>
-          </div>
-        )}
-      </div>
+
+      {/* Bảng danh sách Luyện tập */}
+      <PracticeTable practices={practices} />
 
       {/* Phân trang */}
       {totalPages > 1 && practices.length > 0 && (

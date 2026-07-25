@@ -198,6 +198,68 @@ func GetQuestions(c *gin.Context) {
 	if len(ids) > 0 {
 		query = query.Where("id IN ?", ids)
 		limit = 1000 // If specific IDs are requested, override limit to fetch them all
+	} else {
+		type filter struct {
+			Query string
+			Args  []interface{}
+		}
+		var filters []filter
+
+		gradeParam := c.Query("grade")
+		if gradeParam != "" {
+			if grade, err := strconv.Atoi(gradeParam); err == nil {
+				filters = append(filters, filter{"grade = ?", []interface{}{grade}})
+			}
+		}
+
+		topicParam := c.Query("topic")
+		if topicParam != "" {
+			filters = append(filters, filter{"topic = ?", []interface{}{topicParam}})
+		}
+
+		typeParam := c.Query("type")
+		if typeParam != "" {
+			switch typeParam {
+			case "Câu hỏi chùm":
+				query = query.Where("type_question = ?", "group")
+			case "Trắc nghiệm", "Tự luận":
+				query = query.Where("type_question = ?", "single").Where("type = ?", typeParam)
+			}
+		}
+
+		diffParam := c.Query("difficulty")
+		if diffParam != "" {
+			filters = append(filters, filter{"difficulty_level = ?", []interface{}{diffParam}})
+		}
+
+		qParam := c.Query("q")
+		if qParam != "" {
+			searchStr := "%" + qParam + "%"
+			filters = append(filters, filter{"lower(content) LIKE lower(?)", []interface{}{searchStr}})
+		}
+
+		if len(filters) > 0 {
+			var parentConds []string
+			var childConds []string
+			var parentArgs []interface{}
+			var childArgs []interface{}
+
+			for _, f := range filters {
+				parentConds = append(parentConds, f.Query)
+				parentArgs = append(parentArgs, f.Args...)
+
+				childConds = append(childConds, f.Query)
+				childArgs = append(childArgs, f.Args...)
+			}
+
+			parentWhere := strings.Join(parentConds, " AND ")
+			childWhere := strings.Join(childConds, " AND ")
+
+			combinedQuery := fmt.Sprintf("(%s) OR id IN (SELECT parent_id FROM questions WHERE parent_id IS NOT NULL AND (%s))", parentWhere, childWhere)
+			combinedArgs := append(parentArgs, childArgs...)
+			fmt.Println("SQL WHERE:", combinedQuery, combinedArgs)
+			query = query.Where(combinedQuery, combinedArgs...)
+		}
 	}
 	
 	offset := (page - 1) * limit

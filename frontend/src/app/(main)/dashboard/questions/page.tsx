@@ -33,44 +33,29 @@ function QuestionsPageContent() {
     setIsFiltering(true);
     try {
       const page = parseInt(searchParams.get('page') || '1');
-      const response = await getQuestions(page, 10);
-        
-        // Cần lọc theo filter ở Frontend hoặc truyền xuống Backend.
-        // Tạm thời hiển thị kết quả trả về từ Backend.
-        let filtered = response.data;
-        const currentGrade = searchParams.get('grade');
-        const currentType = searchParams.get('type');
-        const currentDiff = searchParams.get('difficulty');
-        const q = searchParams.get('q') || '';
+      const currentGrade = searchParams.get('grade') || undefined;
+      const currentTopic = searchParams.get('topic') || undefined;
 
-        if (currentGrade) {
-          filtered = filtered.filter(q => q.grade?.toString() === currentGrade.replace(/\D/g, ''));
-        }
-        if (currentType) {
-          filtered = filtered.filter(q => {
-            if (currentType === 'Câu hỏi chùm') return q.type_question === 'group';
-            if (currentType === 'Câu đơn') return q.type_question === 'single';
-            
-            if (q.type_question === 'group' && q.subQuestions) {
-              return q.subQuestions.some((sub: any) => sub.type === currentType);
-            }
-            return q.type === currentType;
-          });
-        }
-        if (currentDiff) {
-          filtered = filtered.filter(q => q.difficulty_level === currentDiff);
-        }
-        if (q) {
-          filtered = filtered.filter(item => item.content.toLowerCase().includes(q.toLowerCase()));
-        }
+      const currentType = searchParams.get('type') || undefined;
+      const currentDiff = searchParams.get('difficulty') || undefined;
+      const q = searchParams.get('q') || undefined;
 
-        setQuestions(filtered);
-        setTotalVisible(response.total);
-      } catch (error) {
-        console.error("Failed to load questions:", error);
-        setQuestions([]);
-        setTotalVisible(0);
-      } finally {
+      const response = await getQuestions(page, 10, {
+        grade: currentGrade,
+        topic: currentTopic,
+
+        type: currentType,
+        difficulty: currentDiff,
+        q: q
+      });
+
+      setQuestions(response.data || []);
+      setTotalVisible(response.total || 0);
+    } catch (error) {
+      console.error("Failed to load questions:", error);
+      setQuestions([]);
+      setTotalVisible(0);
+    } finally {
         setIsFiltering(false);
       }
   };

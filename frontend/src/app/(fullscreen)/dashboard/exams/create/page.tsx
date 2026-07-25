@@ -44,7 +44,7 @@ function CreateExamPageContent() {
       if (ids.length > 0) {
         // Fetch questions from backend
         import('@/lib/api').then(({ getQuestions }) => {
-          getQuestions(1, 1000, ids).then(res => {
+          getQuestions(1, 1000, { ids }).then(res => {
             if (res.data) {
               setExam(prev => ({ ...prev, questions: res.data }));
             }

@@ -16,12 +16,15 @@ interface MultipleChoiceQuestionProps {
   options: MultipleChoiceOption[]
   selectedOptionId: string | null
   selectedExplanation?: string
+  correctOptionId?: string | null
+  aiExplanation?: string
+  readonly?: boolean
   isHintOpen: boolean
   isFlagged: boolean
   examType?: string
-  onSelectOption: (optionId: string, explanation?: string) => void
-  onToggleHint: () => void
-  onToggleFlag: () => void
+  onSelectOption?: (optionId: string, explanation?: string) => void
+  onToggleHint?: () => void
+  onToggleFlag?: () => void
 }
 
 export default function MultipleChoiceQuestion({
@@ -31,6 +34,9 @@ export default function MultipleChoiceQuestion({
   options,
   selectedOptionId,
   selectedExplanation,
+  correctOptionId,
+  aiExplanation,
+  readonly = false,
   isHintOpen,
   isFlagged,
   examType = 'test',
@@ -46,7 +52,7 @@ export default function MultipleChoiceQuestion({
   }
 
   const handleExplanationSubmit = (explanation: string) => {
-    if (pendingOptionId) {
+    if (pendingOptionId && onSelectOption) {
       onSelectOption(pendingOptionId, explanation)
       setPendingOptionId(null)
     }
@@ -79,7 +85,7 @@ export default function MultipleChoiceQuestion({
                   <Flag className={`w-5 h-5 ${isFlagged ? 'fill-amber-500' : ''}`} />
                   <span className="hidden sm:inline">{isFlagged ? 'Đã đánh dấu' : 'Đánh dấu'}</span>
                 </button>
-                {examType === 'practice' && (
+                {examType === 'practice' && !readonly && onToggleHint && (
                   <button 
                     data-hint-toggle="true"
                     onClick={onToggleHint}
@@ -101,24 +107,38 @@ export default function MultipleChoiceQuestion({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {options.map((option) => {
             const isSelected = selectedOptionId === option.id;
+            const isCorrect = readonly && correctOptionId === option.id;
+            const isWrongSelection = readonly && isSelected && correctOptionId !== option.id;
+
+            let optionClass = "bg-white dark:bg-slate-900 border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+            let idClass = "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-white"
+
+            if (readonly) {
+              if (isCorrect) {
+                optionClass = "bg-green-50 dark:bg-green-900/10 border-green-500 shadow-green-500/5"
+                idClass = "bg-green-500 text-white shadow-sm"
+              } else if (isWrongSelection) {
+                optionClass = "bg-red-50 dark:bg-red-900/10 border-red-500 shadow-red-500/5"
+                idClass = "bg-red-500 text-white shadow-sm"
+              } else {
+                optionClass = "bg-white dark:bg-slate-900 border-slate-200 opacity-60"
+                idClass = "bg-slate-100 dark:bg-slate-800 text-slate-400"
+              }
+            } else if (isSelected) {
+              optionClass = "bg-white dark:bg-slate-900 border-primary shadow-primary/5"
+              idClass = "bg-primary text-white shadow-sm"
+            }
             
             return (
               <button 
                 key={option.id}
-                onClick={() => handleOptionClick(option.id)}
-                className={`group relative flex items-center gap-6 p-6 rounded-xl border-2 transition-all shadow-sm text-left
-                  ${isSelected 
-                    ? 'bg-white dark:bg-slate-900 border-primary shadow-primary/5' 
-                    : 'bg-white dark:bg-slate-900 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
-                  }
-                `}
+                onClick={() => {
+                  if (!readonly) handleOptionClick(option.id)
+                }}
+                disabled={readonly}
+                className={`group relative flex items-center gap-6 p-6 rounded-xl border-2 transition-all shadow-sm text-left ${optionClass} ${readonly ? 'cursor-default hover:border-inherit' : ''}`}
               >
-                <div className={`w-12 h-12 flex items-center justify-center font-bold rounded-lg transition-colors text-xl
-                  ${isSelected
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-white'
-                  }
-                `}>
+                <div className={`w-12 h-12 flex items-center justify-center font-bold rounded-lg transition-colors text-xl ${idClass}`}>
                   {option.id}
                 </div>
                 <div className="flex-1">
@@ -135,6 +155,17 @@ export default function MultipleChoiceQuestion({
             )
           })}
         </div>
+        {readonly && aiExplanation && (
+          <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+            <h4 className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-bold mb-3">
+              <Sparkles className="w-5 h-5" />
+              Giải thích từ AI
+            </h4>
+            <div className="text-slate-700 dark:text-slate-300">
+              <MathText content={aiExplanation} />
+            </div>
+          </div>
+        )}
       </div>
       
       <ExplanationPopup 

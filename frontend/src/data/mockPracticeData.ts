@@ -99,7 +99,13 @@ export const fetchPracticesByGrade = async (
     data = data.filter(item => practiceIds.includes(item.id));
   } else if (lectureId) {
     // Lọc theo lectureId nếu có (hiện tại mock bằng cách filter title/lectureName chứa ID để demo)
-    data = data.filter(item => item.id.includes(lectureId) || item.lectureName.includes(lectureId));
+    const filtered = data.filter(item => item.id.includes(lectureId) || item.lectureName.includes(lectureId));
+    // Fallback: nếu không khớp (do database dùng UUID còn mock dùng string tĩnh) thì trả về 2 bài đầu tiên làm mẫu
+    if (filtered.length === 0) {
+      data = data.slice(0, 2);
+    } else {
+      data = filtered;
+    }
   }
 
   const totalItems = data.length;

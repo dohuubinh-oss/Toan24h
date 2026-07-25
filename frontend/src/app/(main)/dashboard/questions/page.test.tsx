@@ -53,47 +53,47 @@ describe('QuestionsPage', () => {
   })
 
   it('renders standalone single questions correctly', async () => {
-    vi.spyOn(api, 'getQuestions').mockResolvedValue({ data: [
-      {
-        id: '1',
-        book_name: 'Q1',
-        type_question: 'single',
-        content: 'Test content 1',
-        type: 'Trắc nghiệm',
-        grade: 10,
-        topic: 'Đại số',
-        difficulty_level: 'Thông hiểu',
-        difficulty_point: 5,
-        point: 1,
-        tags: [],
-        options: ['A', 'B', 'C', 'D'],
-        correct_answer: 'A',
-        solution_guide: 'Solution 1',
-        hint: '',
-        quick_solve_tips: '',
-        general_method: '',
-        mistakes: '',
-      },
-    ], totalPages: 1, totalQuestions: 1})
+    const mockData = Array(15).fill(null).map((_, i) => ({
+      id: `q${i}`,
+      book_name: `Book ${i}`,
+      type_question: 'single' as const,
+      content: `Question ${i}`,
+      type: 'Trắc nghiệm' as const,
+      grade: 10,
+      topic: 'Đại số',
+      difficulty_level: 'Thông hiểu' as const,
+      difficulty_point: 5,
+      point: 1,
+      tags: [],
+      options: ['A', 'B', 'C', 'D'],
+      correct_answer: 'A',
+      solution_guide: 'Solution',
+      hint: '',
+      quick_solve_tips: '',
+      general_method: '',
+      mistakes: '',
+    }))
+    
+    vi.spyOn(api, 'getQuestions').mockResolvedValue({ data: mockData, totalPages: 2, total: 15 })
 
     render(<QuestionsPage />)
     
     await waitFor(() => {
-      expect(screen.getByText('Test content 1')).toBeInTheDocument()
+      expect(screen.getByText('Question 0')).toBeInTheDocument()
     })
   })
 
   it('renders grouped questions correctly', async () => {
     vi.spyOn(api, 'getQuestions').mockResolvedValue({ data: [
       {
-        id: '2',
+        id: 'group1',
         book_name: 'Group 1',
         type_question: 'group',
         content: 'Shared Context Content',
-        type: 'Trắc nghiệm',
+        type: 'Trắc nghiệm' as const,
         grade: 10,
         topic: 'Hình học',
-        difficulty_level: 'Vận dụng',
+        difficulty_level: 'Vận dụng' as const,
         difficulty_point: 8,
         point: 2,
         tags: [],
@@ -126,7 +126,7 @@ describe('QuestionsPage', () => {
           }
         ]
       },
-    ], totalPages: 1, totalQuestions: 1})
+    ], totalPages: 1, total: 1})
 
     render(<QuestionsPage />)
     
@@ -137,7 +137,7 @@ describe('QuestionsPage', () => {
   })
 
   it('renders empty state when no questions found', async () => {
-    vi.spyOn(api, 'getQuestions').mockResolvedValue({ data: [], totalPages: 0, totalQuestions: 0 })
+    vi.spyOn(api, 'getQuestions').mockResolvedValue({ data: [], totalPages: 0, total: 0 })
 
     render(<QuestionsPage />)
     

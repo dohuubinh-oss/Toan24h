@@ -12,6 +12,7 @@ import { deductPoints } from '@/lib/authApi'
 import { Question } from '@/types/question'
 import { useToast } from '@/components/ui/ToastProvider'
 import { useRouter } from 'next/navigation'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 export default function ExamTakePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
@@ -29,6 +30,10 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   const [isAiHintOpen, setIsAiHintOpen] = useState(false)
   const [activeHintQuestionId, setActiveHintQuestionId] = useState<string | null>(null)
   const [unlockedHints, setUnlockedHints] = useState<Record<string, number>>({})
+
+  // Anti-cheat state
+  const [cheatCount, setCheatCount] = useState(0)
+  const [showCheatModal, setShowCheatModal] = useState(false)
 
   const toast = useToast()
   const router = useRouter()
@@ -51,7 +56,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           setExam(examData)
           // Fetch questions
           if (examData.questionIds && examData.questionIds.length > 0) {
-            const qRes = await getQuestions(1, 1000, examData.questionIds)
+            const qRes = await getQuestions(1, 1000, { ids: examData.questionIds })
             // Need to sort questions to match the order of questionIds
             const qMap = new Map(qRes.data.map(q => [q.id, q]))
             const sortedQuestions = examData.questionIds
@@ -69,6 +74,95 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
     }
     fetchExamData()
   }, [id, toast])
+
+  const totalAwayTimeRef = React.useRef(0);
+  const leaveStartTimeRef = React.useRef<number | null>(null);
+  const checkIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Lắng nghe sự kiện chống gian lận
+  useEffect(() => {
+    if (!exam) return;
+
+    const enforceCheatPenalty = (count: number, totalTime: number) => {
+      // Mức 3: Lần 3 hoặc tổng thời gian > 3 phút (180s)
+      if (count >= 3 || totalTime > 180000) {
+        if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
+        import('@/lib/api').then(mod => mod.sendCheatWarning(id, 3));
+        toast.error("Bài làm đã bị thu tự động do vi phạm quy chế. (Đã gửi cảnh báo Zalo cho phụ huynh)", { duration: 5000 });
+        
+        // Auto submit
+        const answersList = Object.entries(answers).map(([qId, ans]) => ({ questionId: qId, studentAnswer: ans as string, isEssay: false })); // Approximate
+        import('@/lib/api').then(mod => mod.submitExam(id, answersList).then(() => {
+          router.push(`/exam/${id}/result`);
+        }));
+        return true; // was submitted
+      }
+      
+      // Mức 2: Lần 2 hoặc tổng thời gian > 1 phút (60s)
+      if (count === 2 || totalTime > 60000) {
+        import('@/lib/api').then(mod => mod.sendCheatWarning(id, 2));
+        setShowCheatModal(true);
+        return false;
+      }
+      
+      // Mức 1: Lần 1
+      if (count === 1) {
+        setShowCheatModal(true);
+        return false;
+      }
+      
+      return false;
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        leaveStartTimeRef.current = Date.now();
+        const nextCount = cheatCount + 1;
+        setCheatCount(nextCount);
+        
+        // Bắt đầu interval kiểm tra nếu học sinh không quay lại
+        checkIntervalRef.current = setInterval(() => {
+          if (leaveStartTimeRef.current) {
+            const currentAway = Date.now() - leaveStartTimeRef.current;
+            const currentTotal = totalAwayTimeRef.current + currentAway;
+            if (currentTotal > 180000) {
+              enforceCheatPenalty(nextCount, currentTotal);
+            }
+          }
+        }, 1000);
+      } else {
+        // Học sinh quay lại
+        if (checkIntervalRef.current) {
+          clearInterval(checkIntervalRef.current);
+          checkIntervalRef.current = null;
+        }
+        
+        if (leaveStartTimeRef.current) {
+          const awayDuration = Date.now() - leaveStartTimeRef.current;
+          totalAwayTimeRef.current += awayDuration;
+          leaveStartTimeRef.current = null;
+        }
+        
+        enforceCheatPenalty(cheatCount, totalAwayTimeRef.current);
+      }
+    };
+
+    const handlePreventCopy = (e: Event) => {
+      e.preventDefault();
+      toast.error("Không được phép sao chép nội dung câu hỏi!");
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('contextmenu', handlePreventCopy);
+    document.addEventListener('copy', handlePreventCopy);
+
+    return () => {
+      if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('contextmenu', handlePreventCopy);
+      document.removeEventListener('copy', handlePreventCopy);
+    };
+  }, [exam, id, router, toast, cheatCount, answers]);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900">
@@ -112,8 +206,52 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
     }
   })
 
-  const handleSubmit = () => {
-    router.push(`/exam/${id}/result`)
+  const handleSubmit = async () => {
+    try {
+      const answersList = Object.entries(answers).map(([qId, ans]) => {
+        // find if it's essay by searching in questions
+        let isEssay = false
+        for (const q of questions) {
+          if (q.id === qId) {
+            isEssay = q.type === 'Tự luận'
+            break
+          }
+          if (q.subQuestions) {
+            for (const sub of q.subQuestions) {
+              if (sub.id === qId) {
+                isEssay = sub.type === 'Tự luận'
+                break
+              }
+            }
+          }
+        }
+        
+        return {
+          questionId: qId,
+          studentAnswer: ans,
+          isEssay: isEssay
+        }
+      })
+
+      const res = await import('@/lib/api').then(mod => mod.submitExam(id, answersList))
+      if (res && res.status === 'success') {
+        toast.success("Nộp bài thành công! AI đang chấm điểm...")
+        router.push(`/student`)
+      } else {
+        toast.error("Nộp bài thất bại")
+      }
+    } catch (e) {
+      console.error(e)
+      toast.error("Lỗi khi nộp bài")
+    }
+  }
+
+  const handleBack = () => {
+    if (exam.type === 'practice' && exam.lectureId) {
+      router.push(`/lectures/lop/${exam.grade}/${exam.lectureId}`)
+    } else {
+      router.push(`/student`)
+    }
   }
 
   // Timer logic for 'test'
@@ -172,7 +310,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         timeLeft={timeLeftStr}
         examType={exam.type}
         points={userPoints}
-        onBack={() => router.push(`/dashboard/exams`)}
+        onBack={handleBack}
       />
 
       <div className="flex-1 flex overflow-hidden relative pb-[88px] w-full">
@@ -244,6 +382,21 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         canGoNext={currentQuestionIndex < questions.length - 1}
         answeredCount={Object.keys(answers).length}
         totalCount={questions.length}
+      />
+
+      <ConfirmModal
+        isOpen={showCheatModal}
+        onClose={() => setShowCheatModal(false)}
+        onConfirm={() => setShowCheatModal(false)}
+        title={cheatCount === 1 ? "Cảnh báo gian lận (Lần 1)" : "Cảnh báo gian lận nghiêm trọng (Lần 2)"}
+        description={
+          cheatCount === 1 
+            ? "Bạn vừa rời khỏi màn hình làm bài. Vui lòng tập trung! Nếu vi phạm quá 2 lần, hệ thống sẽ tự động thu bài."
+            : "Đây là lần vi phạm cuối cùng! Nếu bạn rời khỏi màn hình một lần nữa, hệ thống sẽ tự động thu bài và gửi cảnh báo Zalo cho phụ huynh."
+        }
+        confirmText="Tôi đã hiểu"
+        hideCancel={true}
+        isDestructive={cheatCount > 1}
       />
     </div>
   )

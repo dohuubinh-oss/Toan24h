@@ -18,6 +18,7 @@ interface RichTextEditorProps {
   inline?: boolean
   mathOnlyToolbar?: boolean
   smallToolbar?: boolean
+  readOnly?: boolean
 }
 
 const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar }: { editor: any, mathOnlyToolbar?: boolean, smallToolbar?: boolean }) => {
@@ -165,12 +166,15 @@ export default function RichTextEditor({
   className = "",
   hideToolbar = false,
   inline = false,
-  mathOnlyToolbar = false
+  mathOnlyToolbar = false,
+  smallToolbar = false,
+  readOnly = false
 }: RichTextEditorProps) {
   const lastEmittedHTML = useRef(content || '');
   const processedInitialContent = preprocessMath(content || '');
 
   const editor = useEditor({
+    editable: !readOnly,
     extensions: [
       StarterKit,
       MathExtension,
@@ -225,7 +229,7 @@ export default function RichTextEditor({
 
   return (
     <div className={`flex flex-col transition-all overflow-hidden ${inline ? 'bg-transparent' : 'border border-slate-200 rounded-xl bg-slate-50 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5'} ${className}`}>
-      {!hideToolbar && <MenuBar editor={editor} mathOnlyToolbar={mathOnlyToolbar} />}
+      {!readOnly && !hideToolbar && <MenuBar editor={editor} mathOnlyToolbar={mathOnlyToolbar} />}
       <EditorContent editor={editor} className={`flex-grow flex flex-col overflow-y-auto bg-transparent`} />
     </div>
   )

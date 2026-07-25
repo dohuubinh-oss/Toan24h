@@ -133,18 +133,33 @@ export async function uploadObjectUrlIfNeeded(url: string | null): Promise<strin
   }
 }
 
-// Mockup for AI handwriting recognition
 export async function recognizeHandwriting(file: File): Promise<string> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  // Return some mockup text/latex
-  return 'Gợi ý từ AI: $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$'
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch('/api/ocr', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to recognize handwriting');
+  }
+
+  const data = await res.json();
+  return data.text || '';
 }
 
-export async function getQuestions(page: number = 1, limit: number = 20, ids?: string[]): Promise<{data: Question[], total: number, totalPages?: number}> {
+export async function getQuestions(page: number = 1, limit: number = 20, filters?: { ids?: string[], grade?: string, topic?: string, type?: string, difficulty?: string, q?: string }): Promise<{data: Question[], total: number, totalPages?: number}> {
   let url = `/questions?page=${page}&limit=${limit}`
-  if (ids && ids.length > 0) {
-    url += `&ids=${ids.join(',')}`
+  if (filters) {
+    if (filters.ids && filters.ids.length > 0) url += `&ids=${filters.ids.join(',')}`;
+    if (filters.grade) url += `&grade=${filters.grade.replace(/\D/g, '')}`; // extract only number
+    if (filters.topic) url += `&topic=${encodeURIComponent(filters.topic)}`;
+    if (filters.type) url += `&type=${encodeURIComponent(filters.type)}`;
+    if (filters.difficulty) url += `&difficulty=${encodeURIComponent(filters.difficulty)}`;
+    if (filters.q) url += `&q=${encodeURIComponent(filters.q)}`;
   }
   const response = await apiFetch(url)
   if (response.status === 'success' && response.data) {
@@ -347,6 +362,14 @@ export async function getExams(): Promise<any[]> {
 	}
 }
 
+export async function sendCheatWarning(examId: string, level: number) {
+  return apiFetch('/notifications/cheat', {
+    method: 'POST',
+    body: JSON.stringify({ examId, level }),
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
 export async function getExamById(id: string): Promise<any> {
   try {
     const response = await apiFetch(`/exams/${id}`)
@@ -356,6 +379,28 @@ export async function getExamById(id: string): Promise<any> {
     return null
   } catch (error) {
     console.error(`Failed to fetch exam ${id}:`, error)
+    return null
+  }
+}
+
+export async function submitExam(examId: string, answers: any[]): Promise<any> {
+  const payload = { answers }
+  const response = await apiFetch(`/exams/${examId}/submit`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  return response
+}
+
+export async function getExamResultById(id: string): Promise<any> {
+  try {
+    const response = await apiFetch(`/exam-results/${id}`)
+    if (response.data) {
+      return response.data
+    }
+    return null
+  } catch (error) {
+    console.error(`Failed to fetch exam result ${id}:`, error)
     return null
   }
 }

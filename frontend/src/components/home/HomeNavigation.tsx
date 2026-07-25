@@ -1,19 +1,31 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { FunctionSquare, Bell, User, ChevronDown, LogOut, Settings } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 interface HomeNavigationProps {
   isLoggedIn?: boolean;
 }
 
-export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationProps) {
-  const [userName, setUserName] = React.useState('Học viên')
-  const [userGrade, setUserGrade] = React.useState('Toán THCS')
-  const [isLoggedState, setIsLoggedState] = React.useState(isLoggedIn)
+interface Notification {
+  id: string
+  title: string
+  message: string
+  link: string
+  isRead: boolean
+}
 
-  React.useEffect(() => {
+export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationProps) {
+  const [userName, setUserName] = useState('Học viên')
+  const [userGrade, setUserGrade] = useState('Toán THCS')
+  const [isLoggedState, setIsLoggedState] = useState(isLoggedIn)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [lastNotificationId, setLastNotificationId] = useState<string | null>(null)
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const userStr = localStorage.getItem('user')
       const token = localStorage.getItem('accessToken') || document.cookie.includes('accessToken')
@@ -35,6 +47,53 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (!isLoggedState) return
+    let interval: NodeJS.Timeout
+
+    const fetchNotifications = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/v1/notifications', {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        const data = await res.json()
+        if (data && data.status === 'success' && data.data) {
+          setNotifications(data.data)
+          
+          // Check for new notifications
+          if (data.data.length > 0) {
+            const latest = data.data[0]
+            if (!latest.isRead && lastNotificationId !== latest.id.toString()) {
+              setLastNotificationId(latest.id.toString())
+              toast.success(
+                (t) => (
+                  <span className="flex flex-col gap-1">
+                    <span><b>Zalo giả lập:</b> {latest.title} - Bài thi của bạn đã được AI chấm xong.</span>
+                    <Link href={latest.link} className="text-primary underline text-sm font-semibold" onClick={() => toast.dismiss(t.id)}>
+                      Nhấn link để xem chi tiết kết quả.
+                    </Link>
+                  </span>
+                ),
+                { duration: 10000 }
+              )
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch notifications', e)
+      }
+    }
+
+    fetchNotifications()
+    interval = setInterval(fetchNotifications, 30 * 60 * 1000) // 30 minutes
+
+    return () => clearInterval(interval)
+  }, [isLoggedState, lastNotificationId])
+
+  const unreadCount = notifications.filter(n => !n.isRead).length
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
@@ -58,10 +117,41 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
         <div className="flex items-center gap-4">
           {isLoggedState ? (
             <>
-              <button className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors text-slate-600 relative">
-                <Bell size={20} />
-                <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors text-slate-600 relative"
+                >
+                  <Bell size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full"></span>
+                  )}
+                </button>
+
+                {showNotifications && (
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-slate-100 py-2 z-50 max-h-96 overflow-y-auto">
+                    <div className="px-4 py-2 border-b border-slate-100 font-bold text-slate-800">Thông báo</div>
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-4 text-sm text-slate-500 text-center">Không có thông báo nào</div>
+                    ) : (
+                      notifications.map(n => (
+                        <Link 
+                          key={n.id} 
+                          href={n.link}
+                          onClick={() => {
+                            setShowNotifications(false)
+                            fetch(`http://localhost:8080/api/v1/notifications/${n.id}/read`, { method: 'POST' })
+                          }}
+                          className={`block px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 ${!n.isRead ? 'bg-blue-50/50' : ''}`}
+                        >
+                          <p className={`text-sm ${!n.isRead ? 'font-semibold text-slate-800' : 'text-slate-600'}`}>{n.title}</p>
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">{n.message}</p>
+                        </Link>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
               
               <div className="relative group pl-4 border-l border-slate-200">
                 <div className="flex items-center gap-3 cursor-pointer">

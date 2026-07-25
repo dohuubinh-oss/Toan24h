@@ -33,6 +33,8 @@ func main() {
 		&models.Lecture{},
 		&models.LectureBookmark{},
 		&models.Exam{},
+		&models.ExamResult{},
+		&models.ResultDetail{},
 	); err != nil {
 		log.Fatalf("Auto Migrate failed: %v", err)
 	}

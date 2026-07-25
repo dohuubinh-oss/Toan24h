@@ -24,9 +24,11 @@ interface EssayQuestionProps {
   activeHintQuestionId?: number
   isFlagged: boolean
   examType?: string
-  onAnswerChange: (id: number, answer: string, explanation?: string) => void
-  onToggleHint: (id?: number) => void
-  onToggleFlag: () => void
+  readonly?: boolean
+  aiFeedbacks?: Record<number, { isCorrect: boolean, aiExplanation: string, errorLocation?: any, score: number, maxScore: number }>
+  onAnswerChange?: (id: number, answer: string, explanation?: string) => void
+  onToggleHint?: (id?: number) => void
+  onToggleFlag?: () => void
 }
 
 function EditorItem({ 
@@ -36,6 +38,8 @@ function EditorItem({
   onAnswerChange, 
   isGroup,
   examType,
+  readonly,
+  aiFeedback,
   onToggleHint
 }: { 
   q: { id: number, label: string, type: string },
@@ -44,15 +48,19 @@ function EditorItem({
   onAnswerChange: (id: number, answer: string, explanation?: string) => void,
   isGroup: boolean,
   examType?: string,
-  onToggleHint: (id: number) => void
+  readonly?: boolean,
+  aiFeedback?: { isCorrect: boolean, aiExplanation: string, score: number, maxScore: number },
+  onToggleHint?: (id: number) => void
 }) {
   const isMC = q.type === 'mc'
   const editorContent = isMC ? explanation : answer
   const handleEditorChange = (val: string) => {
-    if (isMC) {
-      onAnswerChange(q.id, answer, val)
-    } else {
-      onAnswerChange(q.id, val)
+    if (onAnswerChange) {
+      if (isMC) {
+        onAnswerChange(q.id, answer, val)
+      } else {
+        onAnswerChange(q.id, val)
+      }
     }
   }
 
@@ -86,7 +94,7 @@ function EditorItem({
           {isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`}
         </label>
         <div className="flex space-x-2">
-          {examType === 'practice' && (
+          {examType === 'practice' && !readonly && onToggleHint && (
             <button 
               data-hint-toggle="true"
               onClick={() => onToggleHint(q.id)}
@@ -113,30 +121,60 @@ function EditorItem({
           placeholder={isMC ? "Nhập giải thích cho đáp án bạn chọn..." : (isGroup ? `Nhập lời giải chi tiết cho ${q.label.toLowerCase()}...` : "Nhập lời giải chi tiết tại đây (Sử dụng các công cụ hỗ trợ trên)...")}
           className="flex-1 border-none rounded-none rounded-t-xl"
           minHeight="300px"
+          readOnly={readonly}
         />
 
-        {/* Bottom Upload Zone */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-          <input 
-            type="file" 
-            hidden 
-            accept="image/*" 
-            ref={fileInputRef} 
-            onChange={handleFileUpload}
-          />
-          <button 
-            type="button" 
-            disabled={isOcrProcessing}
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full py-4 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex flex-col items-center justify-center hover:border-primary hover:bg-primary/5 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Camera className={`mb-1 w-6 h-6 ${isOcrProcessing ? 'text-primary animate-pulse' : 'text-slate-400 group-hover:text-primary'}`} />
-            <span className={`text-sm font-medium ${isOcrProcessing ? 'text-primary' : 'text-slate-600 dark:text-slate-400 group-hover:text-primary'}`}>
-              {isOcrProcessing ? 'Đang nhận dạng chữ viết tay...' : 'Tải ảnh lời giải bài làm tay'}
-            </span>
-          </button>
-        </div>
+        {/* Bottom Upload Zone - only show if not readonly */}
+        {!readonly && (
+          <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+            <input 
+              type="file" 
+              hidden 
+              accept="image/*" 
+              ref={fileInputRef} 
+              onChange={handleFileUpload}
+            />
+            <button 
+              type="button" 
+              disabled={isOcrProcessing}
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full py-4 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex flex-col items-center justify-center hover:border-primary hover:bg-primary/5 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Camera className={`mb-1 w-6 h-6 ${isOcrProcessing ? 'text-primary animate-pulse' : 'text-slate-400 group-hover:text-primary'}`} />
+              <span className={`text-sm font-medium ${isOcrProcessing ? 'text-primary' : 'text-slate-600 dark:text-slate-400 group-hover:text-primary'}`}>
+                {isOcrProcessing ? 'Đang nhận dạng chữ viết tay...' : 'Tải ảnh lời giải bài làm tay'}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* AI Feedback Box - only show if readonly and feedback exists */}
+      {readonly && aiFeedback && (
+        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-bold text-lg">
+              <Sparkles className="w-5 h-5" />
+              Đánh giá từ AI
+            </h4>
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-xl text-blue-800 dark:text-blue-300">
+                {aiFeedback.score} / {aiFeedback.maxScore} <span className="text-sm font-normal">điểm</span>
+              </span>
+              <button 
+                className="px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm hover:bg-slate-50 transition-colors"
+                onClick={() => alert('Chức năng kháng cáo đang được phát triển!')}
+              >
+                Kháng cáo
+              </button>
+            </div>
+          </div>
+          <div className="text-slate-700 dark:text-slate-300 prose prose-blue max-w-none">
+            <MathText content={aiFeedback.aiExplanation} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -153,6 +191,8 @@ export default function EssayQuestion({
   activeHintQuestionId,
   isFlagged,
   examType = 'test',
+  readonly = false,
+  aiFeedbacks,
   onAnswerChange,
   onToggleHint,
   onToggleFlag,
@@ -179,18 +219,24 @@ export default function EssayQuestion({
                       return (
                         <button 
                           key={opt.id}
-                          onClick={() => onAnswerChange(q.id, opt.id, explanations?.[q.id] || '')}
+                          onClick={() => {
+                            if (!readonly && onAnswerChange) {
+                              onAnswerChange(q.id, opt.id, explanations?.[q.id] || '')
+                            }
+                          }}
+                          disabled={readonly}
                           className={`group relative flex items-center gap-4 p-4 rounded-xl border-2 transition-all shadow-sm text-left
                             ${isSelected 
                               ? 'bg-white dark:bg-slate-900 border-primary shadow-primary/5' 
                               : 'bg-white dark:bg-slate-900 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
                             }
+                            ${readonly ? 'cursor-default' : ''}
                           `}
                         >
                           <div className={`w-10 h-10 flex items-center justify-center font-bold rounded-lg transition-colors text-lg
                             ${isSelected
                               ? 'bg-primary text-white shadow-sm'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-white'
+                              : (readonly ? 'bg-slate-100 dark:bg-slate-800 text-slate-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-white')
                             }
                           `}>
                             {opt.id}
@@ -238,9 +284,11 @@ export default function EssayQuestion({
             q={q as any}
             answer={answers[q.id] || ''}
             explanation={explanations?.[q.id] || ''}
-            onAnswerChange={onAnswerChange}
+            onAnswerChange={onAnswerChange || (() => {})}
             isGroup={!!isGroup}
             examType={examType}
+            readonly={readonly}
+            aiFeedback={aiFeedbacks?.[q.id]}
             onToggleHint={onToggleHint}
           />
         ))}

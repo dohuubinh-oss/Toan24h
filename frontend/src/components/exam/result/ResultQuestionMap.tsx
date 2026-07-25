@@ -2,13 +2,13 @@ import React from 'react'
 import { LayoutGrid } from 'lucide-react'
 
 export interface ResultMCQuestion {
-  id: number
+  id: string
   isCorrect: boolean
   type: 'mc'
 }
 
 export interface ResultEssayQuestion {
-  id: number
+  id: string
   score: number
   isWarning: boolean
   type: 'essay'
@@ -18,7 +18,7 @@ interface ResultQuestionMapProps {
   mcQuestions: ResultMCQuestion[]
   essayQuestions: ResultEssayQuestion[]
   totalQuestions: number
-  onSelectQuestion: (id: number) => void
+  onSelectQuestion: (id: string) => void
 }
 
 export default function ResultQuestionMap({

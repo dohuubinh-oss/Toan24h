@@ -49,6 +49,12 @@ func SetupRouter() *gin.Engine {
 
 		v1.POST("/questions/bulk", handlers.BulkCreateQuestions)
 		v1.GET("/questions", handlers.GetQuestions)
+
+		// Notifications
+		v1.GET("/notifications", handlers.GetMyNotifications)
+		v1.POST("/notifications/:id/read", handlers.MarkNotificationRead)
+		v1.POST("/notifications/cheat", handlers.CreateCheatNotification)
+		
 		v1.GET("/questions/:id", handlers.GetQuestionByID)
 		v1.PUT("/questions/:id", handlers.UpdateQuestion)
 		v1.DELETE("/questions/:id", handlers.DeleteQuestion)
@@ -57,6 +63,11 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/exams", handlers.CreateExam)
 		v1.GET("/exams", handlers.GetExams)
 		v1.GET("/exams/:id", handlers.GetExamByID)
+		v1.POST("/exams/:id/submit", handlers.SubmitExam)
+
+		v1.GET("/exam-results", handlers.GetMyExamResults)
+		v1.GET("/exam-results/:id", handlers.GetExamResultByID)
+		v1.POST("/exam-results/:id/appeal", handlers.AppealExamResult)
 		
 		// Lectures
 		v1.POST("/lectures", lectureController.CreateLecture)
