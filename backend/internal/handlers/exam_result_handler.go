@@ -33,14 +33,19 @@ func SubmitExam(c *gin.Context) {
 		return
 	}
 
-	// For authenticated users, you'd extract StudentID from Context
-	// studentID := c.MustGet("userID").(uuid.UUID)
-	// For now, let's keep it null if not authenticated
+	// For authenticated users, extract StudentID from Context
+	var studentID *uuid.UUID
+	if val, exists := c.Get("userID"); exists {
+		if id, ok := val.(uuid.UUID); ok {
+			studentID = &id
+		}
+	}
 
 	// Create ExamResult with PENDING status
 	examResult := models.ExamResult{
-		ExamID: examID,
-		Status: models.StatusPending,
+		ExamID:    examID,
+		StudentID: studentID,
+		Status:    models.StatusPending,
 	}
 
 	if err := config.DB.Create(&examResult).Error; err != nil {
@@ -94,7 +99,7 @@ func processExamGrading(resultID uuid.UUID) {
 			continue
 		}
 
-		if question.TypeQuestion == "essay" {
+		if question.Type == "Tự luận" {
 			// Send to Gemini
 			aiResult, err := services.GradeEssayWithGemini(
 				question.Content, 

@@ -171,10 +171,14 @@ function CreateQuestionContent() {
         
         let payload: Partial<Question>;
         if (isGroup) {
+          const firstSub = block.questions.length > 0 ? block.questions[0] : null;
           payload = {
             id: editId,
             type_question: 'group',
             content: block.shared_content,
+            grade: firstSub?.grade || 0,
+            topic: firstSub?.topic || '',
+            difficulty_level: firstSub?.difficulty_level || 'Nhận biết',
             subQuestions: block.questions
           };
         } else {

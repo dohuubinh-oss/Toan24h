@@ -5,7 +5,7 @@ import MathText from '../../../ui/MathText'
 import MathKeyboardModal from '../../../ui/MathKeyboardModal'
 import React, { useState, useEffect } from 'react'
 
-const MathNodeView = ({ node, updateAttributes, selected, deleteNode }: any) => {
+const MathNodeView = ({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) => {
   const [isEditing, setIsEditing] = useState(false)
 
   // Auto-edit when newly inserted and empty
@@ -18,12 +18,28 @@ const MathNodeView = ({ node, updateAttributes, selected, deleteNode }: any) => 
   const handleSave = (latex: string) => {
     updateAttributes({ latex })
     setIsEditing(false)
+    
+    // Automatically focus back to the editor after saving
+    if (typeof getPos === 'function') {
+      const pos = getPos() + node.nodeSize
+      editor.chain().focus().setTextSelection(pos).run()
+    } else {
+      editor.commands.focus()
+    }
   }
 
   const handleCancel = () => {
     setIsEditing(false)
     if (node.attrs.latex === '') {
       deleteNode()
+      editor.commands.focus()
+    } else {
+      if (typeof getPos === 'function') {
+        const pos = getPos() + node.nodeSize
+        editor.chain().focus().setTextSelection(pos).run()
+      } else {
+        editor.commands.focus()
+      }
     }
   }
 

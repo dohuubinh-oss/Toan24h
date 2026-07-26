@@ -323,6 +323,17 @@ export async function updateQuestion(id: string, data: Partial<Question>): Promi
       hint: data.hint,
       mistakes: data.mistakes,
       bookName: data.book_name,
+      subQuestions: data.subQuestions ? data.subQuestions.map((sub: any) => ({
+        ...sub,
+        typeQuestion: sub.type_question,
+        correctAnswer: sub.correct_answer,
+        solutionGuide: sub.solution_guide,
+        difficultyLevel: sub.difficulty_level,
+        difficultyPoint: sub.difficulty_point,
+        quickSolveTips: sub.quick_solve_tips,
+        generalMethod: sub.general_method,
+        bookName: sub.book_name,
+      })) : undefined
     }
     
     // Clean up snake_case keys if necessary, or just send both. The backend will map properly if JSON tags align.

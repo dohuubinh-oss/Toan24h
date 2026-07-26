@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/models"
+	"gorm.io/gorm"
 )
 
 // APIResponse là định dạng gói tin trả về chuẩn
@@ -290,7 +291,9 @@ func GetQuestionByID(c *gin.Context) {
 	id := c.Param("id")
 	var q models.Question
 
-	if err := config.DB.First(&q, "id = ?", id).Error; err != nil {
+	if err := config.DB.Preload("SubQuestions", func(db *gorm.DB) *gorm.DB {
+		return db.Order("created_at ASC")
+	}).First(&q, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, APIResponse{Status: "error", Error: "Question not found"})
 		return
 	}
@@ -303,7 +306,7 @@ func UpdateQuestion(c *gin.Context) {
 	id := c.Param("id")
 	var q models.Question
 
-	if err := config.DB.First(&q, "id = ?", id).Error; err != nil {
+	if err := config.DB.Preload("SubQuestions").First(&q, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, APIResponse{Status: "error", Error: "Question not found"})
 		return
 	}
@@ -314,12 +317,34 @@ func UpdateQuestion(c *gin.Context) {
 		return
 	}
 
-	if err := config.DB.Model(&q).Updates(updateData).Error; err != nil {
+	// Update SubQuestions if it's a group question
+	if updateData.TypeQuestion == "group" {
+		// Ensure all subquestions have the ParentID set correctly
+		for i := range updateData.SubQuestions {
+			updateData.SubQuestions[i].ParentID = &q.ID
+		}
+		if err := config.DB.Model(&q).Association("SubQuestions").Replace(updateData.SubQuestions); err != nil {
+			c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: "Failed to sync subquestions"})
+			return
+		}
+	} else if q.TypeQuestion == "group" && updateData.TypeQuestion != "group" {
+		// If changed from group to single, clear subquestions
+		config.DB.Model(&q).Association("SubQuestions").Clear()
+	}
+
+	// Preserve crucial fields
+	updateData.ID = q.ID
+	updateData.CreatedAt = q.CreatedAt
+	updateData.DeletedAt = q.DeletedAt
+	updateData.ParentID = q.ParentID
+
+	// Save all fields (including empty strings/0) except associations
+	if err := config.DB.Omit("SubQuestions").Save(&updateData).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{Status: "success", Data: q})
+	c.JSON(http.StatusOK, APIResponse{Status: "success", Data: updateData})
 }
 
 // DeleteQuestion xử lý xoá câu hỏi (xoá mềm)

@@ -47,13 +47,14 @@ func CreateCheatNotification(c *gin.Context) {
 	userUUID, _ := uuid.Parse(userIDStr)
 
 	var title, message string
-	if req.Level == 2 {
+	switch req.Level {
+	case 2:
 		title = "⚠️ Cảnh báo: Học sinh mất tập trung"
 		message = "Hệ thống phát hiện con bạn đang rời khỏi màn hình bài thi. Vui lòng nhắc nhở!"
-	} else if req.Level == 3 {
+	case 3:
 		title = "❌ Đã thu bài tự động: Vi phạm quy chế"
 		message = "Bài thi đã bị hệ thống tự động thu do học sinh rời khỏi màn hình bài thi quá thời gian hoặc số lần cho phép."
-	} else {
+	default:
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid level"})
 		return
 	}

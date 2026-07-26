@@ -1,5 +1,6 @@
 import React from 'react'
-import { Camera, CheckCircle, Sparkles, Flag } from 'lucide-react'
+import { Camera, CheckCircle, Sparkles, Flag, BookOpen } from 'lucide-react'
+import Link from 'next/link'
 import MathText from '@/components/ui/MathText'
 import RichTextEditor from '@/components/questions/creator/editor/RichTextEditor'
 import { useToast } from '@/components/ui/ToastProvider'
@@ -25,6 +26,7 @@ interface EssayQuestionProps {
   isFlagged: boolean
   examType?: string
   readonly?: boolean
+  lectureUrl?: string
   aiFeedbacks?: Record<number, { isCorrect: boolean, aiExplanation: string, errorLocation?: any, score: number, maxScore: number }>
   onAnswerChange?: (id: number, answer: string, explanation?: string) => void
   onToggleHint?: (id?: number) => void
@@ -192,6 +194,7 @@ export default function EssayQuestion({
   isFlagged,
   examType = 'test',
   readonly = false,
+  lectureUrl,
   aiFeedbacks,
   onAnswerChange,
   onToggleHint,
@@ -307,6 +310,16 @@ export default function EssayQuestion({
             </span>
             
             <div className="flex items-center gap-2">
+              {examType === 'practice' && lectureUrl && (
+                <Link
+                  href={lectureUrl}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 rounded-full font-semibold text-sm transition-all active:scale-95"
+                  title="Xem bài giảng liên quan"
+                >
+                  <BookOpen className="w-5 h-5" />
+                  <span className="hidden sm:inline">Bài giảng</span>
+                </Link>
+              )}
               <button
                 onClick={onToggleFlag}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer transition-all active:scale-95 ${

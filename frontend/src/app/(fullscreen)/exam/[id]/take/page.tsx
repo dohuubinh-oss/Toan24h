@@ -34,9 +34,68 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   // Anti-cheat state
   const [cheatCount, setCheatCount] = useState(0)
   const [showCheatModal, setShowCheatModal] = useState(false)
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
+  const [isRestored, setIsRestored] = useState(false)
 
   const toast = useToast()
   const router = useRouter()
+
+  // Khôi phục state từ sessionStorage
+  useEffect(() => {
+    let restoredCheatCount = 0;
+    let restoredTotalTime = 0;
+    let parsed: any = null;
+    try {
+      const savedState = sessionStorage.getItem(`exam_state_${id}`)
+      if (savedState) {
+        parsed = JSON.parse(savedState)
+        if (parsed.answers) setAnswers(parsed.answers)
+        if (parsed.explanations) setExplanations(parsed.explanations)
+        if (parsed.flaggedQuestions) setFlaggedQuestions(parsed.flaggedQuestions)
+        if (parsed.cheatCount !== undefined) {
+          setCheatCount(parsed.cheatCount)
+          restoredCheatCount = parsed.cheatCount
+        }
+        if (parsed.totalAwayTime !== undefined) {
+          totalAwayTimeRef.current = parsed.totalAwayTime
+          restoredTotalTime = parsed.totalAwayTime
+        }
+      }
+    } catch (e) {
+      console.error('Failed to restore exam state', e)
+    }
+    setIsRestored(true)
+
+    // Check penalty ngay khi quay lại nếu đã vi phạm từ trang bài giảng
+    if (restoredCheatCount >= 3 || restoredTotalTime > 180000) {
+        import('@/lib/api').then(mod => mod.sendCheatWarning(id, 3));
+        toast.error("Bài làm đã bị thu tự động do vi phạm quy chế. (Đã gửi cảnh báo Zalo cho phụ huynh)");
+        const finalAnswers = parsed?.answers || {};
+        const answersList = Object.entries(finalAnswers).map(([qId, ans]) => ({ questionId: qId, studentAnswer: ans as string, isEssay: false }));
+        import('@/lib/api').then(mod => mod.submitExam(id, answersList).then(() => {
+          router.push(`/exam/${id}/result`);
+        }));
+    } else if (restoredCheatCount > 0) {
+        setShowCheatModal(true)
+    }
+  }, [id, router, toast])
+
+  // Lưu state vào sessionStorage mỗi khi thay đổi
+  useEffect(() => {
+    if (!isRestored) return;
+    try {
+      const stateToSave = {
+        answers,
+        explanations,
+        flaggedQuestions,
+        cheatCount,
+        totalAwayTime: totalAwayTimeRef.current
+      }
+      sessionStorage.setItem(`exam_state_${id}`, JSON.stringify(stateToSave))
+    } catch (e) {
+      console.error('Failed to save exam state', e)
+    }
+  }, [answers, explanations, flaggedQuestions, cheatCount, isRestored, id])
 
   useEffect(() => {
     // Get user points
@@ -88,7 +147,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
       if (count >= 3 || totalTime > 180000) {
         if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
         import('@/lib/api').then(mod => mod.sendCheatWarning(id, 3));
-        toast.error("Bài làm đã bị thu tự động do vi phạm quy chế. (Đã gửi cảnh báo Zalo cho phụ huynh)", { duration: 5000 });
+        toast.error("Bài làm đã bị thu tự động do vi phạm quy chế. (Đã gửi cảnh báo Zalo cho phụ huynh)");
         
         // Auto submit
         const answersList = Object.entries(answers).map(([qId, ans]) => ({ questionId: qId, studentAnswer: ans as string, isEssay: false })); // Approximate
@@ -141,6 +200,16 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           const awayDuration = Date.now() - leaveStartTimeRef.current;
           totalAwayTimeRef.current += awayDuration;
           leaveStartTimeRef.current = null;
+          
+          // Lưu lại totalAwayTime ngay lập tức
+          try {
+            const savedStateStr = sessionStorage.getItem(`exam_state_${id}`)
+            if (savedStateStr) {
+              const state = JSON.parse(savedStateStr)
+              state.totalAwayTime = totalAwayTimeRef.current
+              sessionStorage.setItem(`exam_state_${id}`, JSON.stringify(state))
+            }
+          } catch(e) {}
         }
         
         enforceCheatPenalty(cheatCount, totalAwayTimeRef.current);
@@ -177,6 +246,13 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   }
 
   const currentQuestion = questions[currentQuestionIndex]
+
+  let lectureUrl = undefined
+  if (exam?.type === 'practice' && exam?.lectureId) {
+    const gradeStr = exam?.grade || '12'
+    const returnUrl = encodeURIComponent(`/exam/${id}/take`)
+    lectureUrl = `/lectures/lop/${gradeStr}/${exam.lectureId}?returnUrl=${returnUrl}&examId=${id}`
+  }
 
   const handleAnswerSelect = (questionId: string, answer: string, explanation?: string) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }))
@@ -329,6 +405,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
             onToggleHint={() => toggleAiHint(currentQuestion.id)}
             onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
             examType={exam.type}
+            lectureUrl={lectureUrl}
           />
         ) : (
           <EssayQuestion 
@@ -351,6 +428,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
             onToggleHint={(subId) => toggleAiHint(subId as any)}
             onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
             examType={exam.type}
+            lectureUrl={lectureUrl}
           />
         )}
 
@@ -370,14 +448,14 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
               setCurrentQuestionIndex(idx)
             }
           }}
-          onSubmit={handleSubmit}
+          onSubmit={() => setShowSubmitConfirm(true)}
         />
       </div>
 
       <ExamTakeFooter 
         onPrev={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
         onNext={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
-        onSubmit={handleSubmit}
+        onSubmit={() => setShowSubmitConfirm(true)}
         canGoPrev={currentQuestionIndex > 0}
         canGoNext={currentQuestionIndex < questions.length - 1}
         answeredCount={Object.keys(answers).length}
@@ -397,6 +475,20 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         confirmText="Tôi đã hiểu"
         hideCancel={true}
         isDestructive={cheatCount > 1}
+      />
+
+      <ConfirmModal
+        isOpen={showSubmitConfirm}
+        onClose={() => setShowSubmitConfirm(false)}
+        onConfirm={() => {
+          setShowSubmitConfirm(false)
+          handleSubmit()
+        }}
+        title="Xác nhận nộp bài"
+        description="Bạn có chắc chắn muốn nộp bài không? Bạn sẽ không thể thay đổi đáp án sau khi nộp."
+        confirmText="Nộp bài"
+        cancelText="Trở lại làm tiếp"
+        isDestructive={false}
       />
     </div>
   )
