@@ -3,6 +3,8 @@ import 'katex/dist/katex.min.css';
 import { InlineMath, BlockMath } from 'react-katex';
 import katex from 'katex';
 
+
+
 interface MathTextProps {
   content: string;
   className?: string;
