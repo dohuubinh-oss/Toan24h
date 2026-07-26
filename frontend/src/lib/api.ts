@@ -373,6 +373,16 @@ export async function getExams(): Promise<any[]> {
 	}
 }
 
+export async function deleteExam(id: string): Promise<boolean> {
+  try {
+    await apiFetch(`/exams/${id}`, { method: 'DELETE' })
+    return true
+  } catch (error) {
+    console.error("Failed to delete exam:", error)
+    return false
+  }
+}
+
 export async function sendCheatWarning(examId: string, level: number) {
   return apiFetch('/notifications/cheat', {
     method: 'POST',

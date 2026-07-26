@@ -6,7 +6,8 @@ export interface Exam {
   examCode: string;
   grade: string;
   duration: number;
-  type?: 'exam' | 'practice';
+  cate?: 'exam' | 'practice';
+  type?: string; // 'midterm' | 'final' | 'specialized' | etc.
   lectureId?: string;
   questions: Question[];
 }

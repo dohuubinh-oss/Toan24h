@@ -1,0 +1,6 @@
+tmp/
+exam_model.db
+toan24h.db
+uploads/
+Dockerfile
+.dockerignore

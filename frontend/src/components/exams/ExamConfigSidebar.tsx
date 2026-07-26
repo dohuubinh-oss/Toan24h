@@ -62,10 +62,10 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
               <div className="flex bg-slate-100 p-1 rounded-xl">
                 <button
                   type="button"
-                  onClick={() => onChange('type', 'exam')}
+                  onClick={() => onChange('cate', 'exam')}
                   className={cn(
                     "flex-1 py-2.5 text-sm font-medium rounded-lg transition-all",
-                    (!config.type || config.type === 'exam') 
+                    (!config.cate || config.cate === 'exam') 
                       ? "bg-white text-primary shadow-sm" 
                       : "text-slate-500 hover:text-slate-700"
                   )}
@@ -74,10 +74,10 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
                 </button>
                 <button
                   type="button"
-                  onClick={() => onChange('type', 'practice')}
+                  onClick={() => onChange('cate', 'practice')}
                   className={cn(
                     "flex-1 py-2.5 text-sm font-medium rounded-lg transition-all",
-                    config.type === 'practice' 
+                    config.cate === 'practice' 
                       ? "bg-white text-indigo-600 shadow-sm" 
                       : "text-slate-500 hover:text-slate-700"
                   )}
@@ -86,6 +86,29 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
                 </button>
               </div>
             </div>
+            {(!config.cate || config.cate === 'exam') && (
+              <div className="space-y-1.5">
+                <Label className="text-xs ml-1 mb-1" htmlFor="exam-type">Loại đề</Label>
+                <div className="relative">
+                  <select 
+                    id="exam-type"
+                    value={config.type || ''} 
+                    onChange={(e) => onChange('type', e.target.value)}
+                    className={cn(
+                      "w-full appearance-none bg-none px-3 h-12 bg-white border rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer",
+                      errors.type ? "border-red-500" : "border-slate-200"
+                    )}
+                  >
+                    <option value="" disabled>Chọn loại đề</option>
+                    <option value="Giữa kỳ">Giữa kỳ</option>
+                    <option value="Cuối kỳ">Cuối kỳ</option>
+                    <option value="Chuyên đề">Chuyên đề</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none w-5 h-5" />
+                </div>
+                {errors.type && <p className="text-red-500 text-xs mt-1 font-medium ml-1">{errors.type}</p>}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs ml-1 mb-1" htmlFor="exam-grade">Khối lớp</Label>
@@ -119,11 +142,11 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
                     id="exam-duration"
                     className="pr-10" 
                     type="number" 
-                    placeholder={config.type === 'practice' ? "--" : "90"} 
-                    value={config.type === 'practice' ? '' : (config.duration || '')}
+                    placeholder={config.cate === 'practice' ? "--" : "90"} 
+                    value={config.cate === 'practice' ? '' : (config.duration || '')}
                     onChange={(e) => onChange('duration', parseInt(e.target.value) || 0)}
                     error={!!errors.duration}
-                    disabled={config.type === 'practice'}
+                    disabled={config.cate === 'practice'}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 uppercase">Min</span>
                 </div>
@@ -132,7 +155,7 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
             </div>
             
             {/* Lựa chọn bài giảng (chỉ hiện cho practice) */}
-            {config.type === 'practice' && (
+            {config.cate === 'practice' && (
               <div className="space-y-1.5 pt-4 border-t border-slate-100">
                 <Label className="text-xs ml-1 mb-1">Liên kết bài giảng</Label>
                 <div className="flex gap-2">

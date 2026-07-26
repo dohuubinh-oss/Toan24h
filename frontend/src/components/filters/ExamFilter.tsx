@@ -10,9 +10,16 @@ export function ExamFilter() {
     currentGrade, currentDifficulty, currentDuration, currentExamType, setFilter 
   } = useSidebarFilter();
   
-  const grades = ['Lớp 5', 'Lớp 6', 'Lớp 7', 'Lớp 8', 'Lớp 9', 'Chuyển cấp'];
+  const grades = [
+    { label: 'Lớp 5', value: '5' },
+    { label: 'Lớp 6', value: '6' },
+    { label: 'Lớp 7', value: '7' },
+    { label: 'Lớp 8', value: '8' },
+    { label: 'Lớp 9', value: '9' },
+    { label: 'Chuyển cấp', value: 'chuyen_cap' }
+  ];
 
-  const durations = ['15 phút', '45 phút', '90 phút'];
+  const durations = ['0 phút', '15 phút', '45 phút', '90 phút'];
   const examTypes = ['Giữa kỳ', 'Cuối kỳ', 'Chuyên'];
 
   return (
@@ -27,15 +34,15 @@ export function ExamFilter() {
         </summary>
         <div className="mt-3 grid grid-cols-2 gap-2 pl-6">
           {grades.map(grade => (
-            <label key={grade} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1">
+            <label key={grade.value} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1">
               <input 
                 className="text-primary focus:ring-primary h-4 w-4 cursor-pointer" 
                 type="radio"
                 name="filter_grade"
-                checked={currentGrade === grade}
+                checked={currentGrade === grade.value}
                 onChange={() => {}}
-                onClick={() => setFilter('grade', grade)}
-              /> <span className="truncate">{grade}</span>
+                onClick={(e) => { e.preventDefault(); setFilter('grade', grade.value); }}
+              /> <span className="truncate">{grade.label}</span>
             </label>
           ))}
         </div>
@@ -60,7 +67,7 @@ export function ExamFilter() {
                 name="filter_duration"
                 checked={currentDuration === duration}
                 onChange={() => {}}
-                onClick={() => setFilter('duration', duration)}
+                onClick={(e) => { e.preventDefault(); setFilter('duration', duration); }}
               /> {duration}
             </label>
           ))}
@@ -84,7 +91,7 @@ export function ExamFilter() {
                 name="filter_exam_type"
                 checked={currentExamType === type}
                 onChange={() => {}}
-                onClick={() => setFilter('examType', type)}
+                onClick={(e) => { e.preventDefault(); setFilter('examType', type); }}
               /> {type}
             </label>
           ))}

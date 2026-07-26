@@ -63,6 +63,7 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/exams", handlers.CreateExam)
 		v1.GET("/exams", handlers.GetExams)
 		v1.GET("/exams/:id", handlers.GetExamByID)
+		v1.DELETE("/exams/:id", handlers.DeleteExam)
 		v1.POST("/exams/:id/submit", handlers.SubmitExam)
 
 		v1.GET("/exam-results", handlers.GetMyExamResults)

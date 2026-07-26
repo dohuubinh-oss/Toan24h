@@ -13,7 +13,8 @@ type Exam struct {
 	ID          uuid.UUID      `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	Title       string         `gorm:"type:varchar(255);not null" json:"title"`
 	ExamCode    string         `gorm:"type:varchar(50);not null" json:"examCode"`
-	Type        string         `gorm:"type:varchar(50);not null" json:"type"` // 'exam' or 'practice'
+	Cate        string         `gorm:"type:varchar(50);not null;default:'exam'" json:"cate"` // 'exam' or 'practice'
+	Type        string         `gorm:"type:varchar(50);not null" json:"type"` // e.g. midterm, final, etc.
 	Grade       string         `gorm:"type:varchar(50);not null" json:"grade"`
 	Duration    int            `gorm:"not null;default:0" json:"duration"` // in minutes
 	DiffScore   float64        `gorm:"not null;default:0" json:"diffScore"`

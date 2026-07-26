@@ -48,3 +48,15 @@ func GetExamByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": exam})
 }
+
+func DeleteExam(c *gin.Context) {
+	id := c.Param("id")
+
+	// Hard delete the exam
+	if err := config.DB.Unscoped().Where("id = ?", id).Delete(&models.Exam{}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete exam"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Exam deleted successfully"})
+}

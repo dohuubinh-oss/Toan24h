@@ -30,7 +30,8 @@ function CreateExamPageContent() {
     examCode: '',
     grade: '',
     duration: 0,
-    type: urlType as 'exam' | 'practice',
+    cate: urlType as 'exam' | 'practice',
+    type: '',
     questions: []
   })
 
@@ -57,8 +58,9 @@ function CreateExamPageContent() {
   const handleConfigChange = useCallback((field: keyof Exam, value: any) => {
     setExam(prev => {
       const newExam = { ...prev, [field]: value }
-      if (field === 'type' && value === 'practice') {
+      if (field === 'cate' && value === 'practice') {
         newExam.duration = 0
+        newExam.type = ''
       }
       return newExam
     })
@@ -109,6 +111,7 @@ function CreateExamPageContent() {
     const payload = {
       title: exam.title,
       examCode: exam.examCode,
+      cate: exam.cate,
       type: exam.type,
       grade: exam.grade,
       duration: exam.duration,
@@ -146,6 +149,7 @@ function CreateExamPageContent() {
             examCode: exam.examCode,
             grade: exam.grade,
             duration: exam.duration,
+            cate: exam.cate,
             type: exam.type,
             lectureId: exam.lectureId
           }}

@@ -67,7 +67,7 @@ export function validateExamConfig(config: Partial<Exam>): Record<string, string
     errors.grade = 'Vui lòng chọn khối lớp';
   }
 
-  if (config.type !== 'practice') {
+  if (config.cate !== 'practice') {
     if (!config.duration || config.duration <= 0) {
       errors.duration = 'Thời gian phải lớn hơn 0';
     }

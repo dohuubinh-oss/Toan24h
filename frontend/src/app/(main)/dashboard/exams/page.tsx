@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation'
 import { ChevronRight, FileText, CheckCircle, TrendingUp, Search, Plus } from 'lucide-react'
 import ExamTable, { Exam } from '@/components/exams/ExamTable'
 import { Pagination } from '@/components/ui/Pagination'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { deleteExam } from '@/lib/api'
 
 export default function ExamsPage() {
   return (
@@ -19,22 +21,32 @@ function ExamsPageContent() {
   const searchParams = useSearchParams();
   const [exams, setExams] = useState<Exam[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+
+  const fetchExams = async () => {
+    try {
+      setIsLoading(true)
+      const { getExams } = await import('@/lib/api')
+      const data = await getExams()
+      setExams(data || [])
+    } catch (err) {
+      console.error('Failed to fetch exams:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchExams = async () => {
-      try {
-        setIsLoading(true)
-        const { getExams } = await import('@/lib/api')
-        const data = await getExams()
-        setExams(data || [])
-      } catch (err) {
-        console.error('Failed to fetch exams:', err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
     fetchExams()
   }, [])
+
+  const handleDelete = async () => {
+    if (deleteId) {
+      await deleteExam(deleteId);
+      setDeleteId(null);
+      fetchExams();
+    }
+  }
 
   const gradeFilter = searchParams.get('grade') || '';
   const durationFilter = searchParams.get('duration') || '';
@@ -50,11 +62,7 @@ function ExamsPageContent() {
   }
 
   if (gradeFilter) {
-    const match = gradeFilter.match(/\d+/);
-    if (match) {
-      const gradeNum = parseInt(match[0], 10);
-      filteredExams = filteredExams.filter(exam => exam.grade === gradeNum);
-    }
+    filteredExams = filteredExams.filter(exam => exam.grade === gradeFilter);
   }
 
   if (durationFilter) {
@@ -88,7 +96,7 @@ function ExamsPageContent() {
               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
-            <ExamTable exams={filteredExams} />
+            <ExamTable exams={filteredExams} onDelete={(id) => setDeleteId(id)} />
           )}
           
           {!isLoading && filteredExams.length > 0 && (
@@ -104,7 +112,15 @@ function ExamsPageContent() {
             </div>
           )}
           
-      
+      <ConfirmModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Xóa đề thi"
+        description="Bạn có chắc chắn muốn xóa đề thi này? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        isDestructive={true}
+      />
     </div>
   )
 }
