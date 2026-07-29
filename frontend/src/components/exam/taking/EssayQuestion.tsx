@@ -192,7 +192,7 @@ export default function EssayQuestion({
   isHintOpen,
   activeHintQuestionId,
   isFlagged,
-  examType = 'test',
+  examType = 'exam',
   readonly = false,
   lectureUrl,
   aiFeedbacks,

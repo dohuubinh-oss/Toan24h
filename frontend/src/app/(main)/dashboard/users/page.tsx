@@ -1,54 +1,12 @@
 'use client'
 
-import React, { Suspense, useState } from 'react'
+import React, { Suspense, useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import UserHeader from '@/components/users/UserHeader'
 import UserTable, { User } from '@/components/users/UserTable'
 import { toast } from '@/components/ui/ToastProvider'
 import { Pagination } from '@/components/ui/Pagination'
-
-const INITIAL_MOCK_USERS: User[] = [
-  {
-    id: 1,
-    name: 'Nguyễn Văn An',
-    email: 'an.nguyen@student.edu.vn',
-    avatar: null, // Test default avatar
-    role: 'Học sinh',
-    grade: 'Lớp 6',
-    joinDate: '12/05/2023',
-    status: 'Hoạt động'
-  },
-  {
-    id: 2,
-    name: 'Trần Thị Bình',
-    email: 'binh.tt@mathed.vn',
-    avatar: 'https://ui-avatars.com/api/?name=Trần+Thị+Bình&background=fce7f3&color=db2777',
-    role: 'Giáo viên',
-    grade: 'Lớp 9',
-    joinDate: '02/01/2023',
-    status: 'Hoạt động'
-  },
-  {
-    id: 3,
-    name: 'Lê Công Danh',
-    email: 'danh.lc@student.edu.vn',
-    avatar: null, // Test default avatar
-    role: 'Học sinh',
-    grade: 'Chuyển cấp',
-    joinDate: '15/08/2023',
-    status: 'Bị khóa'
-  },
-  {
-    id: 4,
-    name: 'Phạm Minh Đức',
-    email: 'duc.pm@mathed.vn',
-    avatar: 'https://ui-avatars.com/api/?name=Phạm+Minh+Đức&background=dcfce7&color=15803d',
-    role: 'Admin',
-    grade: '—',
-    joinDate: '20/12/2022',
-    status: 'Hoạt động'
-  }
-];
+import { apiFetch } from '@/lib/api'
 
 export default function UsersPage() {
   return (
@@ -65,38 +23,86 @@ function UsersPageContent() {
   const pageParam = searchParams.get('page') || '1'
   const currentPage = parseInt(pageParam, 10) || 1
 
-  const [users, setUsers] = useState<User[]>(INITIAL_MOCK_USERS)
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const handleSoftDelete = (id: number, name: string) => {
-    // API Call simulation
-    setUsers(prevUsers => 
-      prevUsers.map(u => u.id === id ? { ...u, status: 'Bị khóa' } : u)
-    );
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const queryParams = new URLSearchParams();
+      if (q) queryParams.append('q', q);
+      if (role) queryParams.append('role', role);
+      
+      const res = await apiFetch(`/users?${queryParams.toString()}`);
+      
+      const apiUsers = (Array.isArray(res) ? res : []).map((u: any) => ({
+        id: u.id,
+        name: u.fullName,
+        email: u.email,
+        role: u.role,
+        grade: u.grade,
+        joinDate: new Date(u.createdAt).toLocaleDateString('vi-VN'),
+        status: u.status,
+        expiresAt: u.expiresAt
+      }));
+      setUsers(apiUsers);
+    } catch (err: any) {
+      toast.error('Lỗi tải danh sách người dùng');
+    } finally {
+      setLoading(false);
+    }
   }
-  
-  // Filter
-  const filteredUsers = users.filter(user => {
-    const matchQ = !q || user.name.toLowerCase().includes(q.toLowerCase()) || user.email.toLowerCase().includes(q.toLowerCase())
-    const matchRole = !role || user.role === role
-    return matchQ && matchRole
-  })
 
-  // Paginate
+  useEffect(() => {
+    fetchUsers();
+  }, [q, role]);
+
+  const handleSoftDelete = async (id: string, name: string) => {
+    try {
+      await apiFetch(`/users/${id}/status`, { 
+        method: 'PUT',
+        body: JSON.stringify({ status: 'locked' })
+      });
+      toast.success(`Đã khóa tài khoản ${name}`);
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(`Lỗi khóa tài khoản: ${err.message}`);
+    }
+  }
+
+  const handleRecharge = async (id: string, name: string, months: number) => {
+    try {
+      await apiFetch(`/users/${id}/recharge`, {
+        method: 'POST',
+        body: JSON.stringify({ months })
+      });
+      toast.success(`Đã gia hạn thêm ${months} tháng cho ${name}`);
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(`Lỗi nạp tiền: ${err.message}`);
+    }
+  }
+
+  // Paginate locally for now (can be moved to server-side if needed)
   const itemsPerPage = 10
-  const totalItems = filteredUsers.length
+  const totalItems = users.length
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1
   
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems)
-  const paginatedUsers = filteredUsers.slice(startIndex, endIndex)
+  const paginatedUsers = users.slice(startIndex, endIndex)
 
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto relative pb-20">
       <UserHeader totalUsers={totalItems} />
       <div className="space-y-4">
-        <UserTable users={paginatedUsers} onSoftDelete={handleSoftDelete} />
+        {loading ? (
+          <div className="p-8 text-center text-slate-500">Đang tải dữ liệu...</div>
+        ) : (
+          <UserTable users={paginatedUsers} onSoftDelete={handleSoftDelete} onRecharge={handleRecharge} />
+        )}
         
-        {totalItems > 0 && (
+        {!loading && totalItems > 0 && (
           <div className="pt-0">
             <Pagination 
               currentPage={currentPage} 

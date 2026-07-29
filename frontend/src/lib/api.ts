@@ -22,7 +22,13 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
 
   // Inject Access Token
   if (typeof window !== 'undefined') {
-    const accessToken = localStorage.getItem('accessToken')
+    let accessToken = localStorage.getItem('accessToken')
+    
+    // Fallback to cookie if not in localStorage
+    if (!accessToken && document.cookie.includes('accessToken=')) {
+      accessToken = document.cookie.split('accessToken=')[1]?.split(';')[0]
+    }
+    
     if (accessToken && !headers.has('Authorization')) {
       headers.set('Authorization', `Bearer ${accessToken}`)
     }

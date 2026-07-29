@@ -1,5 +1,6 @@
 import React from 'react'
 import HomeNavigation from '@/components/home/HomeNavigation'
+import SubscriptionBanner from '@/components/layout/SubscriptionBanner'
 import { ExamProvider } from '@/contexts/ExamContext'
 
 export default function DashboardLayout({
@@ -10,6 +11,7 @@ export default function DashboardLayout({
   return (
     <ExamProvider>
       <div className="flex flex-col min-h-screen bg-slate-50">
+        <SubscriptionBanner />
         <HomeNavigation isLoggedIn={true} />
         {children}
       </div>

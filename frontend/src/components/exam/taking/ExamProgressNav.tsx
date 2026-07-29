@@ -18,7 +18,7 @@ export default function ExamProgressNav({
   completedQuestions,
   totalQuestions,
   timeLeft = '00:00',
-  examType = 'test',
+  examType = 'exam',
   points = 0,
   onBack,
 }: ExamProgressNavProps) {
@@ -56,7 +56,7 @@ export default function ExamProgressNav({
           </div>
         </div>
 
-        {examType === 'test' ? (
+        {examType === 'exam' ? (
           <div className="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 dark:border-red-900/30">
             <Timer className="w-5 h-5 text-red-500 animate-pulse" />
             <span className="text-red-600 dark:text-red-400 font-bold tabular-nums text-lg">

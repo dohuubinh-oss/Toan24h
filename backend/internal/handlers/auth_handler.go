@@ -84,6 +84,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	if user.Status == "locked" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Account is locked"})
+		return
+	}
+
 	if err := utils.CheckPasswordHash(req.Password, user.PasswordHash); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
@@ -105,12 +110,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		"accessToken":  accessToken,
 		"refreshToken": refreshToken,
 		"user": gin.H{
-			"id":       user.ID,
-			"email":    user.Email,
-			"fullName": user.FullName,
-			"role":     user.Role,
-			"grade":    user.Grade,
-			"points":   user.Points,
+			"id":        user.ID,
+			"email":     user.Email,
+			"fullName":  user.FullName,
+			"role":      user.Role,
+			"grade":     user.Grade,
+			"points":    user.Points,
+			"status":    user.Status,
+			"expiresAt": user.ExpiresAt,
 		},
 	})
 }

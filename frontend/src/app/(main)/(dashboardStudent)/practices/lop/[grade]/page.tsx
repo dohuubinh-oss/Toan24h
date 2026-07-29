@@ -54,7 +54,7 @@ export default async function GradePracticesPage({
   }
 
   // Filter for practice and grade
-  let practicesData = allExams.filter((exam: any) => exam.type === 'practice' && String(exam.grade) === String(grade));
+  let practicesData = allExams.filter((exam: any) => exam.cate === 'practice' && String(exam.grade) === String(grade));
 
   if (practiceIdsArray && practiceIdsArray.length > 0) {
     practicesData = practicesData.filter((item: any) => practiceIdsArray.includes(item.id));

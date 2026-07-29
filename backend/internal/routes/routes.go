@@ -36,6 +36,7 @@ func SetupRouter() *gin.Engine {
 
 	// Auth & other Handlers
 	authHandler := handlers.NewAuthHandler(config.DB)
+	userHandler := handlers.NewUserHandler(config.DB)
 
 	// API Version 1
 	v1 := r.Group("/api/v1")
@@ -44,6 +45,7 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/auth/register", authHandler.Register)
 		v1.POST("/auth/login", authHandler.Login)
 		v1.POST("/auth/refresh", authHandler.Refresh)
+		v1.POST("/auth/telegram-login", authHandler.TelegramLogin)
 
 		v1.POST("/uploads/temp", handlers.UploadTempImage)
 
@@ -84,8 +86,14 @@ func SetupRouter() *gin.Engine {
 		// User Routes
 		users := protected.Group("/users")
 		{
+			users.GET("/me", userHandler.GetProfile)
+			users.GET("", middleware.RoleMiddleware("admin"), userHandler.GetUsers)
+			users.PUT("/:id/status", middleware.RoleMiddleware("admin"), userHandler.UpdateUserStatus)
+			users.POST("/:id/recharge", middleware.RoleMiddleware("admin"), userHandler.RechargeUser)
+			
 			users.PUT("/me/grade", authHandler.UpdateGrade)
 			users.POST("/me/deduct-points", authHandler.DeductPoints)
+			users.POST("/me/link-telegram", authHandler.LinkTelegram)
 		}
 
 		bookmarkHandler := handlers.NewBookmarkHandler(config.DB)

@@ -248,7 +248,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   const currentQuestion = questions[currentQuestionIndex]
 
   let lectureUrl = undefined
-  if (exam?.type === 'practice' && exam?.lectureId) {
+  if (exam?.cate === 'practice' && exam?.lectureId) {
     const gradeStr = exam?.grade || '12'
     const returnUrl = encodeURIComponent(`/exam/${id}/take`)
     lectureUrl = `/lectures/lop/${gradeStr}/${exam.lectureId}?returnUrl=${returnUrl}&examId=${id}`
@@ -323,7 +323,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   }
 
   const handleBack = () => {
-    if (exam.type === 'practice' && exam.lectureId) {
+    if (exam.cate === 'practice' && exam.lectureId) {
       router.push(`/lectures/lop/${exam.grade}/${exam.lectureId}`)
     } else {
       router.push(`/student`)
@@ -335,7 +335,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   const timeLeftStr = "45:00"
 
   const toggleAiHint = (questionId: string) => {
-    if (exam.type === 'test') {
+    if (exam.cate === 'exam') {
       toast.error("Gợi ý AI không khả dụng trong chế độ làm bài thi")
       return
     }
@@ -384,7 +384,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         completedQuestions={Object.keys(answers).length} 
         totalQuestions={questions.length} 
         timeLeft={timeLeftStr}
-        examType={exam.type}
+        examType={exam.cate}
         points={userPoints}
         onBack={handleBack}
       />
@@ -404,7 +404,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
             onSelectOption={(optId, explanation) => handleAnswerSelect(currentQuestion.id, optId, explanation)}
             onToggleHint={() => toggleAiHint(currentQuestion.id)}
             onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
-            examType={exam.type}
+            examType={exam.cate}
             lectureUrl={lectureUrl}
           />
         ) : (
@@ -427,7 +427,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
             onAnswerChange={(id, val, explanation) => handleAnswerSelect(id as any, val, explanation)}
             onToggleHint={(subId) => toggleAiHint(subId as any)}
             onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
-            examType={exam.type}
+            examType={exam.cate}
             lectureUrl={lectureUrl}
           />
         )}

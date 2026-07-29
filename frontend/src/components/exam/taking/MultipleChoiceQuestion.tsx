@@ -41,7 +41,7 @@ export default function MultipleChoiceQuestion({
   readonly = false,
   isHintOpen,
   isFlagged,
-  examType = 'test',
+  examType = 'exam',
   lectureUrl,
   onSelectOption,
   onToggleHint,
