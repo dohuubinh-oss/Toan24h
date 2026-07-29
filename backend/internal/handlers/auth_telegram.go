@@ -115,9 +115,15 @@ func (h *AuthHandler) TelegramLogin(c *gin.Context) {
 		return
 	}
 
+	// Set HttpOnly cookies
+	c.SetCookie("accessToken", accessToken, 24*60*60, "/", "", false, true)
+	c.SetCookie("refreshToken", refreshToken, 7*24*60*60, "/", "", false, true)
+	// Set normal cookies for frontend routing (middleware.ts)
+	c.SetCookie("userRole", user.Role, 24*60*60, "/", "", false, false)
+	c.SetCookie("userGrade", user.Grade, 24*60*60, "/", "", false, false)
+
 	c.JSON(http.StatusOK, gin.H{
-		"token": accessToken,
-		"refreshToken": refreshToken,
+		"message": "Login successful",
 		"user": gin.H{
 			"id":       user.ID,
 			"email":    user.Email,

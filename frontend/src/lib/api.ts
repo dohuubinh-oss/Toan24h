@@ -20,64 +20,41 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
     headers.set('Content-Type', 'application/json')
   }
 
-  // Inject Access Token
-  if (typeof window !== 'undefined') {
-    let accessToken = localStorage.getItem('accessToken')
-    
-    // Fallback to cookie if not in localStorage
-    if (!accessToken && document.cookie.includes('accessToken=')) {
-      accessToken = document.cookie.split('accessToken=')[1]?.split(';')[0]
-    }
-    
-    if (accessToken && !headers.has('Authorization')) {
-      headers.set('Authorization', `Bearer ${accessToken}`)
-    }
-  }
-
   const response = await fetch(url, {
     ...options,
     headers,
+    credentials: 'include',
   })
 
   if (!response.ok) {
     if (response.status === 401 && typeof window !== 'undefined' && !options.url_is_refresh) {
       // Try refresh token
-      const refreshToken = localStorage.getItem('refreshToken')
-      if (refreshToken) {
-        try {
-          const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refreshToken })
+      // Try refresh token via HttpOnly cookies
+      try {
+        const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        })
+        
+        if (refreshRes.ok) {
+          // Backend sets the new accessToken cookie automatically
+          // Retry original request
+          const retryRes = await fetch(url, {
+            ...options,
+            headers,
+            credentials: 'include'
           })
-          
-          if (refreshRes.ok) {
-            const refreshData = await refreshRes.json()
-            localStorage.setItem('accessToken', refreshData.accessToken)
-            
-            // Retry original request
-            const newHeaders = new Headers(options.headers || {})
-            newHeaders.set('Authorization', `Bearer ${refreshData.accessToken}`)
-            if (!newHeaders.has('Content-Type') && !(options.body instanceof FormData)) {
-              newHeaders.set('Content-Type', 'application/json')
-            }
-            
-            const retryRes = await fetch(url, {
-              ...options,
-              headers: newHeaders,
-            })
-            if (retryRes.ok) {
-              return retryRes.json()
-            }
-          } else {
-            // Refresh failed, clear tokens
-            localStorage.removeItem('accessToken')
-            localStorage.removeItem('refreshToken')
-            window.location.href = '/login'
+          if (retryRes.ok) {
+            return retryRes.json()
           }
-        } catch (e) {
-          console.error("Refresh token error", e)
+        } else {
+          // Refresh failed, clear client user data and redirect to login
+          localStorage.removeItem('user')
+          window.location.href = '/login'
         }
+      } catch (e) {
+        console.error("Refresh token error", e)
       }
     }
 

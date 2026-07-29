@@ -28,8 +28,8 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const userStr = localStorage.getItem('user')
-      const token = localStorage.getItem('accessToken') || document.cookie.includes('accessToken')
-      if (userStr && token) {
+      const isLoggedIn = document.cookie.includes('userRole=')
+      if (userStr && isLoggedIn) {
         setIsLoggedState(true)
         try {
           const user = JSON.parse(userStr)

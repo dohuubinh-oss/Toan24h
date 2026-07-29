@@ -106,9 +106,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// Set HttpOnly cookies
+	c.SetCookie("accessToken", accessToken, 24*60*60, "/", "", false, true)
+	c.SetCookie("refreshToken", refreshToken, 7*24*60*60, "/", "", false, true)
+	// Set normal cookies for frontend routing (middleware.ts)
+	c.SetCookie("userRole", user.Role, 24*60*60, "/", "", false, false)
+	c.SetCookie("userGrade", user.Grade, 24*60*60, "/", "", false, false)
+
 	c.JSON(http.StatusOK, gin.H{
-		"accessToken":  accessToken,
-		"refreshToken": refreshToken,
+		"message": "Login successful",
 		"user": gin.H{
 			"id":        user.ID,
 			"email":     user.Email,
@@ -122,18 +128,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
-type RefreshRequest struct {
-	RefreshToken string `json:"refreshToken" binding:"required"`
-}
-
 func (h *AuthHandler) Refresh(c *gin.Context) {
-	var req RefreshRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	refreshToken, err := c.Cookie("refreshToken")
+	if err != nil || refreshToken == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing refresh token"})
 		return
 	}
 
-	claims, err := utils.ValidateToken(req.RefreshToken)
+	claims, err := utils.ValidateToken(refreshToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
 		return
@@ -151,8 +153,10 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
+	c.SetCookie("accessToken", accessToken, 24*60*60, "/", "", false, true)
+
 	c.JSON(http.StatusOK, gin.H{
-		"accessToken": accessToken,
+		"message": "Token refreshed successfully",
 	})
 }
 
@@ -198,10 +202,12 @@ func (h *AuthHandler) UpdateGrade(c *gin.Context) {
 		return
 	}
 
+	c.SetCookie("accessToken", accessToken, 24*60*60, "/", "", false, true)
+	c.SetCookie("refreshToken", refreshToken, 7*24*60*60, "/", "", false, true)
+	c.SetCookie("userGrade", user.Grade, 24*60*60, "/", "", false, false)
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Grade updated successfully",
-		"accessToken":  accessToken,
-		"refreshToken": refreshToken,
 		"grade":        user.Grade,
 	})
 }
@@ -244,4 +250,12 @@ func (h *AuthHandler) DeductPoints(c *gin.Context) {
 		"message": "Points deducted successfully",
 		"points":  user.Points,
 	})
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	c.SetCookie("accessToken", "", -1, "/", "", false, true)
+	c.SetCookie("refreshToken", "", -1, "/", "", false, true)
+	c.SetCookie("userRole", "", -1, "/", "", false, false)
+	c.SetCookie("userGrade", "", -1, "/", "", false, false)
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }

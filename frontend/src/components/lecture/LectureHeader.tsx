@@ -19,7 +19,7 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (id && typeof window !== 'undefined' && localStorage.getItem('accessToken')) {
+    if (id && typeof window !== 'undefined' && document.cookie.includes('userRole=')) {
       getBookmarkedLectures().then(bookmarks => {
         const found = bookmarks.some((b: any) => b.lectureId === id)
         setIsBookmarked(found)
@@ -29,7 +29,7 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
 
   const toggleBookmark = async () => {
     if (!id) return;
-    if (typeof window !== 'undefined' && !localStorage.getItem('accessToken')) {
+    if (typeof window !== 'undefined' && !document.cookie.includes('userRole=')) {
       toast.error("Vui lòng đăng nhập để lưu bài viết.")
       return;
     }

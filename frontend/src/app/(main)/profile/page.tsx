@@ -15,14 +15,12 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('accessToken') || document.cookie.split('accessToken=')[1]?.split(';')[0]
-        if (!token) {
+        // Dùng apiFetch để có tích hợp HttpOnly cookie và retry logic
+        const res = await apiFetch('/users/me')
+        if (res.error) {
           router.push('/login')
           return
         }
-
-        // Dùng apiFetch để có tích hợp Access Token tự động và retry logic
-        const res = await apiFetch('/users/me')
         
         if (res.data) {
           setUser(res.data)

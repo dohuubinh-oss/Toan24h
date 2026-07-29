@@ -5,10 +5,8 @@ export async function login(data: any) {
     method: 'POST',
     body: JSON.stringify(data)
   })
-  if (res.accessToken && res.refreshToken) {
+  if (res.user) {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('accessToken', res.accessToken)
-      localStorage.setItem('refreshToken', res.refreshToken)
       localStorage.setItem('user', JSON.stringify(res.user))
     }
   }
@@ -31,14 +29,17 @@ export async function updateGrade(grade: string) {
   return res
 }
 
-export function logout() {
+export async function logout() {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
-    document.cookie = 'accessToken=; path=/; max-age=0'
-    document.cookie = 'userRole=; path=/; max-age=0'
-    document.cookie = 'userGrade=; path=/; max-age=0'
+    
+    // Call backend to clear HttpOnly cookies
+    try {
+      await apiFetch('/auth/logout', { method: 'POST' })
+    } catch (error) {
+      console.error("Logout API failed:", error)
+    }
+    
     window.location.href = '/login'
 	}
 }

@@ -65,6 +65,7 @@ export default function RegisterForm() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(user),
       })
       
@@ -75,13 +76,9 @@ export default function RegisterForm() {
 
       const res = await response.json()
       
-      document.cookie = `accessToken=${res.token}; path=/; max-age=86400`
-      document.cookie = `userRole=${res.user?.role || ''}; path=/; max-age=86400`
-      document.cookie = `userGrade=${res.user?.grade || ''}; path=/; max-age=86400`
-      
-      localStorage.setItem('accessToken', res.token)
-      if (res.refreshToken) localStorage.setItem('refreshToken', res.refreshToken)
-      localStorage.setItem('user', JSON.stringify(res.user))
+      if (res.user) {
+        localStorage.setItem('user', JSON.stringify(res.user))
+      }
       
       if (res.user?.role === 'admin') {
         router.push('/dashboard')

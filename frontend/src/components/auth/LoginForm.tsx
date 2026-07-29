@@ -46,11 +46,13 @@ export default function LoginForm() {
         password: data.password
       })
       
-      // Update cookie so middleware in nextjs allows access to protected routes
-      // Note: For real security, HTTPOnly cookie from backend is better, but this handles Next.js middleware requirement for now
-      document.cookie = `accessToken=${res.accessToken}; path=/; max-age=86400`
-      document.cookie = `userRole=${res.user?.role || ''}; path=/; max-age=86400`
-      document.cookie = `userGrade=${res.user?.grade || ''}; path=/; max-age=86400`
+      // Note: The backend now sets HttpOnly cookies automatically, and regular cookies for userRole/userGrade
+      // so Next.js middleware will read them seamlessly.
+
+      // Update user state in local storage (optional, for UI)
+      if (res.user) {
+        localStorage.setItem('user', JSON.stringify(res.user))
+      }
       
       if (res.user?.role === 'admin') {
         router.push('/dashboard')
@@ -77,6 +79,7 @@ export default function LoginForm() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(user),
       })
       
@@ -87,13 +90,9 @@ export default function LoginForm() {
 
       const res = await response.json()
       
-      document.cookie = `accessToken=${res.token}; path=/; max-age=86400`
-      document.cookie = `userRole=${res.user?.role || ''}; path=/; max-age=86400`
-      document.cookie = `userGrade=${res.user?.grade || ''}; path=/; max-age=86400`
-      
-      localStorage.setItem('accessToken', res.token)
-      if (res.refreshToken) localStorage.setItem('refreshToken', res.refreshToken)
-      localStorage.setItem('user', JSON.stringify(res.user))
+      if (res.user) {
+        localStorage.setItem('user', JSON.stringify(res.user))
+      }
       
       if (res.user?.role === 'admin') {
         router.push('/dashboard')
