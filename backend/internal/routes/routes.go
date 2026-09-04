@@ -43,6 +43,8 @@ func SetupRouter() *gin.Engine {
 	// Auth & other Handlers
 	authHandler := handlers.NewAuthHandler(config.DB)
 	userHandler := handlers.NewUserHandler(config.DB)
+	paymentHandler := handlers.NewPaymentHandler(config.DB)
+	webhookHandler := handlers.NewWebhookHandler(config.DB)
 
 	// API Version 1
 	v1 := r.Group("/api/v1")
@@ -53,6 +55,8 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/auth/refresh", authHandler.Refresh)
 		v1.POST("/auth/telegram-login", authHandler.TelegramLogin)
 		v1.POST("/auth/logout", authHandler.Logout)
+
+		v1.POST("/webhooks/bank", webhookHandler.HandleSePayWebhook)
 
 		v1.POST("/uploads/temp", handlers.UploadTempImage)
 
@@ -101,6 +105,12 @@ func SetupRouter() *gin.Engine {
 			users.PUT("/me/grade", authHandler.UpdateGrade)
 			users.POST("/me/deduct-points", authHandler.DeductPoints)
 			users.POST("/me/link-telegram", authHandler.LinkTelegram)
+		}
+
+		payments := protected.Group("/payments")
+		{
+			payments.POST("/create", paymentHandler.CreatePayment)
+			payments.GET("/my-transactions", paymentHandler.GetMyTransactions)
 		}
 
 		bookmarkHandler := handlers.NewBookmarkHandler(config.DB)
