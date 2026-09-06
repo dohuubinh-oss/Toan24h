@@ -66,11 +66,13 @@ func SetupRouter() *gin.Engine {
 		// Notifications
 		v1.GET("/notifications", handlers.GetMyNotifications)
 		v1.POST("/notifications/:id/read", handlers.MarkNotificationRead)
+		v1.DELETE("/notifications", handlers.DeleteAllNotifications)
 		v1.POST("/notifications/cheat", handlers.CreateCheatNotification)
 		
 		v1.GET("/questions/:id", handlers.GetQuestionByID)
 		v1.PUT("/questions/:id", handlers.UpdateQuestion)
 		v1.DELETE("/questions/:id", handlers.DeleteQuestion)
+		v1.POST("/questions/:id/report", handlers.ReportQuestion)
 		
 		// Exams
 		v1.POST("/exams", handlers.CreateExam)
@@ -79,9 +81,7 @@ func SetupRouter() *gin.Engine {
 		v1.DELETE("/exams/:id", handlers.DeleteExam)
 		v1.POST("/exams/:id/submit", handlers.SubmitExam)
 
-		v1.GET("/exam-results", handlers.GetMyExamResults)
 		v1.GET("/exam-results/:id", handlers.GetExamResultByID)
-		v1.POST("/exam-results/:id/appeal", handlers.AppealExamResult)
 		
 		// Lectures
 		v1.POST("/lectures", lectureController.CreateLecture)
@@ -116,6 +116,22 @@ func SetupRouter() *gin.Engine {
 		bookmarkHandler := handlers.NewBookmarkHandler(config.DB)
 		protected.POST("/lectures/:id/bookmark", bookmarkHandler.ToggleLectureBookmark)
 		protected.GET("/bookmarks/lectures", bookmarkHandler.GetBookmarkedLectures)
+		
+		protected.GET("/exam-results", handlers.GetMyExamResults)
+		protected.POST("/exam-results/:id/appeal", handlers.AppealExamResult)
+		
+		appeals := protected.Group("/appeals")
+		appeals.Use(middleware.RoleMiddleware("admin"))
+		{
+			appeals.GET("", handlers.GetAppeals)
+			appeals.POST("/:id/resolve", handlers.ResolveAppeal)
+		}
+		
+		reportedQuestions := protected.Group("/questions/reported")
+		reportedQuestions.Use(middleware.RoleMiddleware("admin"))
+		{
+			reportedQuestions.GET("", handlers.GetReportedQuestions)
+		}
 	}
 
 	return r

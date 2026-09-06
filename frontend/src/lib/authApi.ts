@@ -66,3 +66,14 @@ export async function deductPoints(amount: number) {
   return res
 }
 
+export async function getUserProfile() {
+  const res = await apiFetch('/users/me', {
+    method: 'GET'
+  })
+  if (res && res.data) {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(res.data))
+    }
+  }
+  return res
+}

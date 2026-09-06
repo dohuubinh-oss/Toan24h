@@ -48,8 +48,9 @@ type ResultDetail struct {
 	AIExplanation string    `gorm:"type:text" json:"aiExplanation"`
 	ErrorLocation string    `gorm:"type:text" json:"errorLocation"` // Quote where the student made a mistake
 	IsAppealed    bool      `gorm:"not null;default:false" json:"isAppealed"`
-	AppealStatus  string    `gorm:"type:varchar(20)" json:"appealStatus"` // PENDING, APPROVED, REJECTED
-	AppealMessage string    `gorm:"type:text" json:"appealMessage"`
+	AppealStatus    string    `gorm:"type:varchar(20)" json:"appealStatus"` // PENDING, APPROVED, REJECTED
+	AppealMessage   string    `gorm:"type:text" json:"appealMessage"`
+	TeacherFeedback string    `gorm:"type:text" json:"teacherFeedback"`
 
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`

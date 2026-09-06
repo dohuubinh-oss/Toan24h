@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import ExamProgressNav from '@/components/exam/taking/ExamProgressNav'
 import QuestionMapSidebar from '@/components/exam/taking/QuestionMapSidebar'
 import MultipleChoiceQuestion from '@/components/exam/taking/MultipleChoiceQuestion'
@@ -8,7 +9,7 @@ import EssayQuestion from '@/components/exam/taking/EssayQuestion'
 import ExamTakeFooter from '@/components/exam/taking/ExamTakeFooter'
 import AIHintPanel from '@/components/exam/taking/AIHintPanel'
 import { getExamById, getQuestions } from '@/lib/api'
-import { deductPoints } from '@/lib/authApi'
+import { deductPoints, getUserProfile } from '@/lib/authApi'
 import { Question } from '@/types/question'
 import { useToast } from '@/components/ui/ToastProvider'
 import { useRouter } from 'next/navigation'
@@ -73,7 +74,9 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         const finalAnswers = parsed?.answers || {};
         const answersList = Object.entries(finalAnswers).map(([qId, ans]) => ({ questionId: qId, studentAnswer: ans as string, isEssay: false }));
         import('@/lib/api').then(mod => mod.submitExam(id, answersList).then(() => {
-          router.push(`/exam/${id}/result`);
+          sessionStorage.removeItem(`exam_state_${id}`);
+          toast.success("Bài làm của bạn đang được chấm");
+          router.back();
         }));
     } else if (restoredCheatCount > 0) {
         setShowCheatModal(true)
@@ -98,14 +101,25 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   }, [answers, explanations, flaggedQuestions, cheatCount, isRestored, id])
 
   useEffect(() => {
-    // Get user points
-    const userStr = localStorage.getItem('user')
-    if (userStr) {
+    // Get user points from backend to ensure it's up to date
+    const fetchUserPoints = async () => {
       try {
-        const user = JSON.parse(userStr)
-        setUserPoints(user.points || 0)
-      } catch (e) {}
+        const res = await getUserProfile()
+        if (res && res.data) {
+          setUserPoints(res.data.points != null ? Number(res.data.points) : 0)
+        }
+      } catch (e) {
+        // Fallback to local storage
+        const userStr = localStorage.getItem('user')
+        if (userStr) {
+          try {
+            const user = JSON.parse(userStr)
+            setUserPoints(user.points != null ? Number(user.points) : 0)
+          } catch (e) {}
+        }
+      }
     }
+    fetchUserPoints()
 
     // Fetch exam
     const fetchExamData = async () => {
@@ -152,7 +166,9 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         // Auto submit
         const answersList = Object.entries(answers).map(([qId, ans]) => ({ questionId: qId, studentAnswer: ans as string, isEssay: false })); // Approximate
         import('@/lib/api').then(mod => mod.submitExam(id, answersList).then(() => {
-          router.push(`/exam/${id}/result`);
+          sessionStorage.removeItem(`exam_state_${id}`);
+          toast.success("Bài làm của bạn đang được chấm");
+          router.back();
         }));
         return true; // was submitted
       }
@@ -311,8 +327,15 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
 
       const res = await import('@/lib/api').then(mod => mod.submitExam(id, answersList))
       if (res && res.status === 'success') {
-        toast.success("Nộp bài thành công! AI đang chấm điểm...")
-        router.push(`/student`)
+        sessionStorage.removeItem(`exam_state_${id}`);
+        toast.success("Bài làm của bạn đang được chấm")
+        
+        // Force full page reload on the previous URL to clear Next.js client router cache
+        if (typeof window !== 'undefined' && document.referrer) {
+          window.location.href = document.referrer;
+        } else {
+          router.back();
+        }
       } else {
         toast.error("Nộp bài thất bại")
       }
@@ -390,6 +413,30 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
       />
 
       <div className="flex-1 flex overflow-hidden relative pb-[88px] w-full">
+        {/* Left Navigation Overlay */}
+        {currentQuestionIndex > 0 && (
+          <button 
+            onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+            className="absolute left-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-start pl-2 md:pl-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-r hover:from-slate-200/50 hover:to-transparent transition-all group"
+          >
+            <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+              <ChevronLeft size={24} />
+            </div>
+          </button>
+        )}
+
+        {/* Right Navigation Overlay */}
+        {currentQuestionIndex < questions.length - 1 && (
+          <button 
+            onClick={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
+            className="absolute right-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
+          >
+            <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+              <ChevronRight size={24} />
+            </div>
+          </button>
+        )}
+
         {currentQuestion.type_question === 'single' && currentQuestion.type === 'Trắc nghiệm' ? (
           <MultipleChoiceQuestion 
             questionId={currentQuestion.id as any}

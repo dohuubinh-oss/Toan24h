@@ -22,8 +22,8 @@ export function LectureCard({
   thumbnailUrl,
   grade,
 }: LectureCardProps) {
-  const isCompleted = status === 'completed';
-  const isInProgress = status === 'in_progress';
+  const isCompleted = status === 'COMPLETED';
+  const isInProgress = status === 'PENDING';
   
   // Xây dựng URL động, nếu có grade thì chèn grade vào URL
   const hrefUrl = grade ? `/lectures/lop/${grade}/${id}` : `/lectures/${id}`;

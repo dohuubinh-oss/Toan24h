@@ -30,6 +30,18 @@ func MarkNotificationRead(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
+// DeleteAllNotifications deletes all notifications for the current user
+func DeleteAllNotifications(c *gin.Context) {
+	// For testing, hardcode user ID or extract from auth
+	userID := "00000000-0000-0000-0000-000000000001" // Assuming fixed user 1 for now
+
+	if err := config.DB.Where("user_id = ?", userID).Delete(&models.Notification{}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete notifications"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
 type CheatNotificationRequest struct {
 	ExamID string `json:"examId"`
 	Level  int    `json:"level"`

@@ -25,7 +25,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
       const data = await getExamResultById(id)
       if (data) {
         setResultData(data)
-        if (data.status === 'completed') {
+        if (data.status === 'COMPLETED') {
           setLoading(false)
           clearInterval(interval)
         }
@@ -94,11 +94,15 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
       answers[d.questionId] = d.studentAnswer || ''
       
       aiFeedbacks[d.questionId] = {
+        detailId: d.id,
         isCorrect: d.isCorrect,
         score: d.score,
         maxScore: d.Question?.difficultyPoint || 0,
         aiExplanation: d.aiExplanation,
-        errorLocation: d.errorLocation
+        errorLocation: d.errorLocation,
+        isAppealed: d.isAppealed,
+        appealStatus: d.appealStatus,
+        teacherFeedback: d.teacherFeedback
       }
     })
 
@@ -154,6 +158,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const mainContent = currentQuestion ? (
     currentQuestion.type === 'Trắc nghiệm' ? (
       <MultipleChoiceQuestion 
+        resultId={resultData?.id}
         questionId={currentQuestion.id}
         index={currentQuestionIndex}
         topic={currentQuestion.topic || ""}
@@ -162,12 +167,14 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         selectedOptionId={mappedData.answers[currentQuestion.id] || null}
         correctOptionId={currentQuestion.correctAnswer}
         aiExplanation={mappedData.aiFeedbacks[currentQuestion.id]?.aiExplanation}
+        aiFeedback={mappedData.aiFeedbacks[currentQuestion.id]}
         readonly={true}
         isHintOpen={false}
         isFlagged={false}
       />
     ) : (
       <EssayQuestion 
+        resultId={resultData?.id}
         questionId={currentQuestion.id}
         index={currentQuestionIndex}
         content={currentQuestion.content}

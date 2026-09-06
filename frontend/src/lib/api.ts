@@ -1,4 +1,7 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1'
+const isServer = typeof window === 'undefined';
+const API_BASE_URL = isServer 
+  ? (process.env.BACKEND_URL ? `${process.env.BACKEND_URL}${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}` : 'http://localhost:8080/api/v1')
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1');
 
 import { Question } from '@/types/question'
 
@@ -345,7 +348,7 @@ export async function createExam(payload: any): Promise<any> {
 
 export async function getExams(): Promise<any[]> {
   try {
-    const response = await apiFetch('/exams')
+    const response = await apiFetch('/exams', { cache: 'no-store' })
     if (response.data) {
       return response.data
     }
@@ -406,5 +409,72 @@ export async function getExamResultById(id: string): Promise<any> {
   } catch (error) {
     console.error(`Failed to fetch exam result ${id}:`, error)
     return null
+  }
+}
+
+export async function getMyExamResults(token?: string): Promise<any[]> {
+  try {
+    const headers: any = {}
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    const response = await apiFetch(`/exam-results`, { headers, cache: 'no-store' })
+    if (response.data) {
+      return response.data
+    }
+    return []
+  } catch (error) {
+    console.error(`Failed to fetch my exam results:`, error)
+    return []
+  }
+}
+
+export async function getPendingAppeals(): Promise<any[]> {
+  try {
+    const response = await apiFetch(`/appeals`)
+    if (response.data) {
+      return response.data
+    }
+    return []
+  } catch (error) {
+    console.error(`Failed to fetch pending appeals:`, error)
+    return []
+  }
+}
+
+export async function resolveAppeal(detailId: string, data: { status: string, newScore: number, teacherFeedback: string }): Promise<any> {
+  const response = await apiFetch(`/appeals/${detailId}/resolve`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+  return response
+}
+
+export async function submitAppeal(resultId: string, detailId: string, appealMessage: string): Promise<any> {
+  const response = await apiFetch(`/exam-results/${resultId}/appeal`, {
+    method: 'POST',
+    body: JSON.stringify({ detailId, appealMessage }),
+  })
+  return response
+}
+
+export async function reportQuestion(questionId: string, message: string): Promise<any> {
+  const response = await apiFetch(`/questions/${questionId}/report`, {
+    method: 'POST',
+    body: JSON.stringify({ message }),
+  })
+  return response
+}
+
+export async function getReportedQuestions(): Promise<any[]> {
+  try {
+    const response = await apiFetch(`/questions/reported`)
+    if (response.status === 'success' && response.data) {
+      return response.data
+    }
+    return []
+  } catch (error) {
+    console.error(`Failed to fetch reported questions:`, error)
+    return []
   }
 }

@@ -359,3 +359,51 @@ func DeleteQuestion(c *gin.Context) {
 
 	c.JSON(http.StatusOK, APIResponse{Status: "success"})
 }
+
+// ReportQuestion xử lý khi học sinh báo cáo lỗi đề thi
+func ReportQuestion(c *gin.Context) {
+	id := c.Param("id")
+	
+	var req struct {
+		Message string `json:"message" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{Status: "error", Error: err.Error()})
+		return
+	}
+
+	var q models.Question
+	if err := config.DB.First(&q, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, APIResponse{Status: "error", Error: "Question not found"})
+		return
+	}
+
+	// Update flags
+	q.IsReported = true
+	// Nối thêm tin nhắn nếu đã có người report trước đó (hoặc thay thế)
+	if q.ReportMessage != "" {
+		q.ReportMessage = q.ReportMessage + " | " + req.Message
+	} else {
+		q.ReportMessage = req.Message
+	}
+
+	if err := config.DB.Save(&q).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: "Failed to save report"})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{Status: "success", Data: q})
+}
+
+// GetReportedQuestions lấy danh sách câu hỏi bị báo cáo lỗi (dành cho Admin)
+func GetReportedQuestions(c *gin.Context) {
+	var questions []models.Question
+	
+	// Only fetch questions that are reported
+	if err := config.DB.Where("is_reported = ?", true).Order("updated_at desc").Find(&questions).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{Status: "success", Data: questions})
+}

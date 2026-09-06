@@ -22,7 +22,7 @@ export function PracticeCard({
   status,
   score,
 }: PracticeCardProps) {
-  const isCompleted = status === 'completed';
+  const isCompleted = status === 'COMPLETED';
   const isPassed = isCompleted && score !== undefined && score >= questionCount / 2;
   const isFailed = isCompleted && !isPassed;
   

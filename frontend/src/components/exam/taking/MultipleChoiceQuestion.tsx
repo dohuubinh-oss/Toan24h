@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
-import { Sparkles, CheckCircle2, Flag, BookOpen } from 'lucide-react'
+import { Sparkles, CheckCircle2, Flag, BookOpen, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import MathText from '@/components/ui/MathText'
 import ExplanationPopup from './ExplanationPopup'
+import { useToast } from '@/components/ui/ToastProvider'
+import { reportQuestion, submitAppeal } from '@/lib/api'
 
 export interface MultipleChoiceOption {
   id: string
@@ -10,6 +12,7 @@ export interface MultipleChoiceOption {
 }
 
 interface MultipleChoiceQuestionProps {
+  resultId?: string
   questionId: number
   index: number
   topic?: string
@@ -19,6 +22,7 @@ interface MultipleChoiceQuestionProps {
   selectedExplanation?: string
   correctOptionId?: string | null
   aiExplanation?: string
+  aiFeedback?: { detailId?: string, isCorrect: boolean, aiExplanation: string, score: number, maxScore: number, isAppealed?: boolean, appealStatus?: string, teacherFeedback?: string }
   readonly?: boolean
   isHintOpen: boolean
   isFlagged: boolean
@@ -30,6 +34,7 @@ interface MultipleChoiceQuestionProps {
 }
 
 export default function MultipleChoiceQuestion({
+  resultId,
   questionId,
   index,
   content,
@@ -38,6 +43,7 @@ export default function MultipleChoiceQuestion({
   selectedExplanation,
   correctOptionId,
   aiExplanation,
+  aiFeedback,
   readonly = false,
   isHintOpen,
   isFlagged,
@@ -48,6 +54,11 @@ export default function MultipleChoiceQuestion({
   onToggleFlag,
 }: MultipleChoiceQuestionProps) {
   const [pendingOptionId, setPendingOptionId] = useState<string | null>(null)
+  
+  const toast = useToast()
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const [reportMessage, setReportMessage] = useState('')
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false)
 
   const handleOptionClick = (optionId: string) => {
     // If clicking an already selected option, re-open the popup with existing explanation
@@ -63,6 +74,26 @@ export default function MultipleChoiceQuestion({
 
   const handleExplanationClose = () => {
     setPendingOptionId(null)
+  }
+
+  const handleReportSubmit = async () => {
+    if (!reportMessage.trim()) return
+    setIsSubmittingReport(true)
+    try {
+      if (readonly && resultId && aiFeedback?.detailId) {
+        await submitAppeal(resultId, aiFeedback.detailId, reportMessage)
+        toast.success('Kháng cáo đã được gửi thành công!')
+      } else {
+        await reportQuestion(questionId.toString(), reportMessage)
+        toast.success('Báo lỗi câu hỏi thành công!')
+      }
+      setIsReportModalOpen(false)
+      setReportMessage('')
+    } catch (e: any) {
+      toast.error(e.response?.data?.error || 'Lỗi khi gửi yêu cầu')
+    } finally {
+      setIsSubmittingReport(false)
+    }
   }
 
   return (
@@ -86,6 +117,14 @@ export default function MultipleChoiceQuestion({
                     <span className="hidden sm:inline">Bài giảng</span>
                   </Link>
                 )}
+                <button
+                  onClick={() => setIsReportModalOpen(true)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer transition-all active:scale-95 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400`}
+                  title={readonly ? "Kháng cáo/Báo cáo lỗi" : "Câu hỏi lỗi"}
+                >
+                  <AlertTriangle className="w-5 h-5" />
+                  <span className="hidden sm:inline">{readonly ? "Báo cáo/Kháng cáo" : "Câu hỏi lỗi"}</span>
+                </button>
                 <button
                   onClick={onToggleFlag}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer transition-all active:scale-95 ${
@@ -187,6 +226,45 @@ export default function MultipleChoiceQuestion({
         onSubmit={handleExplanationSubmit}
         initialExplanation={pendingOptionId === selectedOptionId ? selectedExplanation : ''}
       />
+
+      {isReportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+              {readonly ? 'Báo lỗi / Kháng cáo' : 'Câu hỏi lỗi'}
+            </h3>
+            <p className="text-slate-500 text-sm mb-4">
+              {readonly ? 'Nêu rõ lý do bạn muốn kháng cáo hoặc lỗi của câu hỏi này.' : 'Vui lòng mô tả lỗi của câu hỏi (sai đề, thiếu đáp án, lỗi chính tả, ...)'}
+            </p>
+            <textarea
+              value={reportMessage}
+              onChange={(e) => setReportMessage(e.target.value)}
+              placeholder="Nhập nội dung..."
+              className="w-full min-h-[120px] p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none text-slate-700 dark:text-slate-200"
+            />
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setIsReportModalOpen(false)}
+                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 rounded-xl font-semibold transition-colors"
+                disabled={isSubmittingReport}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleReportSubmit}
+                disabled={isSubmittingReport || !reportMessage.trim()}
+                className="flex-1 px-4 py-3 bg-primary text-white hover:bg-primary/90 disabled:opacity-50 rounded-xl font-semibold transition-colors shadow-md shadow-primary/20 flex items-center justify-center"
+              >
+                {isSubmittingReport ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  'Gửi'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Bold, List, ListOrdered, Sigma, ImagePlus, Image as ImageIcon, Video as YoutubeIcon, WrapText } from 'lucide-react'
+import { Bold, List, ListOrdered, Sigma, ImagePlus, Image as ImageIcon, Video as YoutubeIcon, WrapText, Mic } from 'lucide-react'
 import TiptapImage from '@tiptap/extension-image'
 import Youtube from '@tiptap/extension-youtube'
 import { uploadTempImage } from '@/lib/api'
@@ -22,6 +22,75 @@ interface RichTextEditorProps {
 }
 
 const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar }: { editor: any, mathOnlyToolbar?: boolean, smallToolbar?: boolean }) => {
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+      setIsListening(false)
+      return
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      alert('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói. Vui lòng dùng Chrome hoặc Edge.')
+      return
+    }
+
+    if (!recognitionRef.current) {
+      const recognition = new SpeechRecognition()
+      recognition.lang = 'vi-VN'
+      recognition.continuous = true
+      recognition.interimResults = false
+
+      recognition.onresult = (event: any) => {
+        let finalTranscript = ''
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript
+          }
+        }
+        if (finalTranscript) {
+          editor.chain().focus().insertContent(finalTranscript + ' ').run()
+        }
+      }
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error)
+        setIsListening(false)
+      }
+
+      recognition.onend = () => {
+        // Auto-restart if we didn't explicitly stop it, but simple approach is just toggle state
+        setIsListening(false)
+      }
+
+      recognitionRef.current = recognition
+    }
+
+    try {
+      recognitionRef.current.start()
+      setIsListening(true)
+    } catch (e) {
+      console.error(e)
+    }
+  }, [editor, isListening])
+
+  // Phím tắt Ctrl+M / Cmd+M
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'm') {
+        e.preventDefault()
+        toggleListening()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [toggleListening])
+
   if (!editor) return null
 
   const btnClass = smallToolbar ? "p-1 rounded transition-colors" : "p-1.5 rounded transition-colors"
@@ -113,6 +182,24 @@ const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar }: { editor: any, mathO
         title="Chèn YouTube"
       >
         <YoutubeIcon className={iconClass} />
+      </button>
+      <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
+      <button
+        onClick={toggleListening}
+        className={`${btnClass} flex items-center justify-center flex-shrink-0 relative ${
+          isListening 
+            ? 'text-red-500 bg-red-50 hover:bg-red-100' 
+            : 'text-slate-600 hover:bg-white'
+        }`}
+        title="Nhập bằng giọng nói (Ctrl+M)"
+      >
+        <Mic className={iconClass} />
+        {isListening && (
+          <span className="absolute top-0 right-0 flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+          </span>
+        )}
       </button>
     </div>
   )

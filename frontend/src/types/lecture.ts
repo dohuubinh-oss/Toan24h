@@ -1,4 +1,4 @@
-export type LectureStatus = 'not_started' | 'in_progress' | 'completed';
+export type LectureStatus = 'NOT_STARTED' | 'PENDING' | 'COMPLETED';
 
 export interface Lecture {
   id: string;

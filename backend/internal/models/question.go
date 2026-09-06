@@ -34,6 +34,9 @@ type Question struct {
 	GeneralMethod   string         `gorm:"type:text" json:"generalMethod"`
 	Mistakes        string         `gorm:"type:text" json:"mistakes"`
 
+	IsReported      bool           `gorm:"default:false" json:"isReported"`
+	ReportMessage   string         `gorm:"type:text" json:"reportMessage"`
+
 	CreatedAt       time.Time      `json:"createdAt"`
 	UpdatedAt       time.Time      `json:"updatedAt"`
 	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`

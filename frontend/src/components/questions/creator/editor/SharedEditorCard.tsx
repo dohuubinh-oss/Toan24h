@@ -1,9 +1,9 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import TiptapImage from '@tiptap/extension-image'
 import Youtube from '@tiptap/extension-youtube'
-import { Bold, List, ListOrdered, ImagePlus, Sigma, Image as ImageIcon, Video as YoutubeIcon, WrapText } from 'lucide-react'
+import { Bold, List, ListOrdered, ImagePlus, Sigma, Image as ImageIcon, Video as YoutubeIcon, WrapText, Mic } from 'lucide-react'
 import { MathExtension } from './MathExtension'
 import { uploadTempImage } from '@/lib/api'
 import { toast } from '@/components/ui/ToastProvider'
@@ -65,6 +65,74 @@ interface SharedEditorCardProps {
 }
 
 const MenuBar = ({ editor }: { editor: any }) => {
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+      setIsListening(false)
+      return
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      alert('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói. Vui lòng dùng Chrome hoặc Edge.')
+      return
+    }
+
+    if (!recognitionRef.current) {
+      const recognition = new SpeechRecognition()
+      recognition.lang = 'vi-VN'
+      recognition.continuous = true
+      recognition.interimResults = false
+
+      recognition.onresult = (event: any) => {
+        let finalTranscript = ''
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript
+          }
+        }
+        if (finalTranscript) {
+          editor.chain().focus().insertContent(finalTranscript + ' ').run()
+        }
+      }
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error)
+        setIsListening(false)
+      }
+
+      recognition.onend = () => {
+        setIsListening(false)
+      }
+
+      recognitionRef.current = recognition
+    }
+
+    try {
+      recognitionRef.current.start()
+      setIsListening(true)
+    } catch (e) {
+      console.error(e)
+    }
+  }, [editor, isListening])
+
+  // Phím tắt Ctrl+M / Cmd+M
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'm') {
+        e.preventDefault()
+        toggleListening()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [toggleListening])
+
   if (!editor) return null
 
   return (
@@ -135,6 +203,24 @@ const MenuBar = ({ editor }: { editor: any }) => {
         title="Chèn công thức Toán (MathLive)"
       >
         <Sigma className="w-4 h-4" />
+      </button>
+      <div className="w-px h-4 bg-slate-300 mx-1"></div>
+      <button
+        onClick={toggleListening}
+        className={`p-1.5 rounded transition-colors flex items-center justify-center relative ${
+          isListening 
+            ? 'text-red-500 bg-red-50 hover:bg-red-100' 
+            : 'text-slate-600 hover:bg-white'
+        }`}
+        title="Nhập bằng giọng nói (Ctrl+M)"
+      >
+        <Mic className="w-4 h-4" />
+        {isListening && (
+          <span className="absolute top-0 right-0 flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+          </span>
+        )}
       </button>
     </div>
   )

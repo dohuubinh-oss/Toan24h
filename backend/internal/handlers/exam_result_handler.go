@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -143,13 +144,35 @@ func processExamGrading(resultID uuid.UUID) {
 			Message: "Bài thi của bạn đã được AI chấm xong. Nhấn để xem kết quả chi tiết.",
 			Link:    "/exam/" + result.ID.String() + "/result",
 		})
+
+		var user models.User
+		if err := config.DB.First(&user, "id = ?", result.StudentID).Error; err == nil && user.TelegramID != nil {
+			notifier := services.NewTelegramNotifier()
+			msg := fmt.Sprintf("✅ <b>Chấm điểm hoàn tất</b>\nBài thi của bạn đã được AI chấm xong.\nTổng điểm: %.2f\nHãy truy cập website để xem chi tiết.", result.TotalScore)
+			// Send message in a goroutine so it doesn't block
+			go notifier.SendMessage(*user.TelegramID, msg)
+		}
 	}
 }
 
 func GetMyExamResults(c *gin.Context) {
-	// Mock user ID for now as we don't have auth middleware applied fully
-	// In reality: userID := c.MustGet("userID").(string)
-	userID := "00000000-0000-0000-0000-000000000000" // fallback or get from query/token
+	// Extract userID from context (set by AuthMiddleware)
+	userIDVal, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	
+	// userID could be string or uuid.UUID depending on token claims parsing
+	var userID string
+	if id, ok := userIDVal.(uuid.UUID); ok {
+		userID = id.String()
+	} else if idStr, ok := userIDVal.(string); ok {
+		userID = idStr
+	} else {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID type"})
+		return
+	}
 
 	var results []models.ExamResult
 	if err := config.DB.Where("student_id = ?", userID).Order("created_at desc").Find(&results).Error; err != nil {
@@ -189,7 +212,110 @@ func AppealExamResult(c *gin.Context) {
 	}
 
 	detail.AppealStatus = "PENDING"
+	detail.IsAppealed = true
+	detail.AppealMessage = req.AppealMessage
 	config.DB.Save(&detail)
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Kháng cáo đã được gửi và đang chờ duyệt."})
+}
+
+func GetAppeals(c *gin.Context) {
+	type AppealResponse struct {
+		DetailID      string  `json:"detailId"`
+		ResultID      string  `json:"resultId"`
+		ExamName      string  `json:"examName"`
+		Question      string  `json:"question"`
+		StudentAnswer string  `json:"studentAnswer"`
+		AIExplanation string  `json:"aiExplanation"`
+		Score         float64 `json:"score"`
+		MaxScore      float64 `json:"maxScore"`
+		AppealMessage string  `json:"appealMessage"`
+	}
+
+	var details []models.ResultDetail
+	if err := config.DB.Where("appeal_status = ?", "PENDING").Find(&details).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch appeals"})
+		return
+	}
+
+	var response []AppealResponse
+	for _, d := range details {
+		var q models.Question
+		config.DB.First(&q, "id = ?", d.QuestionID)
+
+		var res models.ExamResult
+		config.DB.First(&res, "id = ?", d.ExamResultID)
+
+		var exam models.Exam
+		config.DB.First(&exam, "id = ?", res.ExamID)
+
+		response = append(response, AppealResponse{
+			DetailID:      d.ID.String(),
+			ResultID:      res.ID.String(),
+			ExamName:      exam.Title,
+			Question:      q.Content,
+			StudentAnswer: d.StudentAnswer,
+			AIExplanation: d.AIExplanation,
+			Score:         d.Score,
+			MaxScore:      float64(q.DifficultyPoint),
+			AppealMessage: d.AppealMessage,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": response})
+}
+
+func ResolveAppeal(c *gin.Context) {
+	id := c.Param("id")
+	var req struct {
+		Status          string  `json:"status"` // APPROVED, REJECTED
+		NewScore        float64 `json:"newScore"`
+		TeacherFeedback string  `json:"teacherFeedback"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	var detail models.ResultDetail
+	if err := config.DB.First(&detail, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Result detail not found"})
+		return
+	}
+
+	oldScore := detail.Score
+
+	detail.AppealStatus = req.Status
+	detail.TeacherFeedback = req.TeacherFeedback
+	if req.Status == "APPROVED" {
+		detail.Score = req.NewScore
+		if req.NewScore > 0 {
+			detail.IsCorrect = true
+		} else {
+			detail.IsCorrect = false
+		}
+	}
+	config.DB.Save(&detail)
+
+	// Recalculate ExamResult Score
+	var res models.ExamResult
+	if err := config.DB.First(&res, "id = ?", detail.ExamResultID).Error; err == nil {
+		if req.Status == "APPROVED" {
+			scoreDiff := req.NewScore - oldScore
+			res.EssayScore += scoreDiff // Assuming appeals are mostly for essays
+			res.TotalScore += scoreDiff
+			config.DB.Save(&res)
+		}
+		
+		if res.StudentID != nil {
+			config.DB.Create(&models.Notification{
+				UserID:  *res.StudentID,
+				Title:   "Kết quả kháng cáo",
+				Message: "Kháng cáo của bạn đã được giáo viên duyệt. Nhấn để xem phản hồi.",
+				Link:    "/exam/" + res.ID.String() + "/result",
+			})
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Đã duyệt kháng cáo"})
 }

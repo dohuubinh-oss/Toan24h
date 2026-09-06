@@ -1,4 +1,4 @@
-export type PracticeStatus = 'not_started' | 'completed';
+export type PracticeStatus = 'NOT_STARTED' | 'PENDING' | 'COMPLETED';
 
 export interface Practice {
   id: string;

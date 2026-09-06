@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { PenTool, CheckCircle2, Clock, HelpCircle, Trophy, AlertCircle, PlayCircle, RotateCcw } from 'lucide-react'
 import { Practice } from '@/types/practice'
@@ -12,6 +12,10 @@ interface PracticeTableProps {
 
 export default function PracticeTable({ practices }: PracticeTableProps) {
   const router = useRouter()
+
+  useEffect(() => {
+    router.refresh();
+  }, [router]);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden">
@@ -29,7 +33,7 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {practices.map(practice => {
-              const isCompleted = practice.status === 'completed';
+              const isCompleted = practice.status === 'COMPLETED';
               
               let scoreColor = 'text-slate-400';
               let scoreBg = 'bg-slate-50';

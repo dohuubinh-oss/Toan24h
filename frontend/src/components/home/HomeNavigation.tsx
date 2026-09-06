@@ -94,6 +94,21 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
   }, [isLoggedState, lastNotificationId])
 
   const unreadCount = notifications.filter(n => !n.isRead).length
+  const notificationRef = React.useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false)
+      }
+    }
+    if (showNotifications) {
+      document.addEventListener("mousedown", handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [showNotifications])
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
@@ -117,7 +132,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
         <div className="flex items-center gap-4">
           {isLoggedState ? (
             <>
-              <div className="relative">
+              <div className="relative" ref={notificationRef}>
                 <button 
                   onClick={() => setShowNotifications(!showNotifications)}
                   className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors text-slate-600 relative"
@@ -129,26 +144,72 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-slate-100 py-2 z-50 max-h-96 overflow-y-auto">
-                    <div className="px-4 py-2 border-b border-slate-100 font-bold text-slate-800">Thông báo</div>
-                    {notifications.length === 0 ? (
-                      <div className="px-4 py-4 text-sm text-slate-500 text-center">Không có thông báo nào</div>
-                    ) : (
-                      notifications.map(n => (
-                        <Link 
-                          key={n.id} 
-                          href={n.link}
-                          onClick={() => {
-                            setShowNotifications(false)
-                            fetch(`http://localhost:8080/api/v1/notifications/${n.id}/read`, { method: 'POST' })
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-slate-100 z-50">
+                    <div className="flex items-center justify-between p-4 border-b border-slate-100">
+                      <h3 className="font-semibold text-slate-800">Thông báo</h3>
+                      {notifications.length > 0 && (
+                        <button 
+                          onClick={async () => {
+                            try {
+                              await fetch(`http://localhost:8080/api/v1/notifications`, { method: 'DELETE' })
+                              setNotifications([])
+                            } catch (err) {
+                              console.error('Failed to delete all notifications', err)
+                            }
                           }}
-                          className={`block px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 ${!n.isRead ? 'bg-blue-50/50' : ''}`}
+                          className="text-xs text-red-500 hover:text-red-700 font-medium"
                         >
-                          <p className={`text-sm ${!n.isRead ? 'font-semibold text-slate-800' : 'text-slate-600'}`}>{n.title}</p>
-                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">{n.message}</p>
-                        </Link>
-                      ))
-                    )}
+                          Xóa tất cả
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="max-h-[320px] overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-8 text-center text-slate-500">
+                          <Bell className="w-8 h-8 mx-auto text-slate-300 mb-2" />
+                          <p>Chưa có thông báo nào</p>
+                        </div>
+                      ) : (
+                        notifications.map(n => {
+                          const isResultLink = n.link?.includes('/result')
+                          
+                          const handleNotificationClick = () => {
+                            if (!isResultLink) {
+                              setShowNotifications(false)
+                            }
+                            if (!n.isRead) {
+                              fetch(`http://localhost:8080/api/v1/notifications/${n.id}/read`, { method: 'POST' })
+                                .then(() => {
+                                  setNotifications(notifications.map(notif => notif.id === n.id ? { ...notif, isRead: true } : notif))
+                                })
+                            }
+                          }
+
+                          const className = `block px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 relative ${!n.isRead ? 'bg-blue-50/50' : ''}`
+
+                          if (isResultLink) {
+                            return (
+                              <Link href={n.link} key={n.id} className={className} onClick={handleNotificationClick}>
+                                <div className="pr-6">
+                                  <p className={`text-sm ${!n.isRead ? 'font-semibold text-slate-800' : 'text-slate-600'}`}>{n.title}</p>
+                                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{n.message}</p>
+                                </div>
+                              </Link>
+                            )
+                          } else {
+                            return (
+                              <button key={n.id} className={`w-full text-left ${className}`} onClick={handleNotificationClick}>
+                                <div className="pr-6">
+                                  <p className={`text-sm ${!n.isRead ? 'font-semibold text-slate-800' : 'text-slate-600'}`}>{n.title}</p>
+                                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{n.message}</p>
+                                </div>
+                              </button>
+                            )
+                          }
+                        })
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
