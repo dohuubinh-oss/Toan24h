@@ -13,10 +13,11 @@ import (
 
 type SubmitExamRequest struct {
 	Answers []struct {
-		QuestionID    string `json:"questionId"`
-		StudentAnswer string `json:"studentAnswer"`
-		IsEssay       bool   `json:"isEssay"`
-		ImagePath     string `json:"imagePath"`
+		QuestionID         string `json:"questionId"`
+		StudentAnswer      string `json:"studentAnswer"`
+		StudentExplanation string `json:"studentExplanation"`
+		IsEssay            bool   `json:"isEssay"`
+		ImagePath          string `json:"imagePath"`
 	} `json:"answers"`
 }
 
@@ -62,10 +63,11 @@ func SubmitExam(c *gin.Context) {
 		}
 
 		detail := models.ResultDetail{
-			ExamResultID:  examResult.ID,
-			QuestionID:    qID,
-			StudentAnswer: ans.StudentAnswer,
-			ImagePath:     ans.ImagePath,
+			ExamResultID:       examResult.ID,
+			QuestionID:         qID,
+			StudentAnswer:      ans.StudentAnswer,
+			StudentExplanation: ans.StudentExplanation,
+			ImagePath:          ans.ImagePath,
 		}
 		config.DB.Create(&detail)
 	}
@@ -90,6 +92,16 @@ func processExamGrading(resultID uuid.UUID) {
 	}
 
 	var mcqScore, essayScore float64
+	var totalReasoningScore float64
+
+	// Fetch User to check VIP status
+	var user models.User
+	isVip := false
+	if result.StudentID != nil {
+		if err := config.DB.First(&user, "id = ?", result.StudentID).Error; err == nil {
+			isVip = user.Role == "vip"
+		}
+	}
 
 	// 2. Process each detail
 	for i := range result.Details {
@@ -122,6 +134,20 @@ func processExamGrading(resultID uuid.UUID) {
 			if detail.StudentAnswer == question.CorrectAnswer {
 				detail.IsCorrect = true
 				detail.Score = float64(question.DifficultyPoint)
+
+				// VIP Reasoning Grading
+				if isVip && detail.StudentExplanation != "" {
+					aiReasoning, err := services.EvaluateReasoningWithGemini(
+						question.Content,
+						question.CorrectAnswer,
+						detail.StudentExplanation,
+					)
+					if err == nil && aiReasoning != nil {
+						detail.ReasoningScore = aiReasoning.Score
+						detail.AIReasoningRemark = aiReasoning.Explanation
+						totalReasoningScore += aiReasoning.Score
+					}
+				}
 			}
 			mcqScore += detail.Score
 		}
@@ -133,6 +159,10 @@ func processExamGrading(resultID uuid.UUID) {
 	result.MCQScore = mcqScore
 	result.EssayScore = essayScore
 	result.TotalScore = mcqScore + essayScore
+	result.TotalReasoningScore = totalReasoningScore
+	if isVip {
+		result.OverallReasoningRemark = fmt.Sprintf("Điểm tư duy: %.2f. Hãy xem nhận xét chi tiết ở từng câu trắc nghiệm.", totalReasoningScore)
+	}
 	result.Status = models.StatusCompleted
 	config.DB.Save(&result)
 
@@ -145,8 +175,7 @@ func processExamGrading(resultID uuid.UUID) {
 			Link:    "/exam/" + result.ID.String() + "/result",
 		})
 
-		var user models.User
-		if err := config.DB.First(&user, "id = ?", result.StudentID).Error; err == nil && user.TelegramID != nil {
+		if user.TelegramID != nil {
 			notifier := services.NewTelegramNotifier()
 			msg := fmt.Sprintf("✅ <b>Chấm điểm hoàn tất</b>\nBài thi của bạn đã được AI chấm xong.\nTổng điểm: %.2f\nHãy truy cập website để xem chi tiết.", result.TotalScore)
 			// Send message in a goroutine so it doesn't block

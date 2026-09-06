@@ -71,7 +71,10 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
             {sortedExams.map(exam => (
               <tr 
                 key={exam.id} 
-                onClick={() => router.push(`/exam/${exam.id}/take`)}
+                onClick={() => {
+                  sessionStorage.removeItem(`exam_state_${exam.id}`);
+                  router.push(`/exam/${exam.id}/take`);
+                }}
                 className="hover:bg-slate-50 transition-colors group relative border-l-2 border-transparent hover:border-primary cursor-pointer"
               >
                 <td className="px-4 py-3">

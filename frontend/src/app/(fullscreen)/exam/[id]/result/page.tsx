@@ -102,7 +102,9 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         errorLocation: d.errorLocation,
         isAppealed: d.isAppealed,
         appealStatus: d.appealStatus,
-        teacherFeedback: d.teacherFeedback
+        teacherFeedback: d.teacherFeedback,
+        aiReasoningRemark: d.aiReasoningRemark,
+        reasoningScore: d.reasoningScore
       }
     })
 
@@ -145,6 +147,14 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
             <span className="text-slate-400">Tự luận:</span>
             <span className="text-slate-800 dark:text-slate-200">{resultData.essayScore.toFixed(2)}</span>
           </span>
+          {resultData.overallReasoningRemark && (
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-800/50">
+              <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <span className="text-purple-600 dark:text-purple-400 font-bold">
+                Tư duy: {resultData.totalReasoningScore?.toFixed(2)}
+              </span>
+            </span>
+          )}
         </div>
       </div>
       <Link href="/student" className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl text-sm font-semibold transition-colors">
@@ -248,7 +258,26 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           }}
         />
       }
-      mainContent={mainContent}
+      mainContent={
+        <div className="flex flex-col h-full overflow-hidden">
+          {resultData.overallReasoningRemark && (
+            <div className="shrink-0 p-4 pb-0 md:p-8 md:pb-0">
+               <div className="max-w-4xl mx-auto bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-6 text-white shadow-lg flex items-start gap-4">
+                <div className="bg-white/20 p-3 rounded-xl shrink-0">
+                  <Sparkles className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-2">Đánh giá tư duy (Dành riêng cho VIP)</h3>
+                  <p className="text-white/90 leading-relaxed text-sm">
+                    {resultData.overallReasoningRemark}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          {mainContent}
+        </div>
+      }
       footerContent={footerContent}
     />
   )

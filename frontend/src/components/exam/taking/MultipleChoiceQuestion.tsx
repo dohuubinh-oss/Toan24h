@@ -22,7 +22,7 @@ interface MultipleChoiceQuestionProps {
   selectedExplanation?: string
   correctOptionId?: string | null
   aiExplanation?: string
-  aiFeedback?: { detailId?: string, isCorrect: boolean, aiExplanation: string, score: number, maxScore: number, isAppealed?: boolean, appealStatus?: string, teacherFeedback?: string }
+  aiFeedback?: { detailId?: string, isCorrect: boolean, aiExplanation: string, score: number, maxScore: number, isAppealed?: boolean, appealStatus?: string, teacherFeedback?: string, aiReasoningRemark?: string, reasoningScore?: number }
   readonly?: boolean
   isHintOpen: boolean
   isFlagged: boolean
@@ -215,6 +215,23 @@ export default function MultipleChoiceQuestion({
             </h4>
             <div className="text-slate-700 dark:text-slate-300">
               <MathText content={aiExplanation} />
+            </div>
+          </div>
+        )}
+
+        {readonly && aiFeedback?.aiReasoningRemark && (
+          <div className="mt-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-6">
+            <h4 className="flex items-center justify-between text-purple-700 dark:text-purple-400 font-bold mb-3">
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5" />
+                Đánh giá tư duy (VIP)
+              </span>
+              <span className="bg-purple-100 dark:bg-purple-800/50 px-3 py-1 rounded-full text-sm">
+                Điểm: {aiFeedback.reasoningScore}/10
+              </span>
+            </h4>
+            <div className="text-slate-700 dark:text-slate-300">
+              <MathText content={aiFeedback.aiReasoningRemark} />
             </div>
           </div>
         )}

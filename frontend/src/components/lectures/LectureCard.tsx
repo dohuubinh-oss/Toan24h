@@ -9,6 +9,7 @@ export interface LectureCardProps {
   chapter: string;
   status: LectureStatus;
   practiceCount: number;
+  completedWellCount?: number;
   thumbnailUrl?: string;
   grade?: string; // Tùy chọn để tương thích với các view khác
 }
@@ -19,6 +20,7 @@ export function LectureCard({
   chapter,
   status,
   practiceCount,
+  completedWellCount,
   thumbnailUrl,
   grade,
 }: LectureCardProps) {
@@ -70,7 +72,11 @@ export function LectureCard({
         <div className="flex justify-end mt-auto pt-2">
           <div className="flex items-center gap-1.5 text-slate-500 text-sm font-medium shrink-0">
             <PenTool className="w-4 h-4" />
-            <span>{practiceCount} Đề</span>
+            {completedWellCount !== undefined ? (
+              <span>{completedWellCount}/{practiceCount} Đề</span>
+            ) : (
+              <span>{practiceCount} Đề</span>
+            )}
           </div>
         </div>
       </div>

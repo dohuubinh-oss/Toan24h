@@ -124,7 +124,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
         <div className="hidden lg:flex items-center gap-8 font-medium">
           <Link className="hover:text-primary transition-colors text-slate-700" href="/">Trang chủ</Link>
           <Link className="hover:text-primary transition-colors text-slate-700" href="/lectures">Khoá học</Link>
-          <Link className="hover:text-primary transition-colors text-slate-700" href="/practices">Luyện thi</Link>
+          <Link className="hover:text-primary transition-colors text-slate-700" href="/exams">Đề thi</Link>
           <Link className="hover:text-primary transition-colors text-slate-700" href="/blog">Blog</Link>
           <Link className="hover:text-primary transition-colors text-slate-700" href="/pricing">Bảng giá</Link>
           <Link className="hover:text-primary transition-colors text-slate-700" href="/community">Cộng đồng</Link>

@@ -4,6 +4,7 @@ import { ChevronRight, BookOpen } from 'lucide-react';
 import { LectureCard } from '@/components/lectures/LectureCard';
 import { Pagination } from '@/components/ui/Pagination';
 import { getLecturesByGrade } from '@/lib/lectureApi';
+import { getExams, getMyExamResults } from '@/lib/api';
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -30,7 +31,40 @@ export default async function GradeLecturesPage({
     redirect(`/lectures/lop/${userGradeCookie.value}`);
   }
 
-  const { data: lectures, totalPages, totalItems, startIndex, endIndex, currentPage } = await getLecturesByGrade(grade, page, 9);
+  const token = cookieStore.get('accessToken')?.value;
+
+  const [lecturesResult, examsData, resultsData] = await Promise.all([
+    getLecturesByGrade(grade, page, 9),
+    getExams(),
+    token ? getMyExamResults(token) : Promise.resolve([])
+  ]);
+
+  const { data: lectures, totalPages, totalItems, startIndex, endIndex, currentPage } = lecturesResult;
+
+  const mappedLectures = lectures.map(lecture => {
+    // Find all practices for this lecture
+    const lectureExams = examsData.filter((exam: any) => exam.cate === 'practice' && exam.lectureId === lecture.id);
+    const practiceCount = lectureExams.length;
+    
+    // Count how many are completed with score > 6.5
+    let completedWellCount = 0;
+    lectureExams.forEach((exam: any) => {
+      // Find the latest result for this exam
+      const examResults = resultsData.filter((r: any) => r.examId === exam.id);
+      examResults.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      const latestResult = examResults.length > 0 ? examResults[0] : null;
+      if (latestResult && latestResult.status === 'COMPLETED' && latestResult.totalScore > 6.5) {
+        completedWellCount++;
+      }
+    });
+
+    return {
+      ...lecture,
+      practiceCount,
+      completedWellCount
+    };
+  });
 
   return (
     <div className="space-y-10">
@@ -49,14 +83,14 @@ export default async function GradeLecturesPage({
 
       {/* Grid danh sách Bài giảng */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {lectures.map((lecture) => (
+        {mappedLectures.map((lecture) => (
           <LectureCard 
             key={lecture.id}
             grade={grade}
             {...lecture}
           />
         ))}
-        {lectures.length === 0 && (
+        {mappedLectures.length === 0 && (
           <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-500 bg-white rounded-2xl border border-slate-200/60 shadow-sm">
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
               <BookOpen className="w-8 h-8 text-slate-300" />

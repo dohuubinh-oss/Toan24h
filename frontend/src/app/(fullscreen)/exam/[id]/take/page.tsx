@@ -321,6 +321,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         return {
           questionId: qId,
           studentAnswer: ans,
+          studentExplanation: explanations[qId] || "",
           isEssay: isEssay
         }
       })
@@ -399,6 +400,23 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
     (currentQuestion.subQuestions?.find(sq => sq.id === activeHintQuestionId) || currentQuestion)
   ) : currentQuestion
 
+  let isCurrentQuestionAnswered = false
+  if (currentQuestion) {
+    if (currentQuestion.type_question === 'group' && currentQuestion.subQuestions) {
+      isCurrentQuestionAnswered = currentQuestion.subQuestions.every(sq => !!answers[sq.id])
+    } else {
+      isCurrentQuestionAnswered = !!answers[currentQuestion.id]
+    }
+  }
+
+  const handleNextWithCheck = () => {
+    if (!isCurrentQuestionAnswered) {
+      toast.error("Vui lòng hoàn thành câu hỏi hiện tại trước khi qua câu tiếp theo.")
+      return
+    }
+    setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))
+  }
+
   return (
     <div className="flex flex-col min-h-screen relative overflow-x-hidden bg-background-light dark:bg-background-dark">
       <ExamProgressNav 
@@ -428,7 +446,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         {/* Right Navigation Overlay */}
         {currentQuestionIndex < questions.length - 1 && (
           <button 
-            onClick={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
+            onClick={handleNextWithCheck}
             className="absolute right-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
           >
             <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
@@ -492,6 +510,10 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           onSelectQuestion={(id) => {
             const idx = questions.findIndex(q => q.id === id)
             if (idx !== -1) {
+              if (idx > currentQuestionIndex && !isCurrentQuestionAnswered) {
+                toast.error("Vui lòng hoàn thành câu hỏi hiện tại trước khi nhảy cóc.")
+                return
+              }
               setCurrentQuestionIndex(idx)
             }
           }}
@@ -501,10 +523,10 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
 
       <ExamTakeFooter 
         onPrev={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
-        onNext={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
+        onNext={handleNextWithCheck}
         onSubmit={() => setShowSubmitConfirm(true)}
         canGoPrev={currentQuestionIndex > 0}
-        canGoNext={currentQuestionIndex < questions.length - 1}
+        canGoNext={currentQuestionIndex < questions.length - 1 && isCurrentQuestionAnswered}
         answeredCount={Object.keys(answers).length}
         totalCount={questions.length}
       />

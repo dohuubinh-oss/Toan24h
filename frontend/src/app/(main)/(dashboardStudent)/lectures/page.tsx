@@ -1,13 +1,20 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 
-export default function LecturesRedirectPage() {
-  // [TODO: WARNING] Hiện tại đang hardcode mặc định là khối 5.
-  // KHI CÓ API HOẶC JWT TỪ BACKEND:
-  // 1. Trích xuất thông tin người dùng từ JWT hoặc gọi API lấy profile.
-  // 2. Lấy được `grade` (khối lớp) của học sinh đó.
-  // 3. Redirect sang route tương ứng. Ví dụ: redirect(`/lectures/lop/${user.grade}`)
-  
-  const mockStudentGrade = '5'; // Giả lập học sinh lớp 5
-  
-  redirect(`/lectures/lop/${mockStudentGrade}`);
+export default async function LecturesRedirectPage() {
+  const cookieStore = await cookies();
+  const userGradeCookie = cookieStore.get('userGrade')?.value;
+
+  // Nếu người dùng đã có lớp, redirect thẳng tới trang bài giảng của lớp đó
+  if (userGradeCookie && userGradeCookie.trim() !== '') {
+    redirect(`/lectures/lop/${userGradeCookie}`);
+  }
+
+  // Nếu chưa có lớp, không redirect. 
+  // Modal chọn lớp từ layout.tsx sẽ hiện lên che toàn bộ trang.
+  return (
+    <div className="flex h-full items-center justify-center min-h-[500px]">
+      {/* Giao diện trống trong lúc Modal đang bật */}
+    </div>
+  );
 }

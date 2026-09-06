@@ -189,8 +189,12 @@ function CreateQuestionContent() {
           };
         }
         
-        await apiUpdateQuestion(editId, payload);
-        toast.success('Cập nhật câu hỏi thành công!');
+        const result = await apiUpdateQuestion(editId, payload);
+        if (result) {
+          toast.success('Cập nhật câu hỏi thành công!');
+        } else {
+          throw new Error('Cập nhật thất bại. Backend trả về lỗi hoặc thiếu thông tin.');
+        }
       } else {
         const payload = questionBlocks.map(block => ({
           shared_content: block.shared_content,
@@ -209,7 +213,7 @@ function CreateQuestionContent() {
         });
       }
       
-      router.push('/dashboard/questions');
+      router.back();
     } catch (error: any) {
       console.error("Lỗi khi lưu:", error);
       toast.error("Lỗi khi lưu: " + error.message);

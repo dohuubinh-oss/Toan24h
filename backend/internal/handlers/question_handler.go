@@ -395,6 +395,21 @@ func ReportQuestion(c *gin.Context) {
 	c.JSON(http.StatusOK, APIResponse{Status: "success", Data: q})
 }
 
+// ResolveReportQuestion xử lý đánh dấu đã giải quyết báo cáo lỗi
+func ResolveReportQuestion(c *gin.Context) {
+	id := c.Param("id")
+	
+	if err := config.DB.Model(&models.Question{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"is_reported": false,
+		"report_message": "",
+	}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: "Failed to resolve report"})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{Status: "success"})
+}
+
 // GetReportedQuestions lấy danh sách câu hỏi bị báo cáo lỗi (dành cho Admin)
 func GetReportedQuestions(c *gin.Context) {
 	var questions []models.Question

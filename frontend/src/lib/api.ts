@@ -123,7 +123,7 @@ export async function recognizeHandwriting(file: File): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const res = await fetch('/api/ocr', {
+  const res = await apiFetch('/ocr', {
     method: 'POST',
     body: formData,
   });
@@ -299,26 +299,30 @@ export async function updateQuestion(id: string, data: Partial<Question>): Promi
     // Convert snake_case back to camelCase for backend
     const payload = {
       ...data,
-      typeQuestion: data.type_question,
-      correctAnswer: data.correct_answer,
-      solutionGuide: data.solution_guide,
-      difficultyLevel: data.difficulty_level,
-      difficultyPoint: data.difficulty_point,
-      quickSolveTips: data.quick_solve_tips,
-      generalMethod: data.general_method,
+      tags: Array.isArray(data.tags) ? JSON.stringify(data.tags) : (data.tags || '[]'),
+      options: Array.isArray(data.options) ? JSON.stringify(data.options) : (data.options || '[]'),
+      typeQuestion: data.type_question ?? (data as any).typeQuestion,
+      correctAnswer: data.correct_answer ?? (data as any).correctAnswer,
+      solutionGuide: data.solution_guide ?? (data as any).solutionGuide,
+      difficultyLevel: data.difficulty_level ?? (data as any).difficultyLevel,
+      difficultyPoint: data.difficulty_point ?? (data as any).difficultyPoint,
+      quickSolveTips: data.quick_solve_tips ?? (data as any).quickSolveTips,
+      generalMethod: data.general_method ?? (data as any).generalMethod,
       hint: data.hint,
       mistakes: data.mistakes,
-      bookName: data.book_name,
+      bookName: data.book_name ?? (data as any).bookName,
       subQuestions: data.subQuestions ? data.subQuestions.map((sub: any) => ({
         ...sub,
-        typeQuestion: sub.type_question,
-        correctAnswer: sub.correct_answer,
-        solutionGuide: sub.solution_guide,
-        difficultyLevel: sub.difficulty_level,
-        difficultyPoint: sub.difficulty_point,
-        quickSolveTips: sub.quick_solve_tips,
-        generalMethod: sub.general_method,
-        bookName: sub.book_name,
+        tags: Array.isArray(sub.tags) ? JSON.stringify(sub.tags) : (sub.tags || '[]'),
+        options: Array.isArray(sub.options) ? JSON.stringify(sub.options) : (sub.options || '[]'),
+        typeQuestion: sub.type_question ?? sub.typeQuestion,
+        correctAnswer: sub.correct_answer ?? sub.correctAnswer,
+        solutionGuide: sub.solution_guide ?? sub.solutionGuide,
+        difficultyLevel: sub.difficulty_level ?? sub.difficultyLevel,
+        difficultyPoint: sub.difficulty_point ?? sub.difficultyPoint,
+        quickSolveTips: sub.quick_solve_tips ?? sub.quickSolveTips,
+        generalMethod: sub.general_method ?? sub.generalMethod,
+        bookName: sub.book_name ?? sub.bookName,
       })) : undefined
     }
     
@@ -478,3 +482,16 @@ export async function getReportedQuestions(): Promise<any[]> {
     return []
   }
 }
+
+export async function resolveReportedQuestion(id: string): Promise<boolean> {
+  try {
+    const response = await apiFetch(`/questions/reported/${id}/resolve`, {
+      method: "POST"
+    })
+    return response.status === "success"
+  } catch (error) {
+    console.error(`Failed to resolve reported question ${id}:`, error)
+    return false
+  }
+}
+

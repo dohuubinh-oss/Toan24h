@@ -9,7 +9,7 @@ const generateMockPractices = (grade: string): Practice[] => {
       lectureName: 'Nhân đơn thức với đa thức',
       duration: 15,
       questionCount: 10,
-      status: 'completed',
+      status: 'COMPLETED',
       score: 8,
       grade,
     },
@@ -19,7 +19,7 @@ const generateMockPractices = (grade: string): Practice[] => {
       lectureName: 'Nhân đa thức với đa thức',
       duration: 15,
       questionCount: 10,
-      status: 'completed',
+      status: 'COMPLETED',
       score: 3,
       grade,
     },
@@ -29,7 +29,7 @@ const generateMockPractices = (grade: string): Practice[] => {
       lectureName: 'Những hằng đẳng thức đáng nhớ (Phần 1)',
       duration: 30,
       questionCount: 20,
-      status: 'not_started',
+      status: 'NOT_STARTED',
       grade,
     },
     {
@@ -38,7 +38,7 @@ const generateMockPractices = (grade: string): Practice[] => {
       lectureName: 'Những hằng đẳng thức đáng nhớ (Phần 2)',
       duration: 45,
       questionCount: 30,
-      status: 'not_started',
+      status: 'NOT_STARTED',
       grade,
     },
     {
@@ -47,7 +47,7 @@ const generateMockPractices = (grade: string): Practice[] => {
       lectureName: 'Tứ giác',
       duration: 45,
       questionCount: 30,
-      status: 'not_started',
+      status: 'NOT_STARTED',
       grade,
     },
     {
@@ -56,7 +56,7 @@ const generateMockPractices = (grade: string): Practice[] => {
       lectureName: 'Hình thang - Hình thang cân',
       duration: 30,
       questionCount: 20,
-      status: 'not_started',
+      status: 'NOT_STARTED',
       grade,
     },
   ];

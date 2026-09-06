@@ -39,6 +39,7 @@ func SetupRouter() *gin.Engine {
 	lectureRepo := repository.NewLectureRepository(config.DB)
 	lectureService := services.NewLectureService(lectureRepo)
 	lectureController := controllers.NewLectureController(lectureService)
+	ocrController := controllers.NewOCRController()
 
 	// Auth & other Handlers
 	authHandler := handlers.NewAuthHandler(config.DB)
@@ -131,7 +132,10 @@ func SetupRouter() *gin.Engine {
 		reportedQuestions.Use(middleware.RoleMiddleware("admin"))
 		{
 			reportedQuestions.GET("", handlers.GetReportedQuestions)
+			reportedQuestions.POST("/:id/resolve", handlers.ResolveReportQuestion)
 		}
+
+		protected.POST("/ocr", ocrController.ExtractText)
 	}
 
 	return r

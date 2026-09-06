@@ -8,7 +8,7 @@ import { Practice } from '@/types/practice';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-export default async function GradePracticesPage({
+export default async function GradeExamsPage({
   params,
   searchParams,
 }: {
@@ -42,7 +42,7 @@ export default async function GradePracticesPage({
   const userRoleCookie = cookieStore.get('userRole');
   
   if (userRoleCookie?.value === 'student' && userGradeCookie && userGradeCookie.value !== grade && userGradeCookie.value !== '') {
-    redirect(`/practices/lop/${userGradeCookie.value}`);
+    redirect(`/exams/lop/${userGradeCookie.value}`);
   }
 
   const token = cookieStore.get('accessToken')?.value;
@@ -67,8 +67,8 @@ export default async function GradePracticesPage({
     console.error("Failed to load exams or results", error);
   }
 
-  // Filter for practice and grade
-  let practicesData = allExams.filter((exam: any) => exam.cate === 'practice' && String(exam.grade) === String(grade));
+  // Filter for exam and grade
+  let practicesData = allExams.filter((exam: any) => exam.cate === 'exam' && String(exam.grade) === String(grade));
 
   if (practiceIdsArray && practiceIdsArray.length > 0) {
     practicesData = practicesData.filter((item: any) => practiceIdsArray.includes(item.id));
@@ -140,7 +140,7 @@ export default async function GradePracticesPage({
 
 
 
-      {/* Bảng danh sách Luyện tập */}
+      {/* Bảng danh sách Đề thi */}
       <PracticeTable practices={practices} />
 
       {/* Phân trang */}

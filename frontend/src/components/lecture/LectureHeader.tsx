@@ -96,7 +96,7 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
                 className="flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] font-bold rounded-lg transition-all border text-sm bg-primary text-white hover:bg-primary/90 border-transparent shadow-sm"
               >
                 <PenTool size={18} />
-                Luyện tập
+                Đề thi
               </Link>
             )}
             <button 

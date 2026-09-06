@@ -64,7 +64,7 @@ export async function getLecturesByGrade(grade: string, page: number = 1, limit:
       id: item.id,
       title: item.title,
       chapter: item.category, // Map category to chapter for UI
-      status: 'not_started', // TODO: Implement real progress tracking
+      status: 'NOT_STARTED', // TODO: Implement real progress tracking
       practiceCount: 0, // TODO: Implement real practice count
       thumbnailUrl: coverImage ? `${process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '') : 'http://localhost:8080'}${coverImage}` : undefined,
     }

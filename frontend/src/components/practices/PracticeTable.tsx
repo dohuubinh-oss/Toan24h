@@ -23,7 +23,7 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50">
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Tên bài luyện tập</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Tên đề thi</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Số câu hỏi</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Thời gian</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Trạng thái</th>
@@ -34,6 +34,7 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
           <tbody className="divide-y divide-slate-100">
             {practices.map(practice => {
               const isCompleted = practice.status === 'COMPLETED';
+              const isPending = practice.status === 'PENDING';
               
               let scoreColor = 'text-slate-400';
               let scoreBg = 'bg-slate-50';
@@ -62,7 +63,14 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
               return (
                 <tr 
                   key={practice.id} 
-                  onClick={() => router.push(`/exam/${practice.id}/take`)}
+                  onClick={() => {
+                    if (isPending || isCompleted) {
+                      router.push(`/exam/${practice.id}/result`);
+                    } else {
+                      sessionStorage.removeItem(`exam_state_${practice.id}`);
+                      router.push(`/exam/${practice.id}/take`);
+                    }
+                  }}
                   className="hover:bg-slate-50 transition-colors group relative border-l-2 border-transparent hover:border-primary cursor-pointer"
                 >
                   <td className="px-6 py-4">
@@ -96,6 +104,10 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-full">
                         Đã làm
                       </span>
+                    ) : isPending ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-100 rounded-full">
+                        Đang chấm
+                      </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full">
                         Chưa làm
@@ -109,6 +121,8 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
                         <ScoreIcon className="w-4 h-4" />
                         <span>{scoreLabel}</span>
                       </div>
+                    ) : isPending ? (
+                      <span className="text-sm text-slate-400 italic">Đang tính...</span>
                     ) : (
                       <span className="text-sm text-slate-400 italic">--</span>
                     )}
@@ -116,18 +130,27 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
                   
                   <td className="px-6 py-4 text-right">
                     <Button 
-                      variant={isCompleted ? "outline" : "primary"}
+                      variant={isCompleted ? "outline" : isPending ? "secondary" : "primary"}
                       className={`h-9 px-4 text-sm font-semibold rounded-lg flex items-center gap-2 ${
-                        !isCompleted ? 'shadow-sm' : ''
+                        !isCompleted && !isPending ? 'shadow-sm' : ''
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/exam/${practice.id}/take`);
+                        if (isPending || isCompleted) {
+                          router.push(`/exam/${practice.id}/result`);
+                        } else {
+                          sessionStorage.removeItem(`exam_state_${practice.id}`);
+                          router.push(`/exam/${practice.id}/take`);
+                        }
                       }}
                     >
                       {isCompleted ? (
                         <>
                           <RotateCcw className="w-4 h-4" /> Làm lại
+                        </>
+                      ) : isPending ? (
+                        <>
+                          <Clock className="w-4 h-4" /> Chờ kết quả
                         </>
                       ) : (
                         <>
@@ -146,7 +169,7 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                       <PenTool className="w-8 h-8 text-slate-300" />
                     </div>
-                    <p className="text-lg font-bold text-slate-700">Chưa có đề luyện tập nào</p>
+                    <p className="text-lg font-bold text-slate-700">Chưa có đề thi nào</p>
                     <p className="text-sm mt-1 max-w-md">Vui lòng quay lại sau hoặc kiểm tra khối lớp khác.</p>
                   </div>
                 </td>

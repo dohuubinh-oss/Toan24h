@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { getPendingAppeals, resolveAppeal, getReportedQuestions, updateQuestion } from '@/lib/api'
+import { getPendingAppeals, resolveAppeal, getReportedQuestions, updateQuestion, resolveReportedQuestion } from '@/lib/api'
 import { Loader2, MessageSquareWarning, Check, X, Search, AlertTriangle, Edit } from 'lucide-react'
 import MathText from '@/components/ui/MathText'
 import { toast } from 'react-hot-toast'
@@ -51,9 +51,13 @@ export default function AppealsPage() {
 
   const handleResolveReport = async (questionId: string) => {
     try {
-      await updateQuestion(questionId, { isReported: false, reportMessage: '' } as any)
-      toast.success('Đã đánh dấu xử lý xong lỗi đề thi!')
-      fetchReports()
+      const success = await resolveReportedQuestion(questionId)
+      if (success) {
+        toast.success('Đã đánh dấu xử lý xong lỗi đề thi!')
+        fetchReports()
+      } else {
+        toast.error('Lỗi khi cập nhật trạng thái báo cáo')
+      }
     } catch (e) {
       toast.error('Lỗi khi cập nhật trạng thái báo cáo')
     }

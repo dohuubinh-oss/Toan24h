@@ -1,8 +1,7 @@
 import React from 'react';
 import { PenTool, CheckCircle2, Clock, HelpCircle, Trophy, AlertCircle } from 'lucide-react';
 
-export type PracticeStatus = 'not_started' | 'completed';
-
+import { PracticeStatus } from '@/types/practice';
 export interface PracticeCardProps {
   id: string;
   title: string;
