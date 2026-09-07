@@ -35,7 +35,7 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
             {practices.map(practice => {
               const isCompleted = practice.status === 'COMPLETED';
               const isPending = practice.status === 'PENDING';
-              
+
               let scoreColor = 'text-slate-400';
               let scoreBg = 'bg-slate-50';
               let ScoreIcon = CheckCircle2;
@@ -44,7 +44,7 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
               if (isCompleted && practice.score !== undefined) {
                 const tenPointScore = (practice.score / practice.questionCount) * 10;
                 scoreLabel = `${practice.score}/${practice.questionCount}`;
-                
+
                 if (tenPointScore < 5) {
                   scoreColor = 'text-rose-600';
                   scoreBg = 'bg-rose-50';
@@ -61,11 +61,16 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
               }
 
               return (
-                <tr 
-                  key={practice.id} 
+                <tr
+                  key={practice.id}
                   onClick={() => {
                     if (isPending || isCompleted) {
-                      router.push(`/exam/${practice.id}/result`);
+                      if (practice.resultId) {
+                        router.push(`/exam/${practice.resultId}/result`);
+                      } else {
+                        // Fallback if resultId is not available
+                        router.push(`/exam/${practice.id}/result`);
+                      }
                     } else {
                       sessionStorage.removeItem(`exam_state_${practice.id}`);
                       router.push(`/exam/${practice.id}/take`);
@@ -84,21 +89,21 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
                       </div>
                     </div>
                   </td>
-                  
+
                   <td className="px-6 py-4 text-center">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-100">
                       <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
                       <span className="text-sm font-medium text-slate-700">{practice.questionCount}</span>
                     </div>
                   </td>
-                  
+
                   <td className="px-6 py-4 text-center">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-100">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
                       <span className="text-sm font-medium text-slate-700">{practice.duration}p</span>
                     </div>
                   </td>
-                  
+
                   <td className="px-6 py-4 text-center">
                     {isCompleted ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-full">
@@ -114,7 +119,7 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
                       </span>
                     )}
                   </td>
-                  
+
                   <td className="px-6 py-4 text-center">
                     {isCompleted ? (
                       <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${scoreBg} ${scoreColor} font-bold text-sm`}>
@@ -127,18 +132,22 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
                       <span className="text-sm text-slate-400 italic">--</span>
                     )}
                   </td>
-                  
+
                   <td className="px-6 py-4 text-right">
-                    <Button 
+                    <Button
                       variant={isCompleted ? "outline" : isPending ? "secondary" : "primary"}
-                      className={`h-9 px-4 text-sm font-semibold rounded-lg flex items-center gap-2 ${
-                        !isCompleted && !isPending ? 'shadow-sm' : ''
-                      }`}
+                      className={`h-9 px-4 text-sm font-semibold rounded-lg flex items-center gap-2 ${!isCompleted && !isPending ? 'shadow-sm' : ''
+                        }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (isPending || isCompleted) {
-                          router.push(`/exam/${practice.id}/result`);
+                        if (isPending) {
+                          if (practice.resultId) {
+                            router.push(`/exam/${practice.resultId}/result`);
+                          } else {
+                            router.push(`/exam/${practice.id}/result`);
+                          }
                         } else {
+                          // Nếu Chưa làm hoặc Đã làm (Làm lại), đều chuyển sang trang làm bài
                           sessionStorage.removeItem(`exam_state_${practice.id}`);
                           router.push(`/exam/${practice.id}/take`);
                         }

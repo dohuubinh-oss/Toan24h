@@ -62,7 +62,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
         const data = await res.json()
         if (data && data.status === 'success' && data.data) {
           setNotifications(data.data)
-          
+
           // Check for new notifications
           if (data.data.length > 0) {
             const latest = data.data[0]
@@ -133,7 +133,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
           {isLoggedState ? (
             <>
               <div className="relative" ref={notificationRef}>
-                <button 
+                <button
                   onClick={() => setShowNotifications(!showNotifications)}
                   className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors text-slate-600 relative"
                 >
@@ -148,7 +148,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                     <div className="flex items-center justify-between p-4 border-b border-slate-100">
                       <h3 className="font-semibold text-slate-800">Thông báo</h3>
                       {notifications.length > 0 && (
-                        <button 
+                        <button
                           onClick={async () => {
                             try {
                               await fetch(`http://localhost:8080/api/v1/notifications`, { method: 'DELETE' })
@@ -163,7 +163,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                         </button>
                       )}
                     </div>
-                    
+
                     <div className="max-h-[320px] overflow-y-auto">
                       {notifications.length === 0 ? (
                         <div className="p-8 text-center text-slate-500">
@@ -173,7 +173,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                       ) : (
                         notifications.map(n => {
                           const isResultLink = n.link?.includes('/result')
-                          
+
                           const handleNotificationClick = () => {
                             if (!isResultLink) {
                               setShowNotifications(false)
@@ -213,7 +213,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                   </div>
                 )}
               </div>
-              
+
               <div className="relative group pl-4 border-l border-slate-200">
                 <div className="flex items-center gap-3 cursor-pointer">
                   <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold uppercase">
@@ -228,14 +228,14 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
 
                 {/* Dropdown Menu */}
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 translate-y-2 group-hover:translate-y-0">
-                  <Link 
-                    href="/profile" 
+                  <Link
+                    href="/profile"
                     className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors"
                   >
                     <Settings size={16} />
                     Sửa thông tin
                   </Link>
-                  <button 
+                  <button
                     onClick={() => {
                       import('@/lib/authApi').then(m => m.logout())
                     }}
@@ -249,13 +249,13 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
             </>
           ) : (
             <>
-              <Link 
+              <Link
                 href="/login"
                 className="px-6 py-2.5 rounded-full font-semibold border-2 border-slate-200 text-slate-700 hover:border-primary/30 hover:bg-primary/5 transition-all"
               >
                 Đăng nhập
               </Link>
-              <Link 
+              <Link
                 href="/dashboard"
                 className="px-6 py-2.5 rounded-full font-semibold bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 transition-all"
               >

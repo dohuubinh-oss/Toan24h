@@ -300,29 +300,20 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
 
   const handleSubmit = async () => {
     try {
-      const answersList = Object.entries(answers).map(([qId, ans]) => {
-        // find if it's essay by searching in questions
-        let isEssay = false
-        for (const q of questions) {
-          if (q.id === qId) {
-            isEssay = q.type === 'Tự luận'
-            break
-          }
-          if (q.subQuestions) {
-            for (const sub of q.subQuestions) {
-              if (sub.id === qId) {
-                isEssay = sub.type === 'Tự luận'
-                break
-              }
-            }
-          }
+      const answersList = questions.flatMap(q => {
+        if (q.type_question === 'group' && q.subQuestions) {
+          return q.subQuestions.map(sub => ({
+            questionId: sub.id,
+            studentAnswer: answers[sub.id] || "",
+            studentExplanation: explanations[sub.id] || "",
+            isEssay: sub.type === 'Tự luận'
+          }))
         }
-        
         return {
-          questionId: qId,
-          studentAnswer: ans,
-          studentExplanation: explanations[qId] || "",
-          isEssay: isEssay
+          questionId: q.id,
+          studentAnswer: answers[q.id] || "",
+          studentExplanation: explanations[q.id] || "",
+          isEssay: q.type === 'Tự luận'
         }
       })
 
@@ -331,12 +322,10 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         sessionStorage.removeItem(`exam_state_${id}`);
         toast.success("Bài làm của bạn đang được chấm")
         
-        // Force full page reload on the previous URL to clear Next.js client router cache
-        if (typeof window !== 'undefined' && document.referrer) {
-          window.location.href = document.referrer;
-        } else {
-          router.back();
-        }
+        // Navigate back to the appropriate page and force a hard reload
+        const baseUrl = exam.cate === 'exam' ? '/exams/lop/' : '/practices/lop/';
+        const backUrl = exam.grade ? (baseUrl + exam.grade) : '/student';
+        window.location.href = backUrl;
       } else {
         toast.error("Nộp bài thất bại")
       }

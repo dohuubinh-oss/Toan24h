@@ -57,7 +57,9 @@ export default async function GradePracticesPage({
         return [];
       }),
       token ? getMyExamResults(token).catch(e => {
-        console.error("Failed to load results", e);
+        if (!e?.message?.includes('Invalid or expired token') && !e?.message?.includes('401')) {
+          console.error("Failed to load results", e);
+        }
         return [];
       }) : Promise.resolve([])
     ]);
@@ -118,6 +120,7 @@ export default async function GradePracticesPage({
       status: status,
       score: score, 
       grade: String(exam.grade),
+      resultId: latestResult?.id,
     };
   });
 

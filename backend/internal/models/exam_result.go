@@ -43,6 +43,7 @@ type ResultDetail struct {
 	ID            uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	ExamResultID  uuid.UUID `gorm:"type:uuid;not null;index" json:"examResultId"`
 	QuestionID      uuid.UUID `gorm:"type:uuid;not null;index" json:"questionId"`
+	Question        *Question `gorm:"foreignKey:QuestionID" json:"Question,omitempty"`
 	StudentAnswer   string    `gorm:"type:text" json:"studentAnswer"`
 	StudentExplanation string `gorm:"type:text" json:"studentExplanation"`
 	ImagePath       string    `gorm:"type:varchar(255)" json:"imagePath"` // Path to saved image in "test" folder

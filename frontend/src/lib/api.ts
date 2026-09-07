@@ -427,7 +427,11 @@ export async function getMyExamResults(token?: string): Promise<any[]> {
       return response.data
     }
     return []
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message?.includes('Invalid or expired token') || error?.message?.includes('401')) {
+      // Silently return empty array on auth failure during SSR
+      return []
+    }
     console.error(`Failed to fetch my exam results:`, error)
     return []
   }

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronRight, Calendar, LayoutDashboard, Loader2, ArrowLeft, ArrowRight, Home } from 'lucide-react'
+import { ChevronRight, Calendar, LayoutDashboard, Loader2, ArrowLeft, ArrowRight, Home, Sparkles, CheckCircle, XCircle } from 'lucide-react'
 import ExamWorkspaceLayout from '@/components/exam/ExamWorkspaceLayout'
 import QuestionMapSidebar, { QuestionMapItem, QuestionStatus } from '@/components/exam/taking/QuestionMapSidebar'
 import MultipleChoiceQuestion from '@/components/exam/taking/MultipleChoiceQuestion'

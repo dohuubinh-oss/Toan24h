@@ -9,6 +9,7 @@ export interface Practice {
   status: PracticeStatus;
   score?: number; // Score if completed
   grade: string;
+  resultId?: string;
 }
 
 export interface PaginatedPractices {

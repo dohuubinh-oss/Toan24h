@@ -99,7 +99,7 @@ func processExamGrading(resultID uuid.UUID) {
 	isVip := false
 	if result.StudentID != nil {
 		if err := config.DB.First(&user, "id = ?", result.StudentID).Error; err == nil {
-			isVip = user.Role == "vip"
+			isVip = user.Role == "vip" || user.Role == "admin"
 		}
 	}
 
@@ -215,7 +215,7 @@ func GetMyExamResults(c *gin.Context) {
 func GetExamResultByID(c *gin.Context) {
 	id := c.Param("id")
 	var result models.ExamResult
-	if err := config.DB.Preload("Details").Preload("Exam").First(&result, "id = ?", id).Error; err != nil {
+	if err := config.DB.Preload("Details.Question").First(&result, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Result not found"})
 		return
 	}

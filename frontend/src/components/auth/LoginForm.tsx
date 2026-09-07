@@ -45,7 +45,7 @@ export default function LoginForm() {
         email: data.identity,
         password: data.password
       })
-      
+
       // Note: The backend now sets HttpOnly cookies automatically, and regular cookies for userRole/userGrade
       // so Next.js middleware will read them seamlessly.
 
@@ -53,11 +53,11 @@ export default function LoginForm() {
       if (res.user) {
         localStorage.setItem('user', JSON.stringify(res.user))
       }
-      
+
       if (res.user?.role === 'admin') {
-        router.push('/dashboard')
+        window.location.href = '/dashboard/lectures'
       } else {
-        router.push('/lectures')
+        window.location.href = '/lectures'
       }
     } catch (error: any) {
       let msg = error.message
@@ -82,22 +82,22 @@ export default function LoginForm() {
         credentials: 'include',
         body: JSON.stringify(user),
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Đăng nhập Telegram thất bại')
       }
 
       const res = await response.json()
-      
+
       if (res.user) {
         localStorage.setItem('user', JSON.stringify(res.user))
       }
-      
+
       if (res.user?.role === 'admin') {
-        router.push('/dashboard')
+        window.location.href = '/dashboard/lectures'
       } else {
-        router.push('/lectures')
+        window.location.href = '/lectures'
       }
     } catch (error: any) {
       setErrorMessage(error.message || 'Lỗi kết nối máy chủ.')
@@ -122,11 +122,11 @@ export default function LoginForm() {
               {errorMessage}
             </div>
           )}
-          
+
           <div>
             <Label htmlFor="identity">Số điện thoại hoặc Email</Label>
             <Input
-              {...register('identity', { 
+              {...register('identity', {
                 required: 'Vui lòng nhập email hoặc số điện thoại',
                 pattern: {
                   value: /^([^\s@]+@[^\s@]+\.[^\s@]+|(84|0[3|5|7|8|9])+([0-9]{8})\b)$/,
@@ -209,9 +209,9 @@ export default function LoginForm() {
               <span className="text-xs text-slate-400 mt-2">Sử dụng tài khoản Telegram của bạn</span>
             </div>
           ) : (
-             <div className="text-center text-red-500 text-sm p-4 bg-red-50 rounded-lg border border-red-100">
-               Lỗi: Chưa cấu hình Telegram Bot. Vui lòng cập nhật biến môi trường NEXT_PUBLIC_TELEGRAM_BOT_USERNAME.
-             </div>
+            <div className="text-center text-red-500 text-sm p-4 bg-red-50 rounded-lg border border-red-100">
+              Lỗi: Chưa cấu hình Telegram Bot. Vui lòng cập nhật biến môi trường NEXT_PUBLIC_TELEGRAM_BOT_USERNAME.
+            </div>
           )}
         </div>
 
