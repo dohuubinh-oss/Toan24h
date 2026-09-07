@@ -28,7 +28,7 @@ export default function ExamHeader({
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-lg font-bold leading-tight">{title || 'Đề thi mới'}</h1>
+            <h1 className="text-lg font-bold leading-tight">{title || 'Bài thực hành mới'}</h1>
             <p className="text-xs text-slate-500">{subtitle}</p>
           </div>
         </div>

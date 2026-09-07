@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -35,164 +38,223 @@ func SubmitExam(c *gin.Context) {
 		return
 	}
 
-	// For authenticated users, extract StudentID from Context
 	var studentID *uuid.UUID
 	if val, exists := c.Get("userID"); exists {
 		if id, ok := val.(uuid.UUID); ok {
 			studentID = &id
+		} else if idStr, ok := val.(string); ok {
+			parsedID, err := uuid.Parse(idStr)
+			if err == nil {
+				studentID = &parsedID
+			}
 		}
 	}
 
-	// Create ExamResult with PENDING status
-	examResult := models.ExamResult{
-		ExamID:    examID,
-		StudentID: studentID,
-		Status:    models.StatusPending,
-	}
-
-	if err := config.DB.Create(&examResult).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to create exam result"})
-		return
-	}
-
-	// Create ResultDetails
+	answersMap := make(map[string]models.QuestionAnswer)
 	for _, ans := range req.Answers {
-		qID, err := uuid.Parse(ans.QuestionID)
+		_, err := uuid.Parse(ans.QuestionID)
 		if err != nil {
 			continue // Skip invalid question IDs
 		}
+		
+		qType := "Trắc nghiệm"
+		if ans.IsEssay {
+			qType = "Tự luận"
+		}
 
-		detail := models.ResultDetail{
-			ExamResultID:       examResult.ID,
-			QuestionID:         qID,
+		answersMap[ans.QuestionID] = models.QuestionAnswer{
+			Type:               qType,
 			StudentAnswer:      ans.StudentAnswer,
 			StudentExplanation: ans.StudentExplanation,
-			ImagePath:          ans.ImagePath,
+			ImageURLs:          []string{ans.ImagePath},
+			Appeal: models.AppealInfo{
+				IsAppealed: false,
+			},
 		}
-		config.DB.Create(&detail)
 	}
 
-	// TODO: Dispatch Background Job to Grade Exam
-	go processExamGrading(examResult.ID)
+	answersJSONBytes, err := json.Marshal(answersMap)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to encode answers"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "Nộp bài thành công. AI đang chấm điểm.",
-		"data": gin.H{
-			"resultId": examResult.ID,
-		},
-	})
+	now := time.Now()
+	submission := models.Submission{
+		ExamID:      examID,
+		UserID:      studentID,
+		Status:      models.StatusInProgress, // Will be graded by background job
+		AnswersJSON: answersJSONBytes,
+		SubmittedAt: &now,
+	}
+
+	if err := config.DB.Create(&submission).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to save submission"})
+		return
+	}
+
+	// Determine if there are essay questions
+	var exam models.Exam
+	config.DB.First(&exam, "id = ?", examID)
+	var allQuestions []models.Question
+	config.DB.Where("id IN ? OR parent_id IN ?", exam.QuestionIDs, exam.QuestionIDs).Find(&allQuestions)
+	
+	hasEssay := false
+	for _, q := range allQuestions {
+		if q.Type == "Tự luận" {
+			hasEssay = true
+			break
+		}
+	}
+
+	if hasEssay {
+		go processExamGrading(submission.ID)
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "pending",
+			"message": "Nộp bài thành công. AI đang chấm điểm.",
+			"data": gin.H{
+				"resultId": submission.ID,
+			},
+		})
+	} else {
+		processExamGrading(submission.ID)
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "graded",
+			"message": "Chấm điểm hoàn tất.",
+			"data": gin.H{
+				"resultId": submission.ID,
+			},
+		})
+	}
 }
 
-func processExamGrading(resultID uuid.UUID) {
-	// 1. Fetch ExamResult and details
-	var result models.ExamResult
-	if err := config.DB.Preload("Details").First(&result, "id = ?", resultID).Error; err != nil {
-		return // Not found or error
+func processExamGrading(submissionID uuid.UUID) {
+	var submission models.Submission
+	if err := config.DB.First(&submission, "id = ?", submissionID).Error; err != nil {
+		return
 	}
 
-	var mcqScore, essayScore float64
-	var totalReasoningScore float64
+	var answersMap map[string]models.QuestionAnswer
+	if err := json.Unmarshal(submission.AnswersJSON, &answersMap); err != nil {
+		return
+	}
 
-	// Fetch User to check VIP status
 	var user models.User
 	isVip := false
-	if result.StudentID != nil {
-		if err := config.DB.First(&user, "id = ?", result.StudentID).Error; err == nil {
+	if submission.UserID != nil {
+		if err := config.DB.First(&user, "id = ?", submission.UserID).Error; err == nil {
 			isVip = user.Role == "vip" || user.Role == "admin"
 		}
 	}
 
-	// 2. Process each detail
-	for i := range result.Details {
-		detail := &result.Details[i]
-		
-		var question models.Question
-		if err := config.DB.First(&question, "id = ?", detail.QuestionID).Error; err != nil {
+	var exam models.Exam
+	if err := config.DB.First(&exam, "id = ?", submission.ExamID).Error; err != nil {
+		return
+	}
+
+	var allQuestions []models.Question
+	config.DB.Where("id IN ? OR parent_id IN ?", []string(exam.QuestionIDs), []string(exam.QuestionIDs)).Find(&allQuestions)
+
+	var totalScore float64
+
+	for _, question := range allQuestions {
+		// Ignore group parent questions because they don't have answers themselves, only their sub-questions do
+		if question.TypeQuestion == "group" && question.ParentID == nil {
 			continue
 		}
 
-		if question.Type == "Tự luận" {
-			// Send to Gemini
-			aiResult, err := services.GradeEssayWithGemini(
-				question.Content, 
-				question.CorrectAnswer, 
-				detail.StudentAnswer, 
-				float64(question.DifficultyPoint),
-			)
-			if err == nil && aiResult != nil {
-				detail.Score = aiResult.Score
-				detail.AIExplanation = aiResult.Explanation
-				detail.ErrorLocation = aiResult.ErrorLocation
-				if aiResult.Score > 0 {
-					detail.IsCorrect = true // Partially or fully correct
-				}
+		qID := question.ID.String()
+		ans, exists := answersMap[qID]
+		if !exists {
+			// Initialize empty answer
+			ans = models.QuestionAnswer{
+				Score: 0,
+				IsCorrect: false,
+				StudentAnswer: "",
 			}
-			essayScore += detail.Score
-		} else {
-			// MCQ logic
-			if detail.StudentAnswer == question.CorrectAnswer {
-				detail.IsCorrect = true
-				detail.Score = float64(question.DifficultyPoint)
+		}
 
-				// VIP Reasoning Grading
-				if isVip && detail.StudentExplanation != "" {
-					aiReasoning, err := services.EvaluateReasoningWithGemini(
-						question.Content,
-						question.CorrectAnswer,
-						detail.StudentExplanation,
-					)
-					if err == nil && aiReasoning != nil {
-						detail.ReasoningScore = aiReasoning.Score
-						detail.AIReasoningRemark = aiReasoning.Explanation
-						totalReasoningScore += aiReasoning.Score
+		if question.Type == "Tự luận" {
+			if ans.StudentAnswer == "" {
+				ans.Score = 0
+				ans.IsCorrect = false
+				ans.AIExplanation = "Không có câu trả lời."
+			} else {
+				aiResult, err := services.GradeEssayWithGemini(
+					question.Content,
+					question.CorrectAnswer,
+					ans.StudentAnswer,
+					float64(question.DifficultyPoint),
+				)
+				if err == nil && aiResult != nil {
+					ans.Score = aiResult.Score
+					ans.AIExplanation = aiResult.Explanation
+					ans.ErrorLocation = aiResult.ErrorLocation
+					if aiResult.Score > 0 {
+						ans.IsCorrect = true
 					}
 				}
 			}
-			mcqScore += detail.Score
+			totalScore += ans.Score
+		} else {
+			if strings.TrimSpace(ans.StudentAnswer) == strings.TrimSpace(question.CorrectAnswer) {
+				ans.IsCorrect = true
+				ans.Score = float64(question.DifficultyPoint)
+
+				if isVip && ans.StudentExplanation != "" {
+					aiReasoning, err := services.EvaluateReasoningWithGemini(
+						question.Content,
+						question.CorrectAnswer,
+						ans.StudentExplanation,
+					)
+					if err == nil && aiReasoning != nil {
+						ans.ReasoningScore = aiReasoning.Score
+						ans.AIReasoningRemark = aiReasoning.Explanation
+					}
+				}
+			} else {
+				ans.IsCorrect = false
+				ans.Score = 0
+			}
+			totalScore += ans.Score
 		}
 		
-		config.DB.Save(detail)
+		// Update map reference
+		answersMap[qID] = ans
 	}
 
-	// 3. Update result
-	result.MCQScore = mcqScore
-	result.EssayScore = essayScore
-	result.TotalScore = mcqScore + essayScore
-	result.TotalReasoningScore = totalReasoningScore
-	if isVip {
-		result.OverallReasoningRemark = fmt.Sprintf("Điểm tư duy: %.2f. Hãy xem nhận xét chi tiết ở từng câu trắc nghiệm.", totalReasoningScore)
-	}
-	result.Status = models.StatusCompleted
-	config.DB.Save(&result)
+	updatedJSONBytes, _ := json.Marshal(answersMap)
+	submission.AnswersJSON = updatedJSONBytes
+	submission.TotalScore = totalScore
+	submission.Status = models.StatusGraded
 
-	// Create a notification for the user
-	if result.StudentID != nil {
+	config.DB.Save(&submission)
+
+	if submission.UserID != nil {
+		resultURL := fmt.Sprintf("%s/exam/%s/result", config.Env.FrontendURL, submission.ID.String())
 		config.DB.Create(&models.Notification{
-			UserID:  *result.StudentID,
+			UserID:  *submission.UserID,
 			Title:   "Chấm điểm hoàn tất",
-			Message: "Bài thi của bạn đã được AI chấm xong. Nhấn để xem kết quả chi tiết.",
-			Link:    "/exam/" + result.ID.String() + "/result",
+			Message: fmt.Sprintf("Bài thi của bạn đã được AI chấm xong. Xem lời giải tại: %s", resultURL),
+			Link:    "/exam/" + submission.ID.String() + "/result",
 		})
 
 		if user.TelegramID != nil {
 			notifier := services.NewTelegramNotifier()
-			msg := fmt.Sprintf("✅ <b>Chấm điểm hoàn tất</b>\nBài thi của bạn đã được AI chấm xong.\nTổng điểm: %.2f\nHãy truy cập website để xem chi tiết.", result.TotalScore)
-			// Send message in a goroutine so it doesn't block
+			resultURL := fmt.Sprintf("%s/exam/%s/result", config.Env.FrontendURL, submission.ID.String())
+			msg := fmt.Sprintf("✅ <b>Chấm điểm hoàn tất</b>\nBài thi của bạn đã được AI chấm xong.\nTổng điểm: %.2f\n\n🔗 Xem lời giải chi tiết: %s", submission.TotalScore, resultURL)
 			go notifier.SendMessage(*user.TelegramID, msg)
 		}
 	}
 }
 
 func GetMyExamResults(c *gin.Context) {
-	// Extract userID from context (set by AuthMiddleware)
 	userIDVal, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	
-	// userID could be string or uuid.UUID depending on token claims parsing
+
 	var userID string
 	if id, ok := userIDVal.(uuid.UUID); ok {
 		userID = id.String()
@@ -203,30 +265,56 @@ func GetMyExamResults(c *gin.Context) {
 		return
 	}
 
-	var results []models.ExamResult
-	if err := config.DB.Where("student_id = ?", userID).Order("created_at desc").Find(&results).Error; err != nil {
+	var submissions []models.Submission
+	if err := config.DB.Where("user_id = ?", userID).Order("created_at desc").Find(&submissions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch results"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "success", "data": results})
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": submissions})
 }
 
 func GetExamResultByID(c *gin.Context) {
 	id := c.Param("id")
-	var result models.ExamResult
-	if err := config.DB.Preload("Details.Question").First(&result, "id = ?", id).Error; err != nil {
+	var submission models.Submission
+	if err := config.DB.First(&submission, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Result not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "success", "data": result})
+	// We also need to attach the exam and questions information for the frontend to render it properly.
+	// Instead of rewriting everything, we can just return the submission, and the frontend will fetch the exam details separately.
+	// Actually, the previous implementation returned ExamResult with Preloaded Details and Questions.
+	// Since JSON doesn't preload, we need to manually fetch questions if the frontend expects them in this same API call.
+	// For simplicity, let's fetch questions and embed them in the response.
+
+	var answersMap map[string]models.QuestionAnswer
+	json.Unmarshal(submission.AnswersJSON, &answersMap)
+
+	var qIDs []string
+	for k := range answersMap {
+		qIDs = append(qIDs, k)
+	}
+
+	var questions []models.Question
+	if len(qIDs) > 0 {
+		config.DB.Where("id IN ?", qIDs).Find(&questions)
+	}
+
+	// Send everything back
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data": gin.H{
+			"submission": submission,
+			"questions":  questions,
+		},
+	})
 }
 
 func AppealExamResult(c *gin.Context) {
 	id := c.Param("id")
 	var req struct {
-		DetailID      string `json:"detailId"`
+		QuestionID    string `json:"detailId"` // Repurposing detailId field from frontend for questionId
 		AppealMessage string `json:"appealMessage"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -234,24 +322,40 @@ func AppealExamResult(c *gin.Context) {
 		return
 	}
 
-	var detail models.ResultDetail
-	if err := config.DB.First(&detail, "id = ? AND exam_result_id = ?", req.DetailID, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Result detail not found"})
+	var submission models.Submission
+	if err := config.DB.First(&submission, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Submission not found"})
 		return
 	}
 
-	detail.AppealStatus = "PENDING"
-	detail.IsAppealed = true
-	detail.AppealMessage = req.AppealMessage
-	config.DB.Save(&detail)
+	var answersMap map[string]models.QuestionAnswer
+	if err := json.Unmarshal(submission.AnswersJSON, &answersMap); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse answers"})
+		return
+	}
+
+	ans, exists := answersMap[req.QuestionID]
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Question answer not found in submission"})
+		return
+	}
+
+	ans.Appeal.IsAppealed = true
+	ans.Appeal.Status = models.AppealPending
+	ans.Appeal.Message = req.AppealMessage
+	answersMap[req.QuestionID] = ans
+
+	updatedJSONBytes, _ := json.Marshal(answersMap)
+	submission.AnswersJSON = updatedJSONBytes
+	config.DB.Save(&submission)
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Kháng cáo đã được gửi và đang chờ duyệt."})
 }
 
 func GetAppeals(c *gin.Context) {
 	type AppealResponse struct {
-		DetailID      string  `json:"detailId"`
-		ResultID      string  `json:"resultId"`
+		SubmissionID  string  `json:"resultId"` // Kept resultId for frontend compatibility
+		QuestionID    string  `json:"detailId"` // Kept detailId for frontend compatibility
 		ExamName      string  `json:"examName"`
 		Question      string  `json:"question"`
 		StudentAnswer string  `json:"studentAnswer"`
@@ -261,42 +365,49 @@ func GetAppeals(c *gin.Context) {
 		AppealMessage string  `json:"appealMessage"`
 	}
 
-	var details []models.ResultDetail
-	if err := config.DB.Where("appeal_status = ?", "PENDING").Find(&details).Error; err != nil {
+	var submissions []models.Submission
+	// Simple text search for pending appeals. In production, use JSONB @> operator
+	if err := config.DB.Where("answers_json::text LIKE ?", "%\"status\":\"PENDING\"%").Find(&submissions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch appeals"})
 		return
 	}
 
 	var response []AppealResponse
-	for _, d := range details {
-		var q models.Question
-		config.DB.First(&q, "id = ?", d.QuestionID)
-
-		var res models.ExamResult
-		config.DB.First(&res, "id = ?", d.ExamResultID)
+	for _, sub := range submissions {
+		var answersMap map[string]models.QuestionAnswer
+		json.Unmarshal(sub.AnswersJSON, &answersMap)
 
 		var exam models.Exam
-		config.DB.First(&exam, "id = ?", res.ExamID)
+		config.DB.First(&exam, "id = ?", sub.ExamID)
 
-		response = append(response, AppealResponse{
-			DetailID:      d.ID.String(),
-			ResultID:      res.ID.String(),
-			ExamName:      exam.Title,
-			Question:      q.Content,
-			StudentAnswer: d.StudentAnswer,
-			AIExplanation: d.AIExplanation,
-			Score:         d.Score,
-			MaxScore:      float64(q.DifficultyPoint),
-			AppealMessage: d.AppealMessage,
-		})
+		for qID, ans := range answersMap {
+			if ans.Appeal.IsAppealed && ans.Appeal.Status == models.AppealPending {
+				var q models.Question
+				config.DB.First(&q, "id = ?", qID)
+
+				response = append(response, AppealResponse{
+					SubmissionID:  sub.ID.String(),
+					QuestionID:    qID,
+					ExamName:      exam.Title,
+					Question:      q.Content,
+					StudentAnswer: ans.StudentAnswer,
+					AIExplanation: ans.AIExplanation,
+					Score:         ans.Score,
+					MaxScore:      float64(q.DifficultyPoint),
+					AppealMessage: ans.Appeal.Message,
+				})
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": response})
 }
 
 func ResolveAppeal(c *gin.Context) {
-	id := c.Param("id")
+	// The frontend passes the submissionID via path param
+	id := c.Param("id") 
 	var req struct {
+		QuestionID      string  `json:"detailId"` // Reused detailId field 
 		Status          string  `json:"status"` // APPROVED, REJECTED
 		NewScore        float64 `json:"newScore"`
 		TeacherFeedback string  `json:"teacherFeedback"`
@@ -306,44 +417,52 @@ func ResolveAppeal(c *gin.Context) {
 		return
 	}
 
-	var detail models.ResultDetail
-	if err := config.DB.First(&detail, "id = ?", id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Result detail not found"})
+	var submission models.Submission
+	if err := config.DB.First(&submission, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Submission not found"})
 		return
 	}
 
-	oldScore := detail.Score
+	var answersMap map[string]models.QuestionAnswer
+	json.Unmarshal(submission.AnswersJSON, &answersMap)
 
-	detail.AppealStatus = req.Status
-	detail.TeacherFeedback = req.TeacherFeedback
+	ans, exists := answersMap[req.QuestionID]
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Question answer not found"})
+		return
+	}
+
+	oldScore := ans.Score
+
+	ans.Appeal.Status = models.AppealStatus(req.Status)
+	ans.Appeal.TeacherFeedback = req.TeacherFeedback
 	if req.Status == "APPROVED" {
-		detail.Score = req.NewScore
+		ans.Score = req.NewScore
 		if req.NewScore > 0 {
-			detail.IsCorrect = true
+			ans.IsCorrect = true
 		} else {
-			detail.IsCorrect = false
+			ans.IsCorrect = false
 		}
 	}
-	config.DB.Save(&detail)
+	
+	answersMap[req.QuestionID] = ans
+	updatedJSONBytes, _ := json.Marshal(answersMap)
+	submission.AnswersJSON = updatedJSONBytes
 
-	// Recalculate ExamResult Score
-	var res models.ExamResult
-	if err := config.DB.First(&res, "id = ?", detail.ExamResultID).Error; err == nil {
-		if req.Status == "APPROVED" {
-			scoreDiff := req.NewScore - oldScore
-			res.EssayScore += scoreDiff // Assuming appeals are mostly for essays
-			res.TotalScore += scoreDiff
-			config.DB.Save(&res)
-		}
-		
-		if res.StudentID != nil {
-			config.DB.Create(&models.Notification{
-				UserID:  *res.StudentID,
-				Title:   "Kết quả kháng cáo",
-				Message: "Kháng cáo của bạn đã được giáo viên duyệt. Nhấn để xem phản hồi.",
-				Link:    "/exam/" + res.ID.String() + "/result",
-			})
-		}
+	if req.Status == "APPROVED" {
+		scoreDiff := req.NewScore - oldScore
+		submission.TotalScore += scoreDiff
+	}
+
+	config.DB.Save(&submission)
+
+	if submission.UserID != nil {
+		config.DB.Create(&models.Notification{
+			UserID:  *submission.UserID,
+			Title:   "Kết quả kháng cáo",
+			Message: fmt.Sprintf("Kháng cáo của bạn đã được giáo viên phản hồi: %s", req.TeacherFeedback),
+			Link:    "/exam/" + submission.ID.String() + "/result",
+		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Đã duyệt kháng cáo"})

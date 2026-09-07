@@ -194,12 +194,13 @@ func GetQuestions(c *gin.Context) {
 		ids = strings.Split(idsParam, ",")
 	}
 
-	query := config.DB.Model(&models.Question{}).Where("parent_id IS NULL")
-	
+	var query *gorm.DB
 	if len(ids) > 0 {
-		query = query.Where("id IN ?", ids)
+		query = config.DB.Model(&models.Question{}).Where("id IN ?", ids)
 		limit = 1000 // If specific IDs are requested, override limit to fetch them all
 	} else {
+		query = config.DB.Model(&models.Question{}).Where("parent_id IS NULL")
+
 		type filter struct {
 			Query string
 			Args  []interface{}
@@ -378,13 +379,21 @@ func ReportQuestion(c *gin.Context) {
 		return
 	}
 
+	userID, exists := c.Get("userID")
+	var uid string
+	if exists {
+		uid = userID.(uuid.UUID).String()
+	}
+
+	formattedMessage := fmt.Sprintf("[%s] %s", uid, req.Message)
+
 	// Update flags
 	q.IsReported = true
 	// Nối thêm tin nhắn nếu đã có người report trước đó (hoặc thay thế)
 	if q.ReportMessage != "" {
-		q.ReportMessage = q.ReportMessage + " | " + req.Message
+		q.ReportMessage = q.ReportMessage + " || " + formattedMessage
 	} else {
-		q.ReportMessage = req.Message
+		q.ReportMessage = formattedMessage
 	}
 
 	if err := config.DB.Save(&q).Error; err != nil {
@@ -399,7 +408,42 @@ func ReportQuestion(c *gin.Context) {
 func ResolveReportQuestion(c *gin.Context) {
 	id := c.Param("id")
 	
-	if err := config.DB.Model(&models.Question{}).Where("id = ?", id).Updates(map[string]interface{}{
+	var req struct {
+		TeacherFeedback string `json:"teacherFeedback"`
+	}
+	// Parse optional feedback, ignore error if empty
+	c.ShouldBindJSON(&req)
+
+	var q models.Question
+	if err := config.DB.First(&q, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, APIResponse{Status: "error", Error: "Question not found"})
+		return
+	}
+
+	messages := strings.Split(q.ReportMessage, " || ")
+	notifiedUsers := make(map[string]bool)
+	for _, msg := range messages {
+		if strings.HasPrefix(msg, "[") {
+			endIdx := strings.Index(msg, "]")
+			if endIdx > 1 {
+				uidStr := msg[1:endIdx]
+				if uidStr != "" && !notifiedUsers[uidStr] {
+					notifiedUsers[uidStr] = true
+					uid, err := uuid.Parse(uidStr)
+					if err == nil {
+						config.DB.Create(&models.Notification{
+							UserID:  uid,
+							Title:   "Kết quả báo lỗi",
+							Message: fmt.Sprintf("Báo lỗi của bạn cho câu hỏi đã được giáo viên phản hồi: %s", req.TeacherFeedback),
+							Link:    "/dashboard", 
+						})
+					}
+				}
+			}
+		}
+	}
+
+	if err := config.DB.Model(&q).Updates(map[string]interface{}{
 		"is_reported": false,
 		"report_message": "",
 	}).Error; err != nil {

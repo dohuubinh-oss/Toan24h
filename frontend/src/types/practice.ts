@@ -18,3 +18,36 @@ export interface PaginatedPractices {
   totalPages: number;
   currentPage: number;
 }
+
+export interface AppealInfo {
+  is_appealed: boolean;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  message: string;
+  teacher_feedback: string;
+}
+
+export interface QuestionAnswer {
+  type: string;
+  student_answer: string;
+  image_urls: string[];
+  score: number;
+  reasoning_score: number;
+  is_correct: boolean;
+  ai_explanation: string;
+  ai_reasoning_remark: string;
+  error_location: string;
+  appeal: AppealInfo;
+  student_explanation: string;
+}
+
+export interface Submission {
+  id: string;
+  userId?: string;
+  examId: string;
+  status: 'in_progress' | 'submitted' | 'graded';
+  totalScore: number;
+  answersJson: Record<string, QuestionAnswer>;
+  startedAt: string;
+  submittedAt?: string;
+  createdAt: string;
+}

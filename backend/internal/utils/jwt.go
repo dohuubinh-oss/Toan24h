@@ -30,7 +30,7 @@ func getJWTSecret() []byte {
 
 // GenerateAccessToken generates a short-lived access token
 func GenerateAccessToken(userID uuid.UUID, role string, grade string) (string, error) {
-	expirationTime := time.Now().Add(15 * time.Minute) // 15 mins for access token
+	expirationTime := time.Now().Add(24 * time.Hour) // 24 hours for access token
 
 	claims := &Claims{
 		UserID: userID,

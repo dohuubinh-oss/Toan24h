@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  LayoutDashboard, Database, ClipboardList, Users, BookOpen, Trophy, PenTool
+  LayoutDashboard, Database, ClipboardList, Users, BookOpen, Trophy, PenTool, MessageSquareWarning
 } from 'lucide-react';
 
 export type SidebarRole = 'student' | 'teacher';
@@ -25,6 +25,7 @@ const TEACHER_LINKS = [
   { href: '/dashboard/questions', icon: Database, label: 'Ngân hàng câu hỏi', matchPrefix: true },
   { href: '/dashboard/exams', icon: ClipboardList, label: 'Ngân hàng đề thi', matchPrefix: true },
   { href: '/dashboard/users', icon: Users, label: 'Quản lý người dùng', matchPrefix: true },
+  { href: '/dashboard/appeals', icon: MessageSquareWarning, label: 'Báo lỗi/Kháng cáo', matchPrefix: true },
 ];
 
 export default function Sidebar({ role, filterNode }: SidebarProps) {

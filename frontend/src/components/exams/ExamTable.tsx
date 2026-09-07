@@ -94,7 +94,7 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
                 <td className="px-3 py-3 text-center text-sm font-medium whitespace-nowrap">{exam.questionIds?.length || 0}</td>
                 <td className="px-3 py-3 text-center text-sm font-medium whitespace-nowrap">{exam.duration} phút</td>
                 <td className="px-3 py-3 text-center whitespace-nowrap">
-                  <span className="text-sm font-medium text-slate-700">{exam.cate === 'practice' ? 'Bài tập' : 'Đề thi'}</span>
+                  <span className="text-sm font-medium text-slate-700">{exam.cate === 'practice' ? 'Bài tập' : 'Bài thực hành'}</span>
                 </td>
                 <td className="px-3 py-3 text-center whitespace-nowrap">
                   <span className="text-sm font-medium text-slate-700">{exam.type || '-'}</span>

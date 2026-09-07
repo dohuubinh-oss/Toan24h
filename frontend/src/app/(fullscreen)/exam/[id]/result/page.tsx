@@ -8,45 +8,67 @@ import ExamWorkspaceLayout from '@/components/exam/ExamWorkspaceLayout'
 import QuestionMapSidebar, { QuestionMapItem, QuestionStatus } from '@/components/exam/taking/QuestionMapSidebar'
 import MultipleChoiceQuestion from '@/components/exam/taking/MultipleChoiceQuestion'
 import EssayQuestion from '@/components/exam/taking/EssayQuestion'
+import AIHintPanel from '@/components/exam/taking/AIHintPanel'
 import { getExamResultById } from '@/lib/api'
+
+import { useToast } from '@/components/ui/ToastProvider'
 
 export default function ExamResultPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
   const router = useRouter()
+  const toast = useToast()
   
   const [resultData, setResultData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
-  const [isAiHintOpen, setIsAiHintOpen] = useState(false) // Just for layout spacing if needed
+  const [isAiHintOpen, setIsAiHintOpen] = useState(false)
+  const [unlockedHints, setUnlockedHints] = useState<Record<string, number>>({})
+
+  const toggleAiHint = () => {
+    setIsAiHintOpen(!isAiHintOpen)
+  }
+
+  const handleUnlockHint = async (questionId: string, cost: number) => {
+    setUnlockedHints(prev => ({
+      ...prev,
+      [questionId]: (prev[questionId] || 0) + 1
+    }))
+    return true
+  }
 
   useEffect(() => {
-    let interval: NodeJS.Timeout
     const fetchResult = async () => {
       const data = await getExamResultById(id)
       if (data) {
-        setResultData(data)
-        if (data.status === 'COMPLETED') {
+        if (data.submission?.status === 'graded' || data.submission?.status === 'COMPLETED' as any) {
+          setResultData(data)
           setLoading(false)
-          clearInterval(interval)
+        } else {
+          toast.success("Bài thi của bạn đang được chấm, vui lòng quay lại sau.")
+          router.back()
         }
+      } else {
+        toast.error("Không tìm thấy kết quả")
+        router.back()
       }
     }
 
     fetchResult()
-    
-    // Poll every 5s if not completed
-    interval = setInterval(() => {
-      if (loading) {
-        fetchResult()
-      }
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [id, loading])
+  }, [id, router, toast])
 
   // Memoize mapped data
   const mappedData = useMemo(() => {
-    if (!resultData || !resultData.Details) return { questions: [], mapItems: [], answers: {}, explanations: {}, aiFeedbacks: {} }
+    if (!resultData || !resultData.submission || !resultData.questions) {
+      return { questions: [], mapItems: [], answers: {}, explanations: {}, aiFeedbacks: {} }
+    }
+
+    const sub = resultData.submission
+    const qs = resultData.questions
+
+    let parsedAnswers: Record<string, any> = {}
+    if (sub.answersJson) {
+      parsedAnswers = typeof sub.answersJson === 'string' ? JSON.parse(sub.answersJson) : sub.answersJson
+    }
 
     const questions: any[] = []
     const mapItems: QuestionMapItem[] = []
@@ -54,29 +76,31 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     const explanations: Record<string, string> = {}
     const aiFeedbacks: Record<string, any> = {}
 
-    resultData.Details.forEach((d: any, idx: number) => {
-      const isMC = d.Question?.typeQuestion !== 'essay'
+    qs.forEach((q: any, idx: number) => {
+      const ansData = parsedAnswers[q.id] || {}
       
-      const q: any = {
-        id: d.questionId,
+      const isMC = q.type !== 'Tự luận'
+      
+      const mappedQ: any = {
+        id: q.id,
         type: isMC ? 'Trắc nghiệm' : 'Tự luận',
-        type_question: 'single', // Assuming flat for now, grouping can be added if backend supports it
-        content: d.Question?.content || `Câu ${idx + 1}`,
-        topic: d.Question?.topic,
-        options: d.Question?.options ? JSON.parse(d.Question.options || '[]') : [],
-        correctAnswer: d.Question?.correctAnswer
+        type_question: 'single', // Assuming flat for now
+        content: q.content || `Câu ${idx + 1}`,
+        topic: q.topic,
+        options: q.options ? (typeof q.options === 'string' ? JSON.parse(q.options) : q.options) : [],
+        correctAnswer: q.correctAnswer
       }
       
-      questions.push(q)
+      questions.push(mappedQ)
       
       // Determine Status for Map
       let status: QuestionStatus = 'warning'
       if (isMC) {
-        status = d.isCorrect ? 'correct' : 'incorrect'
+        status = ansData.is_correct ? 'correct' : 'incorrect'
       } else {
         // Essay heuristic
-        if (d.score === 0) status = 'incorrect'
-        else if (d.score === (d.Question?.difficultyPoint || 10)) status = 'correct'
+        if (ansData.score === 0) status = 'incorrect'
+        else if (ansData.score === (q.difficultyPoint || 10)) status = 'correct'
         else status = 'warning'
       }
 
@@ -85,30 +109,31 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
       }
 
       mapItems.push({
-        id: d.questionId,
+        id: q.id,
         index: idx,
         status: status,
         isFlagged: false
       })
 
-      answers[d.questionId] = d.studentAnswer || ''
+      answers[q.id] = ansData.student_answer || ''
+      explanations[q.id] = ansData.student_explanation || ''
       
-      aiFeedbacks[d.questionId] = {
-        detailId: d.id,
-        isCorrect: d.isCorrect,
-        score: d.score,
-        maxScore: d.Question?.difficultyPoint || 0,
-        aiExplanation: d.aiExplanation,
-        errorLocation: d.errorLocation,
-        isAppealed: d.isAppealed,
-        appealStatus: d.appealStatus,
-        teacherFeedback: d.teacherFeedback,
-        aiReasoningRemark: d.aiReasoningRemark,
-        reasoningScore: d.reasoningScore
+      aiFeedbacks[q.id] = {
+        detailId: q.id, // We use questionId instead of detailId
+        isCorrect: ansData.is_correct,
+        score: ansData.score,
+        maxScore: q.difficultyPoint || 0,
+        aiExplanation: ansData.ai_explanation,
+        errorLocation: ansData.error_location,
+        isAppealed: ansData.appeal?.is_appealed || false,
+        appealStatus: ansData.appeal?.status || '',
+        teacherFeedback: ansData.appeal?.teacher_feedback || '',
+        aiReasoningRemark: ansData.ai_reasoning_remark,
+        reasoningScore: ansData.reasoning_score
       }
     })
 
-    return { questions, mapItems, answers, explanations, aiFeedbacks }
+    return { questions, mapItems, answers, explanations, aiFeedbacks, submission: sub }
   }, [resultData, currentQuestionIndex])
 
   if (loading) {
@@ -132,29 +157,13 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm z-30 relative px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-4">
         <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-          Kết quả: {resultData.Exam?.title || 'Bài thi'}
+          Kết quả bài làm
         </h1>
         <div className="hidden md:flex items-center gap-4 text-sm font-medium text-slate-500">
           <span className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
             <span className="text-slate-400">Điểm:</span>
-            <span className="text-slate-800 dark:text-slate-200">{resultData.totalScore.toFixed(2)}</span>
+            <span className="text-slate-800 dark:text-slate-200">{mappedData.submission?.totalScore?.toFixed(2)}</span>
           </span>
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-            <span className="text-slate-400">Trắc nghiệm:</span>
-            <span className="text-slate-800 dark:text-slate-200">{resultData.mcqScore.toFixed(2)}</span>
-          </span>
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-            <span className="text-slate-400">Tự luận:</span>
-            <span className="text-slate-800 dark:text-slate-200">{resultData.essayScore.toFixed(2)}</span>
-          </span>
-          {resultData.overallReasoningRemark && (
-            <span className="flex items-center gap-1.5 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-800/50">
-              <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              <span className="text-purple-600 dark:text-purple-400 font-bold">
-                Tư duy: {resultData.totalReasoningScore?.toFixed(2)}
-              </span>
-            </span>
-          )}
         </div>
       </div>
       <Link href="/student" className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl text-sm font-semibold transition-colors">
@@ -173,14 +182,15 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         index={currentQuestionIndex}
         topic={currentQuestion.topic || ""}
         content={currentQuestion.content}
-        options={currentQuestion.options.map((opt: string, i: number) => ({ id: String.fromCharCode(65 + i), text: opt }))}
+        options={currentQuestion.options.map((opt: string, i: number) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt }))}
         selectedOptionId={mappedData.answers[currentQuestion.id] || null}
         correctOptionId={currentQuestion.correctAnswer}
         aiExplanation={mappedData.aiFeedbacks[currentQuestion.id]?.aiExplanation}
         aiFeedback={mappedData.aiFeedbacks[currentQuestion.id]}
         readonly={true}
-        isHintOpen={false}
+        isHintOpen={isAiHintOpen}
         isFlagged={false}
+        onToggleHint={toggleAiHint}
       />
     ) : (
       <EssayQuestion 
@@ -192,11 +202,30 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         explanations={mappedData.explanations as any}
         aiFeedbacks={mappedData.aiFeedbacks as any}
         readonly={true}
-        isHintOpen={false}
+        isHintOpen={isAiHintOpen}
         isFlagged={false}
+        onToggleHint={() => toggleAiHint()}
       />
     )
   ) : null
+
+  const mainContentWithPanel = (
+    <div className="flex relative h-full">
+      <div className="flex-1 overflow-y-auto">
+        {mainContent}
+      </div>
+      {currentQuestion && (
+        <AIHintPanel 
+          isOpen={isAiHintOpen} 
+          onClose={() => setIsAiHintOpen(false)} 
+          question={resultData?.questions?.find((q: any) => q.id === currentQuestion.id) || null}
+          unlockedLevel={unlockedHints[currentQuestion.id] || 0}
+          onUnlock={handleUnlockHint}
+          readonlyMode={true}
+        />
+      )}
+    </div>
+  )
 
   // Render footer
   const canGoPrev = currentQuestionIndex > 0
@@ -260,22 +289,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
       }
       mainContent={
         <div className="flex flex-col h-full overflow-hidden">
-          {resultData.overallReasoningRemark && (
-            <div className="shrink-0 p-4 pb-0 md:p-8 md:pb-0">
-               <div className="max-w-4xl mx-auto bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-6 text-white shadow-lg flex items-start gap-4">
-                <div className="bg-white/20 p-3 rounded-xl shrink-0">
-                  <Sparkles className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-2">Đánh giá tư duy (Dành riêng cho VIP)</h3>
-                  <p className="text-white/90 leading-relaxed text-sm">
-                    {resultData.overallReasoningRemark}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          {mainContent}
+          {mainContentWithPanel}
         </div>
       }
       footerContent={footerContent}

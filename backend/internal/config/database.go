@@ -25,8 +25,7 @@ func ConnectDB(dsn string) error {
 		&models.Lecture{},
 		&models.Question{},
 		&models.Exam{},
-		&models.ExamResult{},
-		&models.ResultDetail{},
+		&models.Submission{},
 		&models.LectureBookmark{},
 		&models.Notification{},
 	)

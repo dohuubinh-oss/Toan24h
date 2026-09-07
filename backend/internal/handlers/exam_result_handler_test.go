@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/handlers"
 	"github.com/modeptrai/exam-model-backend/internal/models"
@@ -52,7 +53,7 @@ func setupExamTestEnv(t *testing.T) (*gin.Engine, *gorm.DB, func()) {
 	// Set to global config so the handler can use it
 	config.DB = db
 
-	err = db.AutoMigrate(&models.Exam{}, &models.ExamResult{}, &models.ResultDetail{})
+	err = db.AutoMigrate(&models.Exam{}, &models.Submission{}, &models.Question{}, &models.User{}, &models.Notification{})
 	if err != nil {
 		t.Fatalf("Failed to migrate: %v", err)
 	}
@@ -79,8 +80,9 @@ func TestSubmitExam(t *testing.T) {
 		ID:        examID,
 		Title:     "Test Exam",
 		ExamCode:  "TE123",
-		Type:      "practice",
-		Grade:     "8",
+		Type:        "practice",
+		Grade:       "8",
+		QuestionIDs: pq.StringArray{uuid.New().String()},
 	}
 	db.Create(&exam)
 
@@ -105,5 +107,5 @@ func TestSubmitExam(t *testing.T) {
 
 	var res map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &res)
-	assert.Equal(t, "success", res["status"])
+	assert.Contains(t, []string{"graded", "pending"}, res["status"])
 }

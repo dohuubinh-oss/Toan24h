@@ -403,7 +403,9 @@ export async function submitExam(examId: string, answers: any[]): Promise<any> {
   return response
 }
 
-export async function getExamResultById(id: string): Promise<any> {
+import { Submission } from '@/types/practice'
+
+export async function getExamResultById(id: string): Promise<{ submission: Submission, questions: Question[] } | null> {
   try {
     const response = await apiFetch(`/exam-results/${id}`)
     if (response.data) {
@@ -416,7 +418,7 @@ export async function getExamResultById(id: string): Promise<any> {
   }
 }
 
-export async function getMyExamResults(token?: string): Promise<any[]> {
+export async function getMyExamResults(token?: string): Promise<Submission[]> {
   try {
     const headers: any = {}
     if (token) {
@@ -450,8 +452,8 @@ export async function getPendingAppeals(): Promise<any[]> {
   }
 }
 
-export async function resolveAppeal(detailId: string, data: { status: string, newScore: number, teacherFeedback: string }): Promise<any> {
-  const response = await apiFetch(`/appeals/${detailId}/resolve`, {
+export async function resolveAppeal(submissionId: string, data: { detailId: string, status: string, newScore: number, teacherFeedback: string }): Promise<any> {
+  const response = await apiFetch(`/appeals/${submissionId}/resolve`, {
     method: 'POST',
     body: JSON.stringify(data),
   })
@@ -487,10 +489,11 @@ export async function getReportedQuestions(): Promise<any[]> {
   }
 }
 
-export async function resolveReportedQuestion(id: string): Promise<boolean> {
+export async function resolveReportedQuestion(id: string, teacherFeedback: string = ""): Promise<boolean> {
   try {
     const response = await apiFetch(`/questions/reported/${id}/resolve`, {
-      method: "POST"
+      method: "POST",
+      body: JSON.stringify({ teacherFeedback })
     })
     return response.status === "success"
   } catch (error) {

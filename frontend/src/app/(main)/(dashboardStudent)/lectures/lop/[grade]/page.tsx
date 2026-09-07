@@ -54,7 +54,7 @@ export default async function GradeLecturesPage({
       examResults.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
       const latestResult = examResults.length > 0 ? examResults[0] : null;
-      if (latestResult && latestResult.status === 'COMPLETED' && latestResult.totalScore > 6.5) {
+      if (latestResult && latestResult.status === 'graded' && latestResult.totalScore > 6.5) {
         completedWellCount++;
       }
     });

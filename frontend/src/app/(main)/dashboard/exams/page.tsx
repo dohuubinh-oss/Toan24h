@@ -87,7 +87,7 @@ function ExamsPageContent() {
             <ChevronRight className="w-3 h-3" />
             <span className="text-primary font-bold">Kho lưu trữ đề thi</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Danh sách Đề thi <span className="text-slate-500 font-normal text-lg">( {filteredExams.length} đề )</span></h1>
+          <h1 className="text-2xl font-bold text-slate-900">Danh sách Bài thực hành <span className="text-slate-500 font-normal text-lg">( {filteredExams.length} đề )</span></h1>
         </div>
       </div>
 

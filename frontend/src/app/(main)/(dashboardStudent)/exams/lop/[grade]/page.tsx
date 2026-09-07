@@ -103,10 +103,10 @@ export default async function GradeExamsPage({
     let score = undefined;
 
     if (latestResult) {
-      if (latestResult.status === 'COMPLETED') {
+      if (latestResult.status === 'graded') {
         status = 'COMPLETED';
         score = latestResult.totalScore;
-      } else if (latestResult.status === 'PENDING') {
+      } else if (latestResult.status === 'submitted' || latestResult.status === 'in_progress') {
         status = 'PENDING';
       }
     }
@@ -133,17 +133,17 @@ export default async function GradeExamsPage({
               Dashboard
             </Link>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-primary font-bold min-h-[44px] flex items-center">Đề thi</span>
+            <span className="text-primary font-bold min-h-[44px] flex items-center">Bài thực hành</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900">
-            {lectureName ? `Đề thi Khối ${grade} - ${lectureName}` : `Danh sách Đề thi Khối ${grade}`}
+            {lectureName ? `Bài thực hành Khối ${grade} - ${lectureName}` : `Danh sách Bài thực hành Khối ${grade}`}
           </h1>
         </div>
       </div>
 
 
 
-      {/* Bảng danh sách Đề thi */}
+      {/* Bảng danh sách Bài thực hành */}
       <PracticeTable practices={practices} />
 
       {/* Phân trang */}

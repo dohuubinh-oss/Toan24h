@@ -54,6 +54,8 @@ function CreateQuestionContent() {
             }])
           }
         }
+      }).catch(err => {
+        console.error("Failed to fetch question for edit:", err)
       })
     }
   }, [searchParams])

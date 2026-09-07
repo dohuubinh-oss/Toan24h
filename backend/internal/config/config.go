@@ -9,8 +9,9 @@ import (
 
 type AppConfig struct {
 	Port     string
-	DBDSN    string
-	RedisURL string
+	DBDSN       string
+	RedisURL    string
+	FrontendURL string
 }
 
 var Env *AppConfig
@@ -35,10 +36,16 @@ func LoadConfig() error {
 		redisURL = "localhost:6379"
 	}
 
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
+	}
+
 	Env = &AppConfig{
-		Port:     port,
-		DBDSN:    dbDSN,
-		RedisURL: redisURL,
+		Port:        port,
+		DBDSN:       dbDSN,
+		RedisURL:    redisURL,
+		FrontendURL: frontendURL,
 	}
 	return nil
 }

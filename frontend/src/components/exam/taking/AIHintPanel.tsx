@@ -9,9 +9,10 @@ interface AiHintPanelProps {
   question: Question | null
   unlockedLevel: number
   onUnlock: (questionId: string, cost: number) => Promise<boolean>
+  readonlyMode?: boolean
 }
 
-export default function AIHintPanel({ isOpen, onClose, question, unlockedLevel, onUnlock }: AiHintPanelProps) {
+export default function AIHintPanel({ isOpen, onClose, question, unlockedLevel, onUnlock, readonlyMode = false }: AiHintPanelProps) {
   const panelRef = useRef<HTMLElement>(null)
   const [unlocking, setUnlocking] = useState(false)
 
@@ -40,7 +41,7 @@ export default function AIHintPanel({ isOpen, onClose, question, unlockedLevel, 
   const handleUnlockNext = async (cost: number) => {
     if (unlocking) return
     setUnlocking(true)
-    await onUnlock(question.id as string, cost)
+    await onUnlock(question.id as string, readonlyMode ? 0 : cost)
     setUnlocking(false)
   }
 
@@ -116,7 +117,7 @@ export default function AIHintPanel({ isOpen, onClose, question, unlockedLevel, 
                   <div className="p-3 bg-white/90 dark:bg-slate-800/90 rounded-full shadow-lg text-primary group-hover:scale-110 transition-transform">
                     {unlocking ? <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div> : <Unlock className="w-5 h-5" />}
                   </div>
-                  <span className="text-white font-medium text-sm drop-shadow-md">Mở khóa {hint.title} (-1 điểm)</span>
+                  <span className="text-white font-medium text-sm drop-shadow-md">Mở khóa {hint.title} {readonlyMode ? '(Miễn phí)' : '(-1 điểm)'}</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-4 border border-slate-200 dark:border-slate-700 blur-[3px] select-none">
                   <div className="w-3/4 h-4 bg-slate-300 dark:bg-slate-600 rounded mb-2"></div>
@@ -154,7 +155,7 @@ export default function AIHintPanel({ isOpen, onClose, question, unlockedLevel, 
                 <div className="p-3 bg-amber-400 dark:bg-amber-500 rounded-full shadow-lg text-white group-hover:scale-110 transition-transform">
                   {unlocking ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <Lock className="w-5 h-5" />}
                 </div>
-                <span className="text-white font-medium text-sm drop-shadow-md">Mở khóa Giải chi tiết (-5 điểm)</span>
+                <span className="text-white font-medium text-sm drop-shadow-md">Mở khóa Giải chi tiết {readonlyMode ? '(Miễn phí)' : '(-5 điểm)'}</span>
               </div>
               <div className="bg-emerald-50 dark:bg-emerald-900/10 p-6 border border-emerald-200 dark:border-emerald-800/30 blur-[4px] select-none">
                 <div className="w-full h-6 bg-slate-300 dark:bg-slate-600 rounded mb-3"></div>

@@ -8,6 +8,7 @@ import { reportQuestion, submitAppeal } from '@/lib/api'
 
 export interface MultipleChoiceOption {
   id: string
+  label?: string
   text: string
 }
 
@@ -120,10 +121,10 @@ export default function MultipleChoiceQuestion({
                 <button
                   onClick={() => setIsReportModalOpen(true)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer transition-all active:scale-95 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400`}
-                  title={readonly ? "Kháng cáo/Báo cáo lỗi" : "Câu hỏi lỗi"}
+                  title={readonly ? "Kháng cáo" : "Báo lỗi"}
                 >
                   <AlertTriangle className="w-5 h-5" />
-                  <span className="hidden sm:inline">{readonly ? "Báo cáo/Kháng cáo" : "Câu hỏi lỗi"}</span>
+                  <span className="hidden sm:inline">{readonly ? "Kháng cáo" : "Báo lỗi"}</span>
                 </button>
                 <button
                   onClick={onToggleFlag}
@@ -191,7 +192,7 @@ export default function MultipleChoiceQuestion({
                 className={`group relative flex items-center gap-6 p-6 rounded-xl border-2 transition-all shadow-sm text-left ${optionClass} ${readonly ? 'cursor-default hover:border-inherit' : ''}`}
               >
                 <div className={`w-12 h-12 flex items-center justify-center font-bold rounded-lg transition-colors text-xl ${idClass}`}>
-                  {option.id}
+                  {option.label || option.id}
                 </div>
                 <div className="flex-1">
                   <span className="text-xl font-medium text-slate-900 dark:text-white">
@@ -248,10 +249,10 @@ export default function MultipleChoiceQuestion({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800">
             <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
-              {readonly ? 'Báo lỗi / Kháng cáo' : 'Câu hỏi lỗi'}
+              {readonly ? 'Kháng cáo' : 'Báo lỗi'}
             </h3>
             <p className="text-slate-500 text-sm mb-4">
-              {readonly ? 'Nêu rõ lý do bạn muốn kháng cáo hoặc lỗi của câu hỏi này.' : 'Vui lòng mô tả lỗi của câu hỏi (sai đề, thiếu đáp án, lỗi chính tả, ...)'}
+              {readonly ? 'Nêu rõ lý do bạn muốn kháng cáo cho câu hỏi này.' : 'Vui lòng mô tả lỗi của câu hỏi (sai đề, thiếu thông tin, lỗi chính tả, ...)'}
             </p>
             <textarea
               value={reportMessage}

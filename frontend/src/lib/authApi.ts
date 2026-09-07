@@ -33,6 +33,10 @@ export async function logout() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('user')
     
+    // Explicitly clear non-HttpOnly cookies
+    document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    document.cookie = 'userGrade=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    
     // Call backend to clear HttpOnly cookies
     try {
       await apiFetch('/auth/logout', { method: 'POST' })

@@ -14,11 +14,13 @@ export default function AppealsPage() {
   const [reportedQuestions, setReportedQuestions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedAppeal, setSelectedAppeal] = useState<any>(null)
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
   
   // Resolve states
   const [resolveStatus, setResolveStatus] = useState<'APPROVED' | 'REJECTED'>('APPROVED')
   const [newScore, setNewScore] = useState<number>(0)
   const [feedback, setFeedback] = useState('')
+  const [reportFeedback, setReportFeedback] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const fetchAppeals = async () => {
@@ -49,17 +51,27 @@ export default function AppealsPage() {
     fetchData()
   }, [])
 
-  const handleResolveReport = async (questionId: string) => {
+  const openResolveReportModal = (questionId: string) => {
+    setSelectedReportId(questionId)
+    setReportFeedback('')
+  }
+
+  const handleResolveReportSubmit = async () => {
+    if (!selectedReportId) return
+    setIsSubmitting(true)
     try {
-      const success = await resolveReportedQuestion(questionId)
+      const success = await resolveReportedQuestion(selectedReportId, reportFeedback)
       if (success) {
         toast.success('Đã đánh dấu xử lý xong lỗi đề thi!')
         fetchReports()
+        setSelectedReportId(null)
       } else {
         toast.error('Lỗi khi cập nhật trạng thái báo cáo')
       }
     } catch (e) {
       toast.error('Lỗi khi cập nhật trạng thái báo cáo')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -75,11 +87,12 @@ export default function AppealsPage() {
     setIsSubmitting(true)
     try {
       const payload = {
+        detailId: selectedAppeal.detailId,
         status: resolveStatus,
         newScore: Number(newScore),
         teacherFeedback: feedback
       }
-      await resolveAppeal(selectedAppeal.detailId, payload)
+      await resolveAppeal(selectedAppeal.resultId, payload)
       toast.success('Đã duyệt kháng cáo thành công!')
       setSelectedAppeal(null)
       fetchAppeals()
@@ -146,7 +159,7 @@ export default function AppealsPage() {
               <table className="w-full text-left">
                 <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-sm font-medium">
                   <tr>
-                    <th className="px-6 py-4">Đề thi</th>
+                    <th className="px-6 py-4">Bài thực hành</th>
                     <th className="px-6 py-4">Câu hỏi</th>
                     <th className="px-6 py-4">Bài làm</th>
                     <th className="px-6 py-4">Điểm AI</th>
@@ -229,7 +242,7 @@ export default function AppealsPage() {
                           Sửa
                         </Link>
                         <button
-                          onClick={() => handleResolveReport(q.id)}
+                          onClick={() => openResolveReportModal(q.id)}
                           className="flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 rounded-lg text-sm font-semibold transition-colors"
                         >
                           <Check className="w-4 h-4" />
@@ -355,6 +368,51 @@ export default function AppealsPage() {
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Resolve Report Modal */}
+      {selectedReportId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-white">Xử lý báo lỗi</h2>
+              <button onClick={() => setSelectedReportId(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto space-y-4 flex-1">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Lời nhắn / Nhận xét phản hồi (Tùy chọn)</label>
+                <textarea 
+                  rows={4}
+                  value={reportFeedback}
+                  onChange={(e) => setReportFeedback(e.target.value)}
+                  placeholder="Tin nhắn này sẽ được gửi đến những học sinh đã báo lỗi câu hỏi này..."
+                  className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                ></textarea>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+              <button 
+                onClick={() => setSelectedReportId(null)}
+                className="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                disabled={isSubmitting}
+              >
+                Hủy
+              </button>
+              <button 
+                onClick={handleResolveReportSubmit}
+                disabled={isSubmitting}
+                className="px-6 py-2.5 rounded-xl font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                Xác nhận đã xử lý
               </button>
             </div>
           </div>

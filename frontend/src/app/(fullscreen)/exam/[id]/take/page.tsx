@@ -232,20 +232,11 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
       }
     };
 
-    const handlePreventCopy = (e: Event) => {
-      e.preventDefault();
-      toast.error("Không được phép sao chép nội dung câu hỏi!");
-    };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    document.addEventListener('contextmenu', handlePreventCopy);
-    document.addEventListener('copy', handlePreventCopy);
 
     return () => {
       if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      document.removeEventListener('contextmenu', handlePreventCopy);
-      document.removeEventListener('copy', handlePreventCopy);
     };
   }, [exam, id, router, toast, cheatCount, answers]);
 
@@ -318,14 +309,21 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
       })
 
       const res = await import('@/lib/api').then(mod => mod.submitExam(id, answersList))
-      if (res && res.status === 'success') {
+      if (res && (res.status === 'pending' || res.status === 'graded')) {
         sessionStorage.removeItem(`exam_state_${id}`);
-        toast.success("Bài làm của bạn đang được chấm")
         
-        // Navigate back to the appropriate page and force a hard reload
         const baseUrl = exam.cate === 'exam' ? '/exams/lop/' : '/practices/lop/';
         const backUrl = exam.grade ? (baseUrl + exam.grade) : '/student';
-        window.location.href = backUrl;
+        
+        if (res.status === 'graded') {
+          toast.success("Chấm điểm hoàn tất! Đang chuyển đến trang kết quả...");
+          setTimeout(() => {
+            window.location.href = `/exam/${res.data?.resultId}/result`;
+          }, 1500);
+        } else {
+          toast.success("Bài làm của bạn đang được chấm");
+          window.location.href = backUrl;
+        }
       } else {
         toast.error("Nộp bài thất bại")
       }
@@ -450,7 +448,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
             index={currentQuestionIndex}
             topic={currentQuestion.topic || ""}
             content={currentQuestion.content}
-            options={currentQuestion.options.map((opt, i) => ({ id: String.fromCharCode(65 + i), text: opt }))}
+            options={currentQuestion.options.map((opt, i) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt }))}
             selectedOptionId={answers[currentQuestion.id] || null}
             selectedExplanation={explanations[currentQuestion.id]}
             isHintOpen={isAiHintOpen && activeHintQuestionId === currentQuestion.id}
@@ -471,7 +469,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
               id: sq.id as any,
               type: sq.type === 'Trắc nghiệm' ? 'mc' : 'essay',
               content: sq.content,
-              options: sq.options ? sq.options.map((opt, i) => ({ id: String.fromCharCode(65 + i), text: opt })) : undefined
+              options: sq.options ? sq.options.map((opt, i) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt })) : undefined
             })) as any || []}
             answers={answers}
             explanations={explanations}

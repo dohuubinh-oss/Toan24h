@@ -80,9 +80,6 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/exams", handlers.GetExams)
 		v1.GET("/exams/:id", handlers.GetExamByID)
 		v1.DELETE("/exams/:id", handlers.DeleteExam)
-		v1.POST("/exams/:id/submit", handlers.SubmitExam)
-
-		v1.GET("/exam-results/:id", handlers.GetExamResultByID)
 
 		// Lectures
 		v1.POST("/lectures", lectureController.CreateLecture)
@@ -118,7 +115,9 @@ func SetupRouter() *gin.Engine {
 		protected.POST("/lectures/:id/bookmark", bookmarkHandler.ToggleLectureBookmark)
 		protected.GET("/bookmarks/lectures", bookmarkHandler.GetBookmarkedLectures)
 
+		protected.POST("/exams/:id/submit", handlers.SubmitExam)
 		protected.GET("/exam-results", handlers.GetMyExamResults)
+		protected.GET("/exam-results/:id", handlers.GetExamResultByID)
 		protected.POST("/exam-results/:id/appeal", handlers.AppealExamResult)
 
 		appeals := protected.Group("/appeals")
