@@ -108,7 +108,7 @@ function EditorItem({
           {readonly ? (isMC ? `Giải thích của bạn (${q.label})` : `Lời giải của bạn (${q.label})`) : (isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`)}
         </label>
         <div className="flex space-x-2">
-          {examType === 'practice' && !readonly && onToggleHint && (
+          {(examType === 'practice' || readonly) && onToggleHint && (
             <button 
               data-hint-toggle="true"
               onClick={() => onToggleHint(q.id)}

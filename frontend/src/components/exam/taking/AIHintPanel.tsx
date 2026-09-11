@@ -30,13 +30,13 @@ export default function AIHintPanel({ isOpen, onClose, question, unlockedLevel, 
 
   if (!question) return null
 
-  // Define hints available (limit to max 2 hints)
+  // Define all hints available
   const hints = [
     { level: 1, title: 'Gợi ý', icon: Lightbulb, content: question.hint, color: 'blue' },
     { level: 2, title: 'Lỗi thường gặp', icon: AlertTriangle, content: question.mistakes, color: 'red' },
     { level: 3, title: 'Mẹo giải nhanh', icon: Zap, content: question.quick_solve_tips, color: 'amber' },
     { level: 4, title: 'Phương pháp tổng quát', icon: BookOpen, content: question.general_method, color: 'indigo' },
-  ].filter(h => h.content).slice(0, 2) // Only show at most 2 hints
+  ].filter(h => h.content) // Show all available hints
 
   const handleUnlockNext = async (cost: number) => {
     if (unlocking) return
