@@ -38,23 +38,23 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
   useEffect(() => {
     const fetchResult = async () => {
-      const data = await getExamResultById(id)
-      if (data) {
-        if (data.submission?.status === 'graded' || data.submission?.status === 'COMPLETED' as any) {
+      try {
+        const data = await getExamResultById(id)
+        if (data && data.submission) {
           setResultData(data)
-          setLoading(false)
         } else {
-          toast.success("Bài thi của bạn đang được chấm, vui lòng quay lại sau.")
-          router.back()
+          toast.error("Không tìm thấy kết quả bài thi")
         }
-      } else {
-        toast.error("Không tìm thấy kết quả")
-        router.back()
+      } catch (err) {
+        console.error("Error fetching exam result:", err)
+        toast.error("Lỗi khi tải kết quả bài thi")
+      } finally {
+        setLoading(false)
       }
     }
 
     fetchResult()
-  }, [id, router, toast])
+  }, [id, toast])
 
   // Memoize mapped data
   const mappedData = useMemo(() => {
@@ -140,14 +140,61 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 space-y-4">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200">AI đang chấm điểm bài làm của bạn...</h2>
+        <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200">Đang tải kết quả bài làm...</h2>
         <p className="text-slate-500">Vui lòng chờ trong giây lát.</p>
       </div>
     )
   }
 
   if (!resultData || mappedData.questions.length === 0) {
-    return <div className="text-center py-20 text-slate-500">Không tìm thấy kết quả.</div>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 p-6 text-center">
+        <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-4">Không tìm thấy kết quả bài thi.</h2>
+        <Link href="/student" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors">
+          Về trang chủ
+        </Link>
+      </div>
+    )
+  }
+
+  // Check if still pending/grading
+  const isPending = resultData.submission?.status === 'pending' || (resultData.submission?.status !== 'graded' && resultData.submission?.status !== 'COMPLETED')
+  if (isPending) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 p-6">
+        <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-100 dark:border-slate-700 text-center relative overflow-hidden">
+          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-500/25 animate-bounce">
+            <Sparkles className="w-10 h-10" />
+          </div>
+
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3 leading-snug">
+            Bài làm của bạn đang được chấm điểm, xin vui lòng chờ...
+          </h2>
+          
+          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-8">
+            Bài thi đang được chấm, vui lòng kiểm tra tin nhắn và quay lại sau.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link
+              href="/student"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors shadow-md shadow-blue-600/20"
+            >
+              <Home className="w-4 h-4" />
+              Về trang cá nhân
+            </Link>
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold text-sm transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Quay lại
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const currentQuestion = mappedData.questions[currentQuestionIndex]

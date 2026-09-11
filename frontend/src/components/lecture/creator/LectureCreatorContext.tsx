@@ -40,16 +40,19 @@ interface LectureCreatorState {
   setGrade: (val: string) => void;
   setCategory: (val: string) => void;
   setBasicConcept: (val: string) => void;
-  setDangToanList: (val: DangToanItem[]) => void;
+  setDangToanList: (val: DangToanItem[] | ((prev: DangToanItem[]) => DangToanItem[])) => void;
   validateAndSubmit: () => void;
   resetForm: () => void;
   removeDangToan: (id: string) => void;
   isSubmitting: boolean;
+  isLoading: boolean;
+  isEdit: boolean;
+  editId?: string | null;
 }
 
 const LectureCreatorContext = createContext<LectureCreatorState | undefined>(undefined)
 
-export function LectureCreatorProvider({ children }: { children: React.ReactNode }) {
+export function LectureCreatorProvider({ children, editId }: { children: React.ReactNode; editId?: string | null }) {
   const [title, setTitle] = useState('')
   const [grade, setGrade] = useState('')
   const [category, setCategory] = useState('')
@@ -64,6 +67,53 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
     }
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  React.useEffect(() => {
+    if (!editId) return
+    let isMounted = true
+
+    const fetchLecture = async () => {
+      setIsLoading(true)
+      try {
+        const { apiFetch } = await import('@/lib/api')
+        const data = await apiFetch(`/lectures/${editId}`)
+        if (!isMounted) return
+
+        if (data) {
+          setTitle(data.title || '')
+          setGrade(data.grade || '')
+          setCategory(data.category || '')
+          setBasicConcept(data.basicConcept || '')
+
+          let parsedExamples: DangToanItem[] = []
+          if (typeof data.examples === 'string') {
+            try {
+              parsedExamples = JSON.parse(data.examples)
+            } catch (e) {
+              parsedExamples = []
+            }
+          } else if (Array.isArray(data.examples)) {
+            parsedExamples = data.examples
+          }
+
+          if (parsedExamples && parsedExamples.length > 0) {
+            setDangToanList(parsedExamples)
+          }
+        }
+      } catch (error: any) {
+        console.error('Failed to load lecture:', error)
+        toast.error('Không tìm thấy thông tin bài giảng cần sửa')
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+
+    fetchLecture()
+    return () => {
+      isMounted = false
+    }
+  }, [editId])
 
   const validateAndSubmit = async () => {
     if (!title.trim()) {
@@ -105,8 +155,6 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
     try {
       const { apiFetch, uploadObjectUrlIfNeeded } = await import('@/lib/api')
 
-
-
       const processedDangToanList = await Promise.all(
         dangToanList.map(async (dt) => ({
           id: dt.id,
@@ -129,15 +177,23 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
         grade,
         category,
         basicConcept,
-        examples: processedDangToanList // Backend now receives the new structure in 'examples' field
+        examples: processedDangToanList
       }
 
-      await apiFetch('/lectures', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      })
-
-      resetForm()
+      if (editId) {
+        await apiFetch(`/lectures/${editId}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        })
+        toast.success('Cập nhật bài giảng thành công!')
+      } else {
+        await apiFetch('/lectures', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        })
+        toast.success('Tạo bài giảng thành công!')
+        resetForm()
+      }
     } catch (error: any) {
       console.error('Submit error:', error)
       toast.error(`Có lỗi xảy ra: ${error.message}`)
@@ -182,7 +238,10 @@ export function LectureCreatorProvider({ children }: { children: React.ReactNode
       validateAndSubmit,
       resetForm,
       removeDangToan,
-      isSubmitting
+      isSubmitting,
+      isLoading,
+      isEdit: !!editId,
+      editId
     }}>
       {children}
     </LectureCreatorContext.Provider>

@@ -17,6 +17,10 @@ bin/
 *.so
 *.dylib
 backend/backend
+backend/server
+uploads/temp/
+backend/uploads/
+backend/internal/handlers/uploads/
 
 # Docker
 *.log

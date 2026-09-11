@@ -112,8 +112,8 @@ export default function LectureBasicSettings() {
           {grade && (
             <div className="space-y-3">
               <Label>Bài tập tự luyện</Label>
-              <div className="text-sm text-slate-500 italic p-4 border border-dashed border-slate-200 rounded-lg bg-slate-50 text-center">
-                Sau khi lưu bài giảng này, bạn có thể chuyển sang trang <b>Tạo đề thi</b> để chọn bài tập và liên kết với bài giảng.
+              <div className="text-sm text-slate-500 italic p-4 border border-dashed border-slate-200 rounded-lg bg-slate-50 text-center leading-relaxed">
+                Sau khi lưu bài giảng, bạn có thể vào <b>Ngân hàng câu hỏi</b> để chọn các câu hỏi phù hợp và tạo bài tập / đề thi liên kết.
               </div>
             </div>
           )}

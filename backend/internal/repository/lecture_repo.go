@@ -12,6 +12,7 @@ type LectureRepository interface {
 	GetLecturesByGrade(ctx context.Context, grade string, limit, offset int) ([]models.Lecture, int64, error)
 	GetAllLectures(ctx context.Context) ([]models.Lecture, error)
 	GetLectureByID(ctx context.Context, id string) (*models.Lecture, error)
+	UpdateLecture(ctx context.Context, lecture *models.Lecture) error
 }
 
 type lectureRepository struct {
@@ -63,4 +64,10 @@ func (r *lectureRepository) GetLectureByID(ctx context.Context, id string) (*mod
 		return nil, err
 	}
 	return &lecture, nil
+}
+
+func (r *lectureRepository) UpdateLecture(ctx context.Context, lecture *models.Lecture) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return tx.Save(lecture).Error
+	})
 }

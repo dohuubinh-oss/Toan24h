@@ -39,6 +39,30 @@ func (ctrl *LectureController) CreateLecture(c *gin.Context) {
 	})
 }
 
+func (ctrl *LectureController) UpdateLecture(c *gin.Context) {
+	id := c.Param("id")
+	var req services.CreateLectureRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid JSON payload",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	if err := ctrl.service.UpdateLecture(c.Request.Context(), id, req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Lecture updated successfully",
+	})
+}
+
 func (ctrl *LectureController) GetLecturesByGrade(c *gin.Context) {
 	grade := c.Param("grade")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))

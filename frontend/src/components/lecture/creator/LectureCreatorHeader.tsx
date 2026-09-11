@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { useLectureCreator } from './LectureCreatorContext'
 
 export default function LectureCreatorHeader() {
-  const { validateAndSubmit, isSubmitting } = useLectureCreator()
+  const { validateAndSubmit, isSubmitting, isEdit } = useLectureCreator()
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 w-full">
@@ -16,7 +16,9 @@ export default function LectureCreatorHeader() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold text-slate-800">Soạn bài giảng mới</h1>
+            <h1 className="text-xl font-semibold text-slate-800">
+              {isEdit ? 'Chỉnh sửa bài giảng' : 'Soạn bài giảng mới'}
+            </h1>
           </div>
         </div>
         
@@ -39,7 +41,7 @@ export default function LectureCreatorHeader() {
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                Lưu & Xuất bản
+                {isEdit ? 'Cập nhật bài giảng' : 'Lưu & Xuất bản'}
               </>
             )}
           </Button>

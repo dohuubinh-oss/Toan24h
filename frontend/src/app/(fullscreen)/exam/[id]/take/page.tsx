@@ -311,25 +311,23 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
       const res = await import('@/lib/api').then(mod => mod.submitExam(id, answersList))
       if (res && (res.status === 'pending' || res.status === 'graded')) {
         sessionStorage.removeItem(`exam_state_${id}`);
-        
-        const baseUrl = exam.cate === 'exam' ? '/exams/lop/' : '/practices/lop/';
-        const backUrl = exam.grade ? (baseUrl + exam.grade) : '/student';
-        
-        if (res.status === 'graded') {
-          toast.success("Chấm điểm hoàn tất! Đang chuyển đến trang kết quả...");
-          setTimeout(() => {
-            window.location.href = `/exam/${res.data?.resultId}/result`;
-          }, 1500);
-        } else {
-          toast.success("Bài làm của bạn đang được chấm");
-          window.location.href = backUrl;
-        }
+        toast.success("Nộp bài thành công!");
+
+        const prevUrl = exam.cate === 'practice' && exam.lectureId
+          ? `/lectures/lop/${exam.grade || 12}/${exam.lectureId}`
+          : exam.cate === 'exam'
+            ? (exam.grade ? `/exams/lop/${exam.grade}` : '/student')
+            : (exam.grade ? `/practices/lop/${exam.grade}` : '/student');
+
+        setTimeout(() => {
+          router.push(prevUrl);
+        }, 800);
       } else {
-        toast.error("Nộp bài thất bại")
+        toast.error(res?.message || "Nộp bài thất bại")
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
-      toast.error("Lỗi khi nộp bài")
+      toast.error(e?.message || "Lỗi khi nộp bài")
     }
   }
 
@@ -397,10 +395,6 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   }
 
   const handleNextWithCheck = () => {
-    if (!isCurrentQuestionAnswered) {
-      toast.error("Vui lòng hoàn thành câu hỏi hiện tại trước khi qua câu tiếp theo.")
-      return
-    }
     setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))
   }
 
@@ -497,10 +491,6 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           onSelectQuestion={(id) => {
             const idx = questions.findIndex(q => q.id === id)
             if (idx !== -1) {
-              if (idx > currentQuestionIndex && !isCurrentQuestionAnswered) {
-                toast.error("Vui lòng hoàn thành câu hỏi hiện tại trước khi nhảy cóc.")
-                return
-              }
               setCurrentQuestionIndex(idx)
             }
           }}
@@ -513,7 +503,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         onNext={handleNextWithCheck}
         onSubmit={() => setShowSubmitConfirm(true)}
         canGoPrev={currentQuestionIndex > 0}
-        canGoNext={currentQuestionIndex < questions.length - 1 && isCurrentQuestionAnswered}
+        canGoNext={currentQuestionIndex < questions.length - 1}
         answeredCount={Object.keys(answers).length}
         totalCount={questions.length}
       />

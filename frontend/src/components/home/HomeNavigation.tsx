@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { FunctionSquare, Bell, User, ChevronDown, LogOut, Settings } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { apiFetch } from '@/lib/api'
 
 interface HomeNavigationProps {
   isLoggedIn?: boolean;
@@ -54,12 +55,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
 
     const fetchNotifications = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/v1/notifications', {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-        const data = await res.json()
+        const data = await apiFetch('/notifications')
         if (data && data.status === 'success' && data.data) {
           setNotifications(data.data)
 
@@ -151,7 +147,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                         <button
                           onClick={async () => {
                             try {
-                              await fetch(`http://localhost:8080/api/v1/notifications`, { method: 'DELETE' })
+                              await apiFetch('/notifications', { method: 'DELETE' })
                               setNotifications([])
                             } catch (err) {
                               console.error('Failed to delete all notifications', err)
@@ -179,10 +175,11 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                               setShowNotifications(false)
                             }
                             if (!n.isRead) {
-                              fetch(`http://localhost:8080/api/v1/notifications/${n.id}/read`, { method: 'POST' })
+                              apiFetch(`/notifications/${n.id}/read`, { method: 'POST' })
                                 .then(() => {
                                   setNotifications(notifications.map(notif => notif.id === n.id ? { ...notif, isRead: true } : notif))
                                 })
+                                .catch(err => console.error('Failed to mark read', err))
                             }
                           }
 

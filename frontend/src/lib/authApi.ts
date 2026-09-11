@@ -21,6 +21,19 @@ export async function registerUser(data: any) {
   return res
 }
 
+export async function telegramLogin(data: any) {
+  const res = await apiFetch('/auth/telegram-login', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+  if (res.user) {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(res.user))
+    }
+  }
+  return res
+}
+
 export async function updateGrade(grade: string) {
   const res = await apiFetch('/users/me/grade', {
     method: 'PUT',

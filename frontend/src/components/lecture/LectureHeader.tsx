@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { ChevronRight, Calendar, Bookmark, Tags, PenTool } from 'lucide-react'
+import { ChevronRight, Calendar, Bookmark, Tags, PenTool, Edit3 } from 'lucide-react'
 import Link from 'next/link'
 import { toggleBookmark as toggleBookmarkApi, getBookmarkedLectures } from '@/lib/bookmarkApi'
 import { toast } from '@/components/ui/ToastProvider'
@@ -17,6 +17,13 @@ interface LectureHeaderProps {
 export default function LectureHeader({ initialBookmarked = false, title, grade, category, createdAt, id }: LectureHeaderProps) {
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsAdmin(document.cookie.includes('userRole=admin') || document.cookie.includes('userRole=teacher'));
+    }
+  }, []);
 
   useEffect(() => {
     if (id && typeof window !== 'undefined' && document.cookie.includes('userRole=')) {
@@ -97,6 +104,15 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
               >
                 <PenTool size={18} />
                 Bài thực hành
+              </Link>
+            )}
+            {id && isAdmin && (
+              <Link 
+                href={`/dashboard/lectures/create?editId=${id}`}
+                className="flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] font-bold rounded-lg transition-all border text-sm bg-slate-800 text-white hover:bg-slate-700 border-transparent shadow-sm"
+              >
+                <Edit3 size={18} />
+                Sửa bài giảng
               </Link>
             )}
             <button 

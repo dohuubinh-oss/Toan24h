@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -80,15 +81,29 @@ func SubmitExam(c *gin.Context) {
 	}
 
 	now := time.Now()
-	submission := models.Submission{
-		ExamID:      examID,
-		UserID:      studentID,
-		Status:      models.StatusInProgress, // Will be graded by background job
-		AnswersJSON: answersJSONBytes,
-		SubmittedAt: &now,
+	var submission models.Submission
+	var isUpdate bool
+	if studentID != nil {
+		if err := config.DB.Where("exam_id = ? AND user_id = ?", examID, studentID).First(&submission).Error; err == nil {
+			isUpdate = true
+		}
 	}
 
-	if err := config.DB.Create(&submission).Error; err != nil {
+	submission.ExamID = examID
+	submission.UserID = studentID
+	submission.Status = models.StatusInProgress
+	submission.AnswersJSON = answersJSONBytes
+	submission.SubmittedAt = &now
+	submission.TotalScore = 0
+
+	var dbErr error
+	if isUpdate {
+		dbErr = config.DB.Save(&submission).Error
+	} else {
+		dbErr = config.DB.Create(&submission).Error
+	}
+
+	if dbErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to save submission"})
 		return
 	}
@@ -197,7 +212,11 @@ func processExamGrading(submissionID uuid.UUID) {
 			}
 			totalScore += ans.Score
 		} else {
-			if strings.TrimSpace(ans.StudentAnswer) == strings.TrimSpace(question.CorrectAnswer) {
+			re := regexp.MustCompile(`<[^>]*>`)
+			cleanStudentAns := strings.TrimSpace(re.ReplaceAllString(ans.StudentAnswer, ""))
+			cleanCorrectAns := strings.TrimSpace(re.ReplaceAllString(question.CorrectAnswer, ""))
+
+			if cleanStudentAns == cleanCorrectAns && cleanCorrectAns != "" {
 				ans.IsCorrect = true
 				ans.Score = float64(question.DifficultyPoint)
 

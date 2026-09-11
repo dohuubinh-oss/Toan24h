@@ -19,9 +19,10 @@ interface RichTextEditorProps {
   mathOnlyToolbar?: boolean
   smallToolbar?: boolean
   readOnly?: boolean
+  rightCustomAction?: React.ReactNode
 }
 
-const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar }: { editor: any, mathOnlyToolbar?: boolean, smallToolbar?: boolean }) => {
+const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomAction }: { editor: any, mathOnlyToolbar?: boolean, smallToolbar?: boolean, rightCustomAction?: React.ReactNode }) => {
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<any>(null)
 
@@ -111,96 +112,104 @@ const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar }: { editor: any, mathO
   }
 
   return (
-    <div className="flex items-center gap-1 p-1 bg-slate-50 border-b border-slate-200 rounded-t-xl overflow-x-auto">
-      <button
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`${btnClass} ${editor.isActive('bold') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
-        title="In đậm"
-      >
-        <Bold className={iconClass} />
-      </button>
-      <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
-      <button
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={`${btnClass} ${editor.isActive('bulletList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
-        title="Danh sách"
-      >
-        <List className={iconClass} />
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={`${btnClass} ${editor.isActive('orderedList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
-        title="Danh sách số"
-      >
-        <ListOrdered className={iconClass} />
-      </button>
-      <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
-      <button
-        onClick={() => editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()}
-        className={`${btnClass} text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0`}
-        title="Chèn công thức Toán (MathLive)"
-      >
-        <Sigma className={iconClass} />
-      </button>
-      <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
-      <button
-        onClick={() => {
-          const selection = editor.state.selection;
-          const input = document.createElement('input');
-          input.type = 'file';
-          input.accept = 'image/*';
-          input.onchange = async (e: any) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              try {
-                const url = await uploadTempImage(file);
-                editor.chain().focus().insertContentAt(selection.to, { type: 'image', attrs: { src: url } }).run();
-              } catch (error) {
-                console.error("Error uploading image", error);
+    <div className="flex items-center justify-between gap-1 p-1 bg-slate-50 border-b border-slate-200 rounded-t-xl overflow-x-auto">
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          className={`${btnClass} ${editor.isActive('bold') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
+          title="In đậm"
+        >
+          <Bold className={iconClass} />
+        </button>
+        <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
+        <button
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          className={`${btnClass} ${editor.isActive('bulletList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
+          title="Danh sách"
+        >
+          <List className={iconClass} />
+        </button>
+        <button
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          className={`${btnClass} ${editor.isActive('orderedList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
+          title="Danh sách số"
+        >
+          <ListOrdered className={iconClass} />
+        </button>
+        <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
+        <button
+          onClick={() => editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()}
+          className={`${btnClass} text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0`}
+          title="Chèn công thức Toán (MathLive)"
+        >
+          <Sigma className={iconClass} />
+        </button>
+        <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
+        <button
+          onClick={() => {
+            const selection = editor.state.selection;
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e: any) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                try {
+                  const url = await uploadTempImage(file);
+                  editor.chain().focus().insertContentAt(selection.to, { type: 'image', attrs: { src: url } }).run();
+                } catch (error) {
+                  console.error("Error uploading image", error);
+                }
               }
+            };
+            input.click();
+          }}
+          className={`${btnClass} text-slate-600 hover:bg-white flex items-center justify-center flex-shrink-0`}
+          title="Chèn ảnh"
+        >
+          <ImageIcon className={iconClass} />
+        </button>
+        <button
+          onClick={() => {
+            const url = prompt('Nhập URL YouTube (VD: https://www.youtube.com/watch?v=...)');
+            if (url) {
+              editor.commands.setYoutubeVideo({
+                src: url,
+                width: 640,
+                height: 480,
+              })
             }
-          };
-          input.click();
-        }}
-        className={`${btnClass} text-slate-600 hover:bg-white flex items-center justify-center flex-shrink-0`}
-        title="Chèn ảnh"
-      >
-        <ImageIcon className={iconClass} />
-      </button>
-      <button
-        onClick={() => {
-          const url = prompt('Nhập URL YouTube (VD: https://www.youtube.com/watch?v=...)');
-          if (url) {
-            editor.commands.setYoutubeVideo({
-              src: url,
-              width: 640,
-              height: 480,
-            })
-          }
-        }}
-        className={`${btnClass} text-red-600 hover:bg-white flex items-center justify-center flex-shrink-0`}
-        title="Chèn YouTube"
-      >
-        <YoutubeIcon className={iconClass} />
-      </button>
-      <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
-      <button
-        onClick={toggleListening}
-        className={`${btnClass} flex items-center justify-center flex-shrink-0 relative ${
-          isListening 
-            ? 'text-red-500 bg-red-50 hover:bg-red-100' 
-            : 'text-slate-600 hover:bg-white'
-        }`}
-        title="Nhập bằng giọng nói (Ctrl+M)"
-      >
-        <Mic className={iconClass} />
-        {isListening && (
-          <span className="absolute top-0 right-0 flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-          </span>
-        )}
-      </button>
+          }}
+          className={`${btnClass} text-red-600 hover:bg-white flex items-center justify-center flex-shrink-0`}
+          title="Chèn YouTube"
+        >
+          <YoutubeIcon className={iconClass} />
+        </button>
+        <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
+        <button
+          onClick={toggleListening}
+          className={`${btnClass} flex items-center justify-center flex-shrink-0 relative ${
+            isListening 
+              ? 'text-red-500 bg-red-50 hover:bg-red-100' 
+              : 'text-slate-600 hover:bg-white'
+          }`}
+          title="Nhập bằng giọng nói (Ctrl+M)"
+        >
+          <Mic className={iconClass} />
+          {isListening && (
+            <span className="absolute top-0 right-0 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            </span>
+          )}
+        </button>
+      </div>
+
+      {rightCustomAction && (
+        <div className="flex items-center ml-auto pl-2 flex-shrink-0">
+          {rightCustomAction}
+        </div>
+      )}
     </div>
   )
 }
@@ -255,7 +264,8 @@ export default function RichTextEditor({
   inline = false,
   mathOnlyToolbar = false,
   smallToolbar = false,
-  readOnly = false
+  readOnly = false,
+  rightCustomAction
 }: RichTextEditorProps) {
   const lastEmittedHTML = useRef(content || '');
   const processedInitialContent = preprocessMath(content || '');
@@ -316,7 +326,14 @@ export default function RichTextEditor({
 
   return (
     <div className={`flex flex-col transition-all overflow-hidden ${inline ? 'bg-transparent' : 'border border-slate-200 rounded-xl bg-slate-50 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5'} ${className}`}>
-      {!readOnly && !hideToolbar && <MenuBar editor={editor} mathOnlyToolbar={mathOnlyToolbar} />}
+      {!readOnly && !hideToolbar && (
+        <MenuBar 
+          editor={editor} 
+          mathOnlyToolbar={mathOnlyToolbar} 
+          smallToolbar={smallToolbar} 
+          rightCustomAction={rightCustomAction} 
+        />
+      )}
       <EditorContent editor={editor} className={`flex-grow flex flex-col overflow-y-auto bg-transparent`} />
     </div>
   )

@@ -95,11 +95,59 @@ function CreateQuestionContent() {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
     } else if (currentBlockIndex > 0) {
+      const prevBlock = questionBlocks[currentBlockIndex - 1];
       setCurrentBlockIndex(prev => prev - 1);
-      setCurrentQuestionIndex(questionBlocks[currentBlockIndex - 1].questions.length - 1);
+      setCurrentQuestionIndex(prevBlock.questions.length - 1);
     }
     scrollToEditor()
   }, [questionBlocks, currentBlockIndex, currentQuestionIndex])
+
+  const handlePrevBlock = useCallback(() => {
+    if (questionBlocks.length === 0) return;
+    if (currentBlockIndex > 0) {
+      setCurrentBlockIndex(prev => prev - 1);
+      setCurrentQuestionIndex(0);
+      scrollToEditor();
+    }
+  }, [questionBlocks, currentBlockIndex]);
+
+  const handleNextBlock = useCallback(() => {
+    if (questionBlocks.length === 0) return;
+    if (currentBlockIndex < questionBlocks.length - 1) {
+      setCurrentBlockIndex(prev => prev + 1);
+      setCurrentQuestionIndex(0);
+      scrollToEditor();
+    }
+  }, [questionBlocks, currentBlockIndex]);
+
+  const handleDeleteCurrentQuestion = useCallback(() => {
+    if (questionBlocks.length === 0) return;
+    setQuestionBlocks(prev => {
+      const newBlocks = [...prev];
+      const block = newBlocks[currentBlockIndex];
+      if (!block) return prev;
+
+      if (block.questions.length > 1) {
+        const newQuestions = block.questions.filter((_, idx) => idx !== currentQuestionIndex);
+        newBlocks[currentBlockIndex] = {
+          ...block,
+          questions: newQuestions,
+          is_group: newQuestions.length > 1
+        };
+        if (currentQuestionIndex >= newQuestions.length) {
+          setCurrentQuestionIndex(Math.max(0, newQuestions.length - 1));
+        }
+      } else {
+        newBlocks.splice(currentBlockIndex, 1);
+        if (currentBlockIndex >= newBlocks.length) {
+          setCurrentBlockIndex(Math.max(0, newBlocks.length - 1));
+        }
+        setCurrentQuestionIndex(0);
+      }
+      return newBlocks;
+    });
+    toast.success("Đã xóa câu hỏi");
+  }, [questionBlocks, currentBlockIndex, currentQuestionIndex]);
 
   const updateQuestion = useCallback((field: keyof Question, value: any) => {
     setQuestionBlocks(prev => {
@@ -226,8 +274,13 @@ function CreateQuestionContent() {
 
   const currentBlock = questionBlocks[currentBlockIndex] || null;
   const currentQuestion = currentBlock?.questions[currentQuestionIndex] || null;
-  const totalQuestions = questionBlocks.reduce((acc, block) => acc + block.questions.length, 0);
-  const currentGlobalIndex = questionBlocks.slice(0, currentBlockIndex).reduce((acc, block) => acc + block.questions.length, 0) + currentQuestionIndex + 1;
+  const totalBlocks = questionBlocks.length;
+  const isGroup = currentBlock?.is_group === true || (currentBlock?.questions && currentBlock.questions.length > 1);
+  const currentSubIndex = currentQuestionIndex + 1;
+  const totalSubInBlock = currentBlock?.questions.length || 1;
+
+  const isFirstQuestion = currentBlockIndex === 0 && currentQuestionIndex === 0;
+  const isLastQuestion = currentBlockIndex === totalBlocks - 1 && currentQuestionIndex === totalSubInBlock - 1;
 
   return (
     <div className="bg-slate-50 min-h-screen font-display pb-20 lg:pb-0">
@@ -260,8 +313,8 @@ function CreateQuestionContent() {
           <div className="lg:col-span-8 space-y-6">
             <JsonInputSection 
               onProcessJson={handleProcessJson}
-              currentGlobalIndex={currentGlobalIndex}
-              totalQuestions={totalQuestions}
+              currentGlobalIndex={currentBlockIndex + 1}
+              totalQuestions={totalBlocks}
               currentQuestion={currentQuestion}
               onNext={handleNext}
               onPrev={handlePrev}
@@ -288,50 +341,62 @@ function CreateQuestionContent() {
       </main>
 
       {/* Floating Action Bar (Navigation Controls) */}
-      {(totalQuestions > 0) && (
+      {totalBlocks > 0 && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white border border-slate-200 shadow-2xl rounded-full px-4 py-2.5 flex items-center gap-3 z-50 animate-in slide-in-from-bottom-10 fade-in">
-          <button className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 disabled:opacity-30" disabled>
+          <button 
+            className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 disabled:opacity-30 disabled:hover:bg-transparent" 
+            onClick={handlePrevBlock}
+            disabled={currentBlockIndex === 0}
+            title="Câu lớn trước đó"
+          >
             <ChevronsLeft className="w-5 h-5" />
           </button>
           <button 
             className="p-2 hover:bg-slate-100 rounded-full transition-colors border border-transparent disabled:opacity-30" 
             onClick={handlePrev}
-            disabled={totalQuestions === 0 || currentGlobalIndex <= 1}
+            disabled={isFirstQuestion}
+            title="Câu trước"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           
           <div className="px-6 py-1 flex items-center gap-3 border-x border-slate-200">
             <span className="text-sm font-black text-primary uppercase tracking-widest">
-              Câu {totalQuestions > 0 ? currentGlobalIndex : 0}
+              Câu {currentBlockIndex + 1}
             </span>
-            {(() => {
-              const isGroup = currentBlock?.is_group === true;
-                              
-              return isGroup && (
-                <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-black rounded uppercase tracking-widest border border-red-200 hidden sm:inline-block">
-                  Câu hỏi chùm
-                </span>
-              );
-            })()}
+            {isGroup && (
+              <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-black rounded uppercase tracking-widest border border-red-200 hidden sm:inline-block">
+                Câu hỏi chùm ({currentSubIndex}/{totalSubInBlock})
+              </span>
+            )}
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              / {totalQuestions}
+              / {totalBlocks}
             </span>
           </div>
           
           <button 
             className="p-2 hover:bg-slate-100 rounded-full transition-colors border border-transparent disabled:opacity-30"
             onClick={handleNext}
-            disabled={totalQuestions === 0 || currentGlobalIndex >= totalQuestions}
+            disabled={isLastQuestion}
+            title="Câu tiếp theo"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
-          <button className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 disabled:opacity-30" disabled>
+          <button 
+            className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 disabled:opacity-30 disabled:hover:bg-transparent" 
+            onClick={handleNextBlock}
+            disabled={currentBlockIndex === totalBlocks - 1}
+            title="Câu lớn tiếp theo"
+          >
             <ChevronsRight className="w-5 h-5" />
           </button>
           
           <div className="w-px h-6 bg-slate-200 mx-2"></div>
-          <button className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Xóa câu này">
+          <button 
+            className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors" 
+            title="Xóa câu này"
+            onClick={handleDeleteCurrentQuestion}
+          >
             <Trash2 className="w-5 h-5" />
           </button>
         </div>

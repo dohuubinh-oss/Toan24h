@@ -63,6 +63,7 @@ type PaginatedLectures struct {
 
 type LectureService interface {
 	CreateLecture(ctx context.Context, req CreateLectureRequest) error
+	UpdateLecture(ctx context.Context, id string, req CreateLectureRequest) error
 	GetLecturesByGrade(ctx context.Context, grade string, page, limit int) (*PaginatedLectures, error)
 	GetAllLectures(ctx context.Context) ([]models.Lecture, error)
 	GetLectureByID(ctx context.Context, id string) (*models.Lecture, error)
@@ -74,6 +75,76 @@ type lectureService struct {
 
 func NewLectureService(repo repository.LectureRepository) LectureService {
 	return &lectureService{repo: repo}
+}
+
+func processLectureImagesAndSerialize(grade string, basicConcept string, examples []DangToanRequest) (string, string) {
+	processLectureImageUrl := func(originalUrl string) string {
+		if originalUrl == "" || !strings.HasPrefix(originalUrl, "/uploads/temp/") {
+			return originalUrl
+		}
+
+		fileName := strings.TrimPrefix(originalUrl, "/uploads/temp/")
+		sourcePath := filepath.Join(".", "uploads", "temp", fileName)
+
+		ext := filepath.Ext(fileName)
+		baseName := strings.TrimSuffix(fileName, ext)
+		newFileName := fmt.Sprintf("%s_%s%s", baseName, uuid.New().String()[:8], ext)
+
+		finalDir := filepath.Join(".", "uploads", "lectures", grade)
+
+		if err := os.MkdirAll(finalDir, os.ModePerm); err != nil {
+			return originalUrl
+		}
+
+		finalPath := filepath.Join(finalDir, newFileName)
+		if err := os.Rename(sourcePath, finalPath); err != nil {
+			return originalUrl
+		}
+
+		return fmt.Sprintf("/uploads/lectures/%s/%s", grade, newFileName)
+	}
+
+	processHtmlImages := func(htmlContent string) string {
+		re := regexp.MustCompile(`src="/uploads/temp/([^"]+)"`)
+		return re.ReplaceAllStringFunc(htmlContent, func(match string) string {
+			parts := re.FindStringSubmatch(match)
+			if len(parts) > 1 {
+				originalUrl := "/uploads/temp/" + parts[1]
+				newUrl := processLectureImageUrl(originalUrl)
+				return fmt.Sprintf(`src="%s"`, newUrl)
+			}
+			return match
+		})
+	}
+
+	// Process Examples (DangToanList)
+	for i := range examples {
+		for j := range examples[i].Methods {
+			if examples[i].Methods[j].ProblemImage != "" {
+				examples[i].Methods[j].ProblemImage = processLectureImageUrl(examples[i].Methods[j].ProblemImage)
+			}
+			if examples[i].Methods[j].SolutionImage != "" {
+				examples[i].Methods[j].SolutionImage = processLectureImageUrl(examples[i].Methods[j].SolutionImage)
+			}
+			// Process images inside method content if any
+			if examples[i].Methods[j].MethodContent != "" {
+				examples[i].Methods[j].MethodContent = processHtmlImages(examples[i].Methods[j].MethodContent)
+			}
+			// Process images inside Exercise
+			if examples[i].Methods[j].Exercise != nil {
+				ex := examples[i].Methods[j].Exercise
+				if ex.Content != "" {
+					ex.Content = processHtmlImages(ex.Content)
+				}
+			}
+		}
+	}
+	examplesJson, _ := json.Marshal(examples)
+	if len(examples) == 0 {
+		examplesJson = []byte("[]")
+	}
+
+	return processHtmlImages(basicConcept), string(examplesJson)
 }
 
 func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureRequest) error {
@@ -96,76 +167,7 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 	}
 
 	lectureID := uuid.New()
-
-	processLectureImageUrl := func(originalUrl string) string {
-		if originalUrl == "" || !strings.HasPrefix(originalUrl, "/uploads/temp/") {
-			return originalUrl
-		}
-
-		fileName := strings.TrimPrefix(originalUrl, "/uploads/temp/")
-		sourcePath := filepath.Join(".", "uploads", "temp", fileName)
-
-		ext := filepath.Ext(fileName)
-		baseName := strings.TrimSuffix(fileName, ext)
-		newFileName := fmt.Sprintf("%s_%s%s", baseName, uuid.New().String()[:8], ext)
-
-		finalDir := filepath.Join(".", "uploads", "lectures", req.Grade)
-
-		if err := os.MkdirAll(finalDir, os.ModePerm); err != nil {
-			return originalUrl
-		}
-
-		finalPath := filepath.Join(finalDir, newFileName)
-		if err := os.Rename(sourcePath, finalPath); err != nil {
-			return originalUrl
-		}
-
-		return fmt.Sprintf("/uploads/lectures/%s/%s", req.Grade, newFileName)
-	}
-
-	processHtmlImages := func(htmlContent string) string {
-		re := regexp.MustCompile(`src="/uploads/temp/([^"]+)"`)
-		return re.ReplaceAllStringFunc(htmlContent, func(match string) string {
-			parts := re.FindStringSubmatch(match)
-			if len(parts) > 1 {
-				originalUrl := "/uploads/temp/" + parts[1]
-				newUrl := processLectureImageUrl(originalUrl)
-				return fmt.Sprintf(`src="%s"`, newUrl)
-			}
-			return match
-		})
-	}
-
-
-	
-
-
-	// Process Examples (DangToanList)
-	for i := range req.Examples {
-		for j := range req.Examples[i].Methods {
-			if req.Examples[i].Methods[j].ProblemImage != "" {
-				req.Examples[i].Methods[j].ProblemImage = processLectureImageUrl(req.Examples[i].Methods[j].ProblemImage)
-			}
-			if req.Examples[i].Methods[j].SolutionImage != "" {
-				req.Examples[i].Methods[j].SolutionImage = processLectureImageUrl(req.Examples[i].Methods[j].SolutionImage)
-			}
-			// Process images inside method content if any
-			if req.Examples[i].Methods[j].MethodContent != "" {
-				req.Examples[i].Methods[j].MethodContent = processHtmlImages(req.Examples[i].Methods[j].MethodContent)
-			}
-			// Process images inside Exercise
-			if req.Examples[i].Methods[j].Exercise != nil {
-				ex := req.Examples[i].Methods[j].Exercise
-				if ex.Content != "" {
-					ex.Content = processHtmlImages(ex.Content)
-				}
-			}
-		}
-	}
-	examplesJson, _ := json.Marshal(req.Examples)
-	if len(req.Examples) == 0 {
-		examplesJson = []byte("[]")
-	}
+	processedConcept, examplesStr := processLectureImagesAndSerialize(req.Grade, req.BasicConcept, req.Examples)
 
 	// Mapping DTO to Model
 	lecture := &models.Lecture{
@@ -173,11 +175,46 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		Title:        req.Title,
 		Grade:        req.Grade,
 		Category:     req.Category,
-		BasicConcept: processHtmlImages(req.BasicConcept),
-		Examples:     string(examplesJson),
+		BasicConcept: processedConcept,
+		Examples:     examplesStr,
 	}
 
 	return s.repo.CreateLecture(ctx, lecture)
+}
+
+func (s *lectureService) UpdateLecture(ctx context.Context, id string, req CreateLectureRequest) error {
+	// Validation
+	if req.Title == "" {
+		return errors.New("title is required")
+	}
+	if req.Grade == "" {
+		return errors.New("grade is required")
+	}
+	if req.Category == "" {
+		return errors.New("category is required")
+	}
+
+	hasBasicConcept := req.BasicConcept != "" && req.BasicConcept != "<p>Nhập khái niệm cơ bản tại đây...</p>" && req.BasicConcept != "<p></p>"
+	hasExamples := len(req.Examples) > 0
+
+	if !hasBasicConcept && !hasExamples {
+		return errors.New("must provide at least basic concept or examples")
+	}
+
+	lecture, err := s.repo.GetLectureByID(ctx, id)
+	if err != nil {
+		return errors.New("lecture not found")
+	}
+
+	processedConcept, examplesStr := processLectureImagesAndSerialize(req.Grade, req.BasicConcept, req.Examples)
+
+	lecture.Title = req.Title
+	lecture.Grade = req.Grade
+	lecture.Category = req.Category
+	lecture.BasicConcept = processedConcept
+	lecture.Examples = examplesStr
+
+	return s.repo.UpdateLecture(ctx, lecture)
 }
 
 func (s *lectureService) GetLecturesByGrade(ctx context.Context, grade string, page, limit int) (*PaginatedLectures, error) {

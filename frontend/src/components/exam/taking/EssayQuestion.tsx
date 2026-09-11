@@ -1,11 +1,11 @@
-import React from 'react'
-import { Camera, CheckCircle, Sparkles, Flag, BookOpen, AlertTriangle } from 'lucide-react'
+import React, { useState } from 'react'
+import { Camera, CheckCircle, Sparkles, Flag, BookOpen, AlertTriangle, QrCode, Smartphone } from 'lucide-react'
 import Link from 'next/link'
 import MathText from '@/components/ui/MathText'
 import RichTextEditor from '@/components/questions/creator/editor/RichTextEditor'
 import { useToast } from '@/components/ui/ToastProvider'
 import { recognizeHandwriting, submitAppeal, reportQuestion } from '@/lib/api'
-import { useState } from 'react'
+import MobileQrUploadModal from './MobileQrUploadModal'
 
 export interface SubQuestion {
   id: number
@@ -86,33 +86,23 @@ function EditorItem({
     }
   }
 
-  const [isOcrProcessing, setIsOcrProcessing] = React.useState(false)
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const toast = useToast()
+  const [isQrModalOpen, setIsQrModalOpen] = React.useState(false)
+  const [qrSessionId, setQrSessionId] = React.useState('')
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    try {
-      setIsOcrProcessing(true)
-      const text = await recognizeHandwriting(file)
-      handleEditorChange(editorContent + (editorContent ? '\n' : '') + text)
-      toast.success('Nhận dạng thành công')
-    } catch (error) {
-      console.error('OCR failed', error)
-      toast.error('Lỗi khi nhận dạng chữ viết tay')
-    } finally {
-      setIsOcrProcessing(false)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-    }
+  const handleOpenQrModal = () => {
+    const newSession = 'sess_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now()
+    setQrSessionId(newSession)
+    setIsQrModalOpen(true)
+  }
+
+  const handleQrUploadSuccess = (ocrText: string) => {
+    handleEditorChange(editorContent + (editorContent ? '\n' : '') + ocrText)
   }
 
   return (
     <div className="flex flex-col flex-1 min-h-[400px]">
       <div className="flex items-center justify-between mb-4">
-        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
           {isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`}
         </label>
         <div className="flex space-x-2">
@@ -140,36 +130,33 @@ function EditorItem({
         <RichTextEditor
           content={editorContent}
           onChange={handleEditorChange}
-          placeholder={isMC ? "Nhập giải thích cho đáp án bạn chọn..." : (isGroup ? `Nhập lời giải chi tiết cho ${q.label.toLowerCase()}...` : "Nhập lời giải chi tiết tại đây (Sử dụng các công cụ hỗ trợ trên)...")}
+          placeholder={isMC ? `Nhập giải thích cho ${q.label}...` : `Nhập lời giải chi tiết cho ${q.label}...`}
           className="flex-1 border-none rounded-none rounded-t-xl"
           minHeight="300px"
           readOnly={readonly}
+          rightCustomAction={
+            !readonly ? (
+              <button
+                type="button"
+                onClick={handleOpenQrModal}
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-primary text-white hover:bg-primary/90 rounded-lg font-bold text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
+                title="Quét mã QR chụp ảnh bài làm bằng điện thoại"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>Chụp bài thi</span>
+              </button>
+            ) : undefined
+          }
         />
-
-        {/* Bottom Upload Zone - only show if not readonly */}
-        {!readonly && (
-          <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-            <input 
-              type="file" 
-              hidden 
-              accept="image/*" 
-              ref={fileInputRef} 
-              onChange={handleFileUpload}
-            />
-            <button 
-              type="button" 
-              disabled={isOcrProcessing}
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full py-4 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex flex-col items-center justify-center hover:border-primary hover:bg-primary/5 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Camera className={`mb-1 w-6 h-6 ${isOcrProcessing ? 'text-primary animate-pulse' : 'text-slate-400 group-hover:text-primary'}`} />
-              <span className={`text-sm font-medium ${isOcrProcessing ? 'text-primary' : 'text-slate-600 dark:text-slate-400 group-hover:text-primary'}`}>
-                {isOcrProcessing ? 'Đang nhận dạng chữ viết tay...' : 'Tải ảnh lời giải bài làm tay'}
-              </span>
-            </button>
-          </div>
-        )}
       </div>
+
+      {/* Modal Quét mã QR */}
+      <MobileQrUploadModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        sessionId={qrSessionId}
+        onUploadSuccess={handleQrUploadSuccess}
+      />
 
       {/* AI Feedback Box - only show if readonly and feedback exists */}
       {readonly && aiFeedback && (
@@ -402,15 +389,15 @@ export default function EssayQuestion({
   // Determine what to render on the right side
   const renderEditors = () => {
     const questionsToRender = isGroup 
-      ? subQuestions.map((q, i) => ({ id: q.id, label: `Ý ${i + 1}`, type: q.type }))
-      : [{ id: questionId, label: 'của bạn', type: 'essay' }];
+      ? subQuestions.map((q, i) => ({ id: q.id, label: `câu ${index + 1}${String.fromCharCode(97 + i)}`, type: q.type }))
+      : [{ id: questionId, label: `câu ${index + 1}`, type: 'essay' }];
 
     return (
       <div className="flex-1 py-8 pr-8 pl-4 flex flex-col max-w-xl mr-auto w-full space-y-8">
-        {questionsToRender.map((q, i) => (
+        {questionsToRender.map((q) => (
           <EditorItem 
             key={q.id}
-            q={{id: q.id, label: isGroup ? `Câu ${index + 1}.${i + 1}` : 'của bạn', type: q.type}}
+            q={{id: q.id, label: q.label, type: q.type}}
             answer={answers[q.id] || ''}
             explanation={explanations?.[q.id] || ''}
             onAnswerChange={onAnswerChange || (() => {})}

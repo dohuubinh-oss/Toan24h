@@ -40,6 +40,7 @@ func SetupRouter() *gin.Engine {
 	lectureService := services.NewLectureService(lectureRepo)
 	lectureController := controllers.NewLectureController(lectureService)
 	ocrController := controllers.NewOCRController()
+	mobileUploadController := controllers.NewMobileUploadController()
 
 	// Auth & other Handlers
 	authHandler := handlers.NewAuthHandler(config.DB)
@@ -83,9 +84,14 @@ func SetupRouter() *gin.Engine {
 
 		// Lectures
 		v1.POST("/lectures", lectureController.CreateLecture)
+		v1.PUT("/lectures/:id", lectureController.UpdateLecture)
 		v1.GET("/lectures", lectureController.GetAllLectures)
 		v1.GET("/lectures/grade/:grade", lectureController.GetLecturesByGrade)
 		v1.GET("/lectures/:id", lectureController.GetLectureByID)
+
+		// Mobile QR Upload & Sync
+		v1.POST("/mobile-upload/:sessionId", mobileUploadController.UploadFromMobile)
+		v1.GET("/mobile-upload/:sessionId", mobileUploadController.CheckUploadStatus)
 	}
 
 	// Protected API routes

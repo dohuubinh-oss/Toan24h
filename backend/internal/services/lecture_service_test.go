@@ -23,6 +23,13 @@ func (m *mockLectureRepository) CreateLecture(ctx context.Context, lecture *mode
 	return nil
 }
 
+func (m *mockLectureRepository) UpdateLecture(ctx context.Context, lecture *models.Lecture) error {
+	if m.SaveFunc != nil {
+		return m.SaveFunc(ctx, lecture)
+	}
+	return nil
+}
+
 func (m *mockLectureRepository) GetLecturesByGrade(ctx context.Context, grade string, limit, offset int) ([]models.Lecture, int64, error) {
 	if m.GetLecturesByGradeFunc != nil {
 		return m.GetLecturesByGradeFunc(ctx, grade, limit, offset)
@@ -170,6 +177,47 @@ func TestGetLectureByID(t *testing.T) {
 		_, err := service.GetLectureByID(context.Background(), "456")
 		if err == nil || err.Error() != "not found" {
 			t.Errorf("Expected 'not found', got %v", err)
+		}
+	})
+}
+
+func TestUpdateLectureService(t *testing.T) {
+	mockRepo := &mockLectureRepository{
+		GetLectureByIDFunc: func(ctx context.Context, id string) (*models.Lecture, error) {
+			if id == "123" {
+				return &models.Lecture{Title: "Old Title", Grade: "10"}, nil
+			}
+			return nil, errors.New("not found")
+		},
+		SaveFunc: func(ctx context.Context, lecture *models.Lecture) error {
+			return nil
+		},
+	}
+	service := NewLectureService(mockRepo)
+
+	t.Run("Success", func(t *testing.T) {
+		payload := CreateLectureRequest{
+			Title:        "Updated Title",
+			Grade:        "10",
+			Category:     "Algebra",
+			BasicConcept: "New Concept",
+		}
+		err := service.UpdateLecture(context.Background(), "123", payload)
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+	})
+
+	t.Run("Lecture Not Found", func(t *testing.T) {
+		payload := CreateLectureRequest{
+			Title:        "Updated Title",
+			Grade:        "10",
+			Category:     "Algebra",
+			BasicConcept: "New Concept",
+		}
+		err := service.UpdateLecture(context.Background(), "999", payload)
+		if err == nil || err.Error() != "lecture not found" {
+			t.Errorf("Expected 'lecture not found', got %v", err)
 		}
 	})
 }

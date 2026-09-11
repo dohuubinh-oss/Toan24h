@@ -8,7 +8,7 @@ import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
 
-import { registerUser } from '@/lib/authApi'
+import { registerUser, telegramLogin } from '@/lib/authApi'
 import TelegramLoginWidget, { TelegramUser } from './TelegramLoginWidget'
 
 type RegisterFormValues = {
@@ -60,25 +60,7 @@ export default function RegisterForm() {
     setIsLoading(true)
     setErrorMessage('')
     try {
-      const response = await fetch('http://localhost:8080/api/v1/auth/telegram-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(user),
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Đăng nhập Telegram thất bại')
-      }
-
-      const res = await response.json()
-      
-      if (res.user) {
-        localStorage.setItem('user', JSON.stringify(res.user))
-      }
+      const res = await telegramLogin(user)
       
       if (res.user?.role === 'admin') {
         router.push('/dashboard')
