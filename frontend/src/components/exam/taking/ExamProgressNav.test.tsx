@@ -42,4 +42,34 @@ describe('ExamProgressNav Component', () => {
     await user.click(backBtn)
     expect(handleBack).toHaveBeenCalledTimes(1)
   })
+
+  it('renders coin badge on taking page and hides it on result page', () => {
+    const { rerender } = render(
+      <ExamProgressNav
+        title="Luyện tập"
+        subject="Toán Lớp 8"
+        completedQuestions={2}
+        totalQuestions={5}
+        examType="practice"
+        points={50}
+        onBack={() => {}}
+      />
+    )
+    expect(screen.getByText('50 xu')).toBeInTheDocument()
+
+    rerender(
+      <ExamProgressNav
+        title="Kết quả bài làm"
+        subject="Toán Lớp 8"
+        completedQuestions={5}
+        totalQuestions={5}
+        timeLeft="Tổng điểm: 9.0/10"
+        examType="result"
+        points={50}
+        onBack={() => {}}
+      />
+    )
+    expect(screen.queryByText('50 xu')).not.toBeInTheDocument()
+    expect(screen.getByText('Tổng điểm: 9.0/10')).toBeInTheDocument()
+  })
 })

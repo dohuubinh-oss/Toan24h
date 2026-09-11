@@ -1,5 +1,5 @@
 import React from 'react'
-import { ArrowLeft, Timer, Award } from 'lucide-react'
+import { ArrowLeft, Timer, Award, Coins } from 'lucide-react'
 
 interface ExamProgressNavProps {
   title: string
@@ -19,6 +19,7 @@ export default function ExamProgressNav({
   totalQuestions,
   timeLeft = '00:00',
   examType = 'exam',
+  points,
   onBack,
 }: ExamProgressNavProps) {
   const progressPercent = totalQuestions > 0 ? Math.round((completedQuestions / totalQuestions) * 100) : 0
@@ -58,19 +59,31 @@ export default function ExamProgressNav({
         )}
 
         <div className="flex items-center gap-3">
-          {examType === 'exam' ? (
-            <div className="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 dark:border-red-900/30">
-              <Timer className="w-5 h-5 text-red-500 animate-pulse" />
-              <span className="text-red-600 dark:text-red-400 font-bold tabular-nums text-lg">
-                {timeLeft}
-              </span>
-            </div>
-          ) : examType === 'result' ? (
+          {examType !== 'result' ? (
+            <>
+              {points !== undefined && (
+                <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 px-3.5 py-2 rounded-xl border border-amber-200 dark:border-amber-800/40 shadow-sm">
+                  <Coins className="w-5 h-5 text-amber-500" />
+                  <span className="text-amber-700 dark:text-amber-300 font-bold tabular-nums text-sm sm:text-base">
+                    {points} xu
+                  </span>
+                </div>
+              )}
+              {examType === 'exam' && (
+                <div className="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-xl border border-red-100 dark:border-red-900/30">
+                  <Timer className="w-5 h-5 text-red-500 animate-pulse" />
+                  <span className="text-red-600 dark:text-red-400 font-bold tabular-nums text-lg">
+                    {timeLeft}
+                  </span>
+                </div>
+              )}
+            </>
+          ) : (
             <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-xl border border-blue-100 dark:border-blue-900/30 text-blue-700 dark:text-blue-300 font-bold text-base">
               <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               <span>{timeLeft}</span>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
     </nav>
