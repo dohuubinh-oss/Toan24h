@@ -326,6 +326,26 @@ func GetExamResultByID(c *gin.Context) {
 	var questions []models.Question
 	if len(exam.QuestionIDs) > 0 {
 		config.DB.Where("id IN ? OR parent_id IN ?", []string(exam.QuestionIDs), []string(exam.QuestionIDs)).Find(&questions)
+		// Sort parent questions to match exam.QuestionIDs order
+		qMap := make(map[string]models.Question)
+		var childQuestions []models.Question
+		for _, q := range questions {
+			if q.ParentID != nil && *q.ParentID != uuid.Nil {
+				childQuestions = append(childQuestions, q)
+			} else {
+				qMap[q.ID.String()] = q
+			}
+		}
+		var sortedQuestions []models.Question
+		for _, qid := range exam.QuestionIDs {
+			if q, exists := qMap[qid]; exists {
+				sortedQuestions = append(sortedQuestions, q)
+			}
+		}
+		sortedQuestions = append(sortedQuestions, childQuestions...)
+		if len(sortedQuestions) > 0 {
+			questions = sortedQuestions
+		}
 	} else if len(qIDs) > 0 {
 		config.DB.Where("id IN ?", qIDs).Find(&questions)
 	}

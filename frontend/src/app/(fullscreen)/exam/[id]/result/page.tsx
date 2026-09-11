@@ -106,13 +106,21 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     const parentQs = rawQs.filter((q: any) => !q.parentId)
     const childQs = rawQs.filter((q: any) => !!q.parentId)
 
+    let structuredQuestions = parentQs.length > 0 ? parentQs : rawQs
+    if (exam && Array.isArray(exam.questionIds) && exam.questionIds.length > 0) {
+      const qMap = new Map(structuredQuestions.map((q: any) => [q.id, q]))
+      const sorted = exam.questionIds.map((qid: string) => qMap.get(qid)).filter(Boolean)
+      if (sorted.length > 0) {
+        structuredQuestions = sorted
+      }
+    }
+
     const questions: any[] = []
     const mapItems: QuestionMapItem[] = []
     const answers: Record<string, string> = {}
     const explanations: Record<string, string> = {}
     const aiFeedbacks: Record<string, any> = {}
 
-    const structuredQuestions = parentQs.length > 0 ? parentQs : rawQs
     let calculatedMaxScore = 0
 
     structuredQuestions.forEach((q: any, idx: number) => {
@@ -158,6 +166,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           content: sq.content,
           options: subOpts.map((opt: string, i: number) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt })),
           correctAnswer: sq.correctAnswer,
+          solution_guide: sq.solutionGuide || sq.solution_guide,
           difficultyPoint: subMax
         }
       })
@@ -196,6 +205,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         topic: q.topic,
         options: parsedOptions,
         correctAnswer: q.correctAnswer,
+        solution_guide: q.solutionGuide || q.solution_guide,
         subQuestions: mappedSubs,
         difficultyPoint: qMax
       }
@@ -411,11 +421,14 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               index={currentQuestionIndex}
               content={currentQuestion.content}
               sharedContext={currentQuestion.content}
+              solution_guide={currentQuestion.solution_guide}
               subQuestions={currentQuestion.subQuestions?.map((sq: any) => ({
                 id: sq.id as any,
                 type: sq.type === 'Trắc nghiệm' ? 'mc' : 'essay',
                 content: sq.content,
-                options: sq.options
+                options: sq.options,
+                solution_guide: sq.solution_guide,
+                correctAnswer: sq.correctAnswer
               })) || []}
               answers={mappedData.answers as any}
               explanations={mappedData.explanations as any}

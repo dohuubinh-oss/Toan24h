@@ -30,13 +30,13 @@ export default function AIHintPanel({ isOpen, onClose, question, unlockedLevel, 
 
   if (!question) return null
 
-  // Define hints available
+  // Define hints available (limit to max 2 hints)
   const hints = [
     { level: 1, title: 'Gợi ý', icon: Lightbulb, content: question.hint, color: 'blue' },
     { level: 2, title: 'Lỗi thường gặp', icon: AlertTriangle, content: question.mistakes, color: 'red' },
     { level: 3, title: 'Mẹo giải nhanh', icon: Zap, content: question.quick_solve_tips, color: 'amber' },
     { level: 4, title: 'Phương pháp tổng quát', icon: BookOpen, content: question.general_method, color: 'indigo' },
-  ].filter(h => h.content) // Only show if content exists
+  ].filter(h => h.content).slice(0, 2) // Only show at most 2 hints
 
   const handleUnlockNext = async (cost: number) => {
     if (unlocking) return
@@ -56,7 +56,7 @@ export default function AIHintPanel({ isOpen, onClose, question, unlockedLevel, 
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-primary" />
           </div>
-          <h3 className="font-bold text-slate-800 dark:text-white">Trợ lý AI</h3>
+          <h3 className="font-bold text-slate-800 dark:text-white">Gợi ý</h3>
         </div>
         <button 
           onClick={onClose}

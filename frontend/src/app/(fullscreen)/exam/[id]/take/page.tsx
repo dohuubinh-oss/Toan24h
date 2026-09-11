@@ -345,7 +345,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
 
   const toggleAiHint = (questionId: string) => {
     if (exam.cate === 'exam') {
-      toast.error("Gợi ý AI không khả dụng trong chế độ làm bài thi")
+      toast.error("Gợi ý không khả dụng trong chế độ làm bài thi")
       return
     }
     

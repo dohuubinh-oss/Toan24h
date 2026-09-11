@@ -12,6 +12,8 @@ export interface SubQuestion {
   type: 'mc' | 'essay'
   content: React.ReactNode
   options?: { id: string, text: string }[]
+  solution_guide?: string
+  correctAnswer?: string
 }
 
 interface EssayQuestionProps {
@@ -20,6 +22,7 @@ interface EssayQuestionProps {
   index: number
   content?: string
   sharedContext?: React.ReactNode
+  solution_guide?: string
   subQuestions?: SubQuestion[]
   answers: Record<number, string>
   explanations?: Record<number, string>
@@ -38,7 +41,9 @@ interface EssayQuestionProps {
     maxScore: number,
     isAppealed?: boolean,
     appealStatus?: string,
-    teacherFeedback?: string
+    teacherFeedback?: string,
+    aiReasoningRemark?: string,
+    reasoningScore?: number
   }>
   onAnswerChange?: (id: number, answer: string, explanation?: string) => void
   onToggleHint?: (id?: number) => void
@@ -57,14 +62,14 @@ function EditorItem({
   onToggleHint,
   resultId
 }: { 
-  q: { id: number, label: string, type: string },
+  q: { id: number, label: string, type: string, solution_guide?: string, correctAnswer?: string },
   answer: string,
   explanation: string,
   onAnswerChange: (id: number, answer: string, explanation?: string) => void,
   isGroup: boolean,
   examType?: string,
   readonly?: boolean,
-  aiFeedback?: { detailId?: string, isCorrect: boolean, aiExplanation: string, score: number, maxScore: number, isAppealed?: boolean, appealStatus?: string, teacherFeedback?: string },
+  aiFeedback?: { detailId?: string, isCorrect: boolean, aiExplanation: string, score: number, maxScore: number, isAppealed?: boolean, appealStatus?: string, teacherFeedback?: string, aiReasoningRemark?: string, reasoningScore?: number },
   onToggleHint?: (id: number) => void
   resultId?: string
 }) {
@@ -72,9 +77,6 @@ function EditorItem({
   const editorContent = isMC ? explanation : answer
   
   const { success, error } = useToast()
-  const [isAppealModalOpen, setIsAppealModalOpen] = useState(false)
-  const [appealMessage, setAppealMessage] = useState('')
-  const [isSubmittingAppeal, setIsSubmittingAppeal] = useState(false)
 
   const handleEditorChange = (val: string) => {
     if (onAnswerChange) {
@@ -100,10 +102,10 @@ function EditorItem({
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-[400px]">
-      <div className="flex items-center justify-between mb-4">
-        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-          {isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`}
+    <div className="flex flex-col flex-1 min-h-[350px]">
+      <div className="flex items-center justify-between mb-3">
+        <label className="text-sm font-bold text-slate-800 dark:text-slate-200">
+          {readonly ? (isMC ? `Giải thích của bạn (${q.label})` : `Lời giải của bạn (${q.label})`) : (isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`)}
         </label>
         <div className="flex space-x-2">
           {examType === 'practice' && !readonly && onToggleHint && (
@@ -116,7 +118,7 @@ function EditorItem({
               <span>Gợi ý</span>
             </button>
           )}
-          {editorContent.trim().length > 0 && (
+          {!readonly && editorContent.trim().length > 0 && (
             <span className="flex items-center text-xs text-green-600 dark:text-green-400 font-medium">
               <CheckCircle className="w-4 h-4 mr-1" />
               Đã lưu tự động
@@ -125,14 +127,14 @@ function EditorItem({
         </div>
       </div>
 
-      {/* Editor Container */}
+      {/* Editor Container / Student Answer */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
         <RichTextEditor
           content={editorContent}
           onChange={handleEditorChange}
           placeholder={isMC ? `Nhập giải thích cho ${q.label}...` : `Nhập lời giải chi tiết cho ${q.label}...`}
           className="flex-1 border-none rounded-none rounded-t-xl"
-          minHeight="300px"
+          minHeight="220px"
           readOnly={readonly}
           rightCustomAction={
             !readonly ? (
@@ -158,109 +160,42 @@ function EditorItem({
         onUploadSuccess={handleQrUploadSuccess}
       />
 
-      {/* AI Feedback Box - only show if readonly and feedback exists */}
-      {readonly && aiFeedback && (
-        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-bold text-lg">
-              <Sparkles className="w-5 h-5" />
-              Đánh giá từ AI
-            </h4>
-            <div className="flex items-center gap-3">
-              <span className="font-bold text-xl text-blue-800 dark:text-blue-300">
-                {aiFeedback.score} / {aiFeedback.maxScore} <span className="text-sm font-normal">điểm</span>
-              </span>
-              
-              {aiFeedback.isAppealed ? (
-                <span className={`px-3 py-1.5 rounded-lg text-sm font-semibold border ${
-                  aiFeedback.appealStatus === 'APPROVED' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
-                  aiFeedback.appealStatus === 'REJECTED' ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' :
-                  'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800'
-                }`}>
-                  {aiFeedback.appealStatus === 'APPROVED' ? 'Đã duyệt' :
-                   aiFeedback.appealStatus === 'REJECTED' ? 'Bị từ chối' : 'Đang duyệt kháng cáo'}
-                </span>
-              ) : (
-                <button 
-                  className="px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm hover:bg-slate-50 transition-colors"
-                  onClick={() => setIsAppealModalOpen(true)}
-                >
-                  Kháng cáo
-                </button>
-              )}
-            </div>
+      {/* Model Solution Guide (Lời giải chi tiết đối chiếu) */}
+      {readonly && (q.solution_guide || aiFeedback?.aiExplanation) && (
+        <div className="mt-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-5 shadow-sm">
+          <h4 className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-base mb-3">
+            <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            Lời giải chi tiết (Đáp án chuẩn)
+          </h4>
+          <div className="text-slate-800 dark:text-slate-200 leading-relaxed max-w-none">
+            <MathText content={q.solution_guide || aiFeedback?.aiExplanation || ''} />
           </div>
-          <div className="text-slate-700 dark:text-slate-300 prose prose-blue max-w-none">
-            <MathText content={aiFeedback.aiExplanation} />
-          </div>
-          
-          {aiFeedback.teacherFeedback && (
-            <div className="mt-4 p-4 bg-white/50 dark:bg-slate-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl">
-              <p className="text-sm font-semibold text-slate-500 mb-1">Lời nhắn của giáo viên:</p>
-              <p className="text-slate-700 dark:text-slate-300 italic">{aiFeedback.teacherFeedback}</p>
-            </div>
-          )}
         </div>
       )}
 
-      {/* Appeal Modal */}
-      {isAppealModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
-              Kháng cáo / Báo cáo lỗi
-            </h3>
-            <p className="text-slate-500 text-sm mb-4">
-              Nêu rõ lý do bạn muốn kháng cáo hoặc lỗi của câu hỏi này.
-            </p>
-            <textarea
-              value={appealMessage}
-              onChange={(e) => setAppealMessage(e.target.value)}
-              placeholder="Ví dụ: Lời giải của em áp dụng định lý X nhưng AI lại chấm theo cách Y..."
-              className="w-full min-h-[120px] p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none text-slate-700 dark:text-slate-200"
-            />
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setIsAppealModalOpen(false)}
-                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 rounded-xl font-semibold transition-colors"
-                disabled={isSubmittingAppeal}
-              >
-                Hủy
-              </button>
-              <button
-                onClick={async () => {
-                  if (!appealMessage.trim()) {
-                    error('Vui lòng nhập lý do')
-                    return
-                  }
-                  if (!resultId || !aiFeedback?.detailId) {
-                    error('Lỗi dữ liệu. Vui lòng tải lại trang.')
-                    return
-                  }
-                  setIsSubmittingAppeal(true)
-                  try {
-                    await submitAppeal(resultId, aiFeedback.detailId, appealMessage)
-                    success('Kháng cáo đã được gửi thành công!')
-                    setIsAppealModalOpen(false)
-                    window.location.reload()
-                  } catch (e: any) {
-                    error(e.response?.data?.error || 'Lỗi khi gửi kháng cáo')
-                  } finally {
-                    setIsSubmittingAppeal(false)
-                  }
-                }}
-                disabled={isSubmittingAppeal || !appealMessage.trim()}
-                className="flex-1 px-4 py-3 bg-primary text-white hover:bg-primary/90 disabled:opacity-50 rounded-xl font-semibold transition-colors shadow-md shadow-primary/20 flex items-center justify-center"
-              >
-                {isSubmittingAppeal ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  'Gửi'
-                )}
-              </button>
-            </div>
+      {/* VIP Reasoning Review Box */}
+      {readonly && aiFeedback?.aiReasoningRemark && (
+        <div className="mt-4 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-xl p-5 shadow-sm">
+          <h4 className="flex items-center justify-between text-purple-700 dark:text-purple-300 font-bold text-base mb-3">
+            <span className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              Đánh giá tư duy (VIP)
+            </span>
+            <span className="bg-purple-100 dark:bg-purple-800/50 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-xs font-bold">
+              Điểm: {aiFeedback.reasoningScore}/10
+            </span>
+          </h4>
+          <div className="text-slate-700 dark:text-slate-300">
+            <MathText content={aiFeedback.aiReasoningRemark} />
           </div>
+        </div>
+      )}
+
+      {/* Teacher Feedback (if any) */}
+      {readonly && aiFeedback?.teacherFeedback && (
+        <div className="mt-4 p-4 bg-white/50 dark:bg-slate-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl">
+          <p className="text-sm font-semibold text-slate-500 mb-1">Lời nhắn của giáo viên:</p>
+          <p className="text-slate-700 dark:text-slate-300 italic">{aiFeedback.teacherFeedback}</p>
         </div>
       )}
     </div>
@@ -273,6 +208,7 @@ export default function EssayQuestion({
   index,
   content,
   sharedContext,
+  solution_guide,
   subQuestions,
   answers,
   explanations,
@@ -389,15 +325,26 @@ export default function EssayQuestion({
   // Determine what to render on the right side
   const renderEditors = () => {
     const questionsToRender = isGroup 
-      ? subQuestions.map((q, i) => ({ id: q.id, label: `câu ${index + 1}${String.fromCharCode(97 + i)}`, type: q.type }))
-      : [{ id: questionId, label: `câu ${index + 1}`, type: 'essay' }];
+      ? subQuestions.map((q, i) => ({ 
+          id: q.id, 
+          label: `câu ${index + 1}${String.fromCharCode(97 + i)}`, 
+          type: q.type,
+          solution_guide: (q as any).solution_guide || (q as any).solutionGuide,
+          correctAnswer: (q as any).correctAnswer
+        }))
+      : [{ 
+          id: questionId, 
+          label: `câu ${index + 1}`, 
+          type: 'essay',
+          solution_guide: solution_guide
+        }];
 
     return (
       <div className="flex-1 py-8 pr-8 pl-4 flex flex-col max-w-xl mr-auto w-full space-y-8">
         {questionsToRender.map((q) => (
           <EditorItem 
             key={q.id}
-            q={{id: q.id, label: q.label, type: q.type}}
+            q={q}
             answer={answers[q.id] || ''}
             explanation={explanations?.[q.id] || ''}
             onAnswerChange={onAnswerChange || (() => {})}
@@ -461,7 +408,7 @@ export default function EssayQuestion({
                   className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full font-semibold text-sm cursor-pointer hover:bg-blue-700 transition-all shadow-md shadow-primary/20 active:scale-95"
                 >
                   <Sparkles className="w-5 h-5" />
-                  <span className="hidden sm:inline">Gợi ý AI</span>
+                  <span className="hidden sm:inline">Gợi ý</span>
                 </button>
               )}
             </div>

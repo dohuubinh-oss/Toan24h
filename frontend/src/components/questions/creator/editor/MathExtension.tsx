@@ -7,6 +7,8 @@ import React, { useState, useEffect } from 'react'
 
 const MathNodeView = ({ node, updateAttributes, selected, deleteNode, editor, getPos }: any) => {
   const [isEditing, setIsEditing] = useState(false)
+  const [liveLatex, setLiveLatex] = useState(node.attrs.latex || '')
+  const wrapperRef = React.useRef<HTMLSpanElement>(null)
 
   // Auto-edit when newly inserted and empty
   useEffect(() => {
@@ -14,6 +16,10 @@ const MathNodeView = ({ node, updateAttributes, selected, deleteNode, editor, ge
       setIsEditing(true)
     }
   }, [])
+
+  useEffect(() => {
+    setLiveLatex(node.attrs.latex || '')
+  }, [node.attrs.latex])
 
   const handleSave = (latex: string) => {
     updateAttributes({ latex })
@@ -30,6 +36,7 @@ const MathNodeView = ({ node, updateAttributes, selected, deleteNode, editor, ge
 
   const handleCancel = () => {
     setIsEditing(false)
+    setLiveLatex(node.attrs.latex || '')
     if (node.attrs.latex === '') {
       deleteNode()
       editor.commands.focus()
@@ -44,20 +51,26 @@ const MathNodeView = ({ node, updateAttributes, selected, deleteNode, editor, ge
   }
 
   return (
-    <NodeViewWrapper as="span" className="inline-block relative align-middle mx-1">
+    <NodeViewWrapper ref={wrapperRef} as="span" className="inline-block relative align-middle mx-1">
       {isEditing && (
         <MathKeyboardModal 
+          anchorEl={wrapperRef.current}
           initialValue={node.attrs.latex} 
+          onChange={(val) => setLiveLatex(val)}
           onSave={handleSave} 
           onCancel={handleCancel} 
         />
       )}
       
       <span 
-        className={`cursor-pointer inline-block rounded px-1.5 py-0.5 transition-all hover:bg-slate-100`}
+        className={`cursor-pointer inline-block rounded px-1.5 py-0.5 transition-all ${
+          isEditing 
+            ? 'bg-primary/10 ring-2 ring-primary/40 text-primary' 
+            : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+        }`}
         onClick={() => setIsEditing(true)}
       >
-        <MathText content={`$${node.attrs.latex || '\\text{nhập công thức...}'}$`} />
+        <MathText content={`$${(isEditing ? liveLatex : node.attrs.latex) || '\\text{nhập công thức...}'}$`} />
       </span>
     </NodeViewWrapper>
   )

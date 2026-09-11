@@ -8,17 +8,42 @@ import { createPortal } from 'react-dom'
 
 interface MathKeyboardModalProps {
   initialValue: string
+  anchorEl?: HTMLElement | null
+  onChange?: (latex: string) => void
   onSave: (latex: string) => void
   onCancel: () => void
 }
 
-export default function MathKeyboardModal({ initialValue, onSave, onCancel }: MathKeyboardModalProps) {
+export default function MathKeyboardModal({ initialValue, anchorEl, onChange, onSave, onCancel }: MathKeyboardModalProps) {
   const [latex, setLatex] = useState(initialValue || '')
   const [mounted, setMounted] = useState(false)
+  const [position, setPosition] = useState<{ top: number; left: number }>({ top: 300, left: 100 })
   
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (anchorEl && typeof window !== 'undefined') {
+      const rect = anchorEl.getBoundingClientRect()
+      const modalWidth = 400
+      const modalHeight = 240
+      
+      let top = rect.bottom + window.scrollY + 8
+      let left = rect.left + window.scrollX
+
+      // Check if overflowing viewport bottom
+      if (rect.bottom + modalHeight > window.innerHeight && rect.top > modalHeight) {
+        top = rect.top + window.scrollY - modalHeight - 8
+      }
+
+      // Check viewport horizontal boundaries
+      const maxLeft = window.innerWidth - modalWidth - 16
+      left = Math.max(16, Math.min(maxLeft, left))
+
+      setPosition({ top, left })
+    }
+  }, [anchorEl])
   
   // Xử lý phím Enter và Esc
   useEffect(() => {
@@ -26,9 +51,6 @@ export default function MathKeyboardModal({ initialValue, onSave, onCancel }: Ma
       if (e.key === 'Escape') {
         onCancel()
       } else if (e.key === 'Enter') {
-        // Đôi khi người dùng nhấn Enter để xuống dòng trong một số context, 
-        // nhưng với MathLive inline thì Enter thường dùng để lưu.
-        // Để an toàn, chúng ta chỉ lắng nghe phím Enter trên window nếu focus không ở trong vùng đặc biệt nào khác.
         if (e.target && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
           onSave(latex)
         }
@@ -39,10 +61,20 @@ export default function MathKeyboardModal({ initialValue, onSave, onCancel }: Ma
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [latex, onCancel, onSave])
 
+  const handleChange = (val: string) => {
+    setLatex(val)
+    if (onChange) {
+      onChange(val)
+    }
+  }
+
   if (!mounted) return null
 
   return createPortal(
-    <div className="fixed top-[546px] right-8 z-[100] flex flex-col w-[400px] pointer-events-none">
+    <div 
+      style={{ top: `${position.top}px`, left: `${position.left}px` }}
+      className="absolute z-[10000] flex flex-col w-[400px] pointer-events-none transition-all duration-150"
+    >
       {/* Modal Container */}
       <div className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl w-full rounded-[20px] shadow-[0_24px_48px_-12px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col h-fit pointer-events-auto border border-white/50 dark:border-slate-700/50">
         
@@ -52,7 +84,7 @@ export default function MathKeyboardModal({ initialValue, onSave, onCancel }: Ma
           <div className="relative rounded-xl overflow-y-auto max-h-[200px] border border-slate-200 dark:border-slate-700/50 shadow-inner bg-slate-50/80 dark:bg-slate-800/50">
             <MathInput 
               value={latex}
-              onChange={setLatex}
+              onChange={handleChange}
             />
           </div>
         </div>
