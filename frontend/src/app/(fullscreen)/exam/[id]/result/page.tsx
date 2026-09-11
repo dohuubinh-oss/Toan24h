@@ -22,6 +22,30 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isAiHintOpen, setIsAiHintOpen] = useState(false)
   const [flaggedQuestions, setFlaggedQuestions] = useState<Record<string, boolean>>({})
+  const [isVip, setIsVip] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const userStr = localStorage.getItem('user')
+        if (userStr) {
+          const user = JSON.parse(userStr)
+          if (
+            user.role === 'vip' || 
+            user.role === 'admin' || 
+            user.role === 'teacher' || 
+            user.isVip || 
+            user.plan === 'vip' || 
+            user.subscriptionPlan === 'vip'
+          ) {
+            setIsVip(true)
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse user for VIP check", e)
+      }
+    }
+  }, [])
 
   const toggleAiHint = () => {
     setIsAiHintOpen(!isAiHintOpen)
@@ -312,31 +336,6 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const avgReasoningScore = reasoningScores.length > 0 
     ? (reasoningScores.reduce((a, b) => a + b, 0) / reasoningScores.length)
     : standardScore
-
-  // Check VIP status from localStorage
-  const [isVip, setIsVip] = useState(false)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const userStr = localStorage.getItem('user')
-        if (userStr) {
-          const user = JSON.parse(userStr)
-          if (
-            user.role === 'vip' || 
-            user.role === 'admin' || 
-            user.role === 'teacher' || 
-            user.isVip || 
-            user.plan === 'vip' || 
-            user.subscriptionPlan === 'vip'
-          ) {
-            setIsVip(true)
-          }
-        }
-      } catch (e) {
-        console.error("Failed to parse user for VIP check", e)
-      }
-    }
-  }, [])
 
   return (
     <div className="flex flex-col min-h-screen relative overflow-x-hidden bg-background-light dark:bg-background-dark">
