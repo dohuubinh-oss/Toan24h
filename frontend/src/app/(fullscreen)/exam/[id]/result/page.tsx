@@ -347,6 +347,13 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     ? (reasoningScores.reduce((a, b) => a + b, 0) / reasoningScores.length)
     : standardScore
 
+  let lectureUrl = undefined
+  if (mappedData.exam?.lectureId) {
+    const gradeStr = mappedData.exam?.grade || '12'
+    const returnUrl = encodeURIComponent(`/exam/${id}/result`)
+    lectureUrl = `/lectures/lop/${gradeStr}/${mappedData.exam.lectureId}?returnUrl=${returnUrl}&examId=${id}`
+  }
+
   return (
     <div className="flex flex-col min-h-screen relative overflow-x-hidden bg-background-light dark:bg-background-dark">
       {/* Top Navbar */}
@@ -414,6 +421,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               onToggleHint={toggleAiHint}
               onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
               examType={examType}
+              lectureUrl={lectureUrl}
             />
           ) : (
             <EssayQuestion 
@@ -440,6 +448,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               onToggleHint={() => toggleAiHint()}
               onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
               examType={examType}
+              lectureUrl={lectureUrl}
             />
           )
         )}

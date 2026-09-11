@@ -114,7 +114,7 @@ export default function MultipleChoiceQuestion({
                 Câu hỏi {index + 1}
               </span>
               <div className="flex items-center gap-2">
-                {examType === 'practice' && lectureUrl && (
+                {lectureUrl && (
                   <Link
                     href={lectureUrl}
                     className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 rounded-full font-semibold text-sm transition-all active:scale-95"

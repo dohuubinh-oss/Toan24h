@@ -75,6 +75,28 @@
 
   .latex-font { 
     font-family: 'Times New Roman', serif; 
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-width: 100%;
+    padding: 0.25rem 0;
+  }
+
+  .katex {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .katex-html {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: middle;
   }
 
   .ProseMirror img {

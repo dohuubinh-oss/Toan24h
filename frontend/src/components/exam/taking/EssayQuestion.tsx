@@ -104,12 +104,11 @@ function EditorItem({
   return (
     <div className="flex flex-col flex-1 min-h-[250px]">
       {readonly ? (
-        <div className="bg-teal-50/70 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800 rounded-xl p-5 shadow-sm flex flex-col flex-1">
+        <div className="flex flex-col flex-1">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="flex items-center gap-2 text-teal-800 dark:text-teal-300 font-bold text-base">
-              <MessageSquare className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-              {isMC ? `Giải thích của bạn (${q.label})` : `Lời giải của bạn (${q.label})`}
-            </h4>
+            <label className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              {isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`}
+            </label>
             {onToggleHint && (
               <button 
                 data-hint-toggle="true"
@@ -121,13 +120,16 @@ function EditorItem({
               </button>
             )}
           </div>
-          {editorContent && editorContent.trim().length > 0 ? (
-            <div className="text-slate-800 dark:text-slate-200 leading-relaxed text-base">
-              <MathText content={editorContent} />
-            </div>
-          ) : (
-            <p className="text-slate-400 italic text-sm">Học sinh chưa nhập bài làm cho phần này.</p>
-          )}
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex flex-col flex-1 min-h-[140px] overflow-hidden">
+            {editorContent && editorContent.trim().length > 0 ? (
+              <div className="text-slate-800 dark:text-slate-200 leading-relaxed text-base break-words overflow-x-auto max-w-full">
+                <MathText content={editorContent} />
+              </div>
+            ) : (
+              <p className="text-slate-400 italic text-sm">Học sinh chưa nhập bài làm cho phần này.</p>
+            )}
+          </div>
         </div>
       ) : (
         <div className="flex flex-col flex-1 min-h-[350px]">
@@ -188,12 +190,12 @@ function EditorItem({
 
       {/* Model Solution Guide (Lời giải chi tiết đối chiếu) */}
       {readonly && (q.solution_guide || aiFeedback?.aiExplanation) && (
-        <div className="mt-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-5 shadow-sm">
+        <div className="mt-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-5 shadow-sm overflow-hidden">
           <h4 className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-base mb-3">
             <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             Lời giải chi tiết (Đáp án chuẩn)
           </h4>
-          <div className="text-slate-800 dark:text-slate-200 leading-relaxed max-w-none">
+          <div className="text-slate-800 dark:text-slate-200 leading-relaxed max-w-full overflow-x-auto">
             <MathText content={q.solution_guide || aiFeedback?.aiExplanation || ''} />
           </div>
         </div>
@@ -366,7 +368,7 @@ export default function EssayQuestion({
         }];
 
     return (
-      <div className="flex-1 py-8 pr-8 pl-4 flex flex-col max-w-xl mr-auto w-full space-y-8">
+      <div className="flex-1 py-8 pr-8 pl-6 flex flex-col max-w-3xl mr-auto w-full space-y-8">
         {questionsToRender.map((q) => (
           <EditorItem 
             key={q.id}
@@ -397,7 +399,7 @@ export default function EssayQuestion({
             </span>
             
             <div className="flex items-center gap-2">
-              {examType === 'practice' && lectureUrl && (
+              {lectureUrl && (
                 <Link
                   href={lectureUrl}
                   className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 rounded-full font-semibold text-sm transition-all active:scale-95"
@@ -427,16 +429,6 @@ export default function EssayQuestion({
                 <Flag className={`w-5 h-5 ${isFlagged ? 'fill-amber-500' : ''}`} />
                 <span className="hidden sm:inline">{isFlagged ? 'Đã đánh dấu' : 'Đánh dấu'}</span>
               </button>
-              {(examType === 'practice' || readonly) && onToggleHint && (
-                <button 
-                  data-hint-toggle="true"
-                  onClick={() => onToggleHint()}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full font-semibold text-sm cursor-pointer hover:bg-blue-700 transition-all shadow-md shadow-primary/20 active:scale-95"
-                >
-                  <Sparkles className="w-5 h-5" />
-                  <span className="hidden sm:inline">Gợi ý</span>
-                </button>
-              )}
             </div>
           </div>
           
