@@ -302,6 +302,42 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const totalMaxScore = mappedData.totalMaxScore
   const standardScore = totalMaxScore > 0 ? (totalAchieved / totalMaxScore) * 10 : 0
 
+  // Calculate average reasoning score for VIP
+  const reasoningScores: number[] = []
+  Object.values(mappedData.aiFeedbacks).forEach((fb: any) => {
+    if (typeof fb?.reasoningScore === 'number' && fb.reasoningScore > 0) {
+      reasoningScores.push(fb.reasoningScore)
+    }
+  })
+  const avgReasoningScore = reasoningScores.length > 0 
+    ? (reasoningScores.reduce((a, b) => a + b, 0) / reasoningScores.length)
+    : standardScore
+
+  // Check VIP status from localStorage
+  const [isVip, setIsVip] = useState(false)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const userStr = localStorage.getItem('user')
+        if (userStr) {
+          const user = JSON.parse(userStr)
+          if (
+            user.role === 'vip' || 
+            user.role === 'admin' || 
+            user.role === 'teacher' || 
+            user.isVip || 
+            user.plan === 'vip' || 
+            user.subscriptionPlan === 'vip'
+          ) {
+            setIsVip(true)
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse user for VIP check", e)
+      }
+    }
+  }, [])
+
   return (
     <div className="flex flex-col min-h-screen relative overflow-x-hidden bg-background-light dark:bg-background-dark">
       {/* Top Navbar */}
@@ -310,7 +346,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         subject={`Toán Lớp ${examGrade}`}
         completedQuestions={mappedData.questions.length} 
         totalQuestions={mappedData.questions.length} 
-        timeLeft={`Điểm tư duy: ${standardScore.toFixed(1)}/10`}
+        timeLeft={`Tổng điểm: ${standardScore.toFixed(1)}/10`}
         examType="result"
         onBack={handleBack}
       />
@@ -442,10 +478,20 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-xl font-bold text-base border border-blue-100 dark:border-blue-900/30 shadow-sm">
-              <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <span>Điểm tư duy: {standardScore.toFixed(1)}/10</span>
-            </div>
+            {isVip ? (
+              <div className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/40 dark:to-indigo-950/40 text-purple-700 dark:text-purple-300 rounded-xl font-bold text-base border border-purple-200 dark:border-purple-800/50 shadow-sm">
+                <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <span>Điểm tư duy: {avgReasoningScore.toFixed(1)}/10</span>
+                <span className="text-[10px] uppercase font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-2 py-0.5 rounded-full shadow-sm ml-1">
+                  VIP
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-xl font-bold text-base border border-blue-100 dark:border-blue-900/30 shadow-sm">
+                <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <span>Tổng điểm: {standardScore.toFixed(1)}/10</span>
+              </div>
+            )}
           </div>
         </div>
       </footer>
