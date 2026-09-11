@@ -17,8 +17,14 @@ export default function MathText({ content, className = '' }: MathTextProps) {
   const renderedHtml = useMemo(() => {
     if (!hasHtml) return content;
     
+    // Convert TipTap math tags to latex delimiters
+    let processed = content
+      .replace(/<math-inline[^>]*data-latex="([^"]*)"[^>]*>[\s\S]*?<\/math-inline>/gi, '$$$1$$')
+      .replace(/<math-inline[^>]*latex="([^"]*)"[^>]*>[\s\S]*?<\/math-inline>/gi, '$$$1$$')
+      .replace(/<span[^>]*data-type="math"[^>]*data-latex="([^"]*)"[^>]*>[\s\S]*?<\/span>/gi, '$$$1$$');
+
     // Thay thế các công thức $$...$$, \[...\], $...$, \(...\) bằng chuỗi HTML của KaTeX
-    return content.replace(/\$\$([\s\S]*?)\$\$|\\\[([\s\S]*?)\\\]|\$([^$]+)\$|\\\(([\s\S]*?)\\\)/g, (match, b1, b2, i1, i2) => {
+    return processed.replace(/\$\$([\s\S]*?)\$\$|\\\[([\s\S]*?)\\\]|\$([^$]+)\$|\\\(([\s\S]*?)\\\)/g, (match, b1, b2, i1, i2) => {
       const math = b1 || b2 || i1 || i2;
       const isBlock = !!(b1 || b2);
       try {
