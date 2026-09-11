@@ -405,7 +405,8 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               selectedOptionId={mappedData.answers[currentQuestion.id] || null}
               selectedExplanation={mappedData.explanations[currentQuestion.id]}
               correctOptionId={currentQuestion.correctAnswer}
-              aiExplanation={mappedData.aiFeedbacks[currentQuestion.id]?.aiExplanation}
+              aiExplanation={mappedData.aiFeedbacks[currentQuestion.id]?.aiExplanation || currentQuestion.solution_guide}
+              solutionGuide={currentQuestion.solution_guide}
               aiFeedback={mappedData.aiFeedbacks[currentQuestion.id]}
               readonly={true}
               isHintOpen={isAiHintOpen}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Camera, CheckCircle, Sparkles, Flag, BookOpen, AlertTriangle, QrCode, Smartphone } from 'lucide-react'
+import { Camera, CheckCircle, Sparkles, Flag, BookOpen, AlertTriangle, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import MathText from '@/components/ui/MathText'
 import RichTextEditor from '@/components/questions/creator/editor/RichTextEditor'
@@ -74,7 +74,7 @@ function EditorItem({
   resultId?: string
 }) {
   const isMC = q.type === 'mc'
-  const editorContent = isMC ? explanation : answer
+  const editorContent = (isMC ? (explanation || answer) : (answer || explanation)) || ''
   
   const { success, error } = useToast()
 
@@ -102,55 +102,81 @@ function EditorItem({
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-[350px]">
-      <div className="flex items-center justify-between mb-3">
-        <label className="text-sm font-bold text-slate-800 dark:text-slate-200">
-          {readonly ? (isMC ? `Giải thích của bạn (${q.label})` : `Lời giải của bạn (${q.label})`) : (isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`)}
-        </label>
-        <div className="flex space-x-2">
-          {(examType === 'practice' || readonly) && onToggleHint && (
-            <button 
-              data-hint-toggle="true"
-              onClick={() => onToggleHint(q.id)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg font-semibold text-xs cursor-pointer transition-all"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Gợi ý</span>
-            </button>
-          )}
-          {!readonly && editorContent.trim().length > 0 && (
-            <span className="flex items-center text-xs text-green-600 dark:text-green-400 font-medium">
-              <CheckCircle className="w-4 h-4 mr-1" />
-              Đã lưu tự động
-            </span>
+    <div className="flex flex-col flex-1 min-h-[250px]">
+      {readonly ? (
+        <div className="bg-teal-50/70 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800 rounded-xl p-5 shadow-sm flex flex-col flex-1">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="flex items-center gap-2 text-teal-800 dark:text-teal-300 font-bold text-base">
+              <MessageSquare className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              {isMC ? `Giải thích của bạn (${q.label})` : `Lời giải của bạn (${q.label})`}
+            </h4>
+            {onToggleHint && (
+              <button 
+                data-hint-toggle="true"
+                onClick={() => onToggleHint(q.id)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg font-semibold text-xs cursor-pointer transition-all"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Gợi ý</span>
+              </button>
+            )}
+          </div>
+          {editorContent && editorContent.trim().length > 0 ? (
+            <div className="text-slate-800 dark:text-slate-200 leading-relaxed text-base">
+              <MathText content={editorContent} />
+            </div>
+          ) : (
+            <p className="text-slate-400 italic text-sm">Học sinh chưa nhập bài làm cho phần này.</p>
           )}
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col flex-1 min-h-[350px]">
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              {isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`}
+            </label>
+            <div className="flex space-x-2">
+              {examType === 'practice' && onToggleHint && (
+                <button 
+                  data-hint-toggle="true"
+                  onClick={() => onToggleHint(q.id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg font-semibold text-xs cursor-pointer transition-all"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Gợi ý</span>
+                </button>
+              )}
+              {editorContent.trim().length > 0 && (
+                <span className="flex items-center text-xs text-green-600 dark:text-green-400 font-medium">
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Đã lưu tự động
+                </span>
+              )}
+            </div>
+          </div>
 
-      {/* Editor Container / Student Answer */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
-        <RichTextEditor
-          content={editorContent}
-          onChange={handleEditorChange}
-          placeholder={isMC ? `Nhập giải thích cho ${q.label}...` : `Nhập lời giải chi tiết cho ${q.label}...`}
-          className="flex-1 border-none rounded-none rounded-t-xl"
-          minHeight="220px"
-          readOnly={readonly}
-          rightCustomAction={
-            !readonly ? (
-              <button
-                type="button"
-                onClick={handleOpenQrModal}
-                className="flex items-center gap-1.5 px-2.5 py-1 bg-primary text-white hover:bg-primary/90 rounded-lg font-bold text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
-                title="Quét mã QR chụp ảnh bài làm bằng điện thoại"
-              >
-                <Camera className="w-3.5 h-3.5" />
-                <span>Chụp bài thi</span>
-              </button>
-            ) : undefined
-          }
-        />
-      </div>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
+            <RichTextEditor
+              content={editorContent}
+              onChange={handleEditorChange}
+              placeholder={isMC ? `Nhập giải thích cho ${q.label}...` : `Nhập lời giải chi tiết cho ${q.label}...`}
+              className="flex-1 border-none rounded-none rounded-t-xl"
+              minHeight="220px"
+              rightCustomAction={
+                <button
+                  type="button"
+                  onClick={handleOpenQrModal}
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-primary text-white hover:bg-primary/90 rounded-lg font-bold text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
+                  title="Quét mã QR chụp ảnh bài làm bằng điện thoại"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Chụp bài thi</span>
+                </button>
+              }
+            />
+          </div>
+        </div>
+      )}
 
       {/* Modal Quét mã QR */}
       <MobileQrUploadModal
