@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Home, Sparkles, RotateCcw, ArrowLeft, Loader2, Award } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles, ArrowLeft, Loader2, Award } from 'lucide-react'
 import ExamProgressNav from '@/components/exam/taking/ExamProgressNav'
 import QuestionMapSidebar, { QuestionMapItem, QuestionStatus } from '@/components/exam/taking/QuestionMapSidebar'
 import MultipleChoiceQuestion from '@/components/exam/taking/MultipleChoiceQuestion'
@@ -21,18 +21,17 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const [loading, setLoading] = useState(true)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isAiHintOpen, setIsAiHintOpen] = useState(false)
-  const [unlockedHints, setUnlockedHints] = useState<Record<string, number>>({})
+  const [flaggedQuestions, setFlaggedQuestions] = useState<Record<string, boolean>>({})
 
   const toggleAiHint = () => {
     setIsAiHintOpen(!isAiHintOpen)
   }
 
-  const handleUnlockHint = async (questionId: string, cost: number) => {
-    setUnlockedHints(prev => ({
+  const handleToggleFlag = (qId: string) => {
+    setFlaggedQuestions(prev => ({
       ...prev,
-      [questionId]: (prev[questionId] || 0) + 1
+      [qId]: !prev[qId]
     }))
-    return true
   }
 
   useEffect(() => {
@@ -64,7 +63,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   // Memoize mapped questions and status
   const mappedData = useMemo(() => {
     if (!resultData || !resultData.submission || !resultData.questions) {
-      return { questions: [], mapItems: [], answers: {}, explanations: {}, aiFeedbacks: {}, submission: null, exam: null }
+      return { questions: [], mapItems: [], answers: {}, explanations: {}, aiFeedbacks: {}, submission: null, exam: null, totalMaxScore: 0 }
     }
 
     const sub = resultData.submission
@@ -90,6 +89,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     const aiFeedbacks: Record<string, any> = {}
 
     const structuredQuestions = parentQs.length > 0 ? parentQs : rawQs
+    let calculatedMaxScore = 0
 
     structuredQuestions.forEach((q: any, idx: number) => {
       const subs = childQs.filter((cq: any) => cq.parentId === q.id)
@@ -110,11 +110,14 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         answers[sq.id] = ansData.student_answer || ansData.studentAnswer || ''
         explanations[sq.id] = ansData.student_explanation || ansData.studentExplanation || ''
         
+        const subMax = sq.difficultyPoint || 10
+        calculatedMaxScore += subMax
+
         aiFeedbacks[sq.id] = {
           detailId: sq.id,
           isCorrect: ansData.is_correct ?? (ansData.score > 0),
           score: ansData.score || 0,
-          maxScore: sq.difficultyPoint || 0,
+          maxScore: subMax,
           aiExplanation: ansData.ai_explanation || ansData.aiExplanation || '',
           errorLocation: ansData.error_location || ansData.errorLocation,
           isAppealed: ansData.appeal?.is_appealed || false,
@@ -131,7 +134,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           content: sq.content,
           options: subOpts.map((opt: string, i: number) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt })),
           correctAnswer: sq.correctAnswer,
-          difficultyPoint: sq.difficultyPoint
+          difficultyPoint: subMax
         }
       })
 
@@ -139,11 +142,16 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
       answers[q.id] = ansData.student_answer || ansData.studentAnswer || ''
       explanations[q.id] = ansData.student_explanation || ansData.studentExplanation || ''
       
+      const qMax = q.difficultyPoint || 10
+      if (!isGroup || mappedSubs.length === 0) {
+        calculatedMaxScore += qMax
+      }
+
       aiFeedbacks[q.id] = {
         detailId: q.id,
         isCorrect: ansData.is_correct ?? (ansData.score > 0),
         score: ansData.score || 0,
-        maxScore: q.difficultyPoint || 0,
+        maxScore: qMax,
         aiExplanation: ansData.ai_explanation || ansData.aiExplanation || '',
         errorLocation: ansData.error_location || ansData.errorLocation,
         isAppealed: ansData.appeal?.is_appealed || false,
@@ -164,7 +172,8 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         topic: q.topic,
         options: parsedOptions,
         correctAnswer: q.correctAnswer,
-        subQuestions: mappedSubs
+        subQuestions: mappedSubs,
+        difficultyPoint: qMax
       }
 
       questions.push(mappedQ)
@@ -181,7 +190,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         status = ansData.is_correct ? 'correct' : 'incorrect'
       } else {
         if (ansData.score === 0) status = 'incorrect'
-        else if (ansData.score >= (q.difficultyPoint || 10)) status = 'correct'
+        else if (ansData.score >= qMax) status = 'correct'
         else status = 'warning'
       }
 
@@ -193,18 +202,27 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         id: q.id,
         index: idx,
         status: status,
-        isFlagged: false
+        isFlagged: !!flaggedQuestions[q.id]
       })
     })
 
-    return { questions, mapItems, answers, explanations, aiFeedbacks, submission: sub, exam }
-  }, [resultData, currentQuestionIndex])
+    return { 
+      questions, 
+      mapItems, 
+      answers, 
+      explanations, 
+      aiFeedbacks, 
+      submission: sub, 
+      exam, 
+      totalMaxScore: calculatedMaxScore > 0 ? calculatedMaxScore : (questions.length * 10) 
+    }
+  }, [resultData, currentQuestionIndex, flaggedQuestions])
 
   const handleBack = () => {
     const exam = mappedData.exam
     if (exam) {
       if (exam.cate === 'practice' && exam.lectureId) {
-        router.push(`/lectures/lop/${exam.grade || 12}/${exam.lectureId}`)
+        router.push(`/lectures/lop/${exam.grade || 8}/${exam.lectureId}`)
         return
       } else if (exam.cate === 'exam' && exam.grade) {
         router.push(`/exams/lop/${exam.grade}`)
@@ -214,7 +232,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         return
       }
     }
-    router.push('/student')
+    router.push('/dashboard')
   }
 
   if (loading) {
@@ -262,11 +280,10 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
-              href="/student"
+              href="/dashboard"
               className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors shadow-md shadow-blue-600/20"
             >
-              <Home className="w-4 h-4" />
-              Về trang cá nhân
+              Về Dashboard
             </Link>
             <button
               type="button"
@@ -284,9 +301,12 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
   const currentQuestion = mappedData.questions[currentQuestionIndex]
   const examTitle = mappedData.exam?.title || "Kết quả bài làm"
-  const examGrade = mappedData.exam?.grade || 12
+  const examGrade = mappedData.exam?.grade || mappedData.questions?.[0]?.grade || "8"
   const examType = mappedData.exam?.cate || 'exam'
-  const totalScore = mappedData.submission?.totalScore ?? 0
+  
+  const totalAchieved = mappedData.submission?.totalScore ?? 0
+  const totalMaxScore = mappedData.totalMaxScore
+  const standardScore = totalMaxScore > 0 ? (totalAchieved / totalMaxScore) * 10 : 0
 
   return (
     <div className="flex flex-col min-h-screen relative overflow-x-hidden bg-background-light dark:bg-background-dark">
@@ -296,9 +316,9 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         subject={`Toán Lớp ${examGrade}`}
         completedQuestions={mappedData.questions.length} 
         totalQuestions={mappedData.questions.length} 
-        timeLeft={`Điểm: ${totalScore.toFixed(2)}`}
+        timeLeft={`Điểm: ${standardScore.toFixed(1)}/10`}
         examType="result"
-        points={0}
+        dashboardUrl="/dashboard"
         onBack={handleBack}
       />
 
@@ -339,7 +359,11 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               index={currentQuestionIndex}
               topic={currentQuestion.topic || ""}
               content={currentQuestion.content}
-              options={currentQuestion.options.map((opt: string, i: number) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt }))}
+              options={currentQuestion.options.map((opt: any, i: number) => ({
+                id: typeof opt === 'string' ? opt : (opt.id || opt.text),
+                label: typeof opt === 'string' ? String.fromCharCode(65 + i) : (opt.label || String.fromCharCode(65 + i)),
+                text: typeof opt === 'string' ? opt : opt.text
+              }))}
               selectedOptionId={mappedData.answers[currentQuestion.id] || null}
               selectedExplanation={mappedData.explanations[currentQuestion.id]}
               correctOptionId={currentQuestion.correctAnswer}
@@ -347,8 +371,9 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               aiFeedback={mappedData.aiFeedbacks[currentQuestion.id]}
               readonly={true}
               isHintOpen={isAiHintOpen}
-              isFlagged={false}
+              isFlagged={!!flaggedQuestions[currentQuestion.id]}
               onToggleHint={toggleAiHint}
+              onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
               examType={examType}
             />
           ) : (
@@ -369,8 +394,9 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               aiFeedbacks={mappedData.aiFeedbacks as any}
               readonly={true}
               isHintOpen={isAiHintOpen}
-              isFlagged={false}
+              isFlagged={!!flaggedQuestions[currentQuestion.id]}
               onToggleHint={() => toggleAiHint()}
+              onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
               examType={examType}
             />
           )
@@ -381,8 +407,8 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           isOpen={isAiHintOpen} 
           onClose={() => setIsAiHintOpen(false)} 
           question={resultData?.questions?.find((q: any) => q.id === currentQuestion?.id) || null}
-          unlockedLevel={unlockedHints[currentQuestion?.id || ''] || 0}
-          onUnlock={handleUnlockHint}
+          unlockedLevel={10}
+          onUnlock={async () => true}
           readonlyMode={true}
         />
 
@@ -423,18 +449,10 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-xl font-bold text-sm border border-blue-100 dark:border-blue-900/30">
-              <Award className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span>Tổng điểm: {totalScore.toFixed(2)}</span>
+            <div className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-xl font-bold text-base border border-blue-100 dark:border-blue-900/30 shadow-sm">
+              <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <span>Tổng điểm: {standardScore.toFixed(1)}/10 ({totalAchieved.toFixed(0)}/{totalMaxScore} điểm)</span>
             </div>
-            
-            <button
-              onClick={handleBack}
-              className="bg-primary hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-primary/25 transition-all flex items-center gap-2 active:scale-95"
-            >
-              <Home className="w-5 h-5" />
-              <span>Về trang chủ</span>
-            </button>
           </div>
         </div>
       </footer>

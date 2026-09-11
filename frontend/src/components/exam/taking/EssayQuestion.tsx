@@ -454,6 +454,16 @@ export default function EssayQuestion({
                 <Flag className={`w-5 h-5 ${isFlagged ? 'fill-amber-500' : ''}`} />
                 <span className="hidden sm:inline">{isFlagged ? 'Đã đánh dấu' : 'Đánh dấu'}</span>
               </button>
+              {(examType === 'practice' || readonly) && onToggleHint && (
+                <button 
+                  data-hint-toggle="true"
+                  onClick={() => onToggleHint()}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full font-semibold text-sm cursor-pointer hover:bg-blue-700 transition-all shadow-md shadow-primary/20 active:scale-95"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  <span className="hidden sm:inline">Gợi ý AI</span>
+                </button>
+              )}
             </div>
           </div>
           

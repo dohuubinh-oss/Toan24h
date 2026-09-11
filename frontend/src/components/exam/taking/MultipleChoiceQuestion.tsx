@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Sparkles, CheckCircle2, Flag, BookOpen, AlertTriangle } from 'lucide-react'
+import { Sparkles, CheckCircle2, Flag, BookOpen, AlertTriangle, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import MathText from '@/components/ui/MathText'
 import ExplanationPopup from './ExplanationPopup'
@@ -69,11 +69,15 @@ export default function MultipleChoiceQuestion({
   const handleExplanationSubmit = (explanation: string) => {
     if (pendingOptionId && onSelectOption) {
       onSelectOption(pendingOptionId, explanation)
-      setPendingOptionId(null)
     }
+    setPendingOptionId(null)
   }
 
   const handleExplanationClose = () => {
+    // If user closed without submitting explanation, we still select the option if it wasn't selected
+    if (pendingOptionId && onSelectOption && pendingOptionId !== selectedOptionId) {
+      onSelectOption(pendingOptionId, '')
+    }
     setPendingOptionId(null)
   }
 
@@ -138,20 +142,20 @@ export default function MultipleChoiceQuestion({
                   <Flag className={`w-5 h-5 ${isFlagged ? 'fill-amber-500' : ''}`} />
                   <span className="hidden sm:inline">{isFlagged ? 'Đã đánh dấu' : 'Đánh dấu'}</span>
                 </button>
-                {examType === 'practice' && !readonly && onToggleHint && (
+                {(examType === 'practice' || readonly) && onToggleHint && (
                   <button 
                     data-hint-toggle="true"
                     onClick={onToggleHint}
                     className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full font-semibold text-sm cursor-pointer hover:bg-blue-700 transition-all shadow-md shadow-primary/20 active:scale-95"
                   >
                     <Sparkles className="w-5 h-5" />
-                    <span>Gợi ý từ AI</span>
+                    <span className="hidden sm:inline">Gợi ý AI</span>
                   </button>
                 )}
               </div>
             </div>
             
-            <div className="text-2xl font-medium text-slate-800 dark:text-slate-100 leading-relaxed">
+            <div className="text-xl font-medium text-slate-800 dark:text-slate-100 leading-relaxed">
               <MathText content={content} />
             </div>
           </div>
@@ -159,43 +163,39 @@ export default function MultipleChoiceQuestion({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {options.map((option) => {
-            const isSelected = selectedOptionId === option.id;
-            const isCorrect = readonly && correctOptionId === option.id;
-            const isWrongSelection = readonly && isSelected && correctOptionId !== option.id;
+            const isSelected = selectedOptionId === option.id
+            const isCorrect = correctOptionId === option.id
 
-            let optionClass = "bg-white dark:bg-slate-900 border-transparent hover:border-slate-200 dark:hover:border-slate-700"
-            let idClass = "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-white"
+            let borderClass = 'border-slate-200 dark:border-slate-800 hover:border-primary/50'
+            let bgClass = 'bg-white dark:bg-slate-900'
 
             if (readonly) {
               if (isCorrect) {
-                optionClass = "bg-green-50 dark:bg-green-900/10 border-green-500 shadow-green-500/5"
-                idClass = "bg-green-500 text-white shadow-sm"
-              } else if (isWrongSelection) {
-                optionClass = "bg-red-50 dark:bg-red-900/10 border-red-500 shadow-red-500/5"
-                idClass = "bg-red-500 text-white shadow-sm"
-              } else {
-                optionClass = "bg-white dark:bg-slate-900 border-slate-200 opacity-60"
-                idClass = "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                borderClass = 'border-green-500 bg-green-50 dark:bg-green-950/20'
+              } else if (isSelected && !isCorrect) {
+                borderClass = 'border-red-500 bg-red-50 dark:bg-red-950/20'
               }
-            } else if (isSelected) {
-              optionClass = "bg-white dark:bg-slate-900 border-primary shadow-primary/5"
-              idClass = "bg-primary text-white shadow-sm"
+            } else {
+              if (isSelected) {
+                borderClass = 'border-primary ring-2 ring-primary/20'
+                bgClass = 'bg-primary/5 dark:bg-primary/10'
+              }
             }
             
             return (
               <button 
                 key={option.id}
-                onClick={() => {
-                  if (!readonly) handleOptionClick(option.id)
-                }}
                 disabled={readonly}
-                className={`group relative flex items-center gap-6 p-6 rounded-xl border-2 transition-all shadow-sm text-left ${optionClass} ${readonly ? 'cursor-default hover:border-inherit' : ''}`}
+                onClick={() => handleOptionClick(option.id)}
+                className={`flex items-center p-5 rounded-xl border-2 transition-all text-left relative ${borderClass} ${bgClass} ${readonly ? 'cursor-default' : 'cursor-pointer active:scale-[0.99]'}`}
               >
-                <div className={`w-12 h-12 flex items-center justify-center font-bold rounded-lg transition-colors text-xl ${idClass}`}>
-                  {option.label || option.id}
-                </div>
-                <div className="flex-1">
-                  <span className="text-xl font-medium text-slate-900 dark:text-white">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${
+                    isSelected ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                  }`}>
+                    {option.label}
+                  </div>
+                  <span className="text-base text-slate-700 dark:text-slate-200 font-medium flex-1">
                     <MathText content={option.text} />
                   </span>
                 </div>
@@ -208,8 +208,21 @@ export default function MultipleChoiceQuestion({
             )
           })}
         </div>
+
+        {readonly && selectedExplanation && (
+          <div className="mt-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+            <h4 className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold mb-2 text-sm">
+              <MessageSquare className="w-4 h-4 text-primary" />
+              Lời giải thích của bạn:
+            </h4>
+            <div className="text-slate-600 dark:text-slate-300 text-sm bg-white dark:bg-slate-900 p-3.5 rounded-lg border border-slate-100 dark:border-slate-800 leading-relaxed">
+              <MathText content={selectedExplanation} />
+            </div>
+          </div>
+        )}
+
         {readonly && aiExplanation && (
-          <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+          <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
             <h4 className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-bold mb-3">
               <Sparkles className="w-5 h-5" />
               Giải thích từ AI
