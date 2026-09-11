@@ -107,8 +107,8 @@ func EvaluateReasoningWithGemini(questionContent, correctAnswer, studentExplanat
 
 	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + apiKey
 
-	prompt := fmt.Sprintf(`Bạn là một giáo viên Toán thông minh. Học sinh đã chọn đúng đáp án cho một câu hỏi trắc nghiệm, và đưa ra lời giải thích cho lựa chọn của mình.
-Nhiệm vụ của bạn là đánh giá lời giải thích này để xem học sinh có thực sự hiểu bài hay không, hay chỉ là đoán mò.
+	prompt := fmt.Sprintf(`Bạn là một giáo viên Toán tận tâm và giàu kinh nghiệm. Học sinh đã làm một câu hỏi và đưa ra lời giải thích/lập luận cho lựa chọn của mình.
+Nhiệm vụ của bạn là đánh giá lời giải thích này để xem học sinh có thực sự hiểu bài hay không, lập luận đã logic và chính xác chưa.
 
 Thông tin câu hỏi:
 - Đề bài: %s
@@ -119,8 +119,8 @@ Lời giải thích của học sinh:
 
 Yêu cầu:
 1. Đánh giá sự logic, chính xác và mức độ hiểu bài trong lời giải thích của học sinh.
-2. Chấm điểm tư duy từ 0 đến 10. (10: Hoàn hảo, hiểu rất sâu; 5-9: Hiểu cơ bản nhưng còn thiếu sót; 1-4: Giải thích sai lệch, không logic; 0: Không giải thích hoặc giải thích linh tinh, đoán mò).
-3. Viết một lời nhận xét, giải thích ngắn gọn, súc tích (có thể kèm theo lời giải đúng ngắn gọn để học sinh tham khảo).
+2. Chấm điểm tư duy từ 0 đến 10 (10: Hoàn hảo, lập luận rất sâu sắc; 7-9: Hiểu đúng bản chất; 4-6: Hiểu một phần nhưng chưa chặt chẽ hoặc có nhầm lẫn; 1-3: Suy luận sai; 0: Viết linh tinh, đoán mò).
+3. Viết lời nhận xét súc tích, chỉ rõ điểm tốt hoặc lỗi sai trong suy luận của học sinh, kèm hướng dẫn ngắn gọn nếu cần.
 
 Trả về kết quả ĐÚNG định dạng JSON sau: { "score": number, "explanation": "string" }`, questionContent, correctAnswer, studentExplanation)
 

@@ -278,17 +278,11 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
             Bài thi đang được chấm, vui lòng kiểm tra tin nhắn và quay lại sau.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Link
-              href="/dashboard"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors shadow-md shadow-blue-600/20"
-            >
-              Về Dashboard
-            </Link>
+          <div className="flex justify-center">
             <button
               type="button"
               onClick={handleBack}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold text-sm transition-colors"
+              className="w-full sm:w-auto px-8 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Quay lại
@@ -316,9 +310,8 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         subject={`Toán Lớp ${examGrade}`}
         completedQuestions={mappedData.questions.length} 
         totalQuestions={mappedData.questions.length} 
-        timeLeft={`Điểm: ${standardScore.toFixed(1)}/10`}
+        timeLeft={`Điểm tư duy: ${standardScore.toFixed(1)}/10`}
         examType="result"
-        dashboardUrl="/dashboard"
         onBack={handleBack}
       />
 
@@ -451,7 +444,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-xl font-bold text-base border border-blue-100 dark:border-blue-900/30 shadow-sm">
               <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <span>Tổng điểm: {standardScore.toFixed(1)}/10 ({totalAchieved.toFixed(0)}/{totalMaxScore} điểm)</span>
+              <span>Điểm tư duy: {standardScore.toFixed(1)}/10</span>
             </div>
           </div>
         </div>

@@ -157,14 +157,6 @@ func processExamGrading(submissionID uuid.UUID) {
 		return
 	}
 
-	var user models.User
-	isVip := false
-	if submission.UserID != nil {
-		if err := config.DB.First(&user, "id = ?", submission.UserID).Error; err == nil {
-			isVip = user.Role == "vip" || user.Role == "admin"
-		}
-	}
-
 	var exam models.Exam
 	if err := config.DB.First(&exam, "id = ?", submission.ExamID).Error; err != nil {
 		return
@@ -222,22 +214,29 @@ func processExamGrading(submissionID uuid.UUID) {
 			if cleanStudentAns == cleanCorrectAns && cleanCorrectAns != "" {
 				ans.IsCorrect = true
 				ans.Score = float64(question.DifficultyPoint)
-
-				if isVip && ans.StudentExplanation != "" {
-					aiReasoning, err := services.EvaluateReasoningWithGemini(
-						question.Content,
-						question.CorrectAnswer,
-						ans.StudentExplanation,
-					)
-					if err == nil && aiReasoning != nil {
-						ans.ReasoningScore = aiReasoning.Score
-						ans.AIReasoningRemark = aiReasoning.Explanation
-					}
-				}
 			} else {
 				ans.IsCorrect = false
 				ans.Score = 0
 			}
+
+			// Luôn đánh giá tư duy nếu học sinh có nhập lời giải thích (không phân biệt VIP)
+			if ans.StudentExplanation != "" {
+				aiReasoning, err := services.EvaluateReasoningWithGemini(
+					question.Content,
+					question.CorrectAnswer,
+					ans.StudentExplanation,
+				)
+				if err == nil && aiReasoning != nil {
+					ans.ReasoningScore = aiReasoning.Score
+					ans.AIReasoningRemark = aiReasoning.Explanation
+				}
+			}
+
+			// Gán AI Explanation từ SolutionGuide nếu có
+			if question.SolutionGuide != "" {
+				ans.AIExplanation = question.SolutionGuide
+			}
+
 			totalScore += ans.Score
 		}
 		
@@ -253,6 +252,9 @@ func processExamGrading(submissionID uuid.UUID) {
 	config.DB.Save(&submission)
 
 	if submission.UserID != nil {
+		var user models.User
+		config.DB.First(&user, "id = ?", submission.UserID)
+
 		resultURL := fmt.Sprintf("%s/exam/%s/result", config.Env.FrontendURL, submission.ID.String())
 		config.DB.Create(&models.Notification{
 			UserID:  *submission.UserID,

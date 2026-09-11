@@ -210,12 +210,12 @@ export default function MultipleChoiceQuestion({
         </div>
 
         {readonly && selectedExplanation && (
-          <div className="mt-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
-            <h4 className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold mb-2 text-sm">
-              <MessageSquare className="w-4 h-4 text-primary" />
-              Lời giải thích của bạn:
+          <div className="mt-4 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-6">
+            <h4 className="flex items-center gap-2 text-teal-700 dark:text-teal-400 font-bold mb-3">
+              <MessageSquare className="w-5 h-5" />
+              Lời giải thích của bạn
             </h4>
-            <div className="text-slate-600 dark:text-slate-300 text-sm bg-white dark:bg-slate-900 p-3.5 rounded-lg border border-slate-100 dark:border-slate-800 leading-relaxed">
+            <div className="text-slate-700 dark:text-slate-300 leading-relaxed">
               <MathText content={selectedExplanation} />
             </div>
           </div>
