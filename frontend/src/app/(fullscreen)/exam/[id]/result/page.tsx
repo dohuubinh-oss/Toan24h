@@ -3,14 +3,13 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronRight, Calendar, LayoutDashboard, Loader2, ArrowLeft, ArrowRight, Home, Sparkles, CheckCircle, XCircle } from 'lucide-react'
-import ExamWorkspaceLayout from '@/components/exam/ExamWorkspaceLayout'
+import { ChevronLeft, ChevronRight, Home, Sparkles, RotateCcw, ArrowLeft, Loader2, Award } from 'lucide-react'
+import ExamProgressNav from '@/components/exam/taking/ExamProgressNav'
 import QuestionMapSidebar, { QuestionMapItem, QuestionStatus } from '@/components/exam/taking/QuestionMapSidebar'
 import MultipleChoiceQuestion from '@/components/exam/taking/MultipleChoiceQuestion'
 import EssayQuestion from '@/components/exam/taking/EssayQuestion'
 import AIHintPanel from '@/components/exam/taking/AIHintPanel'
 import { getExamResultById } from '@/lib/api'
-
 import { useToast } from '@/components/ui/ToastProvider'
 
 export default function ExamResultPage({ params }: { params: Promise<{ id: string }> }) {
@@ -37,38 +36,52 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   }
 
   useEffect(() => {
+    let isMounted = true
     const fetchResult = async () => {
       try {
         const data = await getExamResultById(id)
+        if (!isMounted) return
         if (data && data.submission) {
           setResultData(data)
         } else {
           toast.error("Không tìm thấy kết quả bài thi")
         }
       } catch (err) {
+        if (!isMounted) return
         console.error("Error fetching exam result:", err)
         toast.error("Lỗi khi tải kết quả bài thi")
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
       }
     }
 
     fetchResult()
-  }, [id, toast])
+    return () => {
+      isMounted = false
+    }
+  }, [id])
 
-  // Memoize mapped data
+  // Memoize mapped questions and status
   const mappedData = useMemo(() => {
     if (!resultData || !resultData.submission || !resultData.questions) {
-      return { questions: [], mapItems: [], answers: {}, explanations: {}, aiFeedbacks: {} }
+      return { questions: [], mapItems: [], answers: {}, explanations: {}, aiFeedbacks: {}, submission: null, exam: null }
     }
 
     const sub = resultData.submission
-    const qs = resultData.questions
+    const exam = resultData.exam || null
+    const rawQs = resultData.questions || []
 
     let parsedAnswers: Record<string, any> = {}
     if (sub.answersJson) {
-      parsedAnswers = typeof sub.answersJson === 'string' ? JSON.parse(sub.answersJson) : sub.answersJson
+      try {
+        parsedAnswers = typeof sub.answersJson === 'string' ? JSON.parse(sub.answersJson) : sub.answersJson
+      } catch (e) {
+        console.error("Failed to parse answersJson", e)
+      }
     }
+
+    const parentQs = rawQs.filter((q: any) => !q.parentId)
+    const childQs = rawQs.filter((q: any) => !!q.parentId)
 
     const questions: any[] = []
     const mapItems: QuestionMapItem[] = []
@@ -76,31 +89,99 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     const explanations: Record<string, string> = {}
     const aiFeedbacks: Record<string, any> = {}
 
-    qs.forEach((q: any, idx: number) => {
+    const structuredQuestions = parentQs.length > 0 ? parentQs : rawQs
+
+    structuredQuestions.forEach((q: any, idx: number) => {
+      const subs = childQs.filter((cq: any) => cq.parentId === q.id)
+      const isGroup = q.typeQuestion === 'group' || subs.length > 0
+
+      let parsedOptions: any[] = []
+      try {
+        parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options || '[]') : (q.options || [])
+      } catch (e) {}
+
+      const mappedSubs = subs.map((sq: any) => {
+        let subOpts: any[] = []
+        try {
+          subOpts = typeof sq.options === 'string' ? JSON.parse(sq.options || '[]') : (sq.options || [])
+        } catch (e) {}
+
+        const ansData = parsedAnswers[sq.id] || {}
+        answers[sq.id] = ansData.student_answer || ansData.studentAnswer || ''
+        explanations[sq.id] = ansData.student_explanation || ansData.studentExplanation || ''
+        
+        aiFeedbacks[sq.id] = {
+          detailId: sq.id,
+          isCorrect: ansData.is_correct ?? (ansData.score > 0),
+          score: ansData.score || 0,
+          maxScore: sq.difficultyPoint || 0,
+          aiExplanation: ansData.ai_explanation || ansData.aiExplanation || '',
+          errorLocation: ansData.error_location || ansData.errorLocation,
+          isAppealed: ansData.appeal?.is_appealed || false,
+          appealStatus: ansData.appeal?.status || '',
+          teacherFeedback: ansData.appeal?.teacher_feedback || '',
+          aiReasoningRemark: ansData.ai_reasoning_remark,
+          reasoningScore: ansData.reasoning_score
+        }
+
+        return {
+          ...sq,
+          id: sq.id,
+          type: sq.type === 'Tự luận' ? 'essay' : 'mc',
+          content: sq.content,
+          options: subOpts.map((opt: string, i: number) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt })),
+          correctAnswer: sq.correctAnswer,
+          difficultyPoint: sq.difficultyPoint
+        }
+      })
+
       const ansData = parsedAnswers[q.id] || {}
+      answers[q.id] = ansData.student_answer || ansData.studentAnswer || ''
+      explanations[q.id] = ansData.student_explanation || ansData.studentExplanation || ''
       
-      const isMC = q.type !== 'Tự luận'
-      
+      aiFeedbacks[q.id] = {
+        detailId: q.id,
+        isCorrect: ansData.is_correct ?? (ansData.score > 0),
+        score: ansData.score || 0,
+        maxScore: q.difficultyPoint || 0,
+        aiExplanation: ansData.ai_explanation || ansData.aiExplanation || '',
+        errorLocation: ansData.error_location || ansData.errorLocation,
+        isAppealed: ansData.appeal?.is_appealed || false,
+        appealStatus: ansData.appeal?.status || '',
+        teacherFeedback: ansData.appeal?.teacher_feedback || '',
+        aiReasoningRemark: ansData.ai_reasoning_remark,
+        reasoningScore: ansData.reasoning_score
+      }
+
+      const isMC = q.type !== 'Tự luận' && !isGroup
+
       const mappedQ: any = {
+        ...q,
         id: q.id,
         type: isMC ? 'Trắc nghiệm' : 'Tự luận',
-        type_question: 'single', // Assuming flat for now
+        type_question: isGroup ? 'group' : 'single',
         content: q.content || `Câu ${idx + 1}`,
         topic: q.topic,
-        options: q.options ? (typeof q.options === 'string' ? JSON.parse(q.options) : q.options) : [],
-        correctAnswer: q.correctAnswer
+        options: parsedOptions,
+        correctAnswer: q.correctAnswer,
+        subQuestions: mappedSubs
       }
-      
+
       questions.push(mappedQ)
-      
+
       // Determine Status for Map
       let status: QuestionStatus = 'warning'
-      if (isMC) {
+      if (isGroup && mappedSubs.length > 0) {
+        const anyCorrect = mappedSubs.some((s: any) => aiFeedbacks[s.id]?.isCorrect)
+        const allCorrect = mappedSubs.every((s: any) => aiFeedbacks[s.id]?.isCorrect)
+        if (allCorrect) status = 'correct'
+        else if (anyCorrect) status = 'warning'
+        else status = 'incorrect'
+      } else if (isMC) {
         status = ansData.is_correct ? 'correct' : 'incorrect'
       } else {
-        // Essay heuristic
         if (ansData.score === 0) status = 'incorrect'
-        else if (ansData.score === (q.difficultyPoint || 10)) status = 'correct'
+        else if (ansData.score >= (q.difficultyPoint || 10)) status = 'correct'
         else status = 'warning'
       }
 
@@ -114,27 +195,27 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         status: status,
         isFlagged: false
       })
-
-      answers[q.id] = ansData.student_answer || ''
-      explanations[q.id] = ansData.student_explanation || ''
-      
-      aiFeedbacks[q.id] = {
-        detailId: q.id, // We use questionId instead of detailId
-        isCorrect: ansData.is_correct,
-        score: ansData.score,
-        maxScore: q.difficultyPoint || 0,
-        aiExplanation: ansData.ai_explanation,
-        errorLocation: ansData.error_location,
-        isAppealed: ansData.appeal?.is_appealed || false,
-        appealStatus: ansData.appeal?.status || '',
-        teacherFeedback: ansData.appeal?.teacher_feedback || '',
-        aiReasoningRemark: ansData.ai_reasoning_remark,
-        reasoningScore: ansData.reasoning_score
-      }
     })
 
-    return { questions, mapItems, answers, explanations, aiFeedbacks, submission: sub }
+    return { questions, mapItems, answers, explanations, aiFeedbacks, submission: sub, exam }
   }, [resultData, currentQuestionIndex])
+
+  const handleBack = () => {
+    const exam = mappedData.exam
+    if (exam) {
+      if (exam.cate === 'practice' && exam.lectureId) {
+        router.push(`/lectures/lop/${exam.grade || 12}/${exam.lectureId}`)
+        return
+      } else if (exam.cate === 'exam' && exam.grade) {
+        router.push(`/exams/lop/${exam.grade}`)
+        return
+      } else if (exam.grade) {
+        router.push(`/practices/lop/${exam.grade}`)
+        return
+      }
+    }
+    router.push('/student')
+  }
 
   if (loading) {
     return (
@@ -150,9 +231,13 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 p-6 text-center">
         <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-4">Không tìm thấy kết quả bài thi.</h2>
-        <Link href="/student" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors">
-          Về trang chủ
-        </Link>
+        <button 
+          onClick={handleBack}
+          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Quay lại
+        </button>
       </div>
     )
   }
@@ -185,7 +270,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
             </Link>
             <button
               type="button"
-              onClick={() => router.back()}
+              onClick={handleBack}
               className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold text-sm transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -198,148 +283,161 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   }
 
   const currentQuestion = mappedData.questions[currentQuestionIndex]
+  const examTitle = mappedData.exam?.title || "Kết quả bài làm"
+  const examGrade = mappedData.exam?.grade || 12
+  const examType = mappedData.exam?.cate || 'exam'
+  const totalScore = mappedData.submission?.totalScore ?? 0
 
-  // Render header
-  const headerContent = (
-    <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm z-30 relative px-6 py-4 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-          Kết quả bài làm
-        </h1>
-        <div className="hidden md:flex items-center gap-4 text-sm font-medium text-slate-500">
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-            <span className="text-slate-400">Điểm:</span>
-            <span className="text-slate-800 dark:text-slate-200">{mappedData.submission?.totalScore?.toFixed(2)}</span>
-          </span>
-        </div>
-      </div>
-      <Link href="/student" className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl text-sm font-semibold transition-colors">
-        <Home className="w-4 h-4" />
-        <span className="hidden sm:inline">Về trang chủ</span>
-      </Link>
-    </div>
-  )
-
-  // Render main content
-  const mainContent = currentQuestion ? (
-    currentQuestion.type === 'Trắc nghiệm' ? (
-      <MultipleChoiceQuestion 
-        resultId={resultData?.id}
-        questionId={currentQuestion.id}
-        index={currentQuestionIndex}
-        topic={currentQuestion.topic || ""}
-        content={currentQuestion.content}
-        options={currentQuestion.options.map((opt: string, i: number) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt }))}
-        selectedOptionId={mappedData.answers[currentQuestion.id] || null}
-        correctOptionId={currentQuestion.correctAnswer}
-        aiExplanation={mappedData.aiFeedbacks[currentQuestion.id]?.aiExplanation}
-        aiFeedback={mappedData.aiFeedbacks[currentQuestion.id]}
-        readonly={true}
-        isHintOpen={isAiHintOpen}
-        isFlagged={false}
-        onToggleHint={toggleAiHint}
+  return (
+    <div className="flex flex-col min-h-screen relative overflow-x-hidden bg-background-light dark:bg-background-dark">
+      {/* Top Navbar */}
+      <ExamProgressNav 
+        title={examTitle}
+        subject={`Toán Lớp ${examGrade}`}
+        completedQuestions={mappedData.questions.length} 
+        totalQuestions={mappedData.questions.length} 
+        timeLeft={`Điểm: ${totalScore.toFixed(2)}`}
+        examType="result"
+        points={0}
+        onBack={handleBack}
       />
-    ) : (
-      <EssayQuestion 
-        resultId={resultData?.id}
-        questionId={currentQuestion.id}
-        index={currentQuestionIndex}
-        content={currentQuestion.content}
-        answers={mappedData.answers as any}
-        explanations={mappedData.explanations as any}
-        aiFeedbacks={mappedData.aiFeedbacks as any}
-        readonly={true}
-        isHintOpen={isAiHintOpen}
-        isFlagged={false}
-        onToggleHint={() => toggleAiHint()}
-      />
-    )
-  ) : null
 
-  const mainContentWithPanel = (
-    <div className="flex relative h-full">
-      <div className="flex-1 overflow-y-auto">
-        {mainContent}
-      </div>
-      {currentQuestion && (
+      {/* Main Workspace Area */}
+      <div className="flex-1 flex overflow-hidden relative pb-[88px] w-full">
+        {/* Left Navigation Overlay */}
+        {currentQuestionIndex > 0 && (
+          <button 
+            onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+            className="absolute left-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-start pl-2 md:pl-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-r hover:from-slate-200/50 hover:to-transparent transition-all group"
+            aria-label="Câu trước"
+          >
+            <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+              <ChevronLeft size={24} />
+            </div>
+          </button>
+        )}
+
+        {/* Right Navigation Overlay */}
+        {currentQuestionIndex < mappedData.questions.length - 1 && (
+          <button 
+            onClick={() => setCurrentQuestionIndex(prev => Math.min(mappedData.questions.length - 1, prev + 1))}
+            className="absolute right-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
+            aria-label="Câu tiếp theo"
+          >
+            <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+              <ChevronRight size={24} />
+            </div>
+          </button>
+        )}
+
+        {/* Central Question Content */}
+        {currentQuestion && (
+          currentQuestion.type_question === 'single' && currentQuestion.type === 'Trắc nghiệm' ? (
+            <MultipleChoiceQuestion 
+              resultId={id}
+              questionId={currentQuestion.id as any}
+              index={currentQuestionIndex}
+              topic={currentQuestion.topic || ""}
+              content={currentQuestion.content}
+              options={currentQuestion.options.map((opt: string, i: number) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt }))}
+              selectedOptionId={mappedData.answers[currentQuestion.id] || null}
+              selectedExplanation={mappedData.explanations[currentQuestion.id]}
+              correctOptionId={currentQuestion.correctAnswer}
+              aiExplanation={mappedData.aiFeedbacks[currentQuestion.id]?.aiExplanation}
+              aiFeedback={mappedData.aiFeedbacks[currentQuestion.id]}
+              readonly={true}
+              isHintOpen={isAiHintOpen}
+              isFlagged={false}
+              onToggleHint={toggleAiHint}
+              examType={examType}
+            />
+          ) : (
+            <EssayQuestion 
+              resultId={id}
+              questionId={currentQuestion.id as any}
+              index={currentQuestionIndex}
+              content={currentQuestion.content}
+              sharedContext={currentQuestion.content}
+              subQuestions={currentQuestion.subQuestions?.map((sq: any) => ({
+                id: sq.id as any,
+                type: sq.type === 'Trắc nghiệm' ? 'mc' : 'essay',
+                content: sq.content,
+                options: sq.options
+              })) || []}
+              answers={mappedData.answers as any}
+              explanations={mappedData.explanations as any}
+              aiFeedbacks={mappedData.aiFeedbacks as any}
+              readonly={true}
+              isHintOpen={isAiHintOpen}
+              isFlagged={false}
+              onToggleHint={() => toggleAiHint()}
+              examType={examType}
+            />
+          )
+        )}
+
+        {/* AI Hint Panel */}
         <AIHintPanel 
           isOpen={isAiHintOpen} 
           onClose={() => setIsAiHintOpen(false)} 
-          question={resultData?.questions?.find((q: any) => q.id === currentQuestion.id) || null}
-          unlockedLevel={unlockedHints[currentQuestion.id] || 0}
+          question={resultData?.questions?.find((q: any) => q.id === currentQuestion?.id) || null}
+          unlockedLevel={unlockedHints[currentQuestion?.id || ''] || 0}
           onUnlock={handleUnlockHint}
           readonlyMode={true}
         />
-      )}
-    </div>
-  )
 
-  // Render footer
-  const canGoPrev = currentQuestionIndex > 0
-  const canGoNext = currentQuestionIndex < mappedData.questions.length - 1
-
-  const footerContent = (
-    <div className="max-w-7xl mx-auto flex items-center justify-between w-full h-14 px-4 sm:px-6 lg:px-8">
-      <button 
-        onClick={() => canGoPrev && setCurrentQuestionIndex(prev => prev - 1)}
-        disabled={!canGoPrev}
-        className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all ${
-          canGoPrev 
-            ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700' 
-            : 'bg-slate-50 text-slate-300 dark:bg-slate-900/50 dark:text-slate-700 cursor-not-allowed'
-        }`}
-        aria-label="Câu trước"
-      >
-        <ArrowLeft className="w-5 h-5" />
-      </button>
-
-      <div className="hidden sm:flex items-center gap-6">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-slate-400">Câu hỏi</span>
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg">
-            <span className="text-base font-bold text-slate-800 dark:text-white">{currentQuestionIndex + 1}</span>
-            <span className="text-slate-400">/</span>
-            <span className="text-sm font-bold text-slate-500">{mappedData.questions.length}</span>
-          </div>
-        </div>
-      </div>
-
-      <button 
-        onClick={() => canGoNext && setCurrentQuestionIndex(prev => prev + 1)}
-        disabled={!canGoNext}
-        className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all ${
-          canGoNext 
-            ? 'bg-primary text-white hover:bg-primary/90 shadow-md shadow-primary/20' 
-            : 'bg-slate-50 text-slate-300 dark:bg-slate-900/50 dark:text-slate-700 cursor-not-allowed'
-        }`}
-        aria-label="Câu tiếp"
-      >
-        <ArrowRight className="w-5 h-5" />
-      </button>
-    </div>
-  )
-
-  return (
-    <ExamWorkspaceLayout
-      sidebarTopContent={headerContent}
-      sidebarGrid={
+        {/* Question Map Sidebar */}
         <QuestionMapSidebar 
           questions={mappedData.mapItems}
           mode="result"
-          onSelectQuestion={(id) => {
-            const idx = mappedData.questions.findIndex(q => q.id === id)
+          onSelectQuestion={(qId) => {
+            const idx = mappedData.questions.findIndex(q => q.id === qId)
             if (idx !== -1) {
               setCurrentQuestionIndex(idx)
             }
           }}
         />
-      }
-      mainContent={
-        <div className="flex flex-col h-full overflow-hidden">
-          {mainContentWithPanel}
+      </div>
+
+      {/* Result Footer matching Take Footer layout */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-6 z-[100] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+              disabled={currentQuestionIndex === 0}
+              className="flex items-center gap-2 px-5 py-3 text-slate-600 dark:text-slate-400 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              Câu trước
+            </button>
+            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
+            <button
+              onClick={() => setCurrentQuestionIndex(prev => Math.min(mappedData.questions.length - 1, prev + 1))}
+              disabled={currentQuestionIndex >= mappedData.questions.length - 1}
+              className="flex items-center gap-2 px-5 py-3 text-slate-600 dark:text-slate-400 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Câu tiếp theo
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-xl font-bold text-sm border border-blue-100 dark:border-blue-900/30">
+              <Award className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span>Tổng điểm: {totalScore.toFixed(2)}</span>
+            </div>
+            
+            <button
+              onClick={handleBack}
+              className="bg-primary hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-primary/25 transition-all flex items-center gap-2 active:scale-95"
+            >
+              <Home className="w-5 h-5" />
+              <span>Về trang chủ</span>
+            </button>
+          </div>
         </div>
-      }
-      footerContent={footerContent}
-    />
+      </footer>
+    </div>
   )
 }

@@ -112,7 +112,10 @@ func SubmitExam(c *gin.Context) {
 	var exam models.Exam
 	config.DB.First(&exam, "id = ?", examID)
 	var allQuestions []models.Question
-	config.DB.Where("id IN ? OR parent_id IN ?", exam.QuestionIDs, exam.QuestionIDs).Find(&allQuestions)
+	questionIDSlice := []string(exam.QuestionIDs)
+	if len(questionIDSlice) > 0 {
+		config.DB.Where("id IN ? OR parent_id IN ?", questionIDSlice, questionIDSlice).Find(&allQuestions)
+	}
 	
 	hasEssay := false
 	for _, q := range allQuestions {
@@ -315,8 +318,13 @@ func GetExamResultByID(c *gin.Context) {
 		qIDs = append(qIDs, k)
 	}
 
+	var exam models.Exam
+	config.DB.First(&exam, "id = ?", submission.ExamID)
+
 	var questions []models.Question
-	if len(qIDs) > 0 {
+	if len(exam.QuestionIDs) > 0 {
+		config.DB.Where("id IN ? OR parent_id IN ?", []string(exam.QuestionIDs), []string(exam.QuestionIDs)).Find(&questions)
+	} else if len(qIDs) > 0 {
 		config.DB.Where("id IN ?", qIDs).Find(&questions)
 	}
 
@@ -324,6 +332,7 @@ func GetExamResultByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
 		"data": gin.H{
+			"exam":       exam,
 			"submission": submission,
 			"questions":  questions,
 		},
