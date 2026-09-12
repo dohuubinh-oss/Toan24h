@@ -502,3 +502,25 @@ export async function resolveReportedQuestion(id: string, teacherFeedback: strin
   }
 }
 
+export async function getNeedsReviewSubmissions(): Promise<any[]> {
+  try {
+    const response = await apiFetch(`/submissions/needs-review`)
+    if (response.status === 'success' && response.data) {
+      return response.data
+    }
+    return []
+  } catch (error) {
+    console.error(`Failed to fetch needs review submissions:`, error)
+    return []
+  }
+}
+
+export async function submitTeacherGradingReview(submissionId: string, payload: any): Promise<any> {
+  const response = await apiFetch(`/submissions/${submissionId}/grade-review`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  return response
+}
+
+
