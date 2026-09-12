@@ -53,6 +53,83 @@ interface EssayQuestionProps {
   onToggleFlag?: () => void
 }
 
+function HighlightedAnswer({ content, aiFeedback }: { content: string, aiFeedback?: any }) {
+  if (!content) return null
+  if (!aiFeedback?.errorLocation && !aiFeedback?.deductionReason) {
+    return <MathText content={content} />
+  }
+
+  const errorLocStr = aiFeedback.errorLocation ? String(aiFeedback.errorLocation).trim() : ''
+  const deduction = aiFeedback.deductionReason || 'Phát hiện lỗi sai ở bước biến đổi này.'
+
+  if (errorLocStr && content.includes(errorLocStr)) {
+    const parts = content.split(errorLocStr)
+    return (
+      <div className="leading-relaxed text-base break-words overflow-x-auto max-w-full space-y-3">
+        <div>
+          {parts.map((part, idx) => (
+            <React.Fragment key={idx}>
+              {part && <MathText content={part} />}
+              {idx < parts.length - 1 && (
+                <span className="relative inline-block group mx-1">
+                  <span className="bg-amber-200 dark:bg-amber-900/80 text-amber-950 dark:text-amber-100 font-bold px-2 py-0.5 rounded border-b-2 border-red-500 cursor-pointer shadow-xs group-hover:bg-amber-300 dark:group-hover:bg-amber-800 transition-colors inline-flex items-center gap-1">
+                    <MathText content={errorLocStr} />
+                    <span className="text-[10px] text-red-600 dark:text-red-400 font-black">⚠️</span>
+                  </span>
+                  
+                  {/* Floating Hover Tooltip with Deduction Reason */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col w-72 p-3 bg-slate-900 text-white dark:bg-slate-800 rounded-xl shadow-2xl z-50 text-xs border border-red-500/50 pointer-events-none transition-all">
+                    <div className="font-bold text-red-400 flex items-center gap-1.5 mb-1 text-xs">
+                      <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+                      <span>Vị trí sai: &quot;{errorLocStr}&quot;</span>
+                    </div>
+                    <div className="text-slate-200 text-xs leading-relaxed border-t border-slate-700/80 pt-1.5 mt-0.5">
+                      <strong>📌 Lý do trừ điểm:</strong> {deduction}
+                    </div>
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900 dark:border-t-slate-800"></div>
+                  </div>
+                </span>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Fallback if errorLocation isn't an exact substring match
+  return (
+    <div className="space-y-3">
+      <MathText content={content} />
+      <div className="relative group cursor-pointer">
+        <div className="p-3 bg-amber-100/90 dark:bg-amber-950/50 border-l-4 border-amber-500 rounded-r-xl text-amber-900 dark:text-amber-200 text-xs font-medium flex items-center justify-between transition-all group-hover:bg-amber-200/90 dark:group-hover:bg-amber-900/60">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>
+              <strong>Vị trí lỗi sai:</strong> {errorLocStr || 'Bước biến đổi trong bài làm'}
+            </span>
+          </div>
+          <span className="text-[10px] uppercase font-extrabold bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded">
+            Rê chuột xem lý do trừ điểm 💬
+          </span>
+        </div>
+
+        {/* Hover Tooltip */}
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col w-80 p-3 bg-slate-900 text-white dark:bg-slate-800 rounded-xl shadow-2xl z-50 text-xs border border-amber-500/50 pointer-events-none transition-all">
+          <div className="font-bold text-amber-400 flex items-center gap-1.5 mb-1 text-xs">
+            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+            <span>Chi tiết lý do trừ điểm:</span>
+          </div>
+          <div className="text-slate-200 text-xs leading-relaxed border-t border-slate-700/80 pt-1.5 mt-0.5">
+            <strong>📌 Lý do trừ điểm:</strong> {deduction}
+          </div>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900 dark:border-t-slate-800"></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function EditorItem({ 
   q, 
   answer, 
@@ -156,30 +233,8 @@ function EditorItem({
 
           <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex flex-col flex-1 min-h-[140px] overflow-hidden relative">
             {editorContent && editorContent.trim().length > 0 ? (
-              <div className="text-slate-800 dark:text-slate-200 leading-relaxed text-base break-words overflow-x-auto max-w-full space-y-3">
-                <MathText content={editorContent} />
-
-                {/* Inline Error Annotation & Deduction Reason directly attached to student answer */}
-                {(aiFeedback?.errorLocation || aiFeedback?.deductionReason) && (
-                  <div className="mt-4 p-4 bg-red-50/90 dark:bg-red-950/40 border-l-4 border-red-500 rounded-r-xl space-y-1.5 shadow-xs">
-                    {aiFeedback.errorLocation && (
-                      <div className="flex items-start gap-2 text-xs font-bold text-red-700 dark:text-red-300">
-                        <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                        <div>
-                          <span className="uppercase tracking-wider font-extrabold text-[11px] text-red-600 dark:text-red-400 block mb-0.5">Vị trí phát hiện lỗi sai:</span>
-                          <span className="bg-red-100 dark:bg-red-900/60 text-red-800 dark:text-red-200 px-2 py-0.5 rounded font-mono text-xs border border-red-200 dark:border-red-800 inline-block">
-                            {typeof aiFeedback.errorLocation === 'object' ? JSON.stringify(aiFeedback.errorLocation) : String(aiFeedback.errorLocation)}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    {aiFeedback.deductionReason && (
-                      <div className="text-xs text-red-700 dark:text-red-300 font-medium leading-relaxed pt-1 border-t border-red-200/60 dark:border-red-900/40">
-                        <strong>📌 Lý do trừ điểm:</strong> {aiFeedback.deductionReason}
-                      </div>
-                    )}
-                  </div>
-                )}
+              <div className="text-slate-800 dark:text-slate-200 leading-relaxed text-base break-words overflow-x-auto max-w-full">
+                <HighlightedAnswer content={editorContent} aiFeedback={aiFeedback} />
               </div>
             ) : (
               <p className="text-slate-400 italic text-sm">Học sinh chưa nhập bài làm cho phần này.</p>
