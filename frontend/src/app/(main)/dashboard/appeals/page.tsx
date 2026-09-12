@@ -1,17 +1,18 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { getPendingAppeals, resolveAppeal, getReportedQuestions, updateQuestion, resolveReportedQuestion } from '@/lib/api'
-import { Loader2, MessageSquareWarning, Check, X, Search, AlertTriangle, Edit } from 'lucide-react'
+import { getPendingAppeals, resolveAppeal, getReportedQuestions, updateQuestion, resolveReportedQuestion, getNeedsReviewSubmissions } from '@/lib/api'
+import { Loader2, MessageSquareWarning, Check, X, Search, AlertTriangle, Edit, ClipboardList } from 'lucide-react'
 import MathText from '@/components/ui/MathText'
 import { toast } from 'react-hot-toast'
 import Link from 'next/link'
 
 export default function AppealsPage() {
-  const [activeTab, setActiveTab] = useState<'appeals' | 'reports'>('appeals')
+  const [activeTab, setActiveTab] = useState<'appeals' | 'reports' | 'reviews'>('appeals')
   
   const [appeals, setAppeals] = useState<any[]>([])
   const [reportedQuestions, setReportedQuestions] = useState<any[]>([])
+  const [needsReviewSubmissions, setNeedsReviewSubmissions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedAppeal, setSelectedAppeal] = useState<any>(null)
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
@@ -41,9 +42,18 @@ export default function AppealsPage() {
     }
   }
 
+  const fetchNeedsReview = async () => {
+    try {
+      const data = await getNeedsReviewSubmissions()
+      setNeedsReviewSubmissions(data)
+    } catch (e) {
+      toast.error('Lỗi khi tải danh sách bài thi cần duyệt chấm')
+    }
+  }
+
   const fetchData = async () => {
     setLoading(true)
-    await Promise.all([fetchAppeals(), fetchReports()])
+    await Promise.all([fetchAppeals(), fetchReports(), fetchNeedsReview()])
     setLoading(false)
   }
 
@@ -119,7 +129,7 @@ export default function AppealsPage() {
             <MessageSquareWarning className="w-8 h-8 text-primary" />
             Quản lý Phản hồi
           </h1>
-          <p className="text-slate-500 mt-2">Duyệt kháng cáo điểm và xử lý báo cáo lỗi đề thi.</p>
+          <p className="text-slate-500 mt-2">Duyệt kháng cáo điểm, xử lý báo cáo lỗi đề thi và chấm bài thủ công.</p>
         </div>
       </div>
 
@@ -146,10 +156,71 @@ export default function AppealsPage() {
           <AlertTriangle className="w-5 h-5" />
           Báo cáo lỗi ({reportedQuestions.length})
         </button>
+        <button
+          onClick={() => setActiveTab('reviews')}
+          className={`flex items-center gap-2 py-3 px-6 font-semibold border-b-2 transition-colors ${
+            activeTab === 'reviews'
+              ? 'border-indigo-500 text-indigo-500'
+              : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          <ClipboardList className="w-5 h-5" />
+          Cần duyệt chấm ({needsReviewSubmissions.length})
+        </button>
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-        {activeTab === 'appeals' ? (
+        {activeTab === 'reviews' ? (
+          needsReviewSubmissions.length === 0 ? (
+            <div className="text-center py-20 text-slate-500">
+              Không có bài thi nào đang chờ duyệt chấm.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-sm font-medium">
+                  <tr>
+                    <th className="px-6 py-4">Bài thực hành</th>
+                    <th className="px-6 py-4">Học sinh</th>
+                    <th className="px-6 py-4">Thời gian nộp</th>
+                    <th className="px-6 py-4">Trạng thái</th>
+                    <th className="px-6 py-4 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {needsReviewSubmissions.map((sub) => (
+                    <tr key={sub.submissionId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
+                        {sub.examName}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">{sub.studentName}</div>
+                        <div className="text-xs text-slate-400">{sub.studentEmail}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-500">
+                        {new Date(sub.submittedAt).toLocaleString('vi-VN')}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                          Cần duyệt chấm
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link
+                          href={`/exam/${sub.submissionId}/result?mode=grade`}
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-1.5"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Chấm ngay
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        ) : activeTab === 'appeals' ? (
           appeals.length === 0 ? (
             <div className="text-center py-20 text-slate-500">
               Không có kháng cáo nào đang chờ duyệt.
