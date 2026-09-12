@@ -102,3 +102,37 @@ Luồng chấm điểm sử dụng AI Gemini đang được thiết kế rất t
 ### 1. Ẩn Port Redis khi Dockerize lên Production
 - **Vấn đề hiện tại:** Trong quá trình phát triển (Development), do Backend chạy trực tiếp trên máy host (`go run`), Redis trong Docker cần phải mở port `6379:6379` để Backend kết nối. Tuy nhiên, khi lên Production, việc public port Redis ra ngoài mạng Internet là một rủi ro bảo mật (dù đã có mật khẩu).
 - **Hành động cần làm:** Khi đã Dockerize toàn bộ hệ thống (gồm cả Backend), hãy xóa phần `ports: - "6379:6379"` của dịch vụ Redis trong `docker-compose.yml`. Khi đó Backend sẽ kết nối với Redis nội bộ thông qua tên hostname là `redis`.
+
+---
+
+# Danh mục các vấn đề CÒN LẠI cần rà soát & khắc phục (Từ khắc phục.md)
+
+Dưới đây là tổng hợp toàn bộ các hạng mục chưa được kiểm tra / xử lý từ `docs/khắc phục.md` để rà soát và thực hiện ở các bước tiếp theo:
+
+### 🛡️ 1. Security Audit (Rà soát bảo mật)
+- **🔴 Critical (Nghiêm trọng):**
+  - **Self-registration role bypass:** Kiểm tra `backend/internal/handlers/auth_handler.go` để ngăn user tự đăng ký set role `admin`/`teacher`.
+  - **JWT Secret & Cookie Security:** Bắt buộc set `JWT_SECRET` mạnh trong `.env`, thêm `Secure=true`, `HttpOnly=true`, `SameSite=Strict/Lax` cho cookie auth.
+  - **CORS Misconfiguration:** Whitelist origin cụ thể (`FRONTEND_URL`) thay vì dùng wildcard `*`.
+  - **Rate Limiting Auth:** Thêm middleware rate limit (5 req/min/IP) cho `/auth/login` và `/auth/register`.
+  - **Audit Log Admin:** Thêm bảng/middleware audit log ghi lại các thao tác admin nhạy cảm (đổi role, đổi trạng thái user).
+- **🟠 High & 🟡 Medium:**
+  - **Token Blacklist / Revoke:** Triển khai token blacklist bằng Redis khi logout hoặc đổi mật khẩu.
+  - **Bảo vệ `/uploads`:** Hạn chế truy cập file tĩnh trực tiếp nếu chưa xác thực hoặc qua signed URL.
+  - **Password Policy:** Yêu cầu tối thiểu 12 ký tự, chữ hoa, chữ thường, số và ký tự đặc biệt.
+  - **Fix SQL Injection tiềm ẩn:** Kiểm tra và thay thế `fmt.Sprintf` trong WHERE clause của `question_handler.go` bằng GORM parameterized query.
+  - **Validate File Upload:** Kiểm tra MIME type, max size, sanitize filename ở route upload tạm `/uploads/temp`.
+  - **Security Headers:** Thêm middleware security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options).
+
+### 🧩 2. Component Reusability (Frontend & UI)
+- **Tối ưu Editor (Unify TipTap):** Hợp nhất `RichTextEditor` và `SharedEditorCard` (đang bị trùng lặp ~90% code logic) thành một `BaseEditor` dùng chung.
+- **ConfirmModal Headless Refactor:** Chuyển `ConfirmModal` sang dạng headless component (render prop) để linh hoạt hơn trong animation và tùy biến nội dung.
+
+### 🐳 3. Infrastructure & Deployment (Hạ tầng & Docker Production)
+- **Bảo vệ Redis:** Ẩn port `6379` ra ngoài host network khi chạy Docker Production (chỉ cho phép giao tiếp nội bộ container network).
+- **CA Certificates cho Backend:** Thêm `apk add --no-cache ca-certificates tzdata` vào Dockerfile backend (Alpine stage) để đảm bảo các lệnh HTTPS (Telegram API, AI grading) không bị từ chối cert.
+- **Nginx Config:** Cấu hình gzip compression, rate limit zone (`api`, `login`), proxy cache cho static assets (`/_next/static/` 1 năm).
+- **Healthcheck & Logging Driver:** Thêm healthcheck cho Postgres, Redis, Backend, Frontend; cấu hình log rotation (`json-file`, max-size 10m).
+- **Tạo `.env.example`:** Chuẩn hóa file mẫu môi trường cho các lập trình viên mới.
+- **PgBouncer & Read Replica:** Thiết lập connection pooler PgBouncer và Postgres Read Replica cho bài toán 1,000+ sinh viên thi đồng thời.
+

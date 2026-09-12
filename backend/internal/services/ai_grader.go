@@ -12,194 +12,46 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
-type GradingResult struct {
-	Score         float64 `json:"score"`
-	Explanation   string  `json:"explanation"`
-	ErrorLocation string  `json:"errorLocation"`
-}
+// --- PROMPT 1: BATCH ESSAY GRADING ---
 
-func GradeEssayWithGemini(questionContent, correctAnswer, studentAnswer string, maxScore float64) (*GradingResult, error) {
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
-	}
-
-	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + apiKey
-
-	prompt := fmt.Sprintf(`Bạn là một giáo viên Toán khó tính nhưng công tâm. Nhiệm vụ của bạn là chấm điểm bài làm tự luận của học sinh.
-Thông tin câu hỏi:
-- Đề bài: %s
-- Đáp án / Thang điểm chuẩn: %s
-- Điểm tối đa: %v
-
-Bài làm của học sinh:
-"%s"
-
-Yêu cầu:
-1. Đối chiếu bài làm của học sinh với đáp án chuẩn.
-2. Đưa ra điểm số (từ 0 đến %v). Điểm có thể lẻ đến 0.25.
-3. Đưa ra lời nhận xét ngắn gọn. NẾU HỌC SINH LÀM SAI, bắt buộc phải trích dẫn lại câu/đoạn viết sai của học sinh và đánh dấu vị trí sai đó (ví dụ: "Bạn làm sai ở bước: [trích dẫn bước sai]").
-4. KHÔNG chấm điểm cho những bài làm lạc đề, gian lận, hoặc viết linh tinh (chấm 0 điểm).
-Trả về kết quả ĐÚNG định dạng JSON sau: { "score": number, "explanation": "string", "errorLocation": "string | null" }`, questionContent, correctAnswer, maxScore, studentAnswer, maxScore)
-
-	payload := map[string]interface{}{
-		"contents": []map[string]interface{}{
-			{
-				"parts": []map[string]interface{}{
-					{"text": prompt},
-				},
-			},
-		},
-		"generationConfig": map[string]interface{}{
-			"responseMimeType": "application/json",
-		},
-	}
-
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Gemini API error: status %d", resp.StatusCode)
-	}
-
-	var res struct {
-		Candidates []struct {
-			Content struct {
-				Parts []struct {
-					Text string `json:"text"`
-				} `json:"parts"`
-			} `json:"content"`
-		} `json:"candidates"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return nil, err
-	}
-
-	if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
-		text := res.Candidates[0].Content.Parts[0].Text
-		text = strings.TrimPrefix(text, "```json")
-		text = strings.TrimSuffix(text, "```")
-		var result GradingResult
-		if err := json.Unmarshal([]byte(text), &result); err == nil {
-			return &result, nil
-		}
-	}
-
-	return nil, fmt.Errorf("Failed to parse Gemini response")
-}
-
-type ReasoningResult struct {
-	Score       float64 `json:"score"`
-	Explanation string  `json:"explanation"`
-}
-
-func EvaluateReasoningWithGemini(questionContent, correctAnswer, studentExplanation string) (*ReasoningResult, error) {
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
-	}
-
-	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + apiKey
-
-	prompt := fmt.Sprintf(`Bạn là một giáo viên Toán tận tâm và giàu kinh nghiệm. Học sinh đã làm một câu hỏi và đưa ra lời giải thích/lập luận cho lựa chọn của mình.
-Nhiệm vụ của bạn là đánh giá lời giải thích này để xem học sinh có thực sự hiểu bài hay không, lập luận đã logic và chính xác chưa.
-
-Thông tin câu hỏi:
-- Đề bài: %s
-- Đáp án đúng: %s
-
-Lời giải thích của học sinh:
-"%s"
-
-Yêu cầu:
-1. Đánh giá sự logic, chính xác và mức độ hiểu bài trong lời giải thích của học sinh.
-2. Chấm điểm tư duy từ 0 đến 10 (10: Hoàn hảo, lập luận rất sâu sắc; 7-9: Hiểu đúng bản chất; 4-6: Hiểu một phần nhưng chưa chặt chẽ hoặc có nhầm lẫn; 1-3: Suy luận sai; 0: Viết linh tinh, đoán mò).
-3. Viết lời nhận xét súc tích, chỉ rõ điểm tốt hoặc lỗi sai trong suy luận của học sinh, kèm hướng dẫn ngắn gọn nếu cần.
-
-Trả về kết quả ĐÚNG định dạng JSON sau: { "score": number, "explanation": "string" }`, questionContent, correctAnswer, studentExplanation)
-
-	payload := map[string]interface{}{
-		"contents": []map[string]interface{}{
-			{
-				"parts": []map[string]interface{}{
-					{"text": prompt},
-				},
-			},
-		},
-		"generationConfig": map[string]interface{}{
-			"responseMimeType": "application/json",
-		},
-	}
-
-	body, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Gemini API error: status %d", resp.StatusCode)
-	}
-
-	var res struct {
-		Candidates []struct {
-			Content struct {
-				Parts []struct {
-					Text string `json:"text"`
-				} `json:"parts"`
-			} `json:"content"`
-		} `json:"candidates"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return nil, err
-	}
-
-	if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
-		text := res.Candidates[0].Content.Parts[0].Text
-		text = strings.TrimPrefix(text, "```json")
-		text = strings.TrimSuffix(text, "```")
-		var result ReasoningResult
-		if err := json.Unmarshal([]byte(text), &result); err == nil {
-			return &result, nil
-		}
-	}
-
-	return nil, fmt.Errorf("Failed to parse Gemini response")
-}
-
-// BATCH PROCESSING
-type EssayBatchInput struct {
-	ID              string  `json:"id"`
+type EssayBatchQuestionItem struct {
+	QuestionID      string  `json:"questionId"`
 	QuestionContent string  `json:"questionContent"`
 	CorrectAnswer   string  `json:"correctAnswer"`
-	StudentAnswer   string  `json:"studentAnswer"`
 	MaxScore        float64 `json:"maxScore"`
+	StudentAnswer   string  `json:"studentAnswer"`
 }
 
-type EssayBatchResult struct {
-	ID            string  `json:"id"`
-	Score         float64 `json:"score"`
-	Explanation   string  `json:"explanation"`
-	ErrorLocation string  `json:"errorLocation"`
+type EssayBatchInput struct {
+	SubmissionID string                   `json:"submissionId"`
+	ExamID       string                   `json:"examId"`
+	StudentID    string                   `json:"studentId"`
+	ExamTitle    string                   `json:"examTitle"`
+	Questions    []EssayBatchQuestionItem `json:"questions"`
 }
 
-func GradeEssayBatchWithGemini(inputs []EssayBatchInput) ([]EssayBatchResult, error) {
-	if len(inputs) == 0 {
+type EssayQuestionResult struct {
+	QuestionID      string  `json:"questionId"`
+	Score           float64 `json:"score"`
+	MaxScore        float64 `json:"maxScore"`
+	IsCorrect       bool    `json:"isCorrect"`
+	Explanation     string  `json:"explanation"`
+	ErrorLocation   string  `json:"errorLocation"`
+	DeductionReason string  `json:"deductionReason"`
+}
+
+type EssayBatchResponse struct {
+	SubmissionID         string                `json:"submissionId"`
+	ExamID               string                `json:"examId"`
+	StudentID            string                `json:"studentId"`
+	OverallEssayFeedback string                `json:"overallEssayFeedback"`
+	TotalEssayScore      float64               `json:"totalEssayScore"`
+	MaxTotalEssayScore   float64               `json:"maxTotalEssayScore"`
+	QuestionResults      []EssayQuestionResult `json:"questionResults"`
+}
+
+func GradeEssayBatchWithGemini(input EssayBatchInput) (*EssayBatchResponse, error) {
+	if len(input.Questions) == 0 {
 		return nil, nil
 	}
 	apiKey := os.Getenv("GEMINI_API_KEY")
@@ -209,20 +61,45 @@ func GradeEssayBatchWithGemini(inputs []EssayBatchInput) ([]EssayBatchResult, er
 
 	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=" + apiKey
 
-	promptBytes, _ := json.MarshalIndent(inputs, "", "  ")
-	prompt := fmt.Sprintf(`Bạn là một giáo viên Toán khó tính nhưng công tâm. Nhiệm vụ của bạn là chấm điểm một HỆ THỐNG CÁC BÀI LÀM TỰ LUẬN của học sinh.
-Dưới đây là danh sách các bài làm, mỗi bài có một "id", đề bài "questionContent", đáp án "correctAnswer", bài làm của học sinh "studentAnswer", và điểm tối đa "maxScore".
+	promptBytes, _ := json.MarshalIndent(input, "", "  ")
+	prompt := fmt.Sprintf(`Bạn là một Giám khảo và Giáo viên Toán học cấp trung học chuyên nghiệp. 
+Nhiệm vụ của bạn là chấm điểm danh sách bài làm TỰ LUẬN của học sinh và trả về dữ liệu chuẩn JSON để lưu CSDL.
 
-Danh sách bài làm:
+---
+### 📥 DỮ LIỆU ĐẦU VÀO (INPUT):
 %s
 
-Yêu cầu:
-1. Đối chiếu bài làm của học sinh với đáp án chuẩn.
-2. Đưa ra điểm số (từ 0 đến maxScore tương ứng). Điểm có thể lẻ đến 0.25.
-3. Nhận xét ngắn gọn. NẾU HỌC SINH LÀM SAI, trích dẫn lại câu sai vào ErrorLocation.
-4. KHÔNG chấm điểm bài lạc đề (chấm 0 điểm).
-Trả về mảng JSON kết quả tương ứng với danh sách đầu vào.
-`, string(promptBytes))
+---
+### ⚙️ QUY TẮC CHẤM TỰ LUẬN (GRADING LOGIC):
+1. Đối chiếu studentAnswer với correctAnswer theo từng bước biến đổi toán học.
+2. Điểm số từ 0 đến maxScore (lẻ đến 0.25). Đúng kết quả nhưng sai bước trung gian/sai dấu => Trừ điểm tương ứng.
+3. Bài làm viết linh tinh, lạc đề hoặc bỏ trống => Chấm 0 điểm.
+4. NẾU HỌC SINH LÀM SAI: BẮT BUỘC trích dẫn chính xác đoạn viết sai vào errorLocation và nêu lý do tại deductionReason.
+5. Đưa ra overallEssayFeedback: Nhận xét tổng quan kỹ năng làm bài tự luận của học sinh (2-3 câu).
+
+---
+### 📤 ĐỊNH DẠNG ĐẦU RA (OUTPUT FORMAT - JSON ONLY):
+BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Trả về đối tượng JSON theo mẫu:
+{
+  "submissionId": "%s",
+  "examId": "%s",
+  "studentId": "%s",
+  "overallEssayFeedback": "string",
+  "totalEssayScore": number,
+  "maxTotalEssayScore": number,
+  "questionResults": [
+    {
+      "questionId": "string",
+      "score": number,
+      "maxScore": number,
+      "isCorrect": boolean,
+      "explanation": "string",
+      "errorLocation": "string",
+      "deductionReason": "string"
+    }
+  ]
+}
+`, string(promptBytes), input.SubmissionID, input.ExamID, input.StudentID)
 
 	payload := map[string]interface{}{
 		"contents": []map[string]interface{}{
@@ -234,19 +111,34 @@ Trả về mảng JSON kết quả tương ứng với danh sách đầu vào.
 		},
 		"generationConfig": map[string]interface{}{
 			"responseMimeType": "application/json",
-			"maxOutputTokens":  2000,
+			"maxOutputTokens":  4000,
 			"responseSchema": map[string]interface{}{
-				"type": "array",
-				"items": map[string]interface{}{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"id":            map[string]interface{}{"type": "string"},
-						"score":         map[string]interface{}{"type": "number"},
-						"explanation":   map[string]interface{}{"type": "string"},
-						"errorLocation": map[string]interface{}{"type": "string"},
+				"type": "OBJECT",
+				"properties": map[string]interface{}{
+					"submissionId":         map[string]interface{}{"type": "STRING"},
+					"examId":               map[string]interface{}{"type": "STRING"},
+					"studentId":            map[string]interface{}{"type": "STRING"},
+					"overallEssayFeedback": map[string]interface{}{"type": "STRING"},
+					"totalEssayScore":      map[string]interface{}{"type": "NUMBER"},
+					"maxTotalEssayScore":   map[string]interface{}{"type": "NUMBER"},
+					"questionResults": map[string]interface{}{
+						"type": "ARRAY",
+						"items": map[string]interface{}{
+							"type": "OBJECT",
+							"properties": map[string]interface{}{
+								"questionId":      map[string]interface{}{"type": "STRING"},
+								"score":           map[string]interface{}{"type": "NUMBER"},
+								"maxScore":        map[string]interface{}{"type": "NUMBER"},
+								"isCorrect":       map[string]interface{}{"type": "BOOLEAN"},
+								"explanation":     map[string]interface{}{"type": "STRING"},
+								"errorLocation":   map[string]interface{}{"type": "STRING"},
+								"deductionReason": map[string]interface{}{"type": "STRING"},
+							},
+							"required": []string{"questionId", "score", "maxScore", "explanation"},
+						},
 					},
-					"required": []string{"id", "score", "explanation"},
 				},
+				"required": []string{"submissionId", "overallEssayFeedback", "questionResults"},
 			},
 		},
 	}
@@ -284,13 +176,15 @@ Trả về mảng JSON kết quả tương ứng với danh sách đầu vào.
 
 			if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
 				text := res.Candidates[0].Content.Parts[0].Text
-				var results []EssayBatchResult
-				if err := json.Unmarshal([]byte(text), &results); err == nil {
-					return results, nil
+				text = strings.TrimPrefix(text, "```json")
+				text = strings.TrimSuffix(text, "```")
+				var response EssayBatchResponse
+				if err := json.Unmarshal([]byte(text), &response); err == nil {
+					return &response, nil
 				}
 			}
 
-			return nil, fmt.Errorf("Failed to parse Gemini response")
+			return nil, fmt.Errorf("Failed to parse Gemini essay response")
 		})
 	})
 
@@ -298,24 +192,45 @@ Trả về mảng JSON kết quả tương ứng với danh sách đầu vào.
 		return nil, err
 	}
 
-	return result.([]EssayBatchResult), nil
+	return result.(*EssayBatchResponse), nil
 }
 
-type ReasoningBatchInput struct {
-	ID                 string `json:"id"`
+// --- PROMPT 2: BATCH MC REASONING & COMPREHENSION ---
+
+type ReasoningBatchQuestionItem struct {
+	QuestionID         string `json:"questionId"`
 	QuestionContent    string `json:"questionContent"`
 	CorrectAnswer      string `json:"correctAnswer"`
+	SelectedAnswer     string `json:"selectedAnswer"`
 	StudentExplanation string `json:"studentExplanation"`
 }
 
-type ReasoningBatchResult struct {
-	ID          string  `json:"id"`
-	Score       float64 `json:"score"`
-	Explanation string  `json:"explanation"`
+type ReasoningBatchInput struct {
+	SubmissionID string                       `json:"submissionId"`
+	ExamID       string                       `json:"examId"`
+	StudentID    string                       `json:"studentId"`
+	ExamTitle    string                       `json:"examTitle"`
+	Questions    []ReasoningBatchQuestionItem `json:"questions"`
 }
 
-func EvaluateReasoningBatchWithGemini(inputs []ReasoningBatchInput) ([]ReasoningBatchResult, error) {
-	if len(inputs) == 0 {
+type ReasoningQuestionResult struct {
+	QuestionID         string  `json:"questionId"`
+	ReasoningScore     float64 `json:"reasoningScore"`
+	ComprehensionLevel string  `json:"comprehensionLevel"`
+	IsRandomGuess      bool    `json:"isRandomGuess"`
+	ReasoningRemark    string  `json:"reasoningRemark"`
+}
+
+type ReasoningBatchResponse struct {
+	SubmissionID                 string                    `json:"submissionId"`
+	ExamID                       string                    `json:"examId"`
+	StudentID                    string                    `json:"studentId"`
+	OverallComprehensionFeedback string                    `json:"overallComprehensionFeedback"`
+	QuestionResults              []ReasoningQuestionResult `json:"questionResults"`
+}
+
+func EvaluateReasoningBatchWithGemini(input ReasoningBatchInput) (*ReasoningBatchResponse, error) {
+	if len(input.Questions) == 0 {
 		return nil, nil
 	}
 	apiKey := os.Getenv("GEMINI_API_KEY")
@@ -325,17 +240,46 @@ func EvaluateReasoningBatchWithGemini(inputs []ReasoningBatchInput) ([]Reasoning
 
 	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=" + apiKey
 
-	promptBytes, _ := json.MarshalIndent(inputs, "", "  ")
-	prompt := fmt.Sprintf(`Bạn là một giáo viên Toán tận tâm. Dưới đây là danh sách các lời giải thích tư duy của học sinh cho nhiều câu hỏi khác nhau.
-Danh sách giải thích:
+	promptBytes, _ := json.MarshalIndent(input, "", "  ")
+	prompt := fmt.Sprintf(`Bạn là một Chuyên gia Đánh giá Tư duy Toán học. 
+Nhiệm vụ của bạn là phân tích lời giải thích (studentExplanation) đối với các câu TRẮC NGHIỆM để xác định học sinh THỰC SỰ HIỂU BÀI hay ĐOÁN MÒ / ĐÁNH BỪA (gieo xúc xắc).
+
+---
+### 📥 DỮ LIỆU ĐẦU VÀO (INPUT):
 %s
 
-Yêu cầu:
-1. Đánh giá sự logic, chính xác và mức độ hiểu bài.
-2. Chấm điểm tư duy từ 0 đến 10 (10: Hoàn hảo; 7-9: Hiểu đúng; 4-6: Có nhầm lẫn; 1-3: Sai; 0: Đoán mò).
-3. Nhận xét súc tích chỉ rõ điểm tốt/lỗi sai.
-Trả về mảng JSON kết quả tương ứng.
-`, string(promptBytes))
+---
+### ⚙️ QUY TẮC ĐÁNH GIÁ TƯ DUY (COMPREHENSION LOGIC):
+1. Phân loại tư duy (comprehensionLevel):
+   - "HOAN_HAO": Lập luận chuẩn xác, hiểu sâu bản chất.
+   - "HIEU_BAI": Hiểu đúng hướng nhưng diễn đạt chưa chặt chẽ.
+   - "NHAM_LAN": Có suy luận nhưng nhầm lẫn công thức.
+   - "DOAN_MO_DANH_BUA": Viết linh tinh, giải thích qua loa, hoặc thừa nhận đánh bừa/khoanh đại.
+2. Cảnh báo đánh bừa (isRandomGuess):
+   - true nếu thể hiện đoán mò, chọn đại, không có cơ sở toán học (kể cả khi chọn đúng đáp án).
+   - false nếu thực sự có suy luận toán học.
+3. Chấm điểm tư duy (reasoningScore từ 0.0 đến 10.0): 10 (Hoàn hảo), 7-8 (Hiểu bài), 4-6 (Nhầm lẫn), 0-3 (Đoán mò).
+4. Viết overallComprehensionFeedback: Nhận xét tổng quan về mức độ hiểu bản chất toán học của học sinh.
+
+---
+### 📤 ĐỊNH DẠNG ĐẦU RA (OUTPUT FORMAT - JSON ONLY):
+BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Trả về đối tượng JSON theo mẫu:
+{
+  "submissionId": "%s",
+  "examId": "%s",
+  "studentId": "%s",
+  "overallComprehensionFeedback": "string",
+  "questionResults": [
+    {
+      "questionId": "string",
+      "reasoningScore": number,
+      "comprehensionLevel": "HOAN_HAO | HIEU_BAI | NHAM_LAN | DOAN_MO_DANH_BUA",
+      "isRandomGuess": boolean,
+      "reasoningRemark": "string"
+    }
+  ]
+}
+`, string(promptBytes), input.SubmissionID, input.ExamID, input.StudentID)
 
 	payload := map[string]interface{}{
 		"contents": []map[string]interface{}{
@@ -347,18 +291,30 @@ Trả về mảng JSON kết quả tương ứng.
 		},
 		"generationConfig": map[string]interface{}{
 			"responseMimeType": "application/json",
-			"maxOutputTokens":  2000,
+			"maxOutputTokens":  4000,
 			"responseSchema": map[string]interface{}{
-				"type": "array",
-				"items": map[string]interface{}{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"id":          map[string]interface{}{"type": "string"},
-						"score":       map[string]interface{}{"type": "number"},
-						"explanation": map[string]interface{}{"type": "string"},
+				"type": "OBJECT",
+				"properties": map[string]interface{}{
+					"submissionId":                 map[string]interface{}{"type": "STRING"},
+					"examId":                       map[string]interface{}{"type": "STRING"},
+					"studentId":                    map[string]interface{}{"type": "STRING"},
+					"overallComprehensionFeedback": map[string]interface{}{"type": "STRING"},
+					"questionResults": map[string]interface{}{
+						"type": "ARRAY",
+						"items": map[string]interface{}{
+							"type": "OBJECT",
+							"properties": map[string]interface{}{
+								"questionId":         map[string]interface{}{"type": "STRING"},
+								"reasoningScore":     map[string]interface{}{"type": "NUMBER"},
+								"comprehensionLevel": map[string]interface{}{"type": "STRING"},
+								"isRandomGuess":      map[string]interface{}{"type": "BOOLEAN"},
+								"reasoningRemark":    map[string]interface{}{"type": "STRING"},
+							},
+							"required": []string{"questionId", "reasoningScore", "comprehensionLevel", "isRandomGuess", "reasoningRemark"},
+						},
 					},
-					"required": []string{"id", "score", "explanation"},
 				},
+				"required": []string{"submissionId", "overallComprehensionFeedback", "questionResults"},
 			},
 		},
 	}
@@ -396,13 +352,15 @@ Trả về mảng JSON kết quả tương ứng.
 
 			if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
 				text := res.Candidates[0].Content.Parts[0].Text
-				var results []ReasoningBatchResult
-				if err := json.Unmarshal([]byte(text), &results); err == nil {
-					return results, nil
+				text = strings.TrimPrefix(text, "```json")
+				text = strings.TrimSuffix(text, "```")
+				var response ReasoningBatchResponse
+				if err := json.Unmarshal([]byte(text), &response); err == nil {
+					return &response, nil
 				}
 			}
 
-			return nil, fmt.Errorf("Failed to parse Gemini response")
+			return nil, fmt.Errorf("Failed to parse Gemini reasoning response")
 		})
 	})
 
@@ -410,5 +368,5 @@ Trả về mảng JSON kết quả tương ứng.
 		return nil, err
 	}
 
-	return result.([]ReasoningBatchResult), nil
+	return result.(*ReasoningBatchResponse), nil
 }

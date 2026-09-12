@@ -41,19 +41,24 @@ type QuestionAnswer struct {
 	AIExplanation      string     `json:"ai_explanation"`
 	AIReasoningRemark  string     `json:"ai_reasoning_remark"`
 	ErrorLocation      string     `json:"error_location"`
+	DeductionReason    string     `json:"deduction_reason,omitempty"`
+	ComprehensionLevel string     `json:"comprehension_level,omitempty"`
+	IsRandomGuess      bool       `json:"is_random_guess,omitempty"`
 	Appeal             AppealInfo `json:"appeal"`
 	StudentExplanation string     `json:"student_explanation"`
 }
 
 type Submission struct {
-	ID          uuid.UUID        `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
-	UserID      *uuid.UUID       `gorm:"type:uuid;index" json:"userId,omitempty"`
-	ExamID      uuid.UUID        `gorm:"type:uuid;not null;index" json:"examId"`
-	Status      SubmissionStatus `gorm:"type:varchar(20);not null;default:'in_progress'" json:"status"`
-	TotalScore  float64          `gorm:"type:decimal(5,2);default:0" json:"totalScore"`
-	AnswersJSON datatypes.JSON   `gorm:"type:jsonb" json:"answersJson"`
-	StartedAt   time.Time        `gorm:"default:CURRENT_TIMESTAMP" json:"startedAt"`
-	SubmittedAt *time.Time       `json:"submittedAt,omitempty"`
+	ID                           uuid.UUID        `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+	UserID                       *uuid.UUID       `gorm:"type:uuid;index" json:"userId,omitempty"`
+	ExamID                       uuid.UUID        `gorm:"type:uuid;not null;index" json:"examId"`
+	Status                       SubmissionStatus `gorm:"type:varchar(20);not null;default:'in_progress'" json:"status"`
+	TotalScore                   float64          `gorm:"type:decimal(5,2);default:0" json:"totalScore"`
+	OverallEssayFeedback         string           `gorm:"type:text" json:"overallEssayFeedback,omitempty"`
+	OverallComprehensionFeedback string           `gorm:"type:text" json:"overallComprehensionFeedback,omitempty"`
+	AnswersJSON                  datatypes.JSON   `gorm:"type:jsonb" json:"answersJson"`
+	StartedAt                    time.Time        `gorm:"default:CURRENT_TIMESTAMP" json:"startedAt"`
+	SubmittedAt                  *time.Time       `json:"submittedAt,omitempty"`
 
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`

@@ -185,9 +185,14 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 	var allQuestions []models.Question
 	config.DB.Where("id IN ? OR parent_id IN ?", []string(exam.QuestionIDs), []string(exam.QuestionIDs)).Find(&allQuestions)
 
-	var essayInputs []services.EssayBatchInput
-	var reasoningInputs []services.ReasoningBatchInput
+	var essayQuestions []services.EssayBatchQuestionItem
+	var reasoningQuestions []services.ReasoningBatchQuestionItem
 	var totalScore float64
+
+	studentIDStr := ""
+	if submission.UserID != nil {
+		studentIDStr = submission.UserID.String()
+	}
 
 	for _, question := range allQuestions {
 		// Ignore group parent questions because they don't have answers themselves, only their sub-questions do
@@ -213,12 +218,12 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 				ans.AIExplanation = "Không có câu trả lời."
 				answersMap[qID] = ans
 			} else {
-				essayInputs = append(essayInputs, services.EssayBatchInput{
-					ID:              qID,
+				essayQuestions = append(essayQuestions, services.EssayBatchQuestionItem{
+					QuestionID:      qID,
 					QuestionContent: question.Content,
 					CorrectAnswer:   question.CorrectAnswer,
-					StudentAnswer:   ans.StudentAnswer,
 					MaxScore:        float64(question.DifficultyPoint),
+					StudentAnswer:   ans.StudentAnswer,
 				})
 			}
 		} else {
@@ -244,47 +249,66 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 
 			// Đánh giá tư duy nếu học sinh nhập lời giải thích
 			if ans.StudentExplanation != "" {
-				reasoningInputs = append(reasoningInputs, services.ReasoningBatchInput{
-					ID:                 qID,
+				reasoningQuestions = append(reasoningQuestions, services.ReasoningBatchQuestionItem{
+					QuestionID:         qID,
 					QuestionContent:    question.Content,
 					CorrectAnswer:      question.CorrectAnswer,
+					SelectedAnswer:     ans.StudentAnswer,
 					StudentExplanation: ans.StudentExplanation,
 				})
 			}
 		}
 	}
 
-	// BATCH CALLS
-	if len(essayInputs) > 0 {
-		essayResults, err := services.GradeEssayBatchWithGemini(essayInputs)
-		if err == nil {
-			for _, res := range essayResults {
-				ans := answersMap[res.ID]
+	// BATCH CALL 1: ESSAY GRADING
+	if len(essayQuestions) > 0 {
+		essayInput := services.EssayBatchInput{
+			SubmissionID: submission.ID.String(),
+			ExamID:       submission.ExamID.String(),
+			StudentID:    studentIDStr,
+			ExamTitle:    exam.Title,
+			Questions:    essayQuestions,
+		}
+		essayResp, err := services.GradeEssayBatchWithGemini(essayInput)
+		if err == nil && essayResp != nil {
+			submission.OverallEssayFeedback = essayResp.OverallEssayFeedback
+			for _, res := range essayResp.QuestionResults {
+				ans := answersMap[res.QuestionID]
 				ans.Score = res.Score
+				ans.IsCorrect = res.IsCorrect
 				ans.AIExplanation = res.Explanation
 				ans.ErrorLocation = res.ErrorLocation
-				if res.Score > 0 {
-					ans.IsCorrect = true
-				}
+				ans.DeductionReason = res.DeductionReason
 				totalScore += ans.Score
-				answersMap[res.ID] = ans
+				answersMap[res.QuestionID] = ans
 			}
 		} else {
-			fmt.Printf("Batch grading failed: %v\n", err)
+			fmt.Printf("Batch essay grading failed: %v\n", err)
 		}
 	}
 
-	if len(reasoningInputs) > 0 {
-		reasoningResults, err := services.EvaluateReasoningBatchWithGemini(reasoningInputs)
-		if err == nil {
-			for _, res := range reasoningResults {
-				ans := answersMap[res.ID]
-				ans.ReasoningScore = res.Score
-				ans.AIReasoningRemark = res.Explanation
-				answersMap[res.ID] = ans
+	// BATCH CALL 2: MC REASONING EVALUATION
+	if len(reasoningQuestions) > 0 {
+		reasoningInput := services.ReasoningBatchInput{
+			SubmissionID: submission.ID.String(),
+			ExamID:       submission.ExamID.String(),
+			StudentID:    studentIDStr,
+			ExamTitle:    exam.Title,
+			Questions:    reasoningQuestions,
+		}
+		reasoningResp, err := services.EvaluateReasoningBatchWithGemini(reasoningInput)
+		if err == nil && reasoningResp != nil {
+			submission.OverallComprehensionFeedback = reasoningResp.OverallComprehensionFeedback
+			for _, res := range reasoningResp.QuestionResults {
+				ans := answersMap[res.QuestionID]
+				ans.ReasoningScore = res.ReasoningScore
+				ans.ComprehensionLevel = res.ComprehensionLevel
+				ans.IsRandomGuess = res.IsRandomGuess
+				ans.AIReasoningRemark = res.ReasoningRemark
+				answersMap[res.QuestionID] = ans
 			}
 		} else {
-			fmt.Printf("Batch reasoning failed: %v\n", err)
+			fmt.Printf("Batch reasoning evaluation failed: %v\n", err)
 		}
 	}
 
