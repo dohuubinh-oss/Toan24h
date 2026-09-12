@@ -36,7 +36,10 @@ interface EssayQuestionProps {
     detailId?: string, 
     isCorrect: boolean, 
     aiExplanation: string, 
-    errorLocation?: any, 
+    errorLocation?: any,
+    deductionReason?: string,
+    comprehensionLevel?: string,
+    isRandomGuess?: boolean,
     score: number, 
     maxScore: number,
     isAppealed?: boolean,
@@ -69,7 +72,22 @@ function EditorItem({
   isGroup: boolean,
   examType?: string,
   readonly?: boolean,
-  aiFeedback?: { detailId?: string, isCorrect: boolean, aiExplanation: string, score: number, maxScore: number, isAppealed?: boolean, appealStatus?: string, teacherFeedback?: string, aiReasoningRemark?: string, reasoningScore?: number },
+  aiFeedback?: { 
+    detailId?: string, 
+    isCorrect: boolean, 
+    aiExplanation: string, 
+    errorLocation?: any,
+    deductionReason?: string,
+    comprehensionLevel?: string,
+    isRandomGuess?: boolean,
+    score: number, 
+    maxScore: number, 
+    isAppealed?: boolean, 
+    appealStatus?: string, 
+    teacherFeedback?: string, 
+    aiReasoningRemark?: string, 
+    reasoningScore?: number 
+  },
   onToggleHint?: (id: number) => void
   resultId?: string
 }) {
@@ -105,10 +123,17 @@ function EditorItem({
     <div className="flex flex-col flex-1 min-h-[250px]">
       {readonly ? (
         <div className="flex flex-col flex-1">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-bold text-slate-800 dark:text-slate-200">
-              {isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`}
-            </label>
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                {isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`}
+              </label>
+              {aiFeedback?.comprehensionLevel && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                  🎯 {aiFeedback.comprehensionLevel === 'HOAN_HAO' ? 'Tư duy hoàn hảo' : aiFeedback.comprehensionLevel === 'HIEU_BAI' ? 'Hiểu bài tốt' : aiFeedback.comprehensionLevel === 'NHAM_LAN' ? 'Có sai sót nhỏ' : 'Cần xem lại'}
+                </span>
+              )}
+            </div>
             {onToggleHint && (
               <button 
                 data-hint-toggle="true"
@@ -121,10 +146,40 @@ function EditorItem({
             )}
           </div>
 
-          <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex flex-col flex-1 min-h-[140px] overflow-hidden">
+          {/* Random Guess Warning Banner */}
+          {aiFeedback?.isRandomGuess && (
+            <div className="mb-3 p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-xl text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2 font-medium">
+              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+              <span>AI phát hiện câu trả lời có khả năng đoán mò / chưa thể hiện đủ bước suy luận toán học.</span>
+            </div>
+          )}
+
+          <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex flex-col flex-1 min-h-[140px] overflow-hidden relative">
             {editorContent && editorContent.trim().length > 0 ? (
-              <div className="text-slate-800 dark:text-slate-200 leading-relaxed text-base break-words overflow-x-auto max-w-full">
+              <div className="text-slate-800 dark:text-slate-200 leading-relaxed text-base break-words overflow-x-auto max-w-full space-y-3">
                 <MathText content={editorContent} />
+
+                {/* Inline Error Annotation & Deduction Reason directly attached to student answer */}
+                {(aiFeedback?.errorLocation || aiFeedback?.deductionReason) && (
+                  <div className="mt-4 p-4 bg-red-50/90 dark:bg-red-950/40 border-l-4 border-red-500 rounded-r-xl space-y-1.5 shadow-xs">
+                    {aiFeedback.errorLocation && (
+                      <div className="flex items-start gap-2 text-xs font-bold text-red-700 dark:text-red-300">
+                        <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="uppercase tracking-wider font-extrabold text-[11px] text-red-600 dark:text-red-400 block mb-0.5">Vị trí phát hiện lỗi sai:</span>
+                          <span className="bg-red-100 dark:bg-red-900/60 text-red-800 dark:text-red-200 px-2 py-0.5 rounded font-mono text-xs border border-red-200 dark:border-red-800 inline-block">
+                            {typeof aiFeedback.errorLocation === 'object' ? JSON.stringify(aiFeedback.errorLocation) : String(aiFeedback.errorLocation)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {aiFeedback.deductionReason && (
+                      <div className="text-xs text-red-700 dark:text-red-300 font-medium leading-relaxed pt-1 border-t border-red-200/60 dark:border-red-900/40">
+                        <strong>📌 Lý do trừ điểm:</strong> {aiFeedback.deductionReason}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <p className="text-slate-400 italic text-sm">Học sinh chưa nhập bài làm cho phần này.</p>

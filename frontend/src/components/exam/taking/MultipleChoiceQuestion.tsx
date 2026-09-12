@@ -24,7 +24,22 @@ interface MultipleChoiceQuestionProps {
   correctOptionId?: string | null
   aiExplanation?: string
   solutionGuide?: string
-  aiFeedback?: { detailId?: string, isCorrect: boolean, aiExplanation: string, score: number, maxScore: number, isAppealed?: boolean, appealStatus?: string, teacherFeedback?: string, aiReasoningRemark?: string, reasoningScore?: number }
+  aiFeedback?: { 
+    detailId?: string, 
+    isCorrect: boolean, 
+    aiExplanation: string, 
+    errorLocation?: any,
+    deductionReason?: string,
+    comprehensionLevel?: string,
+    isRandomGuess?: boolean,
+    score: number, 
+    maxScore: number, 
+    isAppealed?: boolean, 
+    appealStatus?: string, 
+    teacherFeedback?: string, 
+    aiReasoningRemark?: string, 
+    reasoningScore?: number 
+  }
   readonly?: boolean
   isHintOpen: boolean
   isFlagged: boolean
@@ -110,9 +125,16 @@ export default function MultipleChoiceQuestion({
           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary"></div>
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <span className="px-3 py-1 bg-primary/10 text-primary text-sm font-bold rounded-lg uppercase">
-                Câu hỏi {index + 1}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 bg-primary/10 text-primary text-sm font-bold rounded-lg uppercase">
+                  Câu hỏi {index + 1}
+                </span>
+                {readonly && aiFeedback?.comprehensionLevel && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                    🎯 {aiFeedback.comprehensionLevel === 'HOAN_HAO' ? 'Tư duy hoàn hảo' : aiFeedback.comprehensionLevel === 'HIEU_BAI' ? 'Hiểu bài tốt' : aiFeedback.comprehensionLevel === 'NHAM_LAN' ? 'Có sai sót nhỏ' : 'Chọn ngẫu nhiên'}
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 {lectureUrl && (
                   <Link
@@ -225,6 +247,21 @@ export default function MultipleChoiceQuestion({
               <p className="text-slate-400 dark:text-slate-500 italic text-sm">
                 Học sinh không nhập giải thích cho câu hỏi này.
               </p>
+            )}
+
+            {/* Random Guess Alert */}
+            {aiFeedback?.isRandomGuess && (
+              <div className="mt-4 p-3 bg-amber-100/80 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 rounded-xl text-amber-800 dark:text-amber-200 text-xs flex items-center gap-2 font-medium">
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span>⚠️ AI phát hiện đáp án có khả năng đoán mò (thiếu các bước suy luận giải thích).</span>
+              </div>
+            )}
+
+            {/* Deduction reason if any */}
+            {aiFeedback?.deductionReason && (
+              <div className="mt-3 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300 text-xs leading-relaxed font-medium">
+                <strong>📌 Lý do trừ điểm:</strong> {aiFeedback.deductionReason}
+              </div>
             )}
           </div>
         )}

@@ -9,6 +9,7 @@ import QuestionMapSidebar, { QuestionMapItem, QuestionStatus } from '@/component
 import MultipleChoiceQuestion from '@/components/exam/taking/MultipleChoiceQuestion'
 import EssayQuestion from '@/components/exam/taking/EssayQuestion'
 import AIHintPanel from '@/components/exam/taking/AIHintPanel'
+import MathText from '@/components/ui/MathText'
 import { getExamResultById, submitTeacherGradingReview } from '@/lib/api'
 import { useToast } from '@/components/ui/ToastProvider'
 
@@ -31,6 +32,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const [teacherFeedbacks, setTeacherFeedbacks] = useState<Record<string, string>>({})
   const [overallEssayFeedback, setOverallEssayFeedback] = useState('')
   const [overallComprehensionFeedback, setOverallComprehensionFeedback] = useState('')
+  const [summaryTab, setSummaryTab] = useState<'essay' | 'comprehension'>('essay')
   const [teacherGeneralFeedback, setTeacherGeneralFeedback] = useState('')
   const [isSubmittingReview, setIsSubmittingReview] = useState(false)
 
@@ -179,6 +181,9 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           maxScore: subMax,
           aiExplanation: ansData.ai_explanation || ansData.aiExplanation || '',
           errorLocation: ansData.error_location || ansData.errorLocation,
+          deductionReason: ansData.deduction_reason || ansData.deductionReason,
+          comprehensionLevel: ansData.comprehension_level || ansData.comprehensionLevel,
+          isRandomGuess: ansData.is_random_guess ?? ansData.isRandomGuess ?? false,
           isAppealed: ansData.appeal?.is_appealed || false,
           appealStatus: ansData.appeal?.status || '',
           teacherFeedback: ansData.appeal?.teacher_feedback || '',
@@ -214,6 +219,9 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         maxScore: qMax,
         aiExplanation: ansData.ai_explanation || ansData.aiExplanation || '',
         errorLocation: ansData.error_location || ansData.errorLocation,
+        deductionReason: ansData.deduction_reason || ansData.deductionReason,
+        comprehensionLevel: ansData.comprehension_level || ansData.comprehensionLevel,
+        isRandomGuess: ansData.is_random_guess ?? ansData.isRandomGuess ?? false,
         isAppealed: ansData.appeal?.is_appealed || false,
         appealStatus: ansData.appeal?.status || '',
         teacherFeedback: ansData.appeal?.teacher_feedback || '',
@@ -480,6 +488,91 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
           {/* Central Question Content */}
           <div className="flex-1 overflow-y-auto">
+            {/* AI Executive Summary Banner */}
+            {(overallEssayFeedback || overallComprehensionFeedback || isTeacherMode) && (
+              <div className="max-w-4xl mx-auto mt-6 mb-2 px-4 sm:px-6">
+                <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl shadow-xl border border-indigo-500/30 overflow-hidden relative">
+                  <div className="p-5 sm:p-6">
+                    <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-indigo-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-md shadow-indigo-500/30">
+                          <Sparkles className="w-5 h-5 text-white animate-pulse" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-base sm:text-lg text-white flex items-center gap-2">
+                            Báo cáo Đánh giá AI
+                            <span className="text-[10px] uppercase font-extrabold bg-indigo-500/30 text-indigo-200 border border-indigo-400/40 px-2 py-0.5 rounded-full">
+                              Gemini 3.6 Flash
+                            </span>
+                          </h3>
+                          <p className="text-xs text-indigo-200/80">Tổng hợp nhận xét trình bày & phân tích tư duy toán học</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 bg-indigo-950/80 p-1 rounded-xl border border-indigo-500/30">
+                        <button
+                          type="button"
+                          onClick={() => setSummaryTab('essay')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            summaryTab === 'essay' 
+                              ? 'bg-indigo-600 text-white shadow-sm' 
+                              : 'text-indigo-200 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          📝 Nhận xét Tự luận
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSummaryTab('comprehension')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            summaryTab === 'comprehension' 
+                              ? 'bg-purple-600 text-white shadow-sm' 
+                              : 'text-purple-200 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          🧠 Phân tích Tư duy
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="text-sm leading-relaxed text-indigo-100/90 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
+                      {summaryTab === 'essay' ? (
+                        isTeacherMode ? (
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-indigo-300">Giáo viên chỉnh sửa Nhận xét Tự luận:</label>
+                            <textarea
+                              rows={3}
+                              value={overallEssayFeedback}
+                              onChange={(e) => setOverallEssayFeedback(e.target.value)}
+                              placeholder="Nhập nhận xét tổng quan trình bày tự luận..."
+                              className="w-full p-3 rounded-xl bg-slate-900/90 border border-indigo-500/40 text-white text-xs focus:ring-2 focus:ring-indigo-400 outline-none"
+                            />
+                          </div>
+                        ) : (
+                          overallEssayFeedback ? <MathText content={overallEssayFeedback} /> : <span className="italic opacity-60">Chưa có nhận xét tự luận tổng quan.</span>
+                        )
+                      ) : (
+                        isTeacherMode ? (
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-purple-300">Giáo viên chỉnh sửa Đánh giá Tư duy:</label>
+                            <textarea
+                              rows={3}
+                              value={overallComprehensionFeedback}
+                              onChange={(e) => setOverallComprehensionFeedback(e.target.value)}
+                              placeholder="Nhập đánh giá tổng quan tư duy toán học..."
+                              className="w-full p-3 rounded-xl bg-slate-900/90 border border-purple-500/40 text-white text-xs focus:ring-2 focus:ring-purple-400 outline-none"
+                            />
+                          </div>
+                        ) : (
+                          overallComprehensionFeedback ? <MathText content={overallComprehensionFeedback} /> : <span className="italic opacity-60">Chưa có đánh giá tư duy tổng quan.</span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {currentQuestion && (
               currentQuestion.type_question === 'single' && currentQuestion.type === 'Trắc nghiệm' ? (
                 <MultipleChoiceQuestion 
