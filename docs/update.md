@@ -94,3 +94,11 @@ Luồng chấm điểm sử dụng AI Gemini đang được thiết kế rất t
 - **Giải pháp đề xuất:** 
   - Đưa cả 2 thao tác trên vào một **Database Transaction** (`tx := h.DB.Begin()`). Nếu bước cộng ngày lỗi, phải `Rollback()` bước đổi trạng thái.
   - **Khóa Pessimistic Locking:** Sử dụng mệnh đề `FOR UPDATE` khi truy vấn Transaction trong Webhook (`txDB.Set("gorm:query_option", "FOR UPDATE").First(...)`). Điều này giúp khóa dòng dữ liệu lại, nếu có 2 Webhook đến cùng một tíc tắc, cái thứ hai sẽ phải đợi cái thứ nhất xử lý xong (phát hiện `completed` và bỏ qua), chống tuyệt đối lỗi Race Condition.
+
+---
+
+# Các lưu ý Hạ tầng & Triển khai (Infrastructure)
+
+### 1. Ẩn Port Redis khi Dockerize lên Production
+- **Vấn đề hiện tại:** Trong quá trình phát triển (Development), do Backend chạy trực tiếp trên máy host (`go run`), Redis trong Docker cần phải mở port `6379:6379` để Backend kết nối. Tuy nhiên, khi lên Production, việc public port Redis ra ngoài mạng Internet là một rủi ro bảo mật (dù đã có mật khẩu).
+- **Hành động cần làm:** Khi đã Dockerize toàn bộ hệ thống (gồm cả Backend), hãy xóa phần `ports: - "6379:6379"` của dịch vụ Redis trong `docker-compose.yml`. Khi đó Backend sẽ kết nối với Redis nội bộ thông qua tên hostname là `redis`.

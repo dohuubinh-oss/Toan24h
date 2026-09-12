@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/modeptrai/exam-model-backend/internal/config"
+	"github.com/modeptrai/exam-model-backend/internal/handlers"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/routes"
 	"github.com/modeptrai/exam-model-backend/internal/services"
@@ -42,6 +43,9 @@ func main() {
 	if err := config.ConnectRedis(config.Env.RedisURL); err != nil {
 		log.Fatalf("Redis connection failed: %v", err)
 	}
+
+	// 3.5. Start Background Workers (e.g., 5 concurrent grading workers)
+	services.StartGradingWorkers(5, handlers.ProcessExamGrading)
 
 	// 4. Khởi động Web Server (Gin)
 	r := routes.SetupRouter()

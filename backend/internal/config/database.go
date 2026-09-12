@@ -15,7 +15,9 @@ var DB *gorm.DB
 // ConnectDB initializes the PostgreSQL connection via GORM.
 func ConnectDB(dsn string) error {
 	var err error
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+		PrepareStmt: true,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to connect database: %w", err)
 	}
@@ -39,9 +41,10 @@ func ConnectDB(dsn string) error {
 	}
 
 	// Optimize connection pool for high concurrency
-	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
-	sqlDB.SetConnMaxLifetime(time.Hour)
+	sqlDB.SetMaxIdleConns(20)
+	sqlDB.SetConnMaxLifetime(30 * time.Minute)
+	sqlDB.SetConnMaxIdleTime(10 * time.Minute)
 
 	log.Println("Successfully connected to PostgreSQL database")
 	return nil

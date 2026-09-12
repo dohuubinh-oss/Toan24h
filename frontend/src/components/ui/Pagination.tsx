@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { ChevronsLeft, ChevronLeft, ChevronsRight, ChevronRight } from 'lucide-react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 interface PaginationProps {
   currentPage: number;
@@ -11,25 +10,13 @@ interface PaginationProps {
   startIndex: number;
   endIndex: number;
   itemName?: string;
-  onPageChange?: (page: number) => void;
+  onPageChange: (page: number) => void;
 }
 
 export function Pagination({ currentPage, totalPages, totalItems, startIndex, endIndex, itemName = "câu hỏi", onPageChange }: PaginationProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
-    
-    // Call the callback if provided, else use router to update searchParams
-    if (onPageChange) {
-      onPageChange(page);
-    } else {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('page', page.toString());
-      router.push(`${pathname}?${params.toString()}`, { scroll: true });
-    }
+    onPageChange(page);
   };
 
   // Generate page numbers

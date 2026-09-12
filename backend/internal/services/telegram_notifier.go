@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
+
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
 type TelegramNotifier struct {
@@ -37,14 +40,23 @@ func (s *TelegramNotifier) SendMessage(chatID int64, text string) error {
 		return err
 	}
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+	_, err = utils.TelegramBreaker.Execute(func() (interface{}, error) {
+		return utils.ExecuteWithRetry(3, 1*time.Second, func() (interface{}, error) {
+			resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+			if err != nil {
+				return nil, err
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				return nil, fmt.Errorf("failed to send telegram message, status: %d", resp.StatusCode)
+			}
+
+			return nil, nil
+		})
+	})
 	if err != nil {
 		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to send telegram message, status: %d", resp.StatusCode)
 	}
 
 	return nil

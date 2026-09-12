@@ -8,10 +8,12 @@ import (
 )
 
 type AppConfig struct {
-	Port     string
+	Port        string
 	DBDSN       string
-	RedisURL    string
-	FrontendURL string
+	RedisURL      string
+	RedisPassword string
+	FrontendURL   string
+	JWTSecret     string
 }
 
 var Env *AppConfig
@@ -36,16 +38,25 @@ func LoadConfig() error {
 		redisURL = "localhost:6379"
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		return fmt.Errorf("JWT_SECRET is required in environment variables")
+	}
+
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
 		frontendURL = "http://localhost:3000"
 	}
 
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+
 	Env = &AppConfig{
-		Port:        port,
-		DBDSN:       dbDSN,
-		RedisURL:    redisURL,
-		FrontendURL: frontendURL,
+		Port:          port,
+		DBDSN:         dbDSN,
+		RedisURL:      redisURL,
+		RedisPassword: redisPassword,
+		FrontendURL:   frontendURL,
+		JWTSecret:     jwtSecret,
 	}
 	return nil
 }

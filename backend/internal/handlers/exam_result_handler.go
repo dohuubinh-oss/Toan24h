@@ -140,19 +140,23 @@ func SubmitExam(c *gin.Context) {
 	}
 
 	if hasEssay {
-		go processExamGrading(submission.ID)
+		if err := services.QueueGradingJob(submission.ID); err != nil {
+			fmt.Printf("Failed to queue grading job: %v\n", err)
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "pending",
-			"message": "Nộp bài thành công. AI đang chấm điểm.",
+			"message": "Nộp bài thành công. AI đang chấm điểm. Chúng tôi sẽ thông báo khi có kết quả.",
 			"data": gin.H{
 				"resultId": submission.ID,
 			},
 		})
 	} else {
-		processExamGrading(submission.ID)
+		if err := services.QueueGradingJob(submission.ID); err != nil {
+			fmt.Printf("Failed to queue grading job: %v\n", err)
+		}
 		c.JSON(http.StatusOK, gin.H{
-			"status":  "graded",
-			"message": "Chấm điểm hoàn tất.",
+			"status":  "pending",
+			"message": "Nộp bài thành công. Hệ thống đang xử lý điểm số.",
 			"data": gin.H{
 				"resultId": submission.ID,
 			},
@@ -160,7 +164,9 @@ func SubmitExam(c *gin.Context) {
 	}
 }
 
-func processExamGrading(submissionID uuid.UUID) {
+// ProcessExamGrading processes the grading for a submission synchronously. 
+// It is intended to be called by the background grading workers.
+func ProcessExamGrading(submissionID uuid.UUID) {
 	var submission models.Submission
 	if err := config.DB.First(&submission, "id = ?", submissionID).Error; err != nil {
 		return

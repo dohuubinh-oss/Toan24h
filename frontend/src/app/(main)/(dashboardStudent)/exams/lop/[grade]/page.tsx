@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronRight, PenTool } from 'lucide-react';
 import PracticeTable from '@/components/practices/PracticeTable';
-import { Pagination } from '@/components/ui/Pagination';
+import { ClientPagination } from '@/components/ui/ClientPagination';
 import { getExams, getMyExamResults } from '@/lib/api';
 import { Practice } from '@/types/practice';
 import { cookies } from 'next/headers';
@@ -149,7 +149,7 @@ export default async function GradeExamsPage({
       {/* Phân trang */}
       {totalPages > 1 && practices.length > 0 && (
         <div className="mt-8">
-          <Pagination 
+          <ClientPagination 
             currentPage={currentPage}
             totalPages={totalPages}
             totalItems={totalItems}

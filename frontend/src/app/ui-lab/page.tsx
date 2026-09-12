@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Suspense } from 'react'
-import { Pagination } from '../../components/ui/Pagination'
+import { ClientPagination } from '../../components/ui/ClientPagination'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardHeader, CardContent, CardFooter } from '../../components/ui/Card'
@@ -232,12 +232,13 @@ export default function UILabPage() {
           <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">7. Pagination</h2>
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
             <Suspense fallback={<div className="p-4 text-slate-500">Đang tải...</div>}>
-              <Pagination 
+              <ClientPagination 
                 currentPage={2}
                 totalPages={129}
                 totalItems={1284}
                 startIndex={11}
                 endIndex={20}
+                itemName="bản ghi"
               />
             </Suspense>
           </div>

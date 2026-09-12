@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronRight, BookOpen } from 'lucide-react';
 import { LectureCard } from '@/components/lectures/LectureCard';
-import { Pagination } from '@/components/ui/Pagination';
+import { ClientPagination } from '@/components/ui/ClientPagination';
 import { getLecturesByGrade } from '@/lib/lectureApi';
 import { getExams, getMyExamResults } from '@/lib/api';
 
@@ -110,7 +110,7 @@ export default async function GradeLecturesPage({
       {/* Phân trang */}
       {totalPages > 1 && (
         <div className="mt-8">
-          <Pagination 
+          <ClientPagination 
             currentPage={currentPage}
             totalPages={totalPages}
             totalItems={totalItems}

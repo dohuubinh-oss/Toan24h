@@ -2,7 +2,7 @@
 
 import React, { Suspense, useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { ChevronRight, FileText, CheckCircle, TrendingUp, Search, Plus } from 'lucide-react'
 import ExamTable, { Exam } from '@/components/exams/ExamTable'
 import { Pagination } from '@/components/ui/Pagination'
@@ -19,6 +19,7 @@ export default function ExamsPage() {
 
 function ExamsPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [exams, setExams] = useState<Exam[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -108,6 +109,11 @@ function ExamsPageContent() {
                 startIndex={filteredExams.length > 0 ? 1 : 0} 
                 endIndex={Math.min(10, filteredExams.length)} 
                 itemName="đề thi"
+                onPageChange={(page) => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set('page', page.toString());
+                  router.push(`?${params.toString()}`, { scroll: true });
+                }}
               />
             </div>
           )}

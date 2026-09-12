@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Suspense, useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import UserHeader from '@/components/users/UserHeader'
 import UserTable, { User } from '@/components/users/UserTable'
 import { toast } from '@/components/ui/ToastProvider'
@@ -18,6 +18,7 @@ export default function UsersPage() {
 
 function UsersPageContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const q = searchParams.get('q') || ''
   const role = searchParams.get('role') || ''
   const pageParam = searchParams.get('page') || '1'
@@ -111,6 +112,11 @@ function UsersPageContent() {
               startIndex={startIndex + 1} 
               endIndex={endIndex}
               itemName="người dùng" 
+              onPageChange={(page) => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.set('page', page.toString());
+                router.push(`?${params.toString()}`, { scroll: true });
+              }}
             />
           </div>
         )}

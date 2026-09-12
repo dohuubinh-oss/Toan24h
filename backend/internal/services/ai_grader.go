@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
 type GradingResult struct {
@@ -253,39 +256,49 @@ Trả về mảng JSON kết quả tương ứng với danh sách đầu vào.
 		return nil, err
 	}
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+	result, err := utils.AIBreaker.Execute(func() (interface{}, error) {
+		return utils.ExecuteWithRetry(3, 1*time.Second, func() (interface{}, error) {
+			resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+			if err != nil {
+				return nil, err
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				return nil, fmt.Errorf("Gemini API error: status %d", resp.StatusCode)
+			}
+
+			var res struct {
+				Candidates []struct {
+					Content struct {
+						Parts []struct {
+							Text string `json:"text"`
+						} `json:"parts"`
+					} `json:"content"`
+				} `json:"candidates"`
+			}
+
+			if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+				return nil, err
+			}
+
+			if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
+				text := res.Candidates[0].Content.Parts[0].Text
+				var results []EssayBatchResult
+				if err := json.Unmarshal([]byte(text), &results); err == nil {
+					return results, nil
+				}
+			}
+
+			return nil, fmt.Errorf("Failed to parse Gemini response")
+		})
+	})
+
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Gemini API error: status %d", resp.StatusCode)
-	}
-
-	var res struct {
-		Candidates []struct {
-			Content struct {
-				Parts []struct {
-					Text string `json:"text"`
-				} `json:"parts"`
-			} `json:"content"`
-		} `json:"candidates"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return nil, err
-	}
-
-	if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
-		text := res.Candidates[0].Content.Parts[0].Text
-		var results []EssayBatchResult
-		if err := json.Unmarshal([]byte(text), &results); err == nil {
-			return results, nil
-		}
-	}
-
-	return nil, fmt.Errorf("Failed to parse Gemini response")
+	return result.([]EssayBatchResult), nil
 }
 
 type ReasoningBatchInput struct {
@@ -355,37 +368,47 @@ Trả về mảng JSON kết quả tương ứng.
 		return nil, err
 	}
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+	result, err := utils.AIBreaker.Execute(func() (interface{}, error) {
+		return utils.ExecuteWithRetry(3, 1*time.Second, func() (interface{}, error) {
+			resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+			if err != nil {
+				return nil, err
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				return nil, fmt.Errorf("Gemini API error: status %d", resp.StatusCode)
+			}
+
+			var res struct {
+				Candidates []struct {
+					Content struct {
+						Parts []struct {
+							Text string `json:"text"`
+						} `json:"parts"`
+					} `json:"content"`
+				} `json:"candidates"`
+			}
+
+			if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+				return nil, err
+			}
+
+			if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
+				text := res.Candidates[0].Content.Parts[0].Text
+				var results []ReasoningBatchResult
+				if err := json.Unmarshal([]byte(text), &results); err == nil {
+					return results, nil
+				}
+			}
+
+			return nil, fmt.Errorf("Failed to parse Gemini response")
+		})
+	})
+
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Gemini API error: status %d", resp.StatusCode)
-	}
-
-	var res struct {
-		Candidates []struct {
-			Content struct {
-				Parts []struct {
-					Text string `json:"text"`
-				} `json:"parts"`
-			} `json:"content"`
-		} `json:"candidates"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return nil, err
-	}
-
-	if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
-		text := res.Candidates[0].Content.Parts[0].Text
-		var results []ReasoningBatchResult
-		if err := json.Unmarshal([]byte(text), &results); err == nil {
-			return results, nil
-		}
-	}
-
-	return nil, fmt.Errorf("Failed to parse Gemini response")
+	return result.([]ReasoningBatchResult), nil
 }

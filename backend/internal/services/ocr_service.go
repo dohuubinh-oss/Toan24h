@@ -7,6 +7,11 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
+	"time"
+
+	"github.com/modeptrai/exam-model-backend/internal/utils"
+
 	"encoding/base64"
 	"image"
 	"image/jpeg"
@@ -87,41 +92,59 @@ Yêu cầu:
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
+	
+	result, err := utils.AIBreaker.Execute(func() (interface{}, error) {
+		return utils.ExecuteWithRetry(3, 1*time.Second, func() (interface{}, error) {
+			resp, err := client.Do(req)
+			if err != nil {
+				return nil, fmt.Errorf("failed to call Gemini API: %w", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				respBody, _ := io.ReadAll(resp.Body)
+				return nil, fmt.Errorf("Gemini API error: status %d, response: %s", resp.StatusCode, string(respBody))
+			}
+
+			var response struct {
+				Candidates []struct {
+					Content struct {
+						Parts []struct {
+							Text string `json:"text"`
+						} `json:"parts"`
+					} `json:"content"`
+				} `json:"candidates"`
+			}
+
+			if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+				return nil, fmt.Errorf("failed to decode Gemini API response: %w", err)
+			}
+			
+			if len(response.Candidates) > 0 && len(response.Candidates[0].Content.Parts) > 0 {
+				return response.Candidates[0].Content.Parts[0].Text, nil
+			}
+			return nil, fmt.Errorf("empty response from Gemini")
+		})
+	})
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to call Gemini API: %w", err)
+		return nil, err
 	}
-	defer resp.Body.Close()
+	rawText := result.(string)
 
-	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("Gemini API error: status %d, response: %s", resp.StatusCode, string(respBody))
-	}
+	jsonStr := rawText
+	jsonStr = strings.TrimPrefix(jsonStr, "```json")
+	jsonStr = strings.TrimSuffix(jsonStr, "```")
+	jsonStr = strings.TrimSpace(jsonStr)
 
-	var response struct {
-		Candidates []struct {
-			Content struct {
-				Parts []struct {
-					Text string `json:"text"`
-				} `json:"parts"`
-			} `json:"content"`
-		} `json:"candidates"`
+	var ocrResult OCRResult
+	if err := json.Unmarshal([]byte(jsonStr), &ocrResult); err != nil {
+		// Log the raw response if parsing fails
+		fmt.Printf("Raw Gemini Response: %s\n", jsonStr)
+		return nil, fmt.Errorf("failed to parse JSON from Gemini response: %w", err)
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, fmt.Errorf("failed to decode Gemini API response: %w", err)
-	}
-
-	if len(response.Candidates) > 0 && len(response.Candidates[0].Content.Parts) > 0 {
-		jsonStr := response.Candidates[0].Content.Parts[0].Text
-		var result OCRResult
-		if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
-			return nil, fmt.Errorf("failed to parse JSON from Gemini response: %w", err)
-		}
-		return &result, nil
-	}
-
-	return nil, fmt.Errorf("failed to parse Gemini response: unexpected format")
+	return &ocrResult, nil
 }
 
 func compressAndResizeImage(fileBytes []byte, maxDim int) ([]byte, string, error) {

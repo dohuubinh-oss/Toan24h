@@ -432,7 +432,7 @@ Cần certbot/letsencrypt hoặc mount certs cho production.
 | Priority | Task | File(s) |
 |----------|------|---------|
 | 🔴 | Move secrets to `.env`, remove hardcoded passwords | `docker-compose*.yml` |
-| 🔴 | Add Redis password, disable port expose | `docker-compose.yml`, `redis.go`, new `docker/redis.conf` |
+| 🔴 | Add Redis password, disable port expose (Lưu ý: Ẩn port Redis trong Docker compose, không bind ra ngoài) | `docker-compose.yml`, `redis.go`, new `docker/redis.conf` |
 | 🔴 | Add `ca-certificates` to backend runtime image | `docker/backend.Dockerfile` |
 | 🟠 | Add gzip, rate limit, proxy cache to Nginx | `nginx/nginx.conf` |
 | 🟠 | Add healthcheck to backend/frontend | `docker-compose.prod.yml` |
@@ -621,6 +621,9 @@ Mục tiêu: Hỗ trợ **1,000+ học sinh thi đồng thời** (spike traffic)
 ## 🔴 Critical - Backend Scaling & Connection Management
 
 ### 1. **Go Backend: Horizontal scaling + Connection Pool tuning**
+> [!NOTE]
+> **Ghi chú Development:** Quá trình Horizontal Scaling (Dockerize Backend/Frontend) và setup PgBouncer tạm thời được hoãn lại để ưu tiên tốc độ phát triển (hot-reload) ở local. Cần thực hiện các bước này khi chuẩn bị deploy lên Production.
+
 **Vấn đề:** Single backend instance, default GORM pool (max 10 connections) → bottleneck ở DB.
 **Fix:**
 

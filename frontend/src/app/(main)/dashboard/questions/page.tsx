@@ -188,6 +188,11 @@ function QuestionsPageContent() {
               startIndex={(parseInt(searchParams.get('page') || '1') - 1) * 10 + (totalVisible > 0 ? 1 : 0)} 
               endIndex={Math.min(parseInt(searchParams.get('page') || '1') * 10, totalVisible)} 
               itemName="câu hỏi"
+              onPageChange={(page) => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.set('page', page.toString());
+                router.push(`?${params.toString()}`, { scroll: true });
+              }}
             />
           </div>
         )}
