@@ -3,6 +3,7 @@ import { Edit2, Trash2, RefreshCw } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge, BadgeVariant } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { DIFFICULTY_BADGE_VARIANTS } from '@/lib/constants';
 
 export interface QuestionCardProps {
   id: string;
@@ -22,16 +23,6 @@ export interface QuestionCardProps {
 export default function QuestionCard({
   id, grade, topic, difficulty, isSelected, onToggle, children, index, typeQuestion, type, onEdit, onDelete
 }: QuestionCardProps) {
-  
-  const getDifficultyBadgeVariant = (diff: string): BadgeVariant => {
-    switch (diff) {
-      case 'Nhận biết': return 'diff-nb';
-      case 'Thông hiểu': return 'diff-th';
-      case 'Vận dụng': return 'diff-vd';
-      case 'Vận dụng cao': return 'diff-vdc';
-      default: return 'info';
-    }
-  };
 
   return (
     <Card className={`transition-all group overflow-hidden ${
@@ -67,7 +58,7 @@ export default function QuestionCard({
                 </Badge>
               )}
               {difficulty && (
-                <Badge variant={getDifficultyBadgeVariant(difficulty)} className="text-[10px] uppercase tracking-wider">
+                <Badge variant={DIFFICULTY_BADGE_VARIANTS[difficulty] || 'info'} className="text-[10px] uppercase tracking-wider">
                   {difficulty}
                 </Badge>
               )}

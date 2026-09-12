@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ChevronsLeft, ChevronLeft, ChevronsRight, ChevronRight } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
 
 interface PaginationProps {
   currentPage: number;
@@ -14,38 +15,11 @@ interface PaginationProps {
 }
 
 export function Pagination({ currentPage, totalPages, totalItems, startIndex, endIndex, itemName = "câu hỏi", onPageChange }: PaginationProps) {
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    onPageChange(page);
-  };
-
-  // Generate page numbers
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-    
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      let startPage = Math.max(1, currentPage - 2);
-      let endPage = Math.min(totalPages, currentPage + 2);
-
-      if (currentPage <= 3) {
-        endPage = 5;
-      } else if (currentPage >= totalPages - 2) {
-        startPage = totalPages - 4;
-      }
-
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
-      }
-    }
-    return pages;
-  };
-
-  const pages = getPageNumbers();
+  const { pages, handlePageChange } = usePagination({
+    currentPage,
+    totalPages,
+    onChange: onPageChange,
+  });
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

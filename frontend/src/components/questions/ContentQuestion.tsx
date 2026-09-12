@@ -22,6 +22,11 @@ interface ContentQuestionProps {
   
   // Group Question Props
   subQuestions?: SubQuestion[];
+
+  // Configurable Display Props
+  renderOptions?: (options: string[], correctAnswer?: string) => React.ReactNode;
+  optionLayout?: 'grid-2' | 'grid-1' | 'list';
+  showCorrectBadge?: boolean;
 }
 
 export default function ContentQuestion({
@@ -31,7 +36,10 @@ export default function ContentQuestion({
   correctAnswer,
   solution,
   isEssay,
-  subQuestions
+  subQuestions,
+  renderOptions,
+  optionLayout = 'grid-2',
+  showCorrectBadge = true
 }: ContentQuestionProps) {
   
   // Helper to render a single question's body (either standalone or sub-question)
@@ -63,19 +71,29 @@ export default function ContentQuestion({
 
           {/* Multiple Choice Options */}
           {!qIsEssay && qOptions && qOptions.length > 0 && (
-            <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 ${isSubQuestion ? '' : ''}`}>
-              {qOptions.map((opt, idx) => {
-                const label = String.fromCharCode(65 + idx); // A, B, C, D
-                const isCorrect = opt === qCorrect && qCorrect !== undefined && qCorrect !== '';
-                
-                return (
-                  <div key={idx} className={`flex items-center p-3 rounded-xl border transition-all ${isCorrect ? 'bg-primary/5 border-primary/30 shadow-sm font-bold text-primary' : 'bg-white border-slate-200'}`}>
-                    <span className={`font-bold mr-3 shrink-0 ${isCorrect ? 'text-primary' : 'text-slate-700'}`}>{label}.</span>
-                    <MathText content={opt} className={`text-sm ${isCorrect ? 'font-medium' : 'text-slate-700 font-medium'}`} />
-                    {isCorrect && <CheckCircle className="w-4 h-4 text-primary ml-auto shrink-0" />}
-                  </div>
-                );
-              })}
+            <div className="mb-6">
+              {renderOptions ? (
+                renderOptions(qOptions, qCorrect)
+              ) : (
+                <div className={`grid gap-3 ${
+                  optionLayout === 'grid-2' ? 'grid-cols-1 md:grid-cols-2' :
+                  optionLayout === 'grid-1' ? 'grid-cols-1' :
+                  'flex flex-col'
+                }`}>
+                  {qOptions.map((opt, idx) => {
+                    const label = String.fromCharCode(65 + idx); // A, B, C, D
+                    const isCorrect = showCorrectBadge && opt === qCorrect && qCorrect !== undefined && qCorrect !== '';
+                    
+                    return (
+                      <div key={idx} className={`flex items-center p-3 rounded-xl border transition-all ${isCorrect ? 'bg-primary/5 border-primary/30 shadow-sm font-bold text-primary' : 'bg-white border-slate-200'}`}>
+                        <span className={`font-bold mr-3 shrink-0 ${isCorrect ? 'text-primary' : 'text-slate-700'}`}>{label}.</span>
+                        <MathText content={opt} className={`text-sm ${isCorrect ? 'font-medium' : 'text-slate-700 font-medium'}`} />
+                        {isCorrect && <CheckCircle className="w-4 h-4 text-primary ml-auto shrink-0" />}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
