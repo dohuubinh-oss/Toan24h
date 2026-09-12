@@ -14,13 +14,18 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	// Cấu hình CORS
+	// Cấu hình CORS an toàn
 	r.Use(func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		if origin != "" {
+		allowedOrigin := "http://localhost:3000"
+		if config.Env != nil && config.Env.FrontendURL != "" {
+			allowedOrigin = config.Env.FrontendURL
+		}
+
+		if origin == allowedOrigin || origin == "http://localhost:3000" || origin == "http://127.0.0.1:3000" {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		} else {
-			c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+			c.Writer.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
 		}
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
@@ -48,7 +53,7 @@ func SetupRouter() *gin.Engine {
 	paymentHandler := handlers.NewPaymentHandler(config.DB)
 	webhookHandler := handlers.NewWebhookHandler(config.DB)
 
-	// API Version 1
+	// API Version 1 (Public Routes)
 	v1 := r.Group("/api/v1")
 	{
 		// Auth routes
@@ -60,31 +65,15 @@ func SetupRouter() *gin.Engine {
 
 		v1.POST("/webhooks/bank", webhookHandler.HandleSePayWebhook)
 
-		v1.POST("/uploads/temp", handlers.UploadTempImage)
-
-		v1.POST("/questions/bulk", handlers.BulkCreateQuestions)
+		// Read-only Public Questions
 		v1.GET("/questions", handlers.GetQuestions)
-
-		// Notifications
-		v1.GET("/notifications", handlers.GetMyNotifications)
-		v1.POST("/notifications/:id/read", handlers.MarkNotificationRead)
-		v1.DELETE("/notifications", handlers.DeleteAllNotifications)
-		v1.POST("/notifications/cheat", handlers.CreateCheatNotification)
-
 		v1.GET("/questions/:id", handlers.GetQuestionByID)
-		v1.PUT("/questions/:id", handlers.UpdateQuestion)
-		v1.DELETE("/questions/:id", handlers.DeleteQuestion)
-		v1.POST("/questions/:id/report", handlers.ReportQuestion)
 
-		// Exams
-		v1.POST("/exams", handlers.CreateExam)
+		// Read-only Public Exams
 		v1.GET("/exams", handlers.GetExams)
 		v1.GET("/exams/:id", handlers.GetExamByID)
-		v1.DELETE("/exams/:id", handlers.DeleteExam)
 
-		// Lectures
-		v1.POST("/lectures", lectureController.CreateLecture)
-		v1.PUT("/lectures/:id", lectureController.UpdateLecture)
+		// Read-only Public Lectures
 		v1.GET("/lectures", lectureController.GetAllLectures)
 		v1.GET("/lectures/grade/:grade", lectureController.GetLecturesByGrade)
 		v1.GET("/lectures/:id", lectureController.GetLectureByID)
@@ -111,6 +100,18 @@ func SetupRouter() *gin.Engine {
 			users.POST("/me/link-telegram", authHandler.LinkTelegram)
 		}
 
+		// Upload Temp Image (requires authenticated user)
+		protected.POST("/uploads/temp", handlers.UploadTempImage)
+
+		// Report question (authenticated student)
+		protected.POST("/questions/:id/report", handlers.ReportQuestion)
+
+		// Notifications
+		protected.GET("/notifications", handlers.GetMyNotifications)
+		protected.POST("/notifications/:id/read", handlers.MarkNotificationRead)
+		protected.DELETE("/notifications", handlers.DeleteAllNotifications)
+		protected.POST("/notifications/cheat", handlers.CreateCheatNotification)
+
 		payments := protected.Group("/payments")
 		{
 			payments.POST("/create", paymentHandler.CreatePayment)
@@ -126,18 +127,30 @@ func SetupRouter() *gin.Engine {
 		protected.GET("/exam-results/:id", handlers.GetExamResultByID)
 		protected.POST("/exam-results/:id/appeal", handlers.AppealExamResult)
 
-		appeals := protected.Group("/appeals")
-		appeals.Use(middleware.RoleMiddleware("admin"))
+		// Admin Management Group
+		admin := protected.Group("")
+		admin.Use(middleware.RoleMiddleware("admin"))
 		{
-			appeals.GET("", handlers.GetAppeals)
-			appeals.POST("/:id/resolve", handlers.ResolveAppeal)
-		}
+			// Questions admin
+			admin.POST("/questions/bulk", handlers.BulkCreateQuestions)
+			admin.PUT("/questions/:id", handlers.UpdateQuestion)
+			admin.DELETE("/questions/:id", handlers.DeleteQuestion)
 
-		reportedQuestions := protected.Group("/questions/reported")
-		reportedQuestions.Use(middleware.RoleMiddleware("admin"))
-		{
-			reportedQuestions.GET("", handlers.GetReportedQuestions)
-			reportedQuestions.POST("/:id/resolve", handlers.ResolveReportQuestion)
+			// Exams admin
+			admin.POST("/exams", handlers.CreateExam)
+			admin.DELETE("/exams/:id", handlers.DeleteExam)
+
+			// Lectures admin
+			admin.POST("/lectures", lectureController.CreateLecture)
+			admin.PUT("/lectures/:id", lectureController.UpdateLecture)
+
+			// Appeals admin
+			admin.GET("/appeals", handlers.GetAppeals)
+			admin.POST("/appeals/:id/resolve", handlers.ResolveAppeal)
+
+			// Reported questions admin
+			admin.GET("/questions/reported", handlers.GetReportedQuestions)
+			admin.POST("/questions/reported/:id/resolve", handlers.ResolveReportQuestion)
 		}
 
 		protected.POST("/ocr", ocrController.ExtractText)

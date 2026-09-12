@@ -5,11 +5,13 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
-	"testing"
 	"os"
+	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/routes"
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
 func TestUploadTempImage(t *testing.T) {
@@ -32,6 +34,9 @@ func TestUploadTempImage(t *testing.T) {
 
 	req, _ := http.NewRequest("POST", "/api/v1/uploads/temp", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	userToken, _ := utils.GenerateAccessToken(uuid.New(), "student", "12")
+	req.Header.Set("Authorization", "Bearer "+userToken)
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)

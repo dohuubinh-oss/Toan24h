@@ -99,7 +99,7 @@ const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomAction }: {
 
   if (mathOnlyToolbar) {
     return (
-      <div className="flex items-center gap-1 p-1 bg-slate-50 border-b border-slate-200 rounded-t-xl overflow-x-auto">
+      <div className="flex items-center gap-1 p-1 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 rounded-t-xl overflow-x-auto">
         <button
           onClick={() => editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()}
           className={`${btnClass} text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0`}
@@ -112,7 +112,7 @@ const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomAction }: {
   }
 
   return (
-    <div className="flex items-center justify-between gap-1 p-1 bg-slate-50 border-b border-slate-200 rounded-t-xl overflow-x-auto">
+    <div className="flex items-center justify-between gap-1 p-1 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 rounded-t-xl overflow-x-auto">
       <div className="flex items-center gap-1">
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -268,7 +268,14 @@ export default function RichTextEditor({
   rightCustomAction
 }: RichTextEditorProps) {
   const lastEmittedHTML = useRef(content || '');
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const processedInitialContent = preprocessMath(content || '');
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const editor = useEditor({
     editable: !readOnly,
@@ -295,8 +302,17 @@ export default function RichTextEditor({
       })
     ],
     content: processedInitialContent,
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        lastEmittedHTML.current = html;
+        onChange(html);
+      }, 500); // Debounce 500ms
+    },
     onBlur: ({ editor }) => {
       const html = editor.getHTML();
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       lastEmittedHTML.current = html;
       onChange(html);
     },
@@ -325,7 +341,7 @@ export default function RichTextEditor({
   }, [content, editor])
 
   return (
-    <div className={`flex flex-col transition-all overflow-hidden ${inline ? 'bg-transparent' : 'border border-slate-200 rounded-xl bg-slate-50 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5'} ${className}`}>
+    <div className={`flex flex-col transition-all overflow-hidden ${inline ? 'bg-transparent' : 'border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5'} ${className}`}>
       {!readOnly && !hideToolbar && (
         <MenuBar 
           editor={editor} 

@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"os"
 	"regexp"
 	"time"
 
@@ -33,6 +35,17 @@ type SePayWebhookPayload struct {
 }
 
 func (h *WebhookHandler) HandleSePayWebhook(c *gin.Context) {
+	// Verify SePay Webhook Authorization Token if configured
+	expectedToken := os.Getenv("SEPAY_WEBHOOK_TOKEN")
+	if expectedToken != "" {
+		authHeader := c.GetHeader("Authorization")
+		secretHeader := c.GetHeader("X-SePay-Secret")
+		if authHeader != "Bearer "+expectedToken && secretHeader != expectedToken {
+			c.JSON(401, gin.H{"error": "Unauthorized webhook request"})
+			return
+		}
+	}
+
 	var payload SePayWebhookPayload
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(400, gin.H{"error": "Invalid payload"})
@@ -52,38 +65,49 @@ func (h *WebhookHandler) HandleSePayWebhook(c *gin.Context) {
 		return
 	}
 
-	var tx models.Transaction
-	if err := h.DB.First(&tx, "id = ?", match).Error; err != nil {
-		c.JSON(200, gin.H{"message": "Transaction not found"})
-		return
-	}
-
-	if tx.Status == "completed" {
-		c.JSON(200, gin.H{"message": "Transaction already completed"})
-		return
-	}
-
-	if tx.Amount != payload.TransferAmount {
-		c.JSON(200, gin.H{"message": "Amount mismatch"})
-		return
-	}
-
-	// Update Transaction
-	tx.Status = "completed"
-	h.DB.Save(&tx)
-
-	// Update User ExpiresAt
-	var user models.User
-	if err := h.DB.First(&user, "id = ?", tx.UserID).Error; err == nil {
-		now := time.Now()
-		if user.ExpiresAt != nil && user.ExpiresAt.After(now) {
-			newTime := user.ExpiresAt.AddDate(0, 3, 0)
-			user.ExpiresAt = &newTime
-		} else {
-			newTime := now.AddDate(0, 3, 0)
-			user.ExpiresAt = &newTime
+	// Wrap in DB Transaction to prevent race conditions (double redeem)
+	err := h.DB.Transaction(func(db *gorm.DB) error {
+		var tx models.Transaction
+		if err := db.Set("gorm:query_option", "FOR UPDATE").First(&tx, "id = ?", match).Error; err != nil {
+			return err
 		}
-		h.DB.Save(&user)
+
+		if tx.Status == "completed" {
+			return fmt.Errorf("transaction already completed")
+		}
+
+		if tx.Amount != payload.TransferAmount {
+			return fmt.Errorf("amount mismatch")
+		}
+
+		// Update Transaction Status
+		tx.Status = "completed"
+		if err := db.Save(&tx).Error; err != nil {
+			return err
+		}
+
+		// Update User ExpiresAt
+		var user models.User
+		if err := db.First(&user, "id = ?", tx.UserID).Error; err == nil {
+			now := time.Now()
+			if user.ExpiresAt != nil && user.ExpiresAt.After(now) {
+				newTime := user.ExpiresAt.AddDate(0, 3, 0)
+				user.ExpiresAt = &newTime
+			} else {
+				newTime := now.AddDate(0, 3, 0)
+				user.ExpiresAt = &newTime
+			}
+			if err := db.Save(&user).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		c.JSON(200, gin.H{"message": err.Error()})
+		return
 	}
 
 	c.JSON(200, gin.H{"success": true})

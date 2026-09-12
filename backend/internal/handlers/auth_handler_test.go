@@ -132,6 +132,7 @@ func TestAuthRegisterAndLogin(t *testing.T) {
 	refreshBodyBytes, _ := json.Marshal(refreshBody)
 	refreshReq, _ := http.NewRequest("POST", "/api/v1/auth/refresh", bytes.NewBuffer(refreshBodyBytes))
 	refreshReq.Header.Set("Content-Type", "application/json")
+	refreshReq.AddCookie(&http.Cookie{Name: "refreshToken", Value: refreshToken})
 	refreshW := httptest.NewRecorder()
 	r.ServeHTTP(refreshW, refreshReq)
 

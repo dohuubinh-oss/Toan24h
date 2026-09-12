@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"log"
 	"os"
 	"time"
 
@@ -23,7 +24,8 @@ type Claims struct {
 func getJWTSecret() []byte {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "default_secret_key" // For dev if not set
+		log.Println("[WARNING] JWT_SECRET is not configured! Using un-secure fallback key.")
+		secret = "default_secret_key_change_in_production"
 	}
 	return []byte(secret)
 }

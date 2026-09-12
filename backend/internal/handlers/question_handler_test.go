@@ -10,9 +10,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/routes"
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -96,6 +98,11 @@ func TestQuestionAPI_CRUD(t *testing.T) {
 	
 	req, _ := http.NewRequest("POST", "/api/v1/questions/bulk", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+
+	// Generate admin JWT for protected admin endpoint
+	adminToken, _ := utils.GenerateAccessToken(uuid.New(), "admin", "12")
+	req.Header.Set("Authorization", "Bearer "+adminToken)
+
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -146,6 +153,7 @@ func TestQuestionAPI_CRUD(t *testing.T) {
 	updateBody, _ := json.Marshal(updateData)
 	req, _ = http.NewRequest("PUT", "/api/v1/questions/"+qID, bytes.NewBuffer(updateBody))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+adminToken)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -155,6 +163,7 @@ func TestQuestionAPI_CRUD(t *testing.T) {
 
 	// 5. DELETE /api/v1/questions/:id (Xóa)
 	req, _ = http.NewRequest("DELETE", "/api/v1/questions/"+qID, nil)
+	req.Header.Set("Authorization", "Bearer "+adminToken)
 	w = httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 

@@ -45,10 +45,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// Always default public registration to student role to prevent privilege escalation
 	role := "student"
-	if req.Role != "" {
-		role = req.Role
-	}
 
 	user := models.User{
 		Email:        req.Email,
@@ -114,7 +112,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.SetCookie("userGrade", user.Grade, 24*60*60, "/", "", false, false)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successful",
+		"message":      "Login successful",
+		"accessToken":  accessToken,
+		"refreshToken": refreshToken,
 		"user": gin.H{
 			"id":        user.ID,
 			"email":     user.Email,
@@ -154,6 +154,8 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	}
 
 	c.SetCookie("accessToken", accessToken, 24*60*60, "/", "", false, true)
+	c.SetCookie("userRole", user.Role, 24*60*60, "/", "", false, false)
+	c.SetCookie("userGrade", user.Grade, 24*60*60, "/", "", false, false)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Token refreshed successfully",

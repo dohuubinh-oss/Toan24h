@@ -80,6 +80,20 @@ func SubmitExam(c *gin.Context) {
 		return
 	}
 
+	if studentID != nil && config.RedisClient != nil {
+		lockKey := fmt.Sprintf("lock:submit_exam:%s:%s", studentID.String(), examIDStr)
+		ctx := c.Request.Context()
+		acquired, err := config.RedisClient.SetNX(ctx, lockKey, "locked", 15*time.Second).Result()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Lỗi hệ thống khi khóa yêu cầu nộp bài."})
+			return
+		}
+		if !acquired {
+			c.JSON(http.StatusTooManyRequests, gin.H{"status": "error", "message": "Hệ thống đang xử lý bài thi của bạn. Vui lòng không nộp nhiều lần."})
+			return
+		}
+	}
+
 	now := time.Now()
 	var submission models.Submission
 	var isUpdate bool
@@ -165,6 +179,8 @@ func processExamGrading(submissionID uuid.UUID) {
 	var allQuestions []models.Question
 	config.DB.Where("id IN ? OR parent_id IN ?", []string(exam.QuestionIDs), []string(exam.QuestionIDs)).Find(&allQuestions)
 
+	var essayInputs []services.EssayBatchInput
+	var reasoningInputs []services.ReasoningBatchInput
 	var totalScore float64
 
 	for _, question := range allQuestions {
@@ -178,8 +194,8 @@ func processExamGrading(submissionID uuid.UUID) {
 		if !exists {
 			// Initialize empty answer
 			ans = models.QuestionAnswer{
-				Score: 0,
-				IsCorrect: false,
+				Score:         0,
+				IsCorrect:     false,
 				StudentAnswer: "",
 			}
 		}
@@ -189,23 +205,16 @@ func processExamGrading(submissionID uuid.UUID) {
 				ans.Score = 0
 				ans.IsCorrect = false
 				ans.AIExplanation = "Không có câu trả lời."
+				answersMap[qID] = ans
 			} else {
-				aiResult, err := services.GradeEssayWithGemini(
-					question.Content,
-					question.CorrectAnswer,
-					ans.StudentAnswer,
-					float64(question.DifficultyPoint),
-				)
-				if err == nil && aiResult != nil {
-					ans.Score = aiResult.Score
-					ans.AIExplanation = aiResult.Explanation
-					ans.ErrorLocation = aiResult.ErrorLocation
-					if aiResult.Score > 0 {
-						ans.IsCorrect = true
-					}
-				}
+				essayInputs = append(essayInputs, services.EssayBatchInput{
+					ID:              qID,
+					QuestionContent: question.Content,
+					CorrectAnswer:   question.CorrectAnswer,
+					StudentAnswer:   ans.StudentAnswer,
+					MaxScore:        float64(question.DifficultyPoint),
+				})
 			}
-			totalScore += ans.Score
 		} else {
 			re := regexp.MustCompile(`<[^>]*>`)
 			cleanStudentAns := strings.TrimSpace(re.ReplaceAllString(ans.StudentAnswer, ""))
@@ -219,29 +228,58 @@ func processExamGrading(submissionID uuid.UUID) {
 				ans.Score = 0
 			}
 
-			// Luôn đánh giá tư duy nếu học sinh có nhập lời giải thích (không phân biệt VIP)
-			if ans.StudentExplanation != "" {
-				aiReasoning, err := services.EvaluateReasoningWithGemini(
-					question.Content,
-					question.CorrectAnswer,
-					ans.StudentExplanation,
-				)
-				if err == nil && aiReasoning != nil {
-					ans.ReasoningScore = aiReasoning.Score
-					ans.AIReasoningRemark = aiReasoning.Explanation
-				}
-			}
-
 			// Gán AI Explanation từ SolutionGuide nếu có
 			if question.SolutionGuide != "" {
 				ans.AIExplanation = question.SolutionGuide
 			}
 
 			totalScore += ans.Score
+			answersMap[qID] = ans
+
+			// Đánh giá tư duy nếu học sinh nhập lời giải thích
+			if ans.StudentExplanation != "" {
+				reasoningInputs = append(reasoningInputs, services.ReasoningBatchInput{
+					ID:                 qID,
+					QuestionContent:    question.Content,
+					CorrectAnswer:      question.CorrectAnswer,
+					StudentExplanation: ans.StudentExplanation,
+				})
+			}
 		}
-		
-		// Update map reference
-		answersMap[qID] = ans
+	}
+
+	// BATCH CALLS
+	if len(essayInputs) > 0 {
+		essayResults, err := services.GradeEssayBatchWithGemini(essayInputs)
+		if err == nil {
+			for _, res := range essayResults {
+				ans := answersMap[res.ID]
+				ans.Score = res.Score
+				ans.AIExplanation = res.Explanation
+				ans.ErrorLocation = res.ErrorLocation
+				if res.Score > 0 {
+					ans.IsCorrect = true
+				}
+				totalScore += ans.Score
+				answersMap[res.ID] = ans
+			}
+		} else {
+			fmt.Printf("Batch grading failed: %v\n", err)
+		}
+	}
+
+	if len(reasoningInputs) > 0 {
+		reasoningResults, err := services.EvaluateReasoningBatchWithGemini(reasoningInputs)
+		if err == nil {
+			for _, res := range reasoningResults {
+				ans := answersMap[res.ID]
+				ans.ReasoningScore = res.Score
+				ans.AIReasoningRemark = res.Explanation
+				answersMap[res.ID] = ans
+			}
+		} else {
+			fmt.Printf("Batch reasoning failed: %v\n", err)
+		}
 	}
 
 	updatedJSONBytes, _ := json.Marshal(answersMap)

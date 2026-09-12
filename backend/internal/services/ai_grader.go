@@ -178,3 +178,214 @@ Trả về kết quả ĐÚNG định dạng JSON sau: { "score": number, "expla
 
 	return nil, fmt.Errorf("Failed to parse Gemini response")
 }
+
+// BATCH PROCESSING
+type EssayBatchInput struct {
+	ID              string  `json:"id"`
+	QuestionContent string  `json:"questionContent"`
+	CorrectAnswer   string  `json:"correctAnswer"`
+	StudentAnswer   string  `json:"studentAnswer"`
+	MaxScore        float64 `json:"maxScore"`
+}
+
+type EssayBatchResult struct {
+	ID            string  `json:"id"`
+	Score         float64 `json:"score"`
+	Explanation   string  `json:"explanation"`
+	ErrorLocation string  `json:"errorLocation"`
+}
+
+func GradeEssayBatchWithGemini(inputs []EssayBatchInput) ([]EssayBatchResult, error) {
+	if len(inputs) == 0 {
+		return nil, nil
+	}
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
+	}
+
+	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=" + apiKey
+
+	promptBytes, _ := json.MarshalIndent(inputs, "", "  ")
+	prompt := fmt.Sprintf(`Bạn là một giáo viên Toán khó tính nhưng công tâm. Nhiệm vụ của bạn là chấm điểm một HỆ THỐNG CÁC BÀI LÀM TỰ LUẬN của học sinh.
+Dưới đây là danh sách các bài làm, mỗi bài có một "id", đề bài "questionContent", đáp án "correctAnswer", bài làm của học sinh "studentAnswer", và điểm tối đa "maxScore".
+
+Danh sách bài làm:
+%s
+
+Yêu cầu:
+1. Đối chiếu bài làm của học sinh với đáp án chuẩn.
+2. Đưa ra điểm số (từ 0 đến maxScore tương ứng). Điểm có thể lẻ đến 0.25.
+3. Nhận xét ngắn gọn. NẾU HỌC SINH LÀM SAI, trích dẫn lại câu sai vào ErrorLocation.
+4. KHÔNG chấm điểm bài lạc đề (chấm 0 điểm).
+Trả về mảng JSON kết quả tương ứng với danh sách đầu vào.
+`, string(promptBytes))
+
+	payload := map[string]interface{}{
+		"contents": []map[string]interface{}{
+			{
+				"parts": []map[string]interface{}{
+					{"text": prompt},
+				},
+			},
+		},
+		"generationConfig": map[string]interface{}{
+			"responseMimeType": "application/json",
+			"maxOutputTokens":  2000,
+			"responseSchema": map[string]interface{}{
+				"type": "array",
+				"items": map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"id":            map[string]interface{}{"type": "string"},
+						"score":         map[string]interface{}{"type": "number"},
+						"explanation":   map[string]interface{}{"type": "string"},
+						"errorLocation": map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"id", "score", "explanation"},
+				},
+			},
+		},
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Gemini API error: status %d", resp.StatusCode)
+	}
+
+	var res struct {
+		Candidates []struct {
+			Content struct {
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
+			} `json:"content"`
+		} `json:"candidates"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return nil, err
+	}
+
+	if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
+		text := res.Candidates[0].Content.Parts[0].Text
+		var results []EssayBatchResult
+		if err := json.Unmarshal([]byte(text), &results); err == nil {
+			return results, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Failed to parse Gemini response")
+}
+
+type ReasoningBatchInput struct {
+	ID                 string `json:"id"`
+	QuestionContent    string `json:"questionContent"`
+	CorrectAnswer      string `json:"correctAnswer"`
+	StudentExplanation string `json:"studentExplanation"`
+}
+
+type ReasoningBatchResult struct {
+	ID          string  `json:"id"`
+	Score       float64 `json:"score"`
+	Explanation string  `json:"explanation"`
+}
+
+func EvaluateReasoningBatchWithGemini(inputs []ReasoningBatchInput) ([]ReasoningBatchResult, error) {
+	if len(inputs) == 0 {
+		return nil, nil
+	}
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
+	}
+
+	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=" + apiKey
+
+	promptBytes, _ := json.MarshalIndent(inputs, "", "  ")
+	prompt := fmt.Sprintf(`Bạn là một giáo viên Toán tận tâm. Dưới đây là danh sách các lời giải thích tư duy của học sinh cho nhiều câu hỏi khác nhau.
+Danh sách giải thích:
+%s
+
+Yêu cầu:
+1. Đánh giá sự logic, chính xác và mức độ hiểu bài.
+2. Chấm điểm tư duy từ 0 đến 10 (10: Hoàn hảo; 7-9: Hiểu đúng; 4-6: Có nhầm lẫn; 1-3: Sai; 0: Đoán mò).
+3. Nhận xét súc tích chỉ rõ điểm tốt/lỗi sai.
+Trả về mảng JSON kết quả tương ứng.
+`, string(promptBytes))
+
+	payload := map[string]interface{}{
+		"contents": []map[string]interface{}{
+			{
+				"parts": []map[string]interface{}{
+					{"text": prompt},
+				},
+			},
+		},
+		"generationConfig": map[string]interface{}{
+			"responseMimeType": "application/json",
+			"maxOutputTokens":  2000,
+			"responseSchema": map[string]interface{}{
+				"type": "array",
+				"items": map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"id":          map[string]interface{}{"type": "string"},
+						"score":       map[string]interface{}{"type": "number"},
+						"explanation": map[string]interface{}{"type": "string"},
+					},
+					"required": []string{"id", "score", "explanation"},
+				},
+			},
+		},
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Gemini API error: status %d", resp.StatusCode)
+	}
+
+	var res struct {
+		Candidates []struct {
+			Content struct {
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
+			} `json:"content"`
+		} `json:"candidates"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return nil, err
+	}
+
+	if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
+		text := res.Candidates[0].Content.Parts[0].Text
+		var results []ReasoningBatchResult
+		if err := json.Unmarshal([]byte(text), &results); err == nil {
+			return results, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Failed to parse Gemini response")
+}

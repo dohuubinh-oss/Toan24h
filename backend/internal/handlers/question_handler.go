@@ -57,7 +57,13 @@ func processImageUrl(originalUrl string, grade int) string {
 		return originalUrl
 	}
 
-	fileName := strings.TrimPrefix(originalUrl, "/uploads/temp/")
+	rawFileName := strings.TrimPrefix(originalUrl, "/uploads/temp/")
+	// Sanitize fileName using filepath.Base to prevent path traversal (e.g., ../)
+	fileName := filepath.Base(rawFileName)
+	if fileName == "." || fileName == "/" || fileName == ".." {
+		return originalUrl
+	}
+
 	sourcePath := filepath.Join(".", "uploads", "temp", fileName)
 
 	// Thư mục đích: uploads/questions/{grade}
@@ -339,7 +345,23 @@ func UpdateQuestion(c *gin.Context) {
 	updateData.DeletedAt = q.DeletedAt
 	updateData.ParentID = q.ParentID
 
-	// Save all fields (including empty strings/0) except associations
+	// Ensure JSONB fields are valid JSON strings
+	if updateData.Tags == "" {
+		if q.Tags != "" {
+			updateData.Tags = q.Tags
+		} else {
+			updateData.Tags = "[]"
+		}
+	}
+	if updateData.Options == "" {
+		if q.Options != "" {
+			updateData.Options = q.Options
+		} else {
+			updateData.Options = "[]"
+		}
+	}
+
+	// Save all fields except associations
 	if err := config.DB.Omit("SubQuestions").Save(&updateData).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: err.Error()})
 		return

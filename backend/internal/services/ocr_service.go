@@ -8,6 +8,10 @@ import (
 	"net/http"
 	"os"
 	"encoding/base64"
+	"image"
+	"image/jpeg"
+	_ "image/png" // register PNG format
+	"golang.org/x/image/draw"
 )
 
 type OCRResult struct {
@@ -29,8 +33,15 @@ Yêu cầu:
 2. Các công thức toán học phải được viết bằng cú pháp LaTeX chuẩn. Ví dụ phân số là \frac{a}{b}, căn bậc hai là \sqrt{a}, số mũ là x^2. Đặt công thức toán học trong cặp dấu $...$ nếu là trong dòng, hoặc $$...$$ nếu là đoạn riêng.
 3. CHỈ trả về nội dung nhận dạng được, tuyệt đối KHÔNG thêm bất kỳ văn bản giải thích, chào hỏi hay bình luận nào khác. Nếu không nhận dạng được gì, hãy trả về chuỗi rỗng.`
 
-	// Base64 encode the fileBytes
-	base64Data := base64.StdEncoding.EncodeToString(fileBytes)
+	compressedBytes, compressedMimeType, err := compressAndResizeImage(fileBytes, 1024)
+	if err != nil {
+		// Fallback to original if compression fails
+		compressedBytes = fileBytes
+		compressedMimeType = mimeType
+	}
+
+	// Base64 encode the compressedBytes
+	base64Data := base64.StdEncoding.EncodeToString(compressedBytes)
 
 	// Construct request body for Gemini API with inline image data
 	requestBody := map[string]interface{}{
@@ -42,11 +53,24 @@ Yêu cầu:
 					},
 					{
 						"inlineData": map[string]interface{}{
-							"mimeType": mimeType,
+							"mimeType": compressedMimeType,
 							"data":     base64Data,
 						},
 					},
 				},
+			},
+		},
+		"generationConfig": map[string]interface{}{
+			"maxOutputTokens":  1000,
+			"responseMimeType": "application/json",
+			"responseSchema": map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"text": map[string]interface{}{
+						"type": "string",
+					},
+				},
+				"required": []string{"text"},
 			},
 		},
 	}
@@ -89,10 +113,50 @@ Yêu cầu:
 	}
 
 	if len(response.Candidates) > 0 && len(response.Candidates[0].Content.Parts) > 0 {
-		return &OCRResult{
-			Text: response.Candidates[0].Content.Parts[0].Text,
-		}, nil
+		jsonStr := response.Candidates[0].Content.Parts[0].Text
+		var result OCRResult
+		if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
+			return nil, fmt.Errorf("failed to parse JSON from Gemini response: %w", err)
+		}
+		return &result, nil
 	}
 
 	return nil, fmt.Errorf("failed to parse Gemini response: unexpected format")
+}
+
+func compressAndResizeImage(fileBytes []byte, maxDim int) ([]byte, string, error) {
+	img, _, err := image.Decode(bytes.NewReader(fileBytes))
+	if err != nil {
+		return nil, "", err
+	}
+
+	bounds := img.Bounds()
+	width := bounds.Dx()
+	height := bounds.Dy()
+
+	if width > maxDim || height > maxDim {
+		// Calculate new dimensions
+		ratio := float64(width) / float64(height)
+		var newWidth, newHeight int
+		if width > height {
+			newWidth = maxDim
+			newHeight = int(float64(maxDim) / ratio)
+		} else {
+			newHeight = maxDim
+			newWidth = int(float64(maxDim) * ratio)
+		}
+
+		dst := image.NewRGBA(image.Rect(0, 0, newWidth, newHeight))
+		draw.BiLinear.Scale(dst, dst.Bounds(), img, bounds, draw.Over, nil)
+		img = dst
+	}
+
+	buf := new(bytes.Buffer)
+	// Compress as JPEG
+	err = jpeg.Encode(buf, img, &jpeg.Options{Quality: 80})
+	if err != nil {
+		return nil, "", err
+	}
+
+	return buf.Bytes(), "image/jpeg", nil
 }
