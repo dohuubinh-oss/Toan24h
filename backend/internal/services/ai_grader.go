@@ -54,12 +54,61 @@ func GradeEssayBatchWithGemini(input EssayBatchInput) (*EssayBatchResponse, erro
 	if len(input.Questions) == 0 {
 		return nil, nil
 	}
+
+	chunkSize := 5
+	var combinedResults []EssayQuestionResult
+	var feedbacks []string
+	var totalEssayScore float64
+	var maxTotalEssayScore float64
+
+	for i := 0; i < len(input.Questions); i += chunkSize {
+		end := i + chunkSize
+		if end > len(input.Questions) {
+			end = len(input.Questions)
+		}
+
+		chunkInput := input
+		chunkInput.Questions = input.Questions[i:end]
+
+		resp, err := gradeEssayChunk(chunkInput)
+		if err != nil {
+			fmt.Printf("Warning: Essay chunk [%d:%d] grading error: %v\n", i, end, err)
+			continue
+		}
+		if resp != nil {
+			if resp.OverallEssayFeedback != "" {
+				feedbacks = append(feedbacks, resp.OverallEssayFeedback)
+			}
+			for _, qRes := range resp.QuestionResults {
+				combinedResults = append(combinedResults, qRes)
+				totalEssayScore += qRes.Score
+				maxTotalEssayScore += qRes.MaxScore
+			}
+		}
+	}
+
+	return &EssayBatchResponse{
+		SubmissionID:         input.SubmissionID,
+		ExamID:               input.ExamID,
+		StudentID:            input.StudentID,
+		OverallEssayFeedback: strings.Join(feedbacks, " "),
+		TotalEssayScore:      totalEssayScore,
+		MaxTotalEssayScore:   maxTotalEssayScore,
+		QuestionResults:      combinedResults,
+	}, nil
+}
+
+func gradeEssayChunk(input EssayBatchInput) (*EssayBatchResponse, error) {
 	apiKey := os.Getenv("GEMINI_API_KEY")
 	if apiKey == "" {
 		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
 	}
 
-	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=" + apiKey
+	model := os.Getenv("GEMINI_MODEL")
+	if model == "" {
+		model = "gemini-3.6-flash"
+	}
+	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
 
 	promptBytes, _ := json.MarshalIndent(input, "", "  ")
 	prompt := fmt.Sprintf(`Bạn là một Giám khảo và Giáo viên Toán học cấp trung học chuyên nghiệp. 
@@ -111,7 +160,7 @@ BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Tr�
 		},
 		"generationConfig": map[string]interface{}{
 			"responseMimeType": "application/json",
-			"maxOutputTokens":  4000,
+			"maxOutputTokens":  8192,
 			"responseSchema": map[string]interface{}{
 				"type": "OBJECT",
 				"properties": map[string]interface{}{
@@ -176,11 +225,17 @@ BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Tr�
 
 			if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
 				text := res.Candidates[0].Content.Parts[0].Text
-				text = strings.TrimPrefix(text, "```json")
-				text = strings.TrimSuffix(text, "```")
+				text = strings.TrimSpace(text)
+				if startIdx := strings.Index(text, "{"); startIdx != -1 {
+					if endIdx := strings.LastIndex(text, "}"); endIdx != -1 && endIdx > startIdx {
+						text = text[startIdx : endIdx+1]
+					}
+				}
 				var response EssayBatchResponse
 				if err := json.Unmarshal([]byte(text), &response); err == nil {
 					return &response, nil
+				} else {
+					fmt.Printf("GradeEssayBatch JSON unmarshal error: %v\nRaw Text: %s\n", err, text)
 				}
 			}
 
@@ -233,12 +288,53 @@ func EvaluateReasoningBatchWithGemini(input ReasoningBatchInput) (*ReasoningBatc
 	if len(input.Questions) == 0 {
 		return nil, nil
 	}
+
+	chunkSize := 10
+	var combinedResults []ReasoningQuestionResult
+	var feedbacks []string
+
+	for i := 0; i < len(input.Questions); i += chunkSize {
+		end := i + chunkSize
+		if end > len(input.Questions) {
+			end = len(input.Questions)
+		}
+
+		chunkInput := input
+		chunkInput.Questions = input.Questions[i:end]
+
+		resp, err := evaluateReasoningChunk(chunkInput)
+		if err != nil {
+			fmt.Printf("Warning: Reasoning chunk [%d:%d] evaluation error: %v\n", i, end, err)
+			continue
+		}
+		if resp != nil {
+			if resp.OverallComprehensionFeedback != "" {
+				feedbacks = append(feedbacks, resp.OverallComprehensionFeedback)
+			}
+			combinedResults = append(combinedResults, resp.QuestionResults...)
+		}
+	}
+
+	return &ReasoningBatchResponse{
+		SubmissionID:                 input.SubmissionID,
+		ExamID:                       input.ExamID,
+		StudentID:                    input.StudentID,
+		OverallComprehensionFeedback: strings.Join(feedbacks, " "),
+		QuestionResults:              combinedResults,
+	}, nil
+}
+
+func evaluateReasoningChunk(input ReasoningBatchInput) (*ReasoningBatchResponse, error) {
 	apiKey := os.Getenv("GEMINI_API_KEY")
 	if apiKey == "" {
 		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
 	}
 
-	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=" + apiKey
+	model := os.Getenv("GEMINI_MODEL")
+	if model == "" {
+		model = "gemini-3.6-flash"
+	}
+	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
 
 	promptBytes, _ := json.MarshalIndent(input, "", "  ")
 	prompt := fmt.Sprintf(`Bạn là một Chuyên gia Đánh giá Tư duy Toán học. 
@@ -291,7 +387,7 @@ BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Tr�
 		},
 		"generationConfig": map[string]interface{}{
 			"responseMimeType": "application/json",
-			"maxOutputTokens":  4000,
+			"maxOutputTokens":  8192,
 			"responseSchema": map[string]interface{}{
 				"type": "OBJECT",
 				"properties": map[string]interface{}{
@@ -352,11 +448,17 @@ BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Tr�
 
 			if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
 				text := res.Candidates[0].Content.Parts[0].Text
-				text = strings.TrimPrefix(text, "```json")
-				text = strings.TrimSuffix(text, "```")
+				text = strings.TrimSpace(text)
+				if startIdx := strings.Index(text, "{"); startIdx != -1 {
+					if endIdx := strings.LastIndex(text, "}"); endIdx != -1 && endIdx > startIdx {
+						text = text[startIdx : endIdx+1]
+					}
+				}
 				var response ReasoningBatchResponse
 				if err := json.Unmarshal([]byte(text), &response); err == nil {
 					return &response, nil
+				} else {
+					fmt.Printf("EvaluateReasoningBatch JSON unmarshal error: %v\nRaw Text: %s\n", err, text)
 				}
 			}
 
