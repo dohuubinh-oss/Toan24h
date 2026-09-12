@@ -148,6 +148,10 @@ func SetupRouter() *gin.Engine {
 			admin.GET("/appeals", handlers.GetAppeals)
 			admin.POST("/appeals/:id/resolve", handlers.ResolveAppeal)
 
+			// Submissions needs review admin
+			admin.GET("/submissions/needs-review", handlers.GetNeedsReviewSubmissions)
+			admin.POST("/submissions/:id/grade-review", handlers.ResolveSubmissionReview)
+
 			// Reported questions admin
 			admin.GET("/questions/reported", handlers.GetReportedQuestions)
 			admin.POST("/questions/reported/:id/resolve", handlers.ResolveReportQuestion)

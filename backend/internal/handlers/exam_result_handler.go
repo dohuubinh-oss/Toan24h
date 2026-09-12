@@ -585,3 +585,124 @@ func ResolveAppeal(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Đã duyệt kháng cáo"})
 }
+
+type NeedsReviewResponse struct {
+	SubmissionID string    `json:"submissionId"`
+	ExamID       string    `json:"examId"`
+	ExamName     string    `json:"examName"`
+	StudentID    string    `json:"studentId"`
+	StudentName  string    `json:"studentName"`
+	StudentEmail string    `json:"studentEmail"`
+	SubmittedAt  time.Time `json:"submittedAt"`
+	Status       string    `json:"status"`
+}
+
+func GetNeedsReviewSubmissions(c *gin.Context) {
+	var submissions []models.Submission
+	if err := config.DB.Where("status = ?", models.StatusNeedsReview).Order("created_at desc").Find(&submissions).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch submissions for review"})
+		return
+	}
+
+	var response []NeedsReviewResponse
+	for _, sub := range submissions {
+		var exam models.Exam
+		config.DB.First(&exam, "id = ?", sub.ExamID)
+
+		studentName := "Học sinh"
+		studentEmail := ""
+		if sub.UserID != nil {
+			var user models.User
+			if err := config.DB.First(&user, "id = ?", *sub.UserID).Error; err == nil {
+				studentName = user.FullName
+				studentEmail = user.Email
+			}
+		}
+
+		submittedTime := time.Now()
+		if sub.SubmittedAt != nil {
+			submittedTime = *sub.SubmittedAt
+		}
+
+		studentIDStr := ""
+		if sub.UserID != nil {
+			studentIDStr = sub.UserID.String()
+		}
+
+		response = append(response, NeedsReviewResponse{
+			SubmissionID: sub.ID.String(),
+			ExamID:       sub.ExamID.String(),
+			ExamName:     exam.Title,
+			StudentID:    studentIDStr,
+			StudentName:  studentName,
+			StudentEmail: studentEmail,
+			SubmittedAt:  submittedTime,
+			Status:       string(sub.Status),
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": response})
+}
+
+func ResolveSubmissionReview(c *gin.Context) {
+	id := c.Param("id")
+	var req struct {
+		Answers                      map[string]models.QuestionAnswer `json:"answers"`
+		TotalScore                   float64                          `json:"totalScore"`
+		OverallEssayFeedback         string                           `json:"overallEssayFeedback"`
+		OverallComprehensionFeedback string                           `json:"overallComprehensionFeedback"`
+		TeacherFeedback              string                           `json:"teacherFeedback"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	var submission models.Submission
+	if err := config.DB.First(&submission, "id = ?", id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Submission not found"})
+		return
+	}
+
+	updatedJSONBytes, err := json.Marshal(req.Answers)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal answers"})
+		return
+	}
+
+	submission.AnswersJSON = updatedJSONBytes
+	submission.TotalScore = req.TotalScore
+	submission.OverallEssayFeedback = req.OverallEssayFeedback
+	submission.OverallComprehensionFeedback = req.OverallComprehensionFeedback
+	submission.Status = models.StatusGraded
+
+	if err := config.DB.Save(&submission).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save submission"})
+		return
+	}
+
+	if submission.UserID != nil {
+		resultURL := fmt.Sprintf("%s/exam/%s/result", config.Env.FrontendURL, submission.ID.String())
+		msgText := "Bài thi của bạn đã được giáo viên duyệt chấm hoàn tất."
+		if req.TeacherFeedback != "" {
+			msgText = fmt.Sprintf("Bài thi của bạn đã được giáo viên chấm xong: %s", req.TeacherFeedback)
+		}
+
+		config.DB.Create(&models.Notification{
+			UserID:  *submission.UserID,
+			Title:   "Hoàn tất chấm điểm thủ công",
+			Message: msgText,
+			Link:    "/exam/" + submission.ID.String() + "/result",
+		})
+
+		var user models.User
+		if err := config.DB.First(&user, "id = ?", submission.UserID).Error; err == nil && user.TelegramID != nil {
+			notifier := services.NewTelegramNotifier()
+			msg := fmt.Sprintf("✅ <b>Chấm điểm hoàn tất bởi Giáo viên</b>\nTổng điểm: %.2f\nNhận xét: %s\n\n🔗 Xem chi tiết: %s", submission.TotalScore, msgText, resultURL)
+			go notifier.SendMessage(*user.TelegramID, msg)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Đã hoàn tất chấm điểm thủ công"})
+}

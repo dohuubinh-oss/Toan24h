@@ -11,9 +11,10 @@ import (
 type SubmissionStatus string
 
 const (
-	StatusInProgress SubmissionStatus = "in_progress"
-	StatusSubmitted  SubmissionStatus = "submitted"
-	StatusGraded     SubmissionStatus = "graded"
+	StatusInProgress  SubmissionStatus = "in_progress"
+	StatusSubmitted   SubmissionStatus = "submitted"
+	StatusGraded      SubmissionStatus = "graded"
+	StatusNeedsReview SubmissionStatus = "needs_review"
 )
 
 type AppealStatus string
