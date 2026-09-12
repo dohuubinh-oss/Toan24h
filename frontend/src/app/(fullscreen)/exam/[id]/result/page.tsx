@@ -2,19 +2,21 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Sparkles, ArrowLeft, Loader2, Award } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { ChevronLeft, ChevronRight, Sparkles, ArrowLeft, Loader2, Award, Save, CheckCircle } from 'lucide-react'
 import ExamProgressNav from '@/components/exam/taking/ExamProgressNav'
 import QuestionMapSidebar, { QuestionMapItem, QuestionStatus } from '@/components/exam/taking/QuestionMapSidebar'
 import MultipleChoiceQuestion from '@/components/exam/taking/MultipleChoiceQuestion'
 import EssayQuestion from '@/components/exam/taking/EssayQuestion'
 import AIHintPanel from '@/components/exam/taking/AIHintPanel'
-import { getExamResultById } from '@/lib/api'
+import { getExamResultById, submitTeacherGradingReview } from '@/lib/api'
 import { useToast } from '@/components/ui/ToastProvider'
 
 export default function ExamResultPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isTeacherMode = searchParams.get('mode') === 'grade'
   const toast = useToast()
   
   const [resultData, setResultData] = useState<any>(null)
@@ -23,6 +25,14 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const [isAiHintOpen, setIsAiHintOpen] = useState(false)
   const [flaggedQuestions, setFlaggedQuestions] = useState<Record<string, boolean>>({})
   const [isVip, setIsVip] = useState(false)
+
+  // Teacher Grading Mode States
+  const [teacherScores, setTeacherScores] = useState<Record<string, number>>({})
+  const [teacherFeedbacks, setTeacherFeedbacks] = useState<Record<string, string>>({})
+  const [overallEssayFeedback, setOverallEssayFeedback] = useState('')
+  const [overallComprehensionFeedback, setOverallComprehensionFeedback] = useState('')
+  const [teacherGeneralFeedback, setTeacherGeneralFeedback] = useState('')
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -66,6 +76,23 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         if (!isMounted) return
         if (data && data.submission) {
           setResultData(data)
+          if (data.submission.answersJson) {
+            try {
+              const parsed = typeof data.submission.answersJson === 'string'
+                ? JSON.parse(data.submission.answersJson)
+                : data.submission.answersJson
+              const scores: Record<string, number> = {}
+              const feedbacks: Record<string, string> = {}
+              Object.keys(parsed).forEach(k => {
+                scores[k] = parsed[k].score || 0
+                feedbacks[k] = parsed[k].deduction_reason || parsed[k].deductionReason || parsed[k].ai_explanation || ''
+              })
+              setTeacherScores(scores)
+              setTeacherFeedbacks(feedbacks)
+            } catch (e) {}
+          }
+          setOverallEssayFeedback(data.submission.overallEssayFeedback || '')
+          setOverallComprehensionFeedback(data.submission.overallComprehensionFeedback || '')
         } else {
           toast.error("Không tìm thấy kết quả bài thi")
         }
@@ -354,8 +381,63 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     lectureUrl = `/lectures/lop/${gradeStr}/${mappedData.exam.lectureId}?returnUrl=${returnUrl}&examId=${id}`
   }
 
+  const handleTeacherCompleteGrading = async () => {
+    setIsSubmittingReview(true)
+    try {
+      const sub = resultData?.submission
+      let parsedAnswers: Record<string, any> = {}
+      if (sub?.answersJson) {
+        parsedAnswers = typeof sub.answersJson === 'string' ? JSON.parse(sub.answersJson) : sub.answersJson
+      }
+
+      let calculatedTotal = 0
+      Object.keys(parsedAnswers).forEach(qID => {
+        const ans = parsedAnswers[qID]
+        if (teacherScores[qID] !== undefined) {
+          ans.score = teacherScores[qID]
+          ans.is_correct = teacherScores[qID] > 0
+        }
+        if (teacherFeedbacks[qID] !== undefined) {
+          ans.deduction_reason = teacherFeedbacks[qID]
+        }
+        calculatedTotal += (ans.score || 0)
+      })
+
+      const payload = {
+        answers: parsedAnswers,
+        totalScore: calculatedTotal,
+        overallEssayFeedback: overallEssayFeedback,
+        overallComprehensionFeedback: overallComprehensionFeedback,
+        teacherFeedback: teacherGeneralFeedback || "Đã hoàn tất chấm điểm bởi giáo viên"
+      }
+
+      await submitTeacherGradingReview(id, payload)
+      toast.success("Đã hoàn tất chấm điểm thủ công!")
+      router.push('/dashboard/appeals')
+    } catch (e) {
+      toast.error("Lỗi khi lưu kết quả chấm điểm")
+    } finally {
+      setIsSubmittingReview(false)
+    }
+  }
+
   return (
     <div className="flex flex-col min-h-screen relative overflow-x-hidden bg-background-light dark:bg-background-dark">
+      {/* Teacher Mode Top Banner */}
+      {isTeacherMode && (
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 flex items-center justify-between shadow-md z-[110]">
+          <div className="flex items-center gap-3 font-bold text-sm md:text-base">
+            <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+            <span>Chế độ Chấm điểm của Giáo viên — Đang duyệt chấm bài thi</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs bg-white/20 px-3 py-1 rounded-full font-semibold">
+              Mã nộp bài: {id}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Top Navbar */}
       <ExamProgressNav 
         title={examTitle}
@@ -368,112 +450,156 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
       />
 
       {/* Main Workspace Area */}
-      <div className="flex-1 flex overflow-hidden relative pb-[88px] w-full">
-        {/* Left Navigation Overlay */}
-        {currentQuestionIndex > 0 && (
-          <button 
-            onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
-            className="absolute left-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-start pl-2 md:pl-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-r hover:from-slate-200/50 hover:to-transparent transition-all group"
-            aria-label="Câu trước"
-          >
-            <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
-              <ChevronLeft size={24} />
-            </div>
-          </button>
-        )}
+      <div className="flex-1 flex flex-col overflow-hidden relative pb-[88px] w-full">
+        <div className="flex-1 flex overflow-hidden relative w-full">
+          {/* Left Navigation Overlay */}
+          {currentQuestionIndex > 0 && (
+            <button 
+              onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+              className="absolute left-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-start pl-2 md:pl-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-r hover:from-slate-200/50 hover:to-transparent transition-all group"
+              aria-label="Câu trước"
+            >
+              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+                <ChevronLeft size={24} />
+              </div>
+            </button>
+          )}
 
-        {/* Right Navigation Overlay */}
-        {currentQuestionIndex < mappedData.questions.length - 1 && (
-          <button 
-            onClick={() => setCurrentQuestionIndex(prev => Math.min(mappedData.questions.length - 1, prev + 1))}
-            className="absolute right-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
-            aria-label="Câu tiếp theo"
-          >
-            <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
-              <ChevronRight size={24} />
-            </div>
-          </button>
-        )}
+          {/* Right Navigation Overlay */}
+          {currentQuestionIndex < mappedData.questions.length - 1 && (
+            <button 
+              onClick={() => setCurrentQuestionIndex(prev => Math.min(mappedData.questions.length - 1, prev + 1))}
+              className="absolute right-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
+              aria-label="Câu tiếp theo"
+            >
+              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+                <ChevronRight size={24} />
+              </div>
+            </button>
+          )}
 
-        {/* Central Question Content */}
-        {currentQuestion && (
-          currentQuestion.type_question === 'single' && currentQuestion.type === 'Trắc nghiệm' ? (
-            <MultipleChoiceQuestion 
-              resultId={id}
-              questionId={currentQuestion.id as any}
-              index={currentQuestionIndex}
-              topic={currentQuestion.topic || ""}
-              content={currentQuestion.content}
-              options={currentQuestion.options.map((opt: any, i: number) => ({
-                id: typeof opt === 'string' ? opt : (opt.id || opt.text),
-                label: typeof opt === 'string' ? String.fromCharCode(65 + i) : (opt.label || String.fromCharCode(65 + i)),
-                text: typeof opt === 'string' ? opt : opt.text
-              }))}
-              selectedOptionId={mappedData.answers[currentQuestion.id] || null}
-              selectedExplanation={mappedData.explanations[currentQuestion.id]}
-              correctOptionId={currentQuestion.correctAnswer}
-              aiExplanation={mappedData.aiFeedbacks[currentQuestion.id]?.aiExplanation || currentQuestion.solution_guide}
-              solutionGuide={currentQuestion.solution_guide}
-              aiFeedback={mappedData.aiFeedbacks[currentQuestion.id]}
-              readonly={true}
-              isHintOpen={isAiHintOpen}
-              isFlagged={!!flaggedQuestions[currentQuestion.id]}
-              onToggleHint={toggleAiHint}
-              onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
-              examType={examType}
-              lectureUrl={lectureUrl}
-            />
-          ) : (
-            <EssayQuestion 
-              resultId={id}
-              questionId={currentQuestion.id as any}
-              index={currentQuestionIndex}
-              content={currentQuestion.content}
-              sharedContext={currentQuestion.content}
-              solution_guide={currentQuestion.solution_guide}
-              subQuestions={currentQuestion.subQuestions?.map((sq: any) => ({
-                id: sq.id as any,
-                type: sq.type === 'Trắc nghiệm' ? 'mc' : 'essay',
-                content: sq.content,
-                options: sq.options,
-                solution_guide: sq.solution_guide,
-                correctAnswer: sq.correctAnswer
-              })) || []}
-              answers={mappedData.answers as any}
-              explanations={mappedData.explanations as any}
-              aiFeedbacks={mappedData.aiFeedbacks as any}
-              readonly={true}
-              isHintOpen={isAiHintOpen}
-              isFlagged={!!flaggedQuestions[currentQuestion.id]}
-              onToggleHint={() => toggleAiHint()}
-              onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
-              examType={examType}
-              lectureUrl={lectureUrl}
-            />
-          )
-        )}
+          {/* Central Question Content */}
+          <div className="flex-1 overflow-y-auto">
+            {currentQuestion && (
+              currentQuestion.type_question === 'single' && currentQuestion.type === 'Trắc nghiệm' ? (
+                <MultipleChoiceQuestion 
+                  resultId={id}
+                  questionId={currentQuestion.id as any}
+                  index={currentQuestionIndex}
+                  topic={currentQuestion.topic || ""}
+                  content={currentQuestion.content}
+                  options={currentQuestion.options.map((opt: any, i: number) => ({
+                    id: typeof opt === 'string' ? opt : (opt.id || opt.text),
+                    label: typeof opt === 'string' ? String.fromCharCode(65 + i) : (opt.label || String.fromCharCode(65 + i)),
+                    text: typeof opt === 'string' ? opt : opt.text
+                  }))}
+                  selectedOptionId={mappedData.answers[currentQuestion.id] || null}
+                  selectedExplanation={mappedData.explanations[currentQuestion.id]}
+                  correctOptionId={currentQuestion.correctAnswer}
+                  aiExplanation={mappedData.aiFeedbacks[currentQuestion.id]?.aiExplanation || currentQuestion.solution_guide}
+                  solutionGuide={currentQuestion.solution_guide}
+                  aiFeedback={mappedData.aiFeedbacks[currentQuestion.id]}
+                  readonly={true}
+                  isHintOpen={isAiHintOpen}
+                  isFlagged={!!flaggedQuestions[currentQuestion.id]}
+                  onToggleHint={toggleAiHint}
+                  onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
+                  examType={examType}
+                  lectureUrl={lectureUrl}
+                />
+              ) : (
+                <EssayQuestion 
+                  resultId={id}
+                  questionId={currentQuestion.id as any}
+                  index={currentQuestionIndex}
+                  content={currentQuestion.content}
+                  sharedContext={currentQuestion.content}
+                  solution_guide={currentQuestion.solution_guide}
+                  subQuestions={currentQuestion.subQuestions?.map((sq: any) => ({
+                    id: sq.id as any,
+                    type: sq.type === 'Trắc nghiệm' ? 'mc' : 'essay',
+                    content: sq.content,
+                    options: sq.options,
+                    solution_guide: sq.solution_guide,
+                    correctAnswer: sq.correctAnswer
+                  })) || []}
+                  answers={mappedData.answers as any}
+                  explanations={mappedData.explanations as any}
+                  aiFeedbacks={mappedData.aiFeedbacks as any}
+                  readonly={true}
+                  isHintOpen={isAiHintOpen}
+                  isFlagged={!!flaggedQuestions[currentQuestion.id]}
+                  onToggleHint={() => toggleAiHint()}
+                  onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
+                  examType={examType}
+                  lectureUrl={lectureUrl}
+                />
+              )
+            )}
 
-        {/* AI Hint Panel */}
-        <AIHintPanel 
-          isOpen={isAiHintOpen} 
-          onClose={() => setIsAiHintOpen(false)} 
-          question={resultData?.questions?.find((q: any) => q.id === currentQuestion?.id) || null}
-          unlockedLevel={10}
-          onUnlock={async () => true}
-          readonlyMode={true}
-        />
+            {/* Inline Teacher Grading Control Box */}
+            {isTeacherMode && currentQuestion && (
+              <div className="max-w-4xl mx-auto my-6 p-6 bg-indigo-50 dark:bg-indigo-950/40 border-2 border-indigo-200 dark:border-indigo-800 rounded-2xl shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    <h4 className="font-bold text-indigo-950 dark:text-indigo-200 text-base">Giáo viên chấm điểm câu này:</h4>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Điểm (Tối đa {currentQuestion.difficultyPoint || 10}):</label>
+                    <input 
+                      type="number"
+                      step="0.25"
+                      min="0"
+                      max={currentQuestion.difficultyPoint || 10}
+                      value={teacherScores[currentQuestion.id] ?? (mappedData.aiFeedbacks[currentQuestion.id]?.score || 0)}
+                      onChange={(e) => {
+                        const val = Number(e.target.value)
+                        setTeacherScores(prev => ({ ...prev, [currentQuestion.id]: val }))
+                      }}
+                      className="w-24 px-3 py-1.5 border border-indigo-300 dark:border-indigo-700 rounded-xl bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Ghi chú trừ điểm / Lời nhắn cho câu này:</label>
+                  <textarea
+                    rows={2}
+                    value={teacherFeedbacks[currentQuestion.id] ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setTeacherFeedbacks(prev => ({ ...prev, [currentQuestion.id]: val }))
+                    }}
+                    placeholder="Nhập lý do trừ điểm hoặc ghi chú..."
+                    className="w-full px-4 py-2 border border-indigo-200 dark:border-indigo-800 rounded-xl bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
 
-        {/* Question Map Sidebar */}
-        <QuestionMapSidebar 
-          questions={mappedData.mapItems}
-          mode="result"
-          onSelectQuestion={(qId) => {
-            const idx = mappedData.questions.findIndex(q => q.id === qId)
-            if (idx !== -1) {
-              setCurrentQuestionIndex(idx)
-            }
-          }}
-        />
+          {/* AI Hint Panel */}
+          <AIHintPanel 
+            isOpen={isAiHintOpen} 
+            onClose={() => setIsAiHintOpen(false)} 
+            question={resultData?.questions?.find((q: any) => q.id === currentQuestion?.id) || null}
+            unlockedLevel={10}
+            onUnlock={async () => true}
+            readonlyMode={true}
+          />
+
+          {/* Question Map Sidebar */}
+          <QuestionMapSidebar 
+            questions={mappedData.mapItems}
+            mode="result"
+            onSelectQuestion={(qId) => {
+              const idx = mappedData.questions.findIndex(q => q.id === qId)
+              if (idx !== -1) {
+                setCurrentQuestionIndex(idx)
+              }
+            }}
+          />
+        </div>
       </div>
 
       {/* Result Footer matching Take Footer layout */}
@@ -500,7 +626,16 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           </div>
 
           <div className="flex items-center gap-6">
-            {isVip ? (
+            {isTeacherMode ? (
+              <button
+                onClick={handleTeacherCompleteGrading}
+                disabled={isSubmittingReview}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/25 transition-all disabled:opacity-50"
+              >
+                {isSubmittingReview ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                <span>Lưu & Hoàn tất chấm điểm</span>
+              </button>
+            ) : isVip ? (
               <div className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/40 dark:to-indigo-950/40 text-purple-700 dark:text-purple-300 rounded-xl font-bold text-base border border-purple-200 dark:border-purple-800/50 shadow-sm">
                 <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 <span>Điểm tư duy: {avgReasoningScore.toFixed(1)}/10</span>

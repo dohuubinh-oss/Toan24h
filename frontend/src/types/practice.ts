@@ -44,9 +44,16 @@ export interface Submission {
   id: string;
   userId?: string;
   examId: string;
-  status: 'in_progress' | 'submitted' | 'graded';
+  status: 'in_progress' | 'submitted' | 'graded' | 'needs_review';
   totalScore: number;
   answersJson: Record<string, QuestionAnswer>;
+  overallEssayFeedback?: string;
+  overallComprehensionFeedback?: string;
+  deductionReason?: string;
+  comprehensionLevel?: string;
+  isRandomGuess?: boolean;
+  studentName?: string;
+  studentEmail?: string;
   startedAt: string;
   submittedAt?: string;
   createdAt: string;
