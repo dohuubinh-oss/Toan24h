@@ -289,6 +289,13 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
     }
   })
 
+  const answeredQuestionsCount = questions.filter(q => {
+    if (q.type_question === 'group' && q.subQuestions && q.subQuestions.length > 0) {
+      return q.subQuestions.some(sub => !!answers[sub.id] && String(answers[sub.id]).trim() !== '')
+    }
+    return !!answers[q.id] && String(answers[q.id]).trim() !== ''
+  }).length
+
   const handleSubmit = async () => {
     try {
       const answersList = questions.flatMap(q => {
@@ -403,7 +410,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
       <ExamProgressNav 
         title={exam.title}
         subject={`Toán Lớp ${exam.grade || 12}`}
-        completedQuestions={Object.keys(answers).length} 
+        completedQuestions={answeredQuestionsCount} 
         totalQuestions={questions.length} 
         timeLeft={timeLeftStr}
         examType={exam.cate}
@@ -504,7 +511,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         onSubmit={() => setShowSubmitConfirm(true)}
         canGoPrev={currentQuestionIndex > 0}
         canGoNext={currentQuestionIndex < questions.length - 1}
-        answeredCount={Object.keys(answers).length}
+        answeredCount={answeredQuestionsCount}
         totalCount={questions.length}
       />
 
