@@ -16,7 +16,7 @@ export default function AdminLecturesDashboard() {
     <div className="max-w-7xl mx-auto w-full px-4 py-8 space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Quản lý bài giảng theo khối lớp</h1>
+          <h1 className="text-2xl font-bold text-slate-800">Quản lý bài giảng theo khối lớp</h1>
           <p className="text-slate-500 mt-2">Chọn một khối lớp để xem và quản lý danh sách bài giảng (Admin Access).</p>
         </div>
         
@@ -34,12 +34,12 @@ export default function AdminLecturesDashboard() {
           <Link
             key={grade.id}
             href={`/lectures/lop/${grade.id}`}
-            className="group flex flex-col items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-2xl hover:border-primary hover:shadow-lg transition-all"
+            className="group flex flex-col items-center justify-center bg-white border border-slate-200 p-8 rounded-2xl hover:border-primary hover:shadow-lg transition-all"
           >
             <div className="h-16 w-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <BookOpen size={32} />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white">{grade.name}</h3>
+            <h3 className="text-lg font-bold text-slate-800">{grade.name}</h3>
             <span className="text-sm text-slate-500 mt-2">Xem danh sách →</span>
           </Link>
         ))}

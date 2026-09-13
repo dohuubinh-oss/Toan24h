@@ -5,11 +5,11 @@ export default function LectureSidebar() {
   return (
     <div className="space-y-6">
       {/* Related Lessons */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-        <div className="p-4 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="p-4 bg-white flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 px-2 text-primary">
             <BookOpen size={20} />
-            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300">Bài giảng liên quan</h3>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-700">Bài giảng liên quan</h3>
           </div>
         </div>
         

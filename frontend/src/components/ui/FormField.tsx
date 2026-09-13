@@ -24,7 +24,7 @@ export function FormField({
   return (
     <div className={cn("flex flex-col mb-4", className)}>
       {label && (
-        <Label htmlFor={htmlFor} required={required} className={error ? "text-red-500 dark:text-red-400" : ""}>
+        <Label htmlFor={htmlFor} required={required} className={error ? "text-red-500 " : ""}>
           {label}
         </Label>
       )}

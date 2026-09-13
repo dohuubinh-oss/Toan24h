@@ -37,6 +37,7 @@ type QuestionAnswer struct {
 	StudentAnswer      string     `json:"student_answer"`
 	ImageURLs          []string   `json:"image_urls"`
 	Score              float64    `json:"score"`
+	MaxScore           float64    `json:"max_score,omitempty"`
 	ReasoningScore     float64    `json:"reasoning_score"`
 	IsCorrect          bool       `json:"is_correct"`
 	AIExplanation      string     `json:"ai_explanation"`

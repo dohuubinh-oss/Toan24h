@@ -36,17 +36,17 @@ export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubm
       <button
         data-testid="qmap-toggle-btn"
         onClick={() => setIsOpen(!isOpen)}
-        className="absolute left-[-40px] w-10 h-24 bg-white dark:bg-slate-900 border border-r-0 border-slate-200 dark:border-slate-800 rounded-l-xl shadow-lg flex items-center justify-center hover:w-12 active:scale-95 transition-all cursor-pointer"
+        className="absolute left-[-40px] w-10 h-24 bg-white border border-r-0 border-slate-200 rounded-l-xl shadow-lg flex items-center justify-center hover:w-12 active:scale-95 transition-all cursor-pointer"
         aria-label="Toggle Question Map"
       >
-        <div className="text-slate-500 dark:text-slate-400 select-none">
+        <div className="text-slate-500 select-none">
           {isOpen ? <X className="w-6 h-6" /> : <LayoutGrid className="w-6 h-6" />}
         </div>
       </button>
 
-      <aside className="h-full w-[320px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col">
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800">
-          <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+      <aside className="h-full w-[320px] bg-white border-l border-slate-200 shadow-2xl flex flex-col">
+        <div className="p-6 border-b border-slate-100">
+          <h3 className="font-bold text-slate-800 flex items-center gap-2">
             <Map className="w-5 h-5 text-primary" />
             Bản đồ câu hỏi
           </h3>
@@ -57,7 +57,7 @@ export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubm
             {questions.map((q) => {
               let btnClass = ''
               if (q.status === 'done') {
-                btnClass = 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800/50'
+                btnClass = 'bg-green-100  text-green-600  border border-green-200 '
               } else if (q.status === 'current') {
                 btnClass = 'bg-primary text-white shadow-md shadow-primary/30 ring-4 ring-primary/20'
               } else if (q.status === 'correct') {
@@ -67,12 +67,12 @@ export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubm
               } else if (q.status === 'warning') {
                 btnClass = 'bg-amber-500 text-white shadow-md shadow-amber-500/30 border-amber-600'
               } else {
-                btnClass = 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700'
+                btnClass = 'bg-slate-100  text-slate-400  border border-slate-200 '
               }
               // If flagged, it overrides 'unfinished' styles slightly based on design, but let's keep it simple or apply amber style.
               // Wait, the HTML example had amber for flagged/thinking.
               if (q.isFlagged && q.status !== 'current' && q.status !== 'done' && mode === 'take') {
-                btnClass = 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50'
+                btnClass = 'bg-amber-100  text-amber-600  border border-amber-200 '
               }
 
               return (
@@ -83,7 +83,7 @@ export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubm
                 >
                   {q.index + 1}
                   {q.isFlagged && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></div>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
                   )}
                 </div>
               )
@@ -95,34 +95,34 @@ export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubm
             <div className="space-y-3">
               {mode === 'take' ? (
                 <>
-                  <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                    <div className="w-4 h-4 rounded bg-green-100 dark:bg-green-900/30 border border-green-200"></div>
+                  <div className="flex items-center gap-3 text-sm text-slate-600">
+                    <div className="w-4 h-4 rounded bg-green-100 border border-green-200"></div>
                     <span>Đã hoàn thành</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-600">
                     <div className="w-4 h-4 rounded bg-primary"></div>
                     <span>Đang làm</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                    <div className="w-4 h-4 rounded bg-amber-100 dark:bg-amber-900/30 border border-amber-200"></div>
+                  <div className="flex items-center gap-3 text-sm text-slate-600">
+                    <div className="w-4 h-4 rounded bg-amber-100 border border-amber-200"></div>
                     <span>Đang phân vân</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-                    <div className="w-4 h-4 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200"></div>
+                  <div className="flex items-center gap-3 text-sm text-slate-600">
+                    <div className="w-4 h-4 rounded bg-slate-100 border border-slate-200"></div>
                     <span>Chưa làm</span>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-600">
                     <div className="w-4 h-4 rounded bg-green-500"></div>
                     <span>Đúng / Điểm tối đa</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-600">
                     <div className="w-4 h-4 rounded bg-red-500"></div>
                     <span>Sai / 0 điểm</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-600">
                     <div className="w-4 h-4 rounded bg-amber-500"></div>
                     <span>Chưa chấm / Điểm một phần</span>
                   </div>

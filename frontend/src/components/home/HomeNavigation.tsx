@@ -123,7 +123,6 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
           <Link className="hover:text-primary transition-colors text-slate-700" href="/exams">Đề thi</Link>
           <Link className="hover:text-primary transition-colors text-slate-700" href="/blog">Blog</Link>
           <Link className="hover:text-primary transition-colors text-slate-700" href="/pricing">Bảng giá</Link>
-          <Link className="hover:text-primary transition-colors text-slate-700" href="/community">Cộng đồng</Link>
         </div>
         <div className="flex items-center gap-4">
           {isLoggedState ? (

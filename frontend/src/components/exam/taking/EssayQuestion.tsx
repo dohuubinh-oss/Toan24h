@@ -54,6 +54,8 @@ interface EssayQuestionProps {
 }
 
 function HighlightedAnswer({ content, aiFeedback }: { content: string, aiFeedback?: any }) {
+  const [tooltip, setTooltip] = useState<{ x: number, y: number, deduction: string, errorLoc: string } | null>(null)
+
   if (!content) return null
   if (!aiFeedback?.errorLocation && !aiFeedback?.deductionReason) {
     return <MathText content={content} />
@@ -62,70 +64,86 @@ function HighlightedAnswer({ content, aiFeedback }: { content: string, aiFeedbac
   const errorLocStr = aiFeedback.errorLocation ? String(aiFeedback.errorLocation).trim() : ''
   const deduction = aiFeedback.deductionReason || 'Phát hiện lỗi sai ở bước biến đổi này.'
 
-  if (errorLocStr && content.includes(errorLocStr)) {
-    const parts = content.split(errorLocStr)
-    return (
-      <div className="leading-relaxed text-base break-words overflow-x-auto max-w-full space-y-3">
-        <div>
-          {parts.map((part, idx) => (
-            <React.Fragment key={idx}>
-              {part && <MathText content={part} />}
-              {idx < parts.length - 1 && (
-                <span className="relative inline-block group mx-1">
-                  <span className="bg-amber-200 dark:bg-amber-900/80 text-amber-950 dark:text-amber-100 font-bold px-2 py-0.5 rounded border-b-2 border-red-500 cursor-pointer shadow-xs group-hover:bg-amber-300 dark:group-hover:bg-amber-800 transition-colors inline-flex items-center gap-1">
-                    <MathText content={errorLocStr} />
-                    <span className="text-[10px] text-red-600 dark:text-red-400 font-black">⚠️</span>
-                  </span>
-                  
-                  {/* Floating Hover Tooltip with Deduction Reason */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col w-72 p-3 bg-slate-900 text-white dark:bg-slate-800 rounded-xl shadow-2xl z-50 text-xs border border-red-500/50 pointer-events-none transition-all">
-                    <div className="font-bold text-red-400 flex items-center gap-1.5 mb-1 text-xs">
-                      <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
-                      <span>Vị trí sai: &quot;{errorLocStr}&quot;</span>
-                    </div>
-                    <div className="text-slate-200 text-xs leading-relaxed border-t border-slate-700/80 pt-1.5 mt-0.5">
-                      <strong>📌 Lý do trừ điểm:</strong> {deduction}
-                    </div>
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900 dark:border-t-slate-800"></div>
-                  </div>
-                </span>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-    )
+  let renderedContent = <MathText content={content} />
+
+  const cleanAttr = (str: string) => str.replace(/"/g, '&quot;')
+
+  if (errorLocStr) {
+    const escapedStr = errorLocStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(`(${escapedStr})(?![^<]*>)`, 'i')
+
+    if (regex.test(content)) {
+      const highlightedHtml = content.replace(
+        regex,
+        `<span data-highlight="true" data-deduction="${cleanAttr(deduction)}" data-error-loc="${cleanAttr(errorLocStr)}" class="bg-amber-200 text-amber-950 font-bold px-1.5 py-0.5 rounded border-b-2 border-amber-500 inline-flex items-center gap-1 shadow-xs cursor-pointer hover:bg-amber-300 transition-colors">
+          $1
+          <span class="text-[10px] text-red-600 font-black">⚠️</span>
+        </span>`
+      )
+      renderedContent = <MathText content={highlightedHtml} />
+    }
   }
 
-  // Fallback if errorLocation isn't an exact substring match
-  return (
-    <div className="space-y-3">
-      <MathText content={content} />
-      <div className="relative group cursor-pointer">
-        <div className="p-3 bg-amber-100/90 dark:bg-amber-950/50 border-l-4 border-amber-500 rounded-r-xl text-amber-900 dark:text-amber-200 text-xs font-medium flex items-center justify-between transition-all group-hover:bg-amber-200/90 dark:group-hover:bg-amber-900/60">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span>
-              <strong>Vị trí lỗi sai:</strong> {errorLocStr || 'Bước biến đổi trong bài làm'}
-            </span>
-          </div>
-          <span className="text-[10px] uppercase font-extrabold bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded">
-            Rê chuột xem lý do trừ điểm 💬
-          </span>
-        </div>
+  const handleMouseOver = (e: React.MouseEvent) => {
+    const target = (e.target as HTMLElement).closest('[data-highlight="true"]') as HTMLElement
+    if (target) {
+      const rect = target.getBoundingClientRect()
+      const ded = target.getAttribute('data-deduction') || deduction
+      const errLoc = target.getAttribute('data-error-loc') || errorLocStr
+      setTooltip({
+        x: rect.left + rect.width / 2,
+        y: rect.top - 8,
+        deduction: ded,
+        errorLoc: errLoc
+      })
+    }
+  }
 
-        {/* Hover Tooltip */}
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col w-80 p-3 bg-slate-900 text-white dark:bg-slate-800 rounded-xl shadow-2xl z-50 text-xs border border-amber-500/50 pointer-events-none transition-all">
-          <div className="font-bold text-amber-400 flex items-center gap-1.5 mb-1 text-xs">
-            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-            <span>Chi tiết lý do trừ điểm:</span>
-          </div>
-          <div className="text-slate-200 text-xs leading-relaxed border-t border-slate-700/80 pt-1.5 mt-0.5">
-            <strong>📌 Lý do trừ điểm:</strong> {deduction}
-          </div>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900 dark:border-t-slate-800"></div>
+  const handleMouseLeave = () => {
+    setTooltip(null)
+  }
+
+  return (
+    <div 
+      className="space-y-3 relative"
+      onMouseOver={handleMouseOver}
+      onMouseLeave={handleMouseLeave}
+    >
+      {renderedContent}
+
+      {/* Clean app-styled deduction card */}
+      <div className="mt-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs shadow-xs space-y-1.5">
+        <div className="flex items-center gap-2 font-bold text-amber-800">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+          <span>Vị trí sai: &quot;{errorLocStr || 'Bước biến đổi trong bài làm'}&quot;</span>
+        </div>
+        <div className="text-amber-900/90 leading-relaxed border-t border-amber-200/60 pt-1.5 mt-1">
+          <strong>📌 Lý do trừ điểm:</strong> {deduction}
         </div>
       </div>
+
+      {/* Viewport-fixed hover tooltip styled matching app design tokens */}
+      {tooltip && (
+        <div 
+          style={{ 
+            position: 'fixed', 
+            left: `${tooltip.x}px`, 
+            top: `${tooltip.y}px`, 
+            transform: 'translate(-50%, -100%)' 
+          }}
+          className="z-[9999] pointer-events-none flex flex-col w-72 p-3.5 bg-white text-slate-800 rounded-2xl shadow-xl shadow-amber-500/10 text-xs border-2 border-amber-300 animate-in fade-in zoom-in-95 duration-150"
+        >
+          <div className="font-bold text-amber-800 flex items-center gap-1.5 mb-1.5 text-xs">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Vị trí sai: &quot;{tooltip.errorLoc}&quot;</span>
+          </div>
+          <div className="text-slate-700 text-xs leading-relaxed border-t border-amber-200/80 pt-1.5 mt-0.5">
+            <strong>📌 Lý do trừ điểm:</strong> {tooltip.deduction}
+          </div>
+          {/* Arrow pointing down matching tooltip background */}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-white"></div>
+        </div>
+      )}
     </div>
   )
 }
@@ -201,39 +219,47 @@ function EditorItem({
       {readonly ? (
         <div className="flex flex-col flex-1">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-bold text-slate-800 dark:text-slate-200">
+            <div className="flex items-center gap-2 flex-wrap">
+              <label className="text-sm font-bold text-slate-800">
                 {isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`}
               </label>
               {aiFeedback?.comprehensionLevel && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
                   🎯 {aiFeedback.comprehensionLevel === 'HOAN_HAO' ? 'Tư duy hoàn hảo' : aiFeedback.comprehensionLevel === 'HIEU_BAI' ? 'Hiểu bài tốt' : aiFeedback.comprehensionLevel === 'NHAM_LAN' ? 'Có sai sót nhỏ' : 'Cần xem lại'}
                 </span>
               )}
             </div>
-            {onToggleHint && (
-              <button 
-                data-hint-toggle="true"
-                onClick={() => onToggleHint(q.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg font-semibold text-xs cursor-pointer transition-all"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Gợi ý</span>
-              </button>
-            )}
+            
+            <div className="flex items-center gap-2">
+              {readonly && aiFeedback && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black bg-blue-50 text-blue-700 border border-blue-200 shadow-xs">
+                  🎯 Điểm: {aiFeedback.score ?? 0} / {aiFeedback.maxScore ?? 10}
+                </span>
+              )}
+              {onToggleHint && (
+                <button 
+                  data-hint-toggle="true"
+                  onClick={() => onToggleHint(q.id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg font-semibold text-xs cursor-pointer transition-all"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Gợi ý</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Random Guess Warning Banner */}
           {aiFeedback?.isRandomGuess && (
-            <div className="mb-3 p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-xl text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2 font-medium">
+            <div className="mb-3 p-3 bg-amber-50 border border-amber-300 rounded-xl text-amber-800 text-xs flex items-center gap-2 font-medium">
               <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
               <span>AI phát hiện câu trả lời có khả năng đoán mò / chưa thể hiện đủ bước suy luận toán học.</span>
             </div>
           )}
 
-          <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex flex-col flex-1 min-h-[140px] overflow-hidden relative">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col flex-1 min-h-[140px] overflow-hidden relative">
             {editorContent && editorContent.trim().length > 0 ? (
-              <div className="text-slate-800 dark:text-slate-200 leading-relaxed text-base break-words overflow-x-auto max-w-full">
+              <div className="text-slate-800 leading-relaxed text-base break-words overflow-x-auto max-w-full">
                 <HighlightedAnswer content={editorContent} aiFeedback={aiFeedback} />
               </div>
             ) : (
@@ -244,7 +270,7 @@ function EditorItem({
       ) : (
         <div className="flex flex-col flex-1 min-h-[350px]">
           <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-bold text-slate-800 dark:text-slate-200">
+            <label className="text-sm font-bold text-slate-800">
               {isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`}
             </label>
             <div className="flex space-x-2">
@@ -259,7 +285,7 @@ function EditorItem({
                 </button>
               )}
               {editorContent.trim().length > 0 && (
-                <span className="flex items-center text-xs text-green-600 dark:text-green-400 font-medium">
+                <span className="flex items-center text-xs text-green-600 font-medium">
                   <CheckCircle className="w-4 h-4 mr-1" />
                   Đã lưu tự động
                 </span>
@@ -267,7 +293,7 @@ function EditorItem({
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
             <RichTextEditor
               content={editorContent}
               onChange={handleEditorChange}
@@ -300,12 +326,12 @@ function EditorItem({
 
       {/* Model Solution Guide (Lời giải chi tiết đối chiếu) */}
       {readonly && (q.solution_guide || aiFeedback?.aiExplanation) && (
-        <div className="mt-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-5 shadow-sm overflow-hidden">
-          <h4 className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-base mb-3">
-            <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-5 shadow-sm overflow-hidden">
+          <h4 className="flex items-center gap-2 text-emerald-800 font-bold text-base mb-3">
+            <BookOpen className="w-5 h-5 text-emerald-600" />
             Lời giải chi tiết (Đáp án chuẩn)
           </h4>
-          <div className="text-slate-800 dark:text-slate-200 leading-relaxed max-w-full overflow-x-auto">
+          <div className="text-slate-800 leading-relaxed max-w-full overflow-x-auto">
             <MathText content={q.solution_guide || aiFeedback?.aiExplanation || ''} />
           </div>
         </div>
@@ -313,17 +339,17 @@ function EditorItem({
 
       {/* VIP Reasoning Review Box */}
       {readonly && aiFeedback?.aiReasoningRemark && (
-        <div className="mt-4 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-xl p-5 shadow-sm">
-          <h4 className="flex items-center justify-between text-purple-700 dark:text-purple-300 font-bold text-base mb-3">
+        <div className="mt-4 bg-purple-50 border border-purple-200 rounded-xl p-5 shadow-sm">
+          <h4 className="flex items-center justify-between text-purple-700 font-bold text-base mb-3">
             <span className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <Sparkles className="w-5 h-5 text-purple-600" />
               Đánh giá tư duy (VIP)
             </span>
-            <span className="bg-purple-100 dark:bg-purple-800/50 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-xs font-bold">
+            <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold">
               Điểm: {aiFeedback.reasoningScore}/10
             </span>
           </h4>
-          <div className="text-slate-700 dark:text-slate-300">
+          <div className="text-slate-700">
             <MathText content={aiFeedback.aiReasoningRemark} />
           </div>
         </div>
@@ -331,9 +357,9 @@ function EditorItem({
 
       {/* Teacher Feedback (if any) */}
       {readonly && aiFeedback?.teacherFeedback && (
-        <div className="mt-4 p-4 bg-white/50 dark:bg-slate-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl">
+        <div className="mt-4 p-4 bg-white/50 border border-blue-100 rounded-xl">
           <p className="text-sm font-semibold text-slate-500 mb-1">Lời nhắn của giáo viên:</p>
-          <p className="text-slate-700 dark:text-slate-300 italic">{aiFeedback.teacherFeedback}</p>
+          <p className="text-slate-700 italic">{aiFeedback.teacherFeedback}</p>
         </div>
       )}
     </div>
@@ -394,7 +420,7 @@ export default function EssayQuestion({
   const renderLeftContent = () => {
     if (isGroup) {
       return (
-        <div className="prose prose-slate dark:prose-invert max-w-none mb-8">
+        <div className="prose prose-slate max-w-none mb-8">
           <div className="text-lg leading-relaxed">
             {typeof sharedContext === 'string' ? <MathText content={sharedContext} /> : sharedContext}
           </div>
@@ -417,8 +443,8 @@ export default function EssayQuestion({
                           disabled={readonly}
                           className={`group relative flex items-center gap-4 p-4 rounded-xl border-2 transition-all shadow-sm text-left
                             ${isSelected 
-                              ? 'bg-white dark:bg-slate-900 border-primary shadow-primary/5' 
-                              : 'bg-white dark:bg-slate-900 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
+                              ? 'bg-white border-primary shadow-primary/5' 
+                              : 'bg-white border-transparent hover:border-slate-200'
                             }
                             ${readonly ? 'cursor-default' : ''}
                           `}
@@ -426,13 +452,13 @@ export default function EssayQuestion({
                           <div className={`w-10 h-10 flex items-center justify-center font-bold rounded-lg transition-colors text-lg
                             ${isSelected
                               ? 'bg-primary text-white shadow-sm'
-                              : (readonly ? 'bg-slate-100 dark:bg-slate-800 text-slate-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-white')
+                              : (readonly ? 'bg-slate-100 text-slate-400' : 'bg-slate-100 text-slate-600 group-hover:bg-primary group-hover:text-white')
                             }
                           `}>
                             {opt.id}
                           </div>
                           <div className="flex-1">
-                            <span className="text-lg font-medium text-slate-900 dark:text-white">
+                            <span className="text-lg font-medium text-slate-900">
                               <MathText content={opt.text} />
                             </span>
                           </div>
@@ -454,7 +480,7 @@ export default function EssayQuestion({
     }
 
     return (
-      <div className="prose prose-slate dark:prose-invert max-w-none mb-8 text-lg leading-relaxed">
+      <div className="prose prose-slate max-w-none mb-8 text-lg leading-relaxed">
         <MathText content={content || ''} />
       </div>
     )
@@ -501,7 +527,7 @@ export default function EssayQuestion({
   return (
     <main className={`flex-1 flex overflow-hidden relative transition-all duration-500 ${isHintOpen ? 'mr-[460px]' : ''}`}>
       {/* Left Pane: Problem & Geometry */}
-      <div className="w-1/2 overflow-y-auto p-8 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">
+      <div className="w-1/2 overflow-y-auto p-8 border-r border-slate-200 bg-white">
         <div className="max-w-xl ml-auto">
           <div className="flex items-center justify-between mb-6">
             <span className="px-3 py-1 bg-primary/10 text-primary text-sm font-bold rounded-lg uppercase">
@@ -512,7 +538,7 @@ export default function EssayQuestion({
               {lectureUrl && (
                 <Link
                   href={lectureUrl}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 rounded-full font-semibold text-sm transition-all active:scale-95"
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-full font-semibold text-sm transition-all active:scale-95"
                   title="Xem bài giảng liên quan"
                 >
                   <BookOpen className="w-5 h-5" />
@@ -521,7 +547,7 @@ export default function EssayQuestion({
               )}
               <button
                 onClick={() => setIsReportModalOpen(true)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer transition-all active:scale-95 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer transition-all active:scale-95 bg-red-50 text-red-600 hover:bg-red-100`}
                 title={readonly ? "Kháng cáo" : "Báo lỗi"}
               >
                 <AlertTriangle className="w-5 h-5" />
@@ -531,8 +557,8 @@ export default function EssayQuestion({
                 onClick={onToggleFlag}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer transition-all active:scale-95 ${
                   isFlagged 
-                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400'
+                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
                 title="Đánh dấu câu hỏi này để xem lại sau"
               >
@@ -547,14 +573,14 @@ export default function EssayQuestion({
       </div>
 
       {/* Right Pane: Solution Editor */}
-      <div className="w-1/2 overflow-y-auto bg-slate-50 dark:bg-slate-950">
+      <div className="w-1/2 overflow-y-auto bg-slate-50">
         {renderEditors()}
       </div>
 
       {isReportModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100">
+            <h3 className="text-xl font-bold text-slate-800 mb-2">
               {readonly ? 'Kháng cáo' : 'Báo lỗi'}
             </h3>
             <p className="text-slate-500 text-sm mb-4">
@@ -564,12 +590,12 @@ export default function EssayQuestion({
               value={reportMessage}
               onChange={(e) => setReportMessage(e.target.value)}
               placeholder="Nhập nội dung..."
-              className="w-full min-h-[120px] p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none text-slate-700 dark:text-slate-200"
+              className="w-full min-h-[120px] p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none text-slate-700"
             />
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setIsReportModalOpen(false)}
-                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 rounded-xl font-semibold transition-colors"
+                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-semibold transition-colors"
                 disabled={isSubmittingReport}
               >
                 Hủy

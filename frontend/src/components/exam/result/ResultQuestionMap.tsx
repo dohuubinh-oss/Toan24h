@@ -28,7 +28,7 @@ export default function ResultQuestionMap({
   onSelectQuestion,
 }: ResultQuestionMapProps) {
   return (
-    <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-6 border border-slate-200/60 dark:border-slate-800 shadow-sm">
+    <div className="bg-slate-50 rounded-xl p-6 border border-slate-200/60 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-bold text-lg flex items-center gap-2">
           <LayoutGrid className="w-6 h-6 text-primary" />
@@ -68,7 +68,7 @@ export default function ResultQuestionMap({
               {essayQuestions.map((q) => {
                 const btnClass = q.isWarning
                   ? 'bg-warning/10 text-warning border-warning/20'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                  : 'bg-slate-100  text-slate-600  border-slate-200 '
                 
                 return (
                   <button

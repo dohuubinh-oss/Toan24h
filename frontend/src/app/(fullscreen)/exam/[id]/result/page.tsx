@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Sparkles, ArrowLeft, Loader2, Award, Save, CheckCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles, ArrowLeft, Loader2, Award, Save, CheckCircle, X } from 'lucide-react'
 import ExamProgressNav from '@/components/exam/taking/ExamProgressNav'
 import QuestionMapSidebar, { QuestionMapItem, QuestionStatus } from '@/components/exam/taking/QuestionMapSidebar'
 import MultipleChoiceQuestion from '@/components/exam/taking/MultipleChoiceQuestion'
@@ -26,6 +26,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const [isAiHintOpen, setIsAiHintOpen] = useState(false)
   const [flaggedQuestions, setFlaggedQuestions] = useState<Record<string, boolean>>({})
   const [isVip, setIsVip] = useState(false)
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false)
 
   // Teacher Grading Mode States
   const [teacherScores, setTeacherScores] = useState<Record<string, number>>({})
@@ -302,14 +303,13 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         return
       }
     }
-    router.push('/dashboard')
   }
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 space-y-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 space-y-4">
         <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200">Đang tải kết quả bài làm...</h2>
+        <h2 className="text-xl font-bold text-slate-700">Đang tải kết quả bài làm...</h2>
         <p className="text-slate-500">Vui lòng chờ trong giây lát.</p>
       </div>
     )
@@ -317,8 +317,8 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
   if (!resultData || mappedData.questions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 p-6 text-center">
-        <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-4">Không tìm thấy kết quả bài thi.</h2>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6 text-center">
+        <h2 className="text-xl font-semibold text-slate-700 mb-4">Không tìm thấy kết quả bài thi.</h2>
         <button 
           onClick={handleBack}
           className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center gap-2"
@@ -334,17 +334,17 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const isPending = resultData.submission?.status === 'pending' || (resultData.submission?.status !== 'graded' && resultData.submission?.status !== 'COMPLETED')
   if (isPending) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 p-6">
-        <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-100 dark:border-slate-700 text-center relative overflow-hidden">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl border border-slate-100 text-center relative overflow-hidden">
           <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-500/25 animate-bounce">
             <Sparkles className="w-10 h-10" />
           </div>
 
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3 leading-snug">
+          <h2 className="text-2xl font-bold text-slate-800 mb-3 leading-snug">
             Bài làm của bạn đang được chấm điểm, xin vui lòng chờ...
           </h2>
           
-          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-8">
+          <p className="text-slate-600 text-sm leading-relaxed mb-8">
             Bài thi đang được chấm, vui lòng kiểm tra tin nhắn và quay lại sau.
           </p>
 
@@ -352,7 +352,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
             <button
               type="button"
               onClick={handleBack}
-              className="w-full sm:w-auto px-8 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Quay lại
@@ -431,7 +431,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="flex flex-col min-h-screen relative overflow-x-hidden bg-background-light dark:bg-background-dark">
+    <div className="flex flex-col min-h-screen relative overflow-x-hidden bg-background-light">
       {/* Teacher Mode Top Banner */}
       {isTeacherMode && (
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 flex items-center justify-between shadow-md z-[110]">
@@ -468,7 +468,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               className="absolute left-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-start pl-2 md:pl-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-r hover:from-slate-200/50 hover:to-transparent transition-all group"
               aria-label="Câu trước"
             >
-              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+              <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
                 <ChevronLeft size={24} />
               </div>
             </button>
@@ -481,7 +481,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               className="absolute right-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
               aria-label="Câu tiếp theo"
             >
-              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+              <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
                 <ChevronRight size={24} />
               </div>
             </button>
@@ -489,100 +489,6 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
           {/* Central Question Content */}
           <div className="flex-1 overflow-y-auto">
-            {/* AI Executive Summary Banner - Always Visible */}
-            <div className="max-w-4xl mx-auto mt-6 mb-2 px-4 sm:px-6">
-              <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl shadow-xl border border-indigo-500/30 overflow-hidden relative">
-                <div className="p-5 sm:p-6">
-                  <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-indigo-500/20">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-md shadow-indigo-500/30">
-                        <Sparkles className="w-5 h-5 text-white animate-pulse" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-base sm:text-lg text-white flex items-center gap-2">
-                          Báo cáo Đánh giá AI Tổng quan
-                          <span className="text-[10px] uppercase font-extrabold bg-indigo-500/30 text-indigo-200 border border-indigo-400/40 px-2 py-0.5 rounded-full">
-                            Gemini 3.6 Flash
-                          </span>
-                        </h3>
-                        <p className="text-xs text-indigo-200/80">Tổng hợp nhận xét trình bày & phân tích tư duy toán học</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 bg-indigo-950/80 p-1 rounded-xl border border-indigo-500/30">
-                      <button
-                        type="button"
-                        onClick={() => setSummaryTab('essay')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          summaryTab === 'essay' 
-                            ? 'bg-indigo-600 text-white shadow-sm' 
-                            : 'text-indigo-200 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        📝 Nhận xét Tự luận
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSummaryTab('comprehension')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          summaryTab === 'comprehension' 
-                            ? 'bg-purple-600 text-white shadow-sm' 
-                            : 'text-purple-200 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        🧠 Phân tích Tư duy
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="text-sm leading-relaxed text-indigo-100/90 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
-                    {summaryTab === 'essay' ? (
-                      isTeacherMode ? (
-                        <div className="space-y-1">
-                          <label className="text-xs font-bold text-indigo-300">Giáo viên chỉnh sửa Nhận xét Tự luận:</label>
-                          <textarea
-                            rows={3}
-                            value={overallEssayFeedback}
-                            onChange={(e) => setOverallEssayFeedback(e.target.value)}
-                            placeholder="Nhập nhận xét tổng quan trình bày tự luận..."
-                            className="w-full p-3 rounded-xl bg-slate-900/90 border border-indigo-500/40 text-white text-xs focus:ring-2 focus:ring-indigo-400 outline-none"
-                          />
-                        </div>
-                      ) : (
-                        overallEssayFeedback ? (
-                          <MathText content={overallEssayFeedback} />
-                        ) : (
-                          <div className="p-3 bg-indigo-950/50 rounded-xl border border-indigo-500/20 text-xs text-indigo-200">
-                            ✨ Bài thi đã được AI chấm tự động và đánh giá dựa trên tiêu chuẩn đáp án chuẩn. Xem chi tiết nhận xét từng câu bên dưới.
-                          </div>
-                        )
-                      )
-                    ) : (
-                      isTeacherMode ? (
-                        <div className="space-y-1">
-                          <label className="text-xs font-bold text-purple-300">Giáo viên chỉnh sửa Đánh giá Tư duy:</label>
-                          <textarea
-                            rows={3}
-                            value={overallComprehensionFeedback}
-                            onChange={(e) => setOverallComprehensionFeedback(e.target.value)}
-                            placeholder="Nhập đánh giá tổng quan tư duy toán học..."
-                            className="w-full p-3 rounded-xl bg-slate-900/90 border border-purple-500/40 text-white text-xs focus:ring-2 focus:ring-purple-400 outline-none"
-                          />
-                        </div>
-                      ) : (
-                        overallComprehensionFeedback ? (
-                          <MathText content={overallComprehensionFeedback} />
-                        ) : (
-                          <div className="p-3 bg-purple-950/50 rounded-xl border border-purple-500/20 text-xs text-purple-200">
-                            🧠 AI phân tích mạch suy luận toán học và năng lực giải quyết vấn đề của bài thi. Dưới đây là phân tích chi tiết cho từng câu hỏi.
-                          </div>
-                        )
-                      )
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {currentQuestion && (
               currentQuestion.type_question === 'single' && currentQuestion.type === 'Trắc nghiệm' ? (
@@ -643,14 +549,14 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
             {/* Inline Teacher Grading Control Box */}
             {isTeacherMode && currentQuestion && (
-              <div className="max-w-4xl mx-auto my-6 p-6 bg-indigo-50 dark:bg-indigo-950/40 border-2 border-indigo-200 dark:border-indigo-800 rounded-2xl shadow-sm space-y-4">
+              <div className="max-w-4xl mx-auto my-6 p-6 bg-indigo-50 border-2 border-indigo-200 rounded-2xl shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                    <h4 className="font-bold text-indigo-950 dark:text-indigo-200 text-base">Giáo viên chấm điểm câu này:</h4>
+                    <Sparkles className="w-5 h-5 text-indigo-600" />
+                    <h4 className="font-bold text-indigo-950 text-base">Giáo viên chấm điểm câu này:</h4>
                   </div>
                   <div className="flex items-center gap-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Điểm (Tối đa {currentQuestion.difficultyPoint || 10}):</label>
+                    <label className="text-sm font-semibold text-slate-700">Điểm (Tối đa {currentQuestion.difficultyPoint || 10}):</label>
                     <input 
                       type="number"
                       step="0.25"
@@ -661,12 +567,12 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                         const val = Number(e.target.value)
                         setTeacherScores(prev => ({ ...prev, [currentQuestion.id]: val }))
                       }}
-                      className="w-24 px-3 py-1.5 border border-indigo-300 dark:border-indigo-700 rounded-xl bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-white"
+                      className="w-24 px-3 py-1.5 border border-indigo-300 rounded-xl bg-white font-bold text-slate-900"
                     />
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Ghi chú trừ điểm / Lời nhắn cho câu này:</label>
+                  <label className="text-xs font-semibold text-slate-600">Ghi chú trừ điểm / Lời nhắn cho câu này:</label>
                   <textarea
                     rows={2}
                     value={teacherFeedbacks[currentQuestion.id] ?? ''}
@@ -675,7 +581,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                       setTeacherFeedbacks(prev => ({ ...prev, [currentQuestion.id]: val }))
                     }}
                     placeholder="Nhập lý do trừ điểm hoặc ghi chú..."
-                    className="w-full px-4 py-2 border border-indigo-200 dark:border-indigo-800 rounded-xl bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                    className="w-full px-4 py-2 border border-indigo-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                   />
                 </div>
               </div>
@@ -707,22 +613,22 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* Result Footer matching Take Footer layout */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-6 z-[100] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-6 z-[100] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
               disabled={currentQuestionIndex === 0}
-              className="flex items-center gap-2 px-5 py-3 text-slate-600 dark:text-slate-400 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-5 py-3 text-slate-600 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-5 h-5" />
               Câu trước
             </button>
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
+            <div className="h-6 w-px bg-slate-200"></div>
             <button
               onClick={() => setCurrentQuestionIndex(prev => Math.min(mappedData.questions.length - 1, prev + 1))}
               disabled={currentQuestionIndex >= mappedData.questions.length - 1}
-              className="flex items-center gap-2 px-5 py-3 text-slate-600 dark:text-slate-400 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-5 py-3 text-slate-600 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Câu tiếp theo
               <ChevronRight className="w-5 h-5" />
@@ -740,22 +646,156 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                 <span>Lưu & Hoàn tất chấm điểm</span>
               </button>
             ) : isVip ? (
-              <div className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/40 dark:to-indigo-950/40 text-purple-700 dark:text-purple-300 rounded-xl font-bold text-base border border-purple-200 dark:border-purple-800/50 shadow-sm">
-                <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                <span>Điểm tư duy: {avgReasoningScore.toFixed(1)}/10</span>
-                <span className="text-[10px] uppercase font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-2 py-0.5 rounded-full shadow-sm ml-1">
-                  VIP
-                </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsSummaryModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer active:scale-95 border border-primary/20"
+                >
+                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                  <span>Xem Nhận xét</span>
+                </button>
+                <div className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 rounded-xl font-bold text-base border border-purple-200 shadow-xs">
+                  <Sparkles className="w-5 h-5 text-purple-600" />
+                  <span>Điểm tư duy: {avgReasoningScore.toFixed(1)}/10</span>
+                  <span className="text-[10px] uppercase font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-2 py-0.5 rounded-full shadow-xs ml-1">
+                    VIP
+                  </span>
+                </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-xl font-bold text-base border border-blue-100 dark:border-blue-900/30 shadow-sm">
-                <Award className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <span>Tổng điểm: {standardScore.toFixed(1)}/10</span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsSummaryModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer active:scale-95 border border-primary/20"
+                >
+                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                  <span>Xem Nhận xét</span>
+                </button>
+                <div className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-700 rounded-xl font-bold text-base border border-blue-100 shadow-xs">
+                  <Award className="w-5 h-5 text-blue-600" />
+                  <span>Tổng điểm: {standardScore.toFixed(1)}/10</span>
+                </div>
               </div>
             )}
           </div>
         </div>
       </footer>
+
+      {/* AI Executive Summary Popup Modal */}
+      {isSummaryModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-white text-slate-800 rounded-3xl p-6 sm:p-8 w-full max-w-2xl shadow-2xl border border-slate-200 relative overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Close button */}
+            <button 
+              onClick={() => setIsSummaryModalOpen(false)}
+              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-xs">
+                <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-xl text-slate-900 flex items-center gap-2">
+                  Báo cáo Đánh giá AI Tổng quan
+                  <span className="text-[10px] uppercase font-black bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 rounded-full">
+                    Gemini 3.6 Flash
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-500">Phân tích chi tiết phương pháp làm bài & trình bày toán học</p>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex items-center gap-2 mb-4 bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-fit">
+              <button
+                type="button"
+                onClick={() => setSummaryTab('essay')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  summaryTab === 'essay' 
+                    ? 'bg-primary text-white shadow-xs' 
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                📝 Nhận xét Tự luận
+              </button>
+              <button
+                type="button"
+                onClick={() => setSummaryTab('comprehension')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  summaryTab === 'comprehension' 
+                    ? 'bg-purple-600 text-white shadow-xs' 
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                🧠 Phân tích Tư duy
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="text-sm leading-relaxed text-slate-700 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar bg-slate-50 p-4 rounded-2xl border border-slate-200">
+              {summaryTab === 'essay' ? (
+                isTeacherMode ? (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700">Giáo viên chỉnh sửa Nhận xét Tự luận:</label>
+                    <textarea
+                      rows={5}
+                      value={overallEssayFeedback}
+                      onChange={(e) => setOverallEssayFeedback(e.target.value)}
+                      placeholder="Nhập nhận xét tổng quan trình bày tự luận..."
+                      className="w-full p-3 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs focus:ring-2 focus:ring-primary outline-none"
+                    />
+                  </div>
+                ) : (
+                  overallEssayFeedback ? (
+                    <MathText content={overallEssayFeedback} />
+                  ) : (
+                    <div className="p-3 text-xs text-slate-500">
+                      ✨ Bài thi đã được AI chấm tự động và đánh giá dựa trên tiêu chuẩn đáp án chuẩn.
+                    </div>
+                  )
+                )
+              ) : (
+                isTeacherMode ? (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700">Giáo viên chỉnh sửa Đánh giá Tư duy:</label>
+                    <textarea
+                      rows={5}
+                      value={overallComprehensionFeedback}
+                      onChange={(e) => setOverallComprehensionFeedback(e.target.value)}
+                      placeholder="Nhập đánh giá tổng quan tư duy toán học..."
+                      className="w-full p-3 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs focus:ring-2 focus:ring-purple-500 outline-none"
+                    />
+                  </div>
+                ) : (
+                  overallComprehensionFeedback ? (
+                    <MathText content={overallComprehensionFeedback} />
+                  ) : (
+                    <div className="p-3 text-xs text-slate-500">
+                      🧠 AI phân tích mạch suy luận toán học và năng lực giải quyết vấn đề của bài thi.
+                    </div>
+                  )
+                )
+              )}
+            </div>
+
+            {/* Action Footer */}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setIsSummaryModalOpen(false)}
+                className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+

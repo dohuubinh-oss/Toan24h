@@ -275,6 +275,7 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 			for _, res := range essayResp.QuestionResults {
 				ans := answersMap[res.QuestionID]
 				ans.Score = res.Score
+				ans.MaxScore = res.MaxScore
 				ans.IsCorrect = res.IsCorrect
 				ans.AIExplanation = res.Explanation
 				ans.ErrorLocation = res.ErrorLocation

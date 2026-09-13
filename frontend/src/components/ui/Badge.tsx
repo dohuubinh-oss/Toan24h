@@ -17,12 +17,12 @@ export function Badge({
   const baseStyles = "inline-flex items-center justify-center font-bold rounded-full transition-colors"
   
   const variants = {
-    default: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+    default: "bg-slate-100 text-slate-700  ",
     success: "bg-success/10 text-success border border-success/20",
     error: "bg-error/10 text-error border border-error/20",
     warning: "bg-warning/10 text-warning border border-warning/20",
-    info: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50",
-    outline: "border-2 border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-300",
+    info: "bg-blue-50 text-blue-600   border border-blue-100 ",
+    outline: "border-2 border-slate-200 text-slate-700  ",
     'diff-nb': "bg-emerald-50 text-emerald-600 border border-emerald-200",
     'diff-th': "bg-amber-50 text-amber-600 border border-amber-200",
     'diff-vd': "bg-orange-50 text-orange-600 border border-orange-200",

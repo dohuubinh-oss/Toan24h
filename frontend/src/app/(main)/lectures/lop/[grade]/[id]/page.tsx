@@ -72,7 +72,7 @@ export default async function GradeLecturePage({
             {returnUrl && (
               <Link 
                 href={returnUrl}
-                className="flex-1 flex items-center justify-center gap-3 px-6 py-4 font-bold rounded-xl transition-all text-lg bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 shadow-md hover:shadow-lg hover:-translate-y-1"
+                className="flex-1 flex items-center justify-center gap-3 px-6 py-4 font-bold rounded-xl transition-all text-lg bg-slate-100 text-slate-700 hover:bg-slate-200 shadow-md hover:shadow-lg hover:-translate-y-1"
               >
                 <ArrowLeft size={24} />
                 Trở về bài thi

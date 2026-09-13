@@ -241,13 +241,13 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   }, [exam, id, router, toast, cheatCount, answers]);
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900">
+    return <div className="flex items-center justify-center min-h-screen bg-slate-50">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
     </div>
   }
 
   if (!exam || questions.length === 0) {
-    return <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-500">
+    return <div className="flex items-center justify-center min-h-screen bg-slate-50 text-slate-500">
       Không tìm thấy dữ liệu đề thi.
     </div>
   }
@@ -406,7 +406,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   }
 
   return (
-    <div className="flex flex-col min-h-screen relative overflow-x-hidden bg-background-light dark:bg-background-dark">
+    <div className="flex flex-col min-h-screen relative overflow-x-hidden bg-background-light">
       <ExamProgressNav 
         title={exam.title}
         subject={`Toán Lớp ${exam.grade || 12}`}

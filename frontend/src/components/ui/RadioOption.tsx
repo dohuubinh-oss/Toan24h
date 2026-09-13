@@ -13,9 +13,9 @@ export const RadioOption = React.forwardRef<HTMLInputElement, RadioOptionProps>(
     return (
       <label
         className={cn(
-          "group relative flex items-center p-5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer transition-all duration-200",
-          "hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10",
-          "has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 has-[:checked]:ring-4 has-[:checked]:ring-blue-500/20",
+          "group relative flex items-center p-5 bg-white  border-2 border-slate-200  rounded-xl cursor-pointer transition-all duration-200",
+          "hover:border-blue-400  hover:bg-blue-50/50 ",
+          "has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50  has-[:checked]:ring-4 has-[:checked]:ring-blue-500/20",
           "has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed",
           containerClassName
         )}
@@ -28,12 +28,12 @@ export const RadioOption = React.forwardRef<HTMLInputElement, RadioOptionProps>(
         />
         
         {prefixContent && (
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold mr-4 group-has-[:checked]:bg-blue-500 group-has-[:checked]:text-white transition-colors shrink-0">
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 text-slate-500 font-bold mr-4 group-has-[:checked]:bg-blue-500 group-has-[:checked]:text-white transition-colors shrink-0">
             {prefixContent}
           </div>
         )}
         
-        <div className="text-slate-700 dark:text-slate-300 font-medium text-lg flex-1">
+        <div className="text-slate-700 font-medium text-lg flex-1">
           {label}
         </div>
         

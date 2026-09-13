@@ -42,11 +42,11 @@ export default function ResultDetailCard({
   errorLocation
 }: ResultDetailCardProps) {
   return (
-    <div className="bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-slate-50 rounded-xl border border-slate-200/60 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <div className="p-6">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex gap-3">
-            <span className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-sm">
+            <span className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-sm">
               {questionId}
             </span>
             <div className="space-y-4 w-full">
@@ -58,7 +58,7 @@ export default function ResultDetailCard({
                     const isSelected = opt.id === selectedOptionId
                     const isRightAnswer = opt.id === correctOptionId
 
-                    let btnClass = 'border-slate-200 dark:border-slate-700'
+                    let btnClass = 'border-slate-200 '
                     let label = `${opt.id}. ${opt.text}`
                     let iconColor = 'text-slate-300'
                     let icon = <Circle className={`w-5 h-5 ${iconColor}`} />
@@ -91,7 +91,7 @@ export default function ResultDetailCard({
               )}
 
               {type === 'essay' && studentAnswer && (
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700 mt-4">
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mt-4">
                   <p className="text-xs font-bold text-slate-500 uppercase mb-2">Bài làm của bạn:</p>
                   <div className="text-sm">{studentAnswer}</div>
                 </div>
@@ -114,14 +114,14 @@ export default function ResultDetailCard({
       </div>
       
       {aiExplanation && (
-        <div className="bg-slate-50 dark:bg-slate-800/50 p-6 border-t border-slate-100 dark:border-slate-800">
+        <div className="bg-slate-50 p-6 border-t border-slate-100">
           <div className="flex items-start gap-3">
             <div className="bg-primary/10 text-primary p-1.5 rounded-md mt-0.5">
               <Brain className="w-5 h-5" />
             </div>
             <div>
               <p className="text-sm font-semibold mb-1">Giải thích từ AI</p>
-              <div className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <div className="text-sm text-slate-600 leading-relaxed">
                 {aiExplanation}
               </div>
               {errorLocation && (

@@ -41,7 +41,7 @@ export default function RichTextEditor({
       editorClass={editorClass}
     >
       {(editor) => (
-        <div className={`flex flex-col transition-all overflow-hidden ${inline ? 'bg-transparent' : 'border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5'} ${className}`}>
+        <div className={`flex flex-col transition-all overflow-hidden ${inline ? 'bg-transparent' : 'border border-slate-200  rounded-xl bg-slate-50  focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5'} ${className}`}>
           {!readOnly && !hideToolbar && (
             <MenuBar 
               editor={editor} 

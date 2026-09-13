@@ -121,7 +121,7 @@ export default function MultipleChoiceQuestion({
   return (
     <main className="flex-grow flex flex-row items-start justify-center p-6 sm:p-12 relative w-full">
       <div className={`w-full max-w-4xl space-y-8 transition-all duration-500 ${isHintOpen ? 'mr-[460px]' : ''}`}>
-        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 p-10 relative overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-10 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary"></div>
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -130,7 +130,7 @@ export default function MultipleChoiceQuestion({
                   Câu hỏi {index + 1}
                 </span>
                 {readonly && aiFeedback?.comprehensionLevel && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
                     🎯 {aiFeedback.comprehensionLevel === 'HOAN_HAO' ? 'Tư duy hoàn hảo' : aiFeedback.comprehensionLevel === 'HIEU_BAI' ? 'Hiểu bài tốt' : aiFeedback.comprehensionLevel === 'NHAM_LAN' ? 'Có sai sót nhỏ' : 'Chọn ngẫu nhiên'}
                   </span>
                 )}
@@ -139,7 +139,7 @@ export default function MultipleChoiceQuestion({
                 {lectureUrl && (
                   <Link
                     href={lectureUrl}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 rounded-full font-semibold text-sm transition-all active:scale-95"
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-full font-semibold text-sm transition-all active:scale-95"
                     title="Xem bài giảng liên quan"
                   >
                     <BookOpen className="w-5 h-5" />
@@ -148,7 +148,7 @@ export default function MultipleChoiceQuestion({
                 )}
                 <button
                   onClick={() => setIsReportModalOpen(true)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer transition-all active:scale-95 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer transition-all active:scale-95 bg-red-50 text-red-600 hover:bg-red-100  `}
                   title={readonly ? "Kháng cáo" : "Báo lỗi"}
                 >
                   <AlertTriangle className="w-5 h-5" />
@@ -158,8 +158,8 @@ export default function MultipleChoiceQuestion({
                   onClick={onToggleFlag}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm cursor-pointer transition-all active:scale-95 ${
                     isFlagged 
-                      ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400'
+                      ? 'bg-amber-100 text-amber-700 hover:bg-amber-200  '
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200  '
                   }`}
                   title="Đánh dấu câu hỏi này để xem lại sau"
                 >
@@ -179,7 +179,7 @@ export default function MultipleChoiceQuestion({
               </div>
             </div>
             
-            <div className="text-xl font-medium text-slate-800 dark:text-slate-100 leading-relaxed">
+            <div className="text-xl font-medium text-slate-800 leading-relaxed">
               <MathText content={content} />
             </div>
           </div>
@@ -190,19 +190,19 @@ export default function MultipleChoiceQuestion({
             const isSelected = selectedOptionId === option.id
             const isCorrect = correctOptionId === option.id
 
-            let borderClass = 'border-slate-200 dark:border-slate-800 hover:border-primary/50'
-            let bgClass = 'bg-white dark:bg-slate-900'
+            let borderClass = 'border-slate-200  hover:border-primary/50'
+            let bgClass = 'bg-white '
 
             if (readonly) {
               if (isCorrect) {
-                borderClass = 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                borderClass = 'border-green-500 bg-green-50 '
               } else if (isSelected && !isCorrect) {
-                borderClass = 'border-red-500 bg-red-50 dark:bg-red-950/20'
+                borderClass = 'border-red-500 bg-red-50 '
               }
             } else {
               if (isSelected) {
                 borderClass = 'border-primary ring-2 ring-primary/20'
-                bgClass = 'bg-primary/5 dark:bg-primary/10'
+                bgClass = 'bg-primary/5 '
               }
             }
             
@@ -215,11 +215,11 @@ export default function MultipleChoiceQuestion({
               >
                 <div className="flex items-center gap-4 flex-1">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${
-                    isSelected ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                    isSelected ? 'bg-primary text-white' : 'bg-slate-100  text-slate-600 '
                   }`}>
                     {option.label}
                   </div>
-                  <span className="text-base text-slate-700 dark:text-slate-200 font-medium flex-1">
+                  <span className="text-base text-slate-700 font-medium flex-1">
                     <MathText content={option.text} />
                   </span>
                 </div>
@@ -234,32 +234,32 @@ export default function MultipleChoiceQuestion({
         </div>
 
         {readonly && (
-          <div className="mt-4 bg-teal-50/80 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800 rounded-xl p-6 shadow-sm">
-            <h4 className="flex items-center gap-2 text-teal-800 dark:text-teal-300 font-bold mb-3">
-              <MessageSquare className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+          <div className="mt-4 bg-teal-50/80 border border-teal-200 rounded-xl p-6 shadow-sm">
+            <h4 className="flex items-center gap-2 text-teal-800 font-bold mb-3">
+              <MessageSquare className="w-5 h-5 text-teal-600" />
               Lời giải thích của bạn
             </h4>
             {selectedExplanation && selectedExplanation.trim().length > 0 ? (
-              <div className="text-slate-800 dark:text-slate-200 leading-relaxed text-base">
+              <div className="text-slate-800 leading-relaxed text-base">
                 <MathText content={selectedExplanation} />
               </div>
             ) : (
-              <p className="text-slate-400 dark:text-slate-500 italic text-sm">
+              <p className="text-slate-400 italic text-sm">
                 Học sinh không nhập giải thích cho câu hỏi này.
               </p>
             )}
 
             {/* Random Guess Alert */}
             {aiFeedback?.isRandomGuess && (
-              <div className="mt-4 p-3 bg-amber-100/80 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 rounded-xl text-amber-800 dark:text-amber-200 text-xs flex items-center gap-2 font-medium">
-                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <div className="mt-4 p-3 bg-amber-100/80 border border-amber-300 rounded-xl text-amber-800 text-xs flex items-center gap-2 font-medium">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>⚠️ AI phát hiện đáp án có khả năng đoán mò (thiếu các bước suy luận giải thích).</span>
               </div>
             )}
 
             {/* Deduction reason if any */}
             {aiFeedback?.deductionReason && (
-              <div className="mt-3 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300 text-xs leading-relaxed font-medium">
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs leading-relaxed font-medium">
                 <strong>📌 Lý do trừ điểm:</strong> {aiFeedback.deductionReason}
               </div>
             )}
@@ -267,29 +267,29 @@ export default function MultipleChoiceQuestion({
         )}
 
         {readonly && (aiExplanation || solutionGuide) && (
-          <div className="mt-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-6 shadow-sm">
-            <h4 className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold mb-3">
-              <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-6 shadow-sm">
+            <h4 className="flex items-center gap-2 text-emerald-800 font-bold mb-3">
+              <BookOpen className="w-5 h-5 text-emerald-600" />
               Lời giải chi tiết (Đáp án chuẩn)
             </h4>
-            <div className="text-slate-800 dark:text-slate-200 leading-relaxed text-base">
+            <div className="text-slate-800 leading-relaxed text-base">
               <MathText content={aiExplanation || solutionGuide || ''} />
             </div>
           </div>
         )}
 
         {readonly && aiFeedback?.aiReasoningRemark && (
-          <div className="mt-4 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-xl p-6 shadow-sm">
-            <h4 className="flex items-center justify-between text-purple-700 dark:text-purple-300 font-bold mb-3">
+          <div className="mt-4 bg-purple-50 border border-purple-200 rounded-xl p-6 shadow-sm">
+            <h4 className="flex items-center justify-between text-purple-700 font-bold mb-3">
               <span className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <Sparkles className="w-5 h-5 text-purple-600" />
                 Đánh giá tư duy (VIP)
               </span>
-              <span className="bg-purple-100 dark:bg-purple-800/50 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-xs font-bold">
+              <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold">
                 Điểm: {aiFeedback.reasoningScore}/10
               </span>
             </h4>
-            <div className="text-slate-700 dark:text-slate-300">
+            <div className="text-slate-700">
               <MathText content={aiFeedback.aiReasoningRemark} />
             </div>
           </div>
@@ -305,8 +305,8 @@ export default function MultipleChoiceQuestion({
 
       {isReportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100">
+            <h3 className="text-xl font-bold text-slate-800 mb-2">
               {readonly ? 'Kháng cáo' : 'Báo lỗi'}
             </h3>
             <p className="text-slate-500 text-sm mb-4">
@@ -316,12 +316,12 @@ export default function MultipleChoiceQuestion({
               value={reportMessage}
               onChange={(e) => setReportMessage(e.target.value)}
               placeholder="Nhập nội dung..."
-              className="w-full min-h-[120px] p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none text-slate-700 dark:text-slate-200"
+              className="w-full min-h-[120px] p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none text-slate-700"
             />
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setIsReportModalOpen(false)}
-                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 rounded-xl font-semibold transition-colors"
+                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-semibold transition-colors"
                 disabled={isSubmittingReport}
               >
                 Hủy

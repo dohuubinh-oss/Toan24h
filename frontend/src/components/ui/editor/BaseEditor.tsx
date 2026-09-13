@@ -169,7 +169,7 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
 
   if (mathOnlyToolbar) {
     return (
-      <div className="flex items-center gap-1 p-1 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 rounded-t-xl overflow-x-auto">
+      <div className="flex items-center gap-1 p-1 bg-slate-50 border-b border-slate-200 rounded-t-xl overflow-x-auto">
         <button
           onClick={() => editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()}
           className={`${btnClass} text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0`}
@@ -182,7 +182,7 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
   }
 
   return (
-    <div className="flex items-center justify-between gap-1 p-1 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 rounded-t-xl overflow-x-auto">
+    <div className="flex items-center justify-between gap-1 p-1 bg-slate-50 border-b border-slate-200 rounded-t-xl overflow-x-auto">
       <div className="flex items-center gap-1">
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}

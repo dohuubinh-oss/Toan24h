@@ -65,11 +65,11 @@ export default function MobileQrUploadModal({
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full p-6 sm:p-8 relative flex flex-col items-center text-center">
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full p-6 sm:p-8 relative flex flex-col items-center text-center">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
         >
           <X size={20} />
         </button>
@@ -78,10 +78,10 @@ export default function MobileQrUploadModal({
         <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
           <Smartphone className="w-7 h-7" />
         </div>
-        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+        <h3 className="text-xl font-bold text-slate-800 mb-2">
           Chụp bài làm bằng điện thoại
         </h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+        <p className="text-sm text-slate-500 mb-6 leading-relaxed">
           Dùng camera điện thoại hoặc Zalo quét mã QR bên dưới để chụp ảnh lời giải viết tay.
         </p>
 
@@ -106,7 +106,7 @@ export default function MobileQrUploadModal({
         </div>
 
         {/* Status indicator */}
-        <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-4 py-2.5 rounded-full w-full">
+        <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-slate-500 bg-slate-100 px-4 py-2.5 rounded-full w-full">
           {isSyncing && (
             <>
               <Loader2 className="w-4 h-4 animate-spin text-primary" />
@@ -114,7 +114,7 @@ export default function MobileQrUploadModal({
             </>
           )}
           {isSuccess && (
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+            <span className="text-emerald-600 font-bold">
               Đang hoàn tất đưa vào bài thi...
             </span>
           )}

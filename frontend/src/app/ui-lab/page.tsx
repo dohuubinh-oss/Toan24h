@@ -65,17 +65,17 @@ const sampleLectureData = {
 
 export default function UILabPage() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-8">
+    <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-5xl mx-auto space-y-16">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">UI Lab</h1>
-          <p className="text-slate-500 dark:text-slate-400">Component thư viện cho dự án Toán 24h</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">UI Lab</h1>
+          <p className="text-slate-500">Component thư viện cho dự án Toán 24h</p>
         </div>
         
         {/* === 1. BADGE === */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">1. Badge</h2>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-8">
+          <h2 className="text-2xl font-bold text-slate-800 border-b pb-2">1. Badge</h2>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-8">
             <div>
               <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">Variants</h3>
               <div className="flex flex-wrap gap-4">
@@ -109,8 +109,8 @@ export default function UILabPage() {
 
         {/* === 2. BUTTON === */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">2. Button</h2>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-8">
+          <h2 className="text-2xl font-bold text-slate-800 border-b pb-2">2. Button</h2>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-8">
             <div>
               <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">Variants</h3>
               <div className="flex flex-wrap gap-4">
@@ -139,9 +139,9 @@ export default function UILabPage() {
 
         {/* === 3. ICON === */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">3. Icon (Lucide)</h2>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-            <div className="flex flex-wrap gap-6 text-slate-600 dark:text-slate-300">
+          <h2 className="text-2xl font-bold text-slate-800 border-b pb-2">3. Icon (Lucide)</h2>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div className="flex flex-wrap gap-6 text-slate-600">
               <div className="flex flex-col items-center gap-2"><Icon name="Home" /><span className="text-xs">Home</span></div>
               <div className="flex flex-col items-center gap-2"><Icon name="User" /><span className="text-xs">User</span></div>
               <div className="flex flex-col items-center gap-2"><Icon name="Settings" /><span className="text-xs">Settings</span></div>
@@ -154,8 +154,8 @@ export default function UILabPage() {
 
         {/* === 4. INPUT & LABEL === */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">4. Input & Label</h2>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+          <h2 className="text-2xl font-bold text-slate-800 border-b pb-2">4. Input & Label</h2>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div className="max-w-md space-y-6">
               <div>
                 <Label htmlFor="email" required>Email address</Label>
@@ -180,8 +180,8 @@ export default function UILabPage() {
 
         {/* === 5. RADIO OPTION === */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">5. Radio Option</h2>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+          <h2 className="text-2xl font-bold text-slate-800 border-b pb-2">5. Radio Option</h2>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div className="max-w-xl space-y-4">
               <RadioOption 
                 name="demo-radio" 
@@ -209,14 +209,14 @@ export default function UILabPage() {
 
         {/* === 6. CARD === */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">6. Card</h2>
+          <h2 className="text-2xl font-bold text-slate-800 border-b pb-2">6. Card</h2>
           <Card className="max-w-2xl">
             <CardHeader>
               <h3 className="text-xl font-bold">Đây là Card Header</h3>
               <p className="text-slate-500 mt-1">Dùng để hiển thị tiêu đề hoặc các action top-level</p>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-700 dark:text-slate-300">
+              <p className="text-slate-700">
                 Đây là Card Content. Nó chứa nội dung chính của thẻ, ví dụ như câu hỏi trắc nghiệm, biểu đồ, hay các form nhập liệu. Nó có padding chuẩn 24px (sm:32px).
               </p>
             </CardContent>
@@ -229,8 +229,8 @@ export default function UILabPage() {
 
         {/* === 7. PAGINATION === */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">7. Pagination</h2>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+          <h2 className="text-2xl font-bold text-slate-800 border-b pb-2">7. Pagination</h2>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <Suspense fallback={<div className="p-4 text-slate-500">Đang tải...</div>}>
               <ClientPagination 
                 currentPage={2}
@@ -246,7 +246,7 @@ export default function UILabPage() {
 
         {/* === 8. QUESTION CARD & CONTENT QUESTION === */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">8. Question Card & Content Question</h2>
+          <h2 className="text-2xl font-bold text-slate-800 border-b pb-2">8. Question Card & Content Question</h2>
           <div className="space-y-6">
             
             <div className="space-y-2">
@@ -325,8 +325,8 @@ export default function UILabPage() {
 
         {/* === 9. SIDEBAR FILTER === */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">9. Sidebar Filter</h2>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 w-80">
+          <h2 className="text-2xl font-bold text-slate-800 border-b pb-2">9. Sidebar Filter</h2>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 w-80">
             <Suspense fallback={<div className="p-4 text-slate-500">Đang tải...</div>}>
               <QuestionFilter />
             </Suspense>
@@ -335,15 +335,15 @@ export default function UILabPage() {
 
         {/* === 10. LECTURE VIEWER === */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 border-b pb-2">10. Lecture Detail Viewer</h2>
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-8">
+          <h2 className="text-2xl font-bold text-slate-800 border-b pb-2">10. Lecture Detail Viewer</h2>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-8">
             <LectureHeader 
               title={sampleLectureData.title}
               grade={sampleLectureData.grade}
               category={sampleLectureData.category}
               createdAt={sampleLectureData.createdAt}
             />
-            <hr className="border-slate-200 dark:border-slate-800" />
+            <hr className="border-slate-200" />
             <LectureConcept basicConcept={sampleLectureData.basicConcept} />
             <LectureExamples examples={sampleLectureData.examples as any} />
           </div>

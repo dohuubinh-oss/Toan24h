@@ -125,7 +125,7 @@ export default function AppealsPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
             <MessageSquareWarning className="w-8 h-8 text-primary" />
             Quản lý Phản hồi
           </h1>
@@ -133,13 +133,13 @@ export default function AppealsPage() {
         </div>
       </div>
 
-      <div className="flex border-b border-slate-200 dark:border-slate-800 mb-6">
+      <div className="flex border-b border-slate-200 mb-6">
         <button
           onClick={() => setActiveTab('appeals')}
           className={`flex items-center gap-2 py-3 px-6 font-semibold border-b-2 transition-colors ${
             activeTab === 'appeals'
               ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              : 'border-transparent text-slate-500 hover:text-slate-700 '
           }`}
         >
           <MessageSquareWarning className="w-5 h-5" />
@@ -150,7 +150,7 @@ export default function AppealsPage() {
           className={`flex items-center gap-2 py-3 px-6 font-semibold border-b-2 transition-colors ${
             activeTab === 'reports'
               ? 'border-red-500 text-red-500'
-              : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              : 'border-transparent text-slate-500 hover:text-slate-700 '
           }`}
         >
           <AlertTriangle className="w-5 h-5" />
@@ -161,7 +161,7 @@ export default function AppealsPage() {
           className={`flex items-center gap-2 py-3 px-6 font-semibold border-b-2 transition-colors ${
             activeTab === 'reviews'
               ? 'border-indigo-500 text-indigo-500'
-              : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              : 'border-transparent text-slate-500 hover:text-slate-700 '
           }`}
         >
           <ClipboardList className="w-5 h-5" />
@@ -169,7 +169,7 @@ export default function AppealsPage() {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {activeTab === 'reviews' ? (
           needsReviewSubmissions.length === 0 ? (
             <div className="text-center py-20 text-slate-500">
@@ -178,7 +178,7 @@ export default function AppealsPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-sm font-medium">
+                <thead className="bg-slate-50 text-slate-500 text-sm font-medium">
                   <tr>
                     <th className="px-6 py-4">Bài thực hành</th>
                     <th className="px-6 py-4">Học sinh</th>
@@ -187,21 +187,21 @@ export default function AppealsPage() {
                     <th className="px-6 py-4 text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-slate-100">
                   {needsReviewSubmissions.map((sub) => (
-                    <tr key={sub.submissionId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
+                    <tr key={sub.submissionId} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-slate-900">
                         {sub.examName}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <div className="font-semibold text-slate-800 dark:text-slate-200">{sub.studentName}</div>
+                        <div className="font-semibold text-slate-800">{sub.studentName}</div>
                         <div className="text-xs text-slate-400">{sub.studentEmail}</div>
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-500">
                         {new Date(sub.submittedAt).toLocaleString('vi-VN')}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
                           Cần duyệt chấm
                         </span>
                       </td>
@@ -228,7 +228,7 @@ export default function AppealsPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-sm font-medium">
+                <thead className="bg-slate-50 text-slate-500 text-sm font-medium">
                   <tr>
                     <th className="px-6 py-4">Bài thực hành</th>
                     <th className="px-6 py-4">Câu hỏi</th>
@@ -238,10 +238,10 @@ export default function AppealsPage() {
                     <th className="px-6 py-4 text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-slate-100">
                   {appeals.map((appeal) => (
-                    <tr key={appeal.detailId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
+                    <tr key={appeal.detailId} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-slate-900">
                         {appeal.examName}
                       </td>
                       <td className="px-6 py-4 text-sm">
@@ -250,14 +250,14 @@ export default function AppealsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <div className="line-clamp-2 max-w-xs text-blue-600 dark:text-blue-400">
+                        <div className="line-clamp-2 max-w-xs text-blue-600">
                           <MathText content={appeal.studentAnswer || '(Không có)'} />
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300">
+                      <td className="px-6 py-4 text-sm font-bold text-slate-700">
                         {appeal.score} / {appeal.maxScore}
                       </td>
-                      <td className="px-6 py-4 text-sm text-red-600 dark:text-red-400 italic max-w-xs">
+                      <td className="px-6 py-4 text-sm text-red-600 italic max-w-xs">
                         {appeal.appealMessage}
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -282,7 +282,7 @@ export default function AppealsPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-sm font-medium">
+                <thead className="bg-slate-50 text-slate-500 text-sm font-medium">
                   <tr>
                     <th className="px-6 py-4">ID</th>
                     <th className="px-6 py-4">Nội dung câu hỏi</th>
@@ -290,10 +290,10 @@ export default function AppealsPage() {
                     <th className="px-6 py-4 text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-slate-100">
                   {reportedQuestions.map((q) => (
-                    <tr key={q.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
+                    <tr key={q.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-medium text-slate-900">
                         {q.id}
                       </td>
                       <td className="px-6 py-4 text-sm">
@@ -301,20 +301,20 @@ export default function AppealsPage() {
                           <MathText content={q.content} />
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-red-600 dark:text-red-400 italic max-w-xs">
+                      <td className="px-6 py-4 text-sm text-red-600 italic max-w-xs">
                         {q.reportMessage}
                       </td>
                       <td className="px-6 py-4 text-right flex justify-end gap-2">
                         <Link
                           href={`/dashboard/questions/create?id=${q.id}`}
-                          className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 rounded-lg text-sm font-semibold transition-colors"
+                          className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-semibold transition-colors"
                         >
                           <Edit className="w-4 h-4" />
                           Sửa
                         </Link>
                         <button
                           onClick={() => openResolveReportModal(q.id)}
-                          className="flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 rounded-lg text-sm font-semibold transition-colors"
+                          className="flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-sm font-semibold transition-colors"
                         >
                           <Check className="w-4 h-4" />
                           Đã xử lý
@@ -332,9 +332,9 @@ export default function AppealsPage() {
       {/* Resolve Modal */}
       {selectedAppeal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-3xl w-full shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">Duyệt Kháng Cáo</h2>
+          <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-slate-800">Duyệt Kháng Cáo</h2>
               <button onClick={() => setSelectedAppeal(null)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-6 h-6" />
               </button>
@@ -344,21 +344,21 @@ export default function AppealsPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-slate-500">Nội dung câu hỏi</p>
-                  <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl prose prose-sm max-w-none">
+                  <div className="p-4 bg-slate-50 rounded-xl prose prose-sm max-w-none">
                     <MathText content={selectedAppeal.question} />
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <p className="text-sm font-semibold text-slate-500">Bài làm học sinh</p>
-                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded-xl font-medium">
+                    <div className="p-4 bg-blue-50 text-blue-800 rounded-xl font-medium">
                       <MathText content={selectedAppeal.studentAnswer || '(Không có)'} />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <p className="text-sm font-semibold text-slate-500">Lời giải AI & Điểm</p>
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                      <p className="font-bold text-slate-800 dark:text-slate-200 mb-2">Điểm: {selectedAppeal.score} / {selectedAppeal.maxScore}</p>
+                    <div className="p-4 bg-slate-50 rounded-xl">
+                      <p className="font-bold text-slate-800 mb-2">Điểm: {selectedAppeal.score} / {selectedAppeal.maxScore}</p>
                       <div className="prose prose-sm max-w-none">
                         <MathText content={selectedAppeal.aiExplanation || ''} />
                       </div>
@@ -369,27 +369,27 @@ export default function AppealsPage() {
 
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-slate-500">Lý do kháng cáo</p>
-                <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 rounded-xl italic">
+                <div className="p-4 bg-red-50 text-red-800 rounded-xl italic">
                   "{selectedAppeal.appealMessage}"
                 </div>
               </div>
 
-              <hr className="border-slate-100 dark:border-slate-800" />
+              <hr className="border-slate-100" />
 
               <div className="space-y-4">
-                <h3 className="font-bold text-slate-800 dark:text-white">Quyết định của giáo viên</h3>
+                <h3 className="font-bold text-slate-800">Quyết định của giáo viên</h3>
                 
                 <div className="flex gap-4">
                   <button 
                     onClick={() => setResolveStatus('APPROVED')}
-                    className={`flex-1 py-3 px-4 rounded-xl border-2 flex items-center justify-center gap-2 font-semibold transition-all ${resolveStatus === 'APPROVED' ? 'border-green-500 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                    className={`flex-1 py-3 px-4 rounded-xl border-2 flex items-center justify-center gap-2 font-semibold transition-all ${resolveStatus === 'APPROVED' ? 'border-green-500 bg-green-50 text-green-700  ' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
                   >
                     <Check className="w-5 h-5" />
                     Chấp thuận & Đổi điểm
                   </button>
                   <button 
                     onClick={() => setResolveStatus('REJECTED')}
-                    className={`flex-1 py-3 px-4 rounded-xl border-2 flex items-center justify-center gap-2 font-semibold transition-all ${resolveStatus === 'REJECTED' ? 'border-red-500 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                    className={`flex-1 py-3 px-4 rounded-xl border-2 flex items-center justify-center gap-2 font-semibold transition-all ${resolveStatus === 'REJECTED' ? 'border-red-500 bg-red-50 text-red-700  ' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
                   >
                     <X className="w-5 h-5" />
                     Từ chối
@@ -398,7 +398,7 @@ export default function AppealsPage() {
 
                 {resolveStatus === 'APPROVED' && (
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Điểm mới (Tối đa: {selectedAppeal.maxScore})</label>
+                    <label className="text-sm font-semibold text-slate-700">Điểm mới (Tối đa: {selectedAppeal.maxScore})</label>
                     <input 
                       type="number"
                       step="0.25"
@@ -406,25 +406,25 @@ export default function AppealsPage() {
                       max={selectedAppeal.maxScore}
                       value={newScore}
                       onChange={(e) => setNewScore(Number(e.target.value))}
-                      className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />
                   </div>
                 )}
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Lời nhắn / Nhận xét (Bắt buộc)</label>
+                  <label className="text-sm font-semibold text-slate-700">Lời nhắn / Nhận xét (Bắt buộc)</label>
                   <textarea 
                     rows={3}
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
                     placeholder="Giải thích vì sao chấp thuận hoặc từ chối..."
-                    className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                   ></textarea>
                 </div>
               </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+            <div className="p-6 border-t border-slate-100 flex justify-end gap-3">
               <button 
                 onClick={() => setSelectedAppeal(null)}
                 className="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
@@ -448,9 +448,9 @@ export default function AppealsPage() {
       {/* Resolve Report Modal */}
       {selectedReportId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">Xử lý báo lỗi</h2>
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-slate-800">Xử lý báo lỗi</h2>
               <button onClick={() => setSelectedReportId(null)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-6 h-6" />
               </button>
@@ -458,18 +458,18 @@ export default function AppealsPage() {
             
             <div className="p-6 overflow-y-auto space-y-4 flex-1">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Lời nhắn / Nhận xét phản hồi (Tùy chọn)</label>
+                <label className="text-sm font-semibold text-slate-700">Lời nhắn / Nhận xét phản hồi (Tùy chọn)</label>
                 <textarea 
                   rows={4}
                   value={reportFeedback}
                   onChange={(e) => setReportFeedback(e.target.value)}
                   placeholder="Tin nhắn này sẽ được gửi đến những học sinh đã báo lỗi câu hỏi này..."
-                  className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                 ></textarea>
               </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+            <div className="p-6 border-t border-slate-100 flex justify-end gap-3">
               <button 
                 onClick={() => setSelectedReportId(null)}
                 className="px-6 py-2.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-colors"

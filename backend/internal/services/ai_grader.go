@@ -121,10 +121,10 @@ Nhiệm vụ của bạn là chấm điểm danh sách bài làm TỰ LUẬN c�
 ---
 ### ⚙️ QUY TẮC CHẤM TỰ LUẬN (GRADING LOGIC):
 1. Đối chiếu studentAnswer với correctAnswer theo từng bước biến đổi toán học.
-2. Điểm số từ 0 đến maxScore (lẻ đến 0.25). Đúng kết quả nhưng sai bước trung gian/sai dấu => Trừ điểm tương ứng.
-3. Bài làm viết linh tinh, lạc đề hoặc bỏ trống => Chấm 0 điểm.
-4. NẾU HỌC SINH LÀM SAI: BẮT BUỘC trích dẫn chính xác đoạn viết sai vào errorLocation và nêu lý do tại deductionReason.
-5. Đưa ra overallEssayFeedback: Nhận xét tổng quan kỹ năng làm bài tự luận của học sinh (2-3 câu).
+2. Điểm số (score) nằm trong khoảng từ 0.0 đến maxScore của câu hỏi đó (thăng số lẻ 0.25). Trả về chính xác trường "score" và trường "maxScore" (lấy từ dữ liệu maxScore đầu vào của từng câu).
+3. Bài làm đúng hoàn toàn => score = maxScore, isCorrect = true. Bài làm sai bước trung gian/dấu => Trừ điểm tương ứng. Bài bỏ trống hoặc làm nhảm => score = 0, isCorrect = false.
+4. NẾU HỌC SINH LÀM SAI (score < maxScore): BẮT BUỘC trích dẫn chính xác đoạn viết sai vào errorLocation và nêu lý do cụ thể tại deductionReason.
+5. Đưa ra overallEssayFeedback: Nhận xét tổng quan trình bày tự luận của học sinh (2-3 câu).
 
 ---
 ### 📤 ĐỊNH DẠNG ĐẦU RA (OUTPUT FORMAT - JSON ONLY):

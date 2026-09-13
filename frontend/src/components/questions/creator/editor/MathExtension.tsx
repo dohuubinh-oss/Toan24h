@@ -66,7 +66,7 @@ const MathNodeView = ({ node, updateAttributes, selected, deleteNode, editor, ge
         className={`cursor-pointer inline-block rounded px-1.5 py-0.5 transition-all ${
           isEditing 
             ? 'bg-primary/10 ring-2 ring-primary/40 text-primary' 
-            : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+            : 'hover:bg-slate-100 '
         }`}
         onClick={() => setIsEditing(true)}
       >

@@ -15,7 +15,7 @@ export function FilterWrapper({
   const { localSearch, handleSearch, clearFilters } = useSidebarFilter();
   
   return (
-    <div className="px-3 py-4 mt-2 border-t border-slate-100 dark:border-slate-800">
+    <div className="px-3 py-4 mt-2 border-t border-slate-100">
       <div className="space-y-4">
         <div className="px-3 mb-2">
           <div className="relative group">
