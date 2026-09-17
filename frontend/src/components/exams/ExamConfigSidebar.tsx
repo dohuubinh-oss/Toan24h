@@ -22,6 +22,20 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
   const [isLectureModalOpen, setIsLectureModalOpen] = React.useState(false);
   const [selectedLectureName, setSelectedLectureName] = React.useState<string | null>(null);
 
+  React.useEffect(() => {
+    if (config.lectureId) {
+      import('@/lib/lectureApi').then(({ getLectureById }) => {
+        getLectureById(config.lectureId!).then(lecture => {
+          if (lecture && lecture.title) {
+            setSelectedLectureName(lecture.title);
+          }
+        }).catch(err => console.error("Failed to load lecture title:", err));
+      });
+    } else {
+      setSelectedLectureName(null);
+    }
+  }, [config.lectureId]);
+
   return (
     <div className="lg:col-span-4 space-y-6">
       <div className="sticky top-24 space-y-6">
