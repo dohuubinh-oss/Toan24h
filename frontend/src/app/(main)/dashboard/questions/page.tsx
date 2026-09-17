@@ -88,6 +88,36 @@ function QuestionsPageContent() {
     });
   };
 
+  const swapFrom = searchParams.get('swapFrom');
+  const qidsParam = searchParams.get('qids');
+  const examIdParam = searchParams.get('id');
+
+  const handleSelectReplacement = (newQuestionId: string) => {
+    const currentQids = qidsParam ? qidsParam.split(',').filter(Boolean) : [];
+    let updatedQids: string[];
+    if (swapFrom && currentQids.includes(swapFrom)) {
+      updatedQids = currentQids.map(qid => qid === swapFrom ? newQuestionId : qid);
+    } else {
+      updatedQids = [...currentQids, newQuestionId];
+    }
+
+    const params = new URLSearchParams();
+    if (updatedQids.length > 0) {
+      params.set('qids', updatedQids.join(','));
+    }
+    if (examIdParam) {
+      params.set('id', examIdParam);
+    }
+    router.push(`/dashboard/exams/create?${params.toString()}`);
+  };
+
+  const handleCancelSwap = () => {
+    const params = new URLSearchParams();
+    if (qidsParam) params.set('qids', qidsParam);
+    if (examIdParam) params.set('id', examIdParam);
+    router.push(`/dashboard/exams/create?${params.toString()}`);
+  };
+
   return (
     <>
       <div className="flex flex-col gap-6 max-w-7xl mx-auto relative pb-20">
@@ -112,6 +142,27 @@ function QuestionsPageContent() {
             </Link>
           </div>
 
+          {/* Swap Question Banner */}
+          {swapFrom && (
+            <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl flex items-center justify-between gap-4 shadow-sm">
+              <div>
+                <p className="font-bold text-amber-900 text-sm flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping inline-block" />
+                  Đang trong chế độ đổi câu hỏi
+                </p>
+                <p className="text-xs text-amber-700 mt-1">
+                  Vui lòng chọn 1 câu hỏi từ danh sách bên dưới để thay thế cho câu hỏi đang có ID: <code className="font-mono bg-amber-100 px-1.5 py-0.5 rounded text-amber-900 font-bold">{swapFrom}</code>
+                </p>
+              </div>
+              <button 
+                onClick={handleCancelSwap}
+                className="px-3 py-1.5 bg-amber-200 hover:bg-amber-300 text-amber-900 font-bold text-xs rounded-lg transition-colors whitespace-nowrap"
+              >
+                Hủy đổi câu hỏi
+              </button>
+            </div>
+          )}
+
           {/* Question List */}
           <div className="space-y-4">
             {isFiltering ? (
@@ -122,48 +173,66 @@ function QuestionsPageContent() {
               </>
             ) : (
               <>
-                {questions.map((q) => (
-                  <QuestionCard 
-                    key={q.id}
-                    id={q.id || ""}
-                    isSelected={selectedIds.includes(q.id || "")}
-                    onToggle={() => {
-                      if (!q.id) return;
-                      setSelectedIds(prev => 
-                        prev.includes(q.id!) 
-                          ? prev.filter(id => id !== q.id)
-                          : [...prev, q.id!]
-                      )
-                    }}
-                    onEdit={() => router.push(`/dashboard/questions/create?id=${q.id}`)}
-                    onDelete={() => setDeleteId(q.id || null)}
-                    grade={Number(q.grade) || (q.type_question === 'group' && q.subQuestions?.[0]?.grade ? Number(q.subQuestions[0].grade) : 0)}
-                    topic={q.topic || (q.type_question === 'group' && q.subQuestions?.[0]?.topic) || ''}
-                    difficulty={q.difficulty_level || (q.type_question === 'group' && q.subQuestions?.[0]?.difficulty_level) || ''}
-                    typeQuestion={q.type_question}
-                    type={q.type || (q.type_question === 'group' && q.subQuestions?.[0]?.type) || ''}
-                  >
-                    <ContentQuestion 
-                      content={q.type_question === 'single' ? q.content : undefined}
-                      sharedContext={q.type_question === 'group' ? q.content : undefined}
-                      options={q.options?.length > 0 ? q.options : undefined}
-                      correctAnswer={q.correct_answer}
-                      solution={q.solution_guide}
-                      isEssay={q.type === 'Tự luận'}
-                      subQuestions={
-                        q.type_question === 'group' && q.subQuestions 
-                          ? q.subQuestions.map(sub => ({
-                              content: sub.content,
-                              options: sub.options?.length > 0 ? sub.options : undefined,
-                              correctAnswer: sub.correct_answer,
-                              solution: sub.solution_guide,
-                              isEssay: sub.type === 'Tự luận'
-                            }))
-                          : undefined
-                      }
-                    />
-                  </QuestionCard>
-                ))}
+                {questions.map((q) => {
+                  const isCurrentInExam = qidsParam?.split(',').includes(q.id || '');
+                  return (
+                    <QuestionCard 
+                      key={q.id}
+                      id={q.id || ""}
+                      isSelected={selectedIds.includes(q.id || "")}
+                      onToggle={() => {
+                        if (!q.id) return;
+                        setSelectedIds(prev => 
+                          prev.includes(q.id!) 
+                            ? prev.filter(id => id !== q.id)
+                            : [...prev, q.id!]
+                        )
+                      }}
+                      onEdit={() => router.push(`/dashboard/questions/create?id=${q.id}`)}
+                      onDelete={() => setDeleteId(q.id || null)}
+                      grade={Number(q.grade) || (q.type_question === 'group' && q.subQuestions?.[0]?.grade ? Number(q.subQuestions[0].grade) : 0)}
+                      topic={q.topic || (q.type_question === 'group' && q.subQuestions?.[0]?.topic) || ''}
+                      difficulty={q.difficulty_level || (q.type_question === 'group' && q.subQuestions?.[0]?.difficulty_level) || ''}
+                      typeQuestion={q.type_question}
+                      type={q.type || (q.type_question === 'group' && q.subQuestions?.[0]?.type) || ''}
+                    >
+                      {swapFrom && (
+                        <div className="mb-4 pb-3 border-b border-slate-100 flex justify-end">
+                          <button
+                            onClick={() => q.id && handleSelectReplacement(q.id)}
+                            disabled={isCurrentInExam}
+                            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 shadow-sm ${
+                              isCurrentInExam
+                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                                : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95'
+                            }`}
+                          >
+                            {isCurrentInExam ? 'Đã có trong đề thi này' : '✓ Chọn câu hỏi này để thay thế'}
+                          </button>
+                        </div>
+                      )}
+                      <ContentQuestion 
+                        content={q.type_question === 'single' ? q.content : undefined}
+                        sharedContext={q.type_question === 'group' ? q.content : undefined}
+                        options={q.options?.length > 0 ? q.options : undefined}
+                        correctAnswer={q.correct_answer}
+                        solution={q.solution_guide}
+                        isEssay={q.type === 'Tự luận'}
+                        subQuestions={
+                          q.type_question === 'group' && q.subQuestions 
+                            ? q.subQuestions.map(sub => ({
+                                content: sub.content,
+                                options: sub.options?.length > 0 ? sub.options : undefined,
+                                correctAnswer: sub.correct_answer,
+                                solution: sub.solution_guide,
+                                isEssay: sub.type === 'Tự luận'
+                              }))
+                            : undefined
+                        }
+                      />
+                    </QuestionCard>
+                  );
+                })}
             
             {questions.length === 0 && (
               <div className="bg-white rounded-xl border border-slate-200/60 p-16 flex flex-col items-center justify-center text-slate-500 text-center">
