@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Calculator, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { Calculator, Trash2, Edit2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { Button } from '../ui/Button'
 
 export type ExamType = 'Giữa kỳ' | 'Cuối kỳ' | 'Chuyên'
@@ -104,6 +104,19 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
                 </td>
                 <td className="px-3 py-3 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-9 w-9 text-slate-400 hover:text-primary hover:bg-primary/10" 
+                      title="Chỉnh sửa"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const qids = (exam.questionIds || []).join(',');
+                        router.push(`/dashboard/exams/create?id=${exam.id}&qids=${qids}`);
+                      }}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
                     <Button 
                       variant="ghost" 
                       size="icon" 

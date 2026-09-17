@@ -350,6 +350,14 @@ export async function createExam(payload: any): Promise<any> {
   return response
 }
 
+export async function updateExam(id: string, payload: any): Promise<any> {
+  const response = await apiFetch(`/exams/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+  return response
+}
+
 export async function getExams(): Promise<any[]> {
   try {
     const response = await apiFetch('/exams', { cache: 'no-store' })
