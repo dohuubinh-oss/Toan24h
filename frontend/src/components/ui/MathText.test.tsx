@@ -34,4 +34,10 @@ describe('MathText', () => {
     const katexElement = container.querySelector('.katex');
     expect(katexElement).toBeInTheDocument();
   });
+
+  it('renders raw LaTeX commands like \\dfrac without delimiters', () => {
+    const { container } = render(<MathText content="\\dfrac{5x^2 - 3x + 1}{x}" />);
+    const katexElement = container.querySelector('.katex');
+    expect(katexElement).toBeInTheDocument();
+  });
 });

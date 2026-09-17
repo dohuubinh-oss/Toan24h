@@ -45,7 +45,15 @@ export default function MathText({ content, className = '' }: MathTextProps) {
   }
 
   // Hàm đơn giản phân tách text thường và text latex
-  const parts = content.split(/(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^$]+\$|\\\([\s\S]*?\\\))/g);
+  let processedContent = content;
+  // Nếu chuỗi chứa lệnh latex phổ biến (\dfrac, \frac, \sqrt, \int, \sum...) mà chưa được bọc $, $$, \(, \[
+  if (content && !/(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^$]+\$|\\\([\s\S]*?\\\))/.test(content)) {
+    if (/\\(dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline)/.test(content)) {
+      processedContent = `$${content}$`;
+    }
+  }
+
+  const parts = processedContent.split(/(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^$]+\$|\\\([\s\S]*?\\\))/g);
 
   return (
     <div className={`latex-font ${className}`}>
