@@ -7,7 +7,7 @@ import ContentQuestion from '@/components/questions/ContentQuestion';
 import QuestionSkeleton from '@/components/questions/QuestionSkeleton';
 import FloatingActionBar from '@/components/questions/FloatingActionBar';
 import { Pagination } from '@/components/ui/Pagination';
-import { ChevronRight, Search, Plus } from 'lucide-react';
+import { ChevronRight, Search, Plus, RefreshCw, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { getQuestions, deleteQuestion } from '@/lib/api';
 import { Question } from '@/types/question';
@@ -197,18 +197,25 @@ function QuestionsPageContent() {
                       type={q.type || (q.type_question === 'group' && q.subQuestions?.[0]?.type) || ''}
                     >
                       {swapFrom && (
-                        <div className="mb-4 pb-3 border-b border-slate-100 flex justify-end">
-                          <button
-                            onClick={() => q.id && handleSelectReplacement(q.id)}
-                            disabled={isCurrentInExam}
-                            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 shadow-sm ${
-                              isCurrentInExam
-                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                                : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95'
-                            }`}
-                          >
-                            {isCurrentInExam ? 'Đã có trong đề thi này' : '✓ Chọn câu hỏi này để thay thế'}
-                          </button>
+                        <div className="mb-4 pb-3 border-b border-slate-100 flex items-center justify-between bg-amber-50/60 p-3 rounded-xl border border-amber-200/60">
+                          <span className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
+                            <RefreshCw className="w-4 h-4 text-amber-600 animate-spin-slow" />
+                            Thay thế cho câu ID: <code className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded text-amber-900">{swapFrom}</code>
+                          </span>
+                          {isCurrentInExam ? (
+                            <span className="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                              Đã có trong đề thi này
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => q.id && handleSelectReplacement(q.id)}
+                              title="Bấm để đổi thành câu hỏi này"
+                              className="px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 shadow-md bg-indigo-600 hover:bg-indigo-700 text-white active:scale-95 cursor-pointer"
+                            >
+                              <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                              <span>Chọn thay thế câu này</span>
+                            </button>
+                          )}
                         </div>
                       )}
                       <ContentQuestion 
