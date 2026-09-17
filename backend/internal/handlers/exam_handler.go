@@ -23,6 +23,39 @@ func CreateExam(c *gin.Context) {
 	c.JSON(http.StatusCreated, exam)
 }
 
+func UpdateExam(c *gin.Context) {
+	id := c.Param("id")
+
+	var existingExam models.Exam
+	if err := config.DB.Where("id = ?", id).First(&existingExam).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Exam not found"})
+		return
+	}
+
+	var payload models.Exam
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	existingExam.Title = payload.Title
+	existingExam.ExamCode = payload.ExamCode
+	existingExam.Grade = payload.Grade
+	existingExam.Duration = payload.Duration
+	existingExam.Cate = payload.Cate
+	existingExam.Type = payload.Type
+	existingExam.DiffScore = payload.DiffScore
+	existingExam.QuestionIDs = payload.QuestionIDs
+	existingExam.LectureID = payload.LectureID
+
+	if err := config.DB.Save(&existingExam).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update exam: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, existingExam)
+}
+
 func GetExams(c *gin.Context) {
 	var exams []models.Exam
 	query := config.DB.Order("created_at desc")

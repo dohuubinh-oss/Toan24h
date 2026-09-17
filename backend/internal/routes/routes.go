@@ -138,6 +138,7 @@ func SetupRouter() *gin.Engine {
 
 			// Exams admin
 			admin.POST("/exams", handlers.CreateExam)
+			admin.PUT("/exams/:id", handlers.UpdateExam)
 			admin.DELETE("/exams/:id", handlers.DeleteExam)
 
 			// Lectures admin
