@@ -120,6 +120,19 @@ function CreateExamPageContent() {
     });
   }, [router, searchParams]);
 
+  const handleSwapQuestion = useCallback((targetQId: string) => {
+    const currentQids = exam.questions.map(q => q.id).filter(Boolean);
+    const params = new URLSearchParams();
+    params.set('swapFrom', targetQId);
+    if (currentQids.length > 0) {
+      params.set('qids', currentQids.join(','));
+    }
+    if (examId) {
+      params.set('id', examId);
+    }
+    router.push(`/dashboard/questions?${params.toString()}`);
+  }, [exam.questions, examId, router]);
+
   const handleSave = async () => {
     const newErrors = validateExamConfig(exam);
     if (Object.keys(newErrors).length > 0) {
@@ -177,7 +190,11 @@ function CreateExamPageContent() {
       />
       
       <main className="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <ExamQuestionList questions={exam.questions} onRemoveQuestion={handleRemoveQuestion} />
+        <ExamQuestionList 
+          questions={exam.questions} 
+          onRemoveQuestion={handleRemoveQuestion} 
+          onSwapQuestion={handleSwapQuestion}
+        />
         <ExamConfigSidebar 
           config={{
             title: exam.title,

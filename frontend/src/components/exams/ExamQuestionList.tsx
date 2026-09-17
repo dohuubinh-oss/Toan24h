@@ -7,9 +7,10 @@ import ContentQuestion from '../questions/ContentQuestion'
 interface ExamQuestionListProps {
   questions: Question[];
   onRemoveQuestion?: (id: string) => void;
+  onSwapQuestion?: (id: string) => void;
 }
 
-export default function ExamQuestionList({ questions, onRemoveQuestion }: ExamQuestionListProps) {
+export default function ExamQuestionList({ questions, onRemoveQuestion, onSwapQuestion }: ExamQuestionListProps) {
   const difficultyWeight: Record<string, number> = {
     'Nhận biết': 1,
     'Thông hiểu': 2,
@@ -54,6 +55,7 @@ export default function ExamQuestionList({ questions, onRemoveQuestion }: ExamQu
               topic={q.topic || 'Chưa phân loại'}
               difficulty={q.difficulty_level || 'Nhận biết'}
               index={idx}
+              onSwap={onSwapQuestion && q.id ? () => onSwapQuestion(q.id) : undefined}
               onDelete={onRemoveQuestion ? () => onRemoveQuestion(q.id) : undefined}
             >
               <ContentQuestion
@@ -84,6 +86,7 @@ export default function ExamQuestionList({ questions, onRemoveQuestion }: ExamQu
               typeQuestion={q.type_question}
               type={q.type || (q.type_question === 'group' && q.subQuestions?.[0]?.type) || ''}
               index={multipleChoiceQuestions.length + idx}
+              onSwap={onSwapQuestion && q.id ? () => onSwapQuestion(q.id) : undefined}
               onDelete={onRemoveQuestion ? () => onRemoveQuestion(q.id) : undefined}
             >
               <ContentQuestion

@@ -18,10 +18,11 @@ export interface QuestionCardProps {
   type?: 'Trắc nghiệm' | 'Tự luận' | string;
   onEdit?: () => void;
   onDelete?: () => void;
+  onSwap?: () => void;
 }
 
 export default function QuestionCard({
-  id, grade, topic, difficulty, isSelected, onToggle, children, index, typeQuestion, type, onEdit, onDelete
+  id, grade, topic, difficulty, isSelected, onToggle, children, index, typeQuestion, type, onEdit, onDelete, onSwap
 }: QuestionCardProps) {
 
   return (
@@ -78,6 +79,11 @@ export default function QuestionCard({
             </div>
           </div>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onSwap && (
+              <Button variant="ghost" size="icon" className="w-10 h-10 text-slate-400 hover:text-amber-600 hover:bg-amber-50" title="Đổi câu hỏi" onClick={onSwap}>
+                <RefreshCw className="w-5 h-5" />
+              </Button>
+            )}
             {onEdit && (
               <Button variant="ghost" size="icon" className="w-10 h-10 text-slate-400 hover:text-primary hover:bg-primary/10" title="Chỉnh sửa" onClick={onEdit}>
                 <Edit2 className="w-5 h-5" />
