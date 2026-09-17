@@ -38,12 +38,40 @@ function CreateExamPageContent() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSaving, setIsSaving] = useState(false)
 
+  const examId = searchParams.get('id');
+
   useEffect(() => {
     const qidsParam = searchParams.get('qids');
-    if (qidsParam) {
+    if (examId) {
+      import('@/lib/api').then(({ getExamById, getQuestions }) => {
+        getExamById(examId).then(existingExam => {
+          if (existingExam) {
+            setExam(prev => ({
+              ...prev,
+              title: existingExam.title || '',
+              examCode: existingExam.examCode || '',
+              grade: existingExam.grade || '',
+              duration: existingExam.duration || 0,
+              cate: existingExam.cate || 'exam',
+              type: existingExam.type || '',
+              lectureId: existingExam.lectureId || undefined
+            }));
+
+            // If URL has qids (e.g. after question swap), use URL qids, else use exam's questionIds
+            const ids = qidsParam ? qidsParam.split(',').filter(Boolean) : (existingExam.questionIds || []);
+            if (ids.length > 0) {
+              getQuestions(1, 1000, { ids }).then(res => {
+                if (res.data) {
+                  setExam(prev => ({ ...prev, questions: res.data }));
+                }
+              }).catch(err => console.error("Failed to fetch questions for exam:", err));
+            }
+          }
+        }).catch(err => console.error("Failed to fetch exam by id:", err));
+      });
+    } else if (qidsParam) {
       const ids = qidsParam.split(',').filter(Boolean);
       if (ids.length > 0) {
-        // Fetch questions from backend
         import('@/lib/api').then(({ getQuestions }) => {
           getQuestions(1, 1000, { ids }).then(res => {
             if (res.data) {
@@ -53,7 +81,7 @@ function CreateExamPageContent() {
         });
       }
     }
-  }, [searchParams]);
+  }, [searchParams, examId]);
 
   const handleConfigChange = useCallback((field: keyof Exam, value: any) => {
     setExam(prev => {
@@ -122,7 +150,14 @@ function CreateExamPageContent() {
 
     setIsSaving(true);
     try {
-      await apiFetch('/exams', { method: 'POST', body: JSON.stringify(payload) })
+      if (examId) {
+        const { updateExam } = await import('@/lib/api');
+        await updateExam(examId, payload);
+        toast.success('Cập nhật đề thi thành công!');
+      } else {
+        await apiFetch('/exams', { method: 'POST', body: JSON.stringify(payload) });
+        toast.success('Tạo đề thi mới thành công!');
+      }
       router.push('/dashboard/exams');
     } catch (err) {
       console.error('Lưu đề thi thất bại:', err);
