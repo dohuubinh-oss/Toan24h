@@ -94,7 +94,7 @@ components:
 ---
 
 # Brand & Style (Modern Academic)
-The **Modern Academic** design system is built for the "Toan24h" project. It merges the **Editorial Scholarship** philosophy with **Google's Material Design 3** accessibility and UX standards.
+The **Modern Academic** design system is built for the "toan6789.vn" project. It merges the **Editorial Scholarship** philosophy with **Google's Material Design 3** accessibility and UX standards.
 
 ## Core Principles
 1. **Accessibility First (A11y)**: Cỡ chữ nhỏ nhất (minimum size) được nâng lên `12px` (text-xs) để tuân thủ chuẩn Google về Legibility. Vùng chạm (Touch targets) trên thiết bị di động cần đảm bảo tối thiểu `48x48px` (hoặc `44x44px`).

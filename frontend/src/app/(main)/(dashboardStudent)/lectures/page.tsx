@@ -3,7 +3,12 @@ import { cookies } from 'next/headers';
 
 export default async function LecturesRedirectPage() {
   const cookieStore = await cookies();
+  const userRoleCookie = cookieStore.get('userRole')?.value;
   const userGradeCookie = cookieStore.get('userGrade')?.value;
+
+  if (userRoleCookie === 'admin' || userRoleCookie === 'teacher') {
+    redirect('/dashboard/lectures');
+  }
 
   // Nếu người dùng đã có lớp, redirect thẳng tới trang bài giảng của lớp đó
   if (userGradeCookie && userGradeCookie.trim() !== '') {

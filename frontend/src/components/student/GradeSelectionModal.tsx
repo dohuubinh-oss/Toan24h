@@ -17,6 +17,13 @@ export default function GradeSelectionModal({ show }: GradeSelectionModalProps) 
 
   if (!show) return null
 
+  if (typeof document !== 'undefined') {
+    const value = `; ${document.cookie}`
+    const parts = value.split(`; userRole=`)
+    const role = parts.length === 2 ? parts.pop()?.split(';').shift() : ''
+    if (role === 'admin' || role === 'teacher') return null
+  }
+
   const grades = [
     { id: '5', label: 'Lớp 5' },
     { id: '6', label: 'Lớp 6' },
@@ -35,20 +42,23 @@ export default function GradeSelectionModal({ show }: GradeSelectionModalProps) 
     setIsLoading(true)
     setError('')
     try {
-      await updateGrade(selectedGrade)
+      const res = await updateGrade(selectedGrade)
+      const updatedGrade = res?.grade || selectedGrade
+      
+      document.cookie = `userGrade=${updatedGrade}; path=/; max-age=86400`
       
       // Update local storage if needed
       const userStr = localStorage.getItem('user')
       if (userStr) {
         try {
           const user = JSON.parse(userStr)
-          user.grade = selectedGrade
+          user.grade = updatedGrade
           localStorage.setItem('user', JSON.stringify(user))
         } catch (e) {}
       }
 
       // Force a full page reload to ensure cookies are read properly by the server
-      window.location.href = `/lectures/lop/${selectedGrade}`
+      window.location.href = `/lectures/lop/${updatedGrade}`
     } catch (err: any) {
       setError(err.message || 'Có lỗi xảy ra, vui lòng thử lại sau.')
     } finally {

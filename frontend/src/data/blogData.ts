@@ -2,6 +2,7 @@ export interface BlogPost {
   id: string
   slug: string
   title: string
+  summary?: string
   content: string
   category: 'Bi-Quyet-Thi' | 'Toan-10-12' | 'Meo-AI' | 'Tin-Tuc'
   categoryLabel: string
@@ -216,6 +217,14 @@ export function addBlogPost(post: BlogPost): BlogPost {
     try {
       const customPostsStr = localStorage.getItem(LOCAL_STORAGE_KEY)
       const existing: BlogPost[] = customPostsStr ? JSON.parse(customPostsStr) : []
+      
+      if (post.featured) {
+        // Unmark all existing default posts
+        BLOG_POSTS.forEach(p => { p.featured = false })
+        // Unmark all existing custom posts
+        existing.forEach(p => { p.featured = false })
+      }
+
       const updated = [post, ...existing]
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated))
     } catch (e) {

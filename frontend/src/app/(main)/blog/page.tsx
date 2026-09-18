@@ -98,6 +98,11 @@ export default function BlogListPage() {
                       {featuredPost.title}
                     </Link>
                   </h2>
+                  {featuredPost.summary && (
+                    <p className="text-xs sm:text-sm text-slate-600 font-medium line-clamp-3 leading-relaxed mt-2">
+                      {featuredPost.summary}
+                    </p>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
@@ -260,44 +265,40 @@ export default function BlogListPage() {
           )}
         </div>
 
-        {/* Newsletter Subscription Card (DESIGN.md Standard) */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-3xl p-8 sm:p-10 shadow-xl relative overflow-hidden">
-          <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+        {/* Newsletter Subscription Card */}
+        <div className="max-w-md mx-auto bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+          <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
           
-          <div className="relative z-10 max-w-2xl mx-auto text-center space-y-5">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md text-amber-300 mx-auto flex items-center justify-center border border-white/20 shadow-inner">
-              <Sparkles className="w-6 h-6 animate-pulse" />
+          <div className="relative z-10 space-y-4 text-center">
+            <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md text-amber-300 mx-auto flex items-center justify-center border border-white/20 shadow-inner">
+              <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             
-            <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Đăng ký Nhận Bí Quyết Ôn Thi & Tin Tức Mới Nhất
+            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight">
+              Đăng ký nhận tin
             </h3>
-            
-            <p className="text-blue-100 text-xs sm:text-sm leading-relaxed">
-              Cập nhật định kỳ các mẹo bấm máy CASIO, tuyển tập đề thi thử có đáp án chi tiết và các tính năng AI luyện thi mới nhất từ Toan24h.
-            </p>
 
             {subscribed ? (
-              <div className="p-4 bg-emerald-500/20 border border-emerald-400/40 rounded-2xl flex items-center justify-center gap-2 text-white font-bold text-sm">
-                <CheckCircle2 className="w-5 h-5 text-emerald-300" />
-                <span>Cảm ơn bạn đã đăng ký nhận tin từ Toan24h!</span>
+              <div className="p-3 bg-emerald-500/20 border border-emerald-400/40 rounded-2xl flex items-center justify-center gap-2 text-white font-bold text-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                <span>Cảm ơn bạn đã đăng ký!</span>
               </div>
             ) : (
-              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2.5 max-w-sm mx-auto pt-1">
                 <input 
                   type="email" 
                   required
-                  placeholder="Nhập email của bạn..."
+                  placeholder="Nhập email..."
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-blue-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-blue-200 text-xs focus:outline-none focus:ring-2 focus:ring-white/50"
                 />
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-white text-blue-700 hover:bg-blue-50 font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95 whitespace-nowrap"
+                  className="px-5 py-2.5 bg-white text-blue-700 hover:bg-blue-50 font-extrabold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 whitespace-nowrap"
                 >
-                  <Send className="w-4 h-4 text-blue-700" />
-                  Đăng ký ngay
+                  <Send className="w-3.5 h-3.5 text-blue-700" />
+                  Đăng ký
                 </button>
               </form>
             )}

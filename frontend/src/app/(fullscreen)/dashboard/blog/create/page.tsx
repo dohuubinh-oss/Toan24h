@@ -37,6 +37,8 @@ export default function CreateBlogPostPage() {
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [isCustomSlug, setIsCustomSlug] = useState(false)
+  const [isFeatured, setIsFeatured] = useState(false)
+  const [summary, setSummary] = useState('')
   const [category, setCategory] = useState<BlogPost['category']>('Bi-Quyet-Thi')
   const [categoryLabel, setCategoryLabel] = useState('Bí quyết thi THPT')
   const [tagInput, setTagInput] = useState('')
@@ -103,6 +105,10 @@ Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đ�
       toast.error("Vui lòng nhập Tiêu đề bài viết!")
       return
     }
+    if (isFeatured && !summary.trim()) {
+      toast.error("Vui lòng nhập Mô tả ngắn cho bài viết Nổi bật!")
+      return
+    }
     if (!content.trim()) {
       toast.error("Vui lòng nhập Nội dung bài viết!")
       return
@@ -115,6 +121,7 @@ Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đ�
       id: String(Date.now()),
       slug: finalSlug,
       title: title.trim(),
+      summary: isFeatured ? summary.trim() : undefined,
       content: content,
       category: category,
       categoryLabel: categoryLabel,
@@ -126,7 +133,7 @@ Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đ�
       },
       publishedAt: 'Hôm nay',
       readTime: '5 phút đọc',
-      featured: false,
+      featured: isFeatured,
       tags: tags.length > 0 ? tags : ['Toán24h']
     }
 
@@ -196,6 +203,7 @@ Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đ�
               
               {/* Title & Slug Card */}
               <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+                {/* Title Input */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                     <FileText className="w-4 h-4 text-primary" />
@@ -210,6 +218,23 @@ Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đ�
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                 </div>
+
+                {/* Short Summary (Only shown when Featured Toggle is ON) */}
+                {isFeatured && (
+                  <div className="space-y-1.5 pt-2 border-t border-slate-100 animate-in fade-in duration-200">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      Mô tả ngắn bài viết nổi bật <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Nhập đoạn mô tả ngắn hiển thị ngay bên dưới tiêu đề bài viết..."
+                      value={summary}
+                      onChange={(e) => setSummary(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-amber-50/50 border border-amber-200 rounded-xl text-xs font-medium text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
+                    />
+                  </div>
+                )}
 
                 {/* Slug Input */}
                 <div className="space-y-1">
@@ -259,12 +284,39 @@ Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đ�
             {/* Right Column - Settings & Metadata Sidebar (4 cols) */}
             <div className="lg:col-span-4 space-y-6">
               
-              {/* Phân loại & Thẻ từ khóa Box */}
+              {/* Phân loại & Thẻ từ khóa Box (Tích hợp Bài viết Nổi bật) */}
               <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-5">
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center justify-between">
                   <span>Phân loại & Thẻ từ khóa</span>
                   <Tag className="w-4 h-4 text-slate-400" />
                 </h3>
+
+                {/* Featured Post Toggle Item */}
+                <div className="p-3.5 bg-amber-50/60 border border-amber-200/80 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 cursor-pointer select-none">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        Bài viết Nổi bật
+                      </label>
+                      <p className="text-[11px] text-slate-500">Đánh dấu bài nổi bật trên đầu trang Blog</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={isFeatured}
+                        onChange={(e) => setIsFeatured(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+                    </label>
+                  </div>
+                  {isFeatured && (
+                    <p className="text-[11px] text-amber-700 font-medium border-t border-amber-200/60 pt-2 leading-relaxed">
+                      ⚠️ Khi bật toggle này, bài viết nổi bật cũ sẽ tự động bỏ chọn.
+                    </p>
+                  )}
+                </div>
 
                 {/* Category Select */}
                 <div className="space-y-1.5">
@@ -335,6 +387,12 @@ Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đ�
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 leading-snug tracking-tight">
                 {title || "Tiêu đề bài viết chưa nhập"}
               </h1>
+
+              {isFeatured && summary && (
+                <p className="text-sm sm:text-base text-slate-600 font-medium italic border-l-4 border-amber-400 pl-4 py-1.5 bg-amber-50/50 rounded-r-xl my-2">
+                  {summary}
+                </p>
+              )}
 
               {/* Author & Date/ReadTime Bar */}
               <div className="flex flex-wrap items-center justify-between gap-4 pb-1">

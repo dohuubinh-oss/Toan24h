@@ -10,8 +10,12 @@ export default async function DashboardStudentLayout({
   children: React.ReactNode
 }) {
   const cookieStore = await cookies()
+  const userRoleCookie = cookieStore.get('userRole')?.value
   const userGradeCookie = cookieStore.get('userGrade')?.value
+  
+  const isStudent = userRoleCookie === 'student'
   const hasGrade = !!userGradeCookie && userGradeCookie.trim() !== ''
+  const showModal = isStudent && !hasGrade
 
   return (
     <div className="flex flex-1 max-w-7xl mx-auto w-full gap-4">
@@ -19,7 +23,7 @@ export default async function DashboardStudentLayout({
       <main className="flex-1 bg-slate-50 py-4 pr-4 min-w-0">
         {children}
       </main>
-      <GradeSelectionModal show={!hasGrade} />
+      {showModal && <GradeSelectionModal show={true} />}
     </div>
   )
 }

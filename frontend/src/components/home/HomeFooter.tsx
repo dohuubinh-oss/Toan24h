@@ -34,7 +34,6 @@ export default function HomeFooter() {
             <ul className="space-y-4 text-slate-500">
               <li><a className="hover:text-primary transition-colors" href="#">Về chúng tôi</a></li>
               <li><a className="hover:text-primary transition-colors" href="#">Tính năng</a></li>
-              <li><a className="hover:text-primary transition-colors" href="#">Bảng giá</a></li>
               <li><a className="hover:text-primary transition-colors" href="#">Đối tác</a></li>
             </ul>
           </div>

@@ -1,0 +1,31 @@
+name: Deploy Toan24h to Dokku
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Deploy Backend to Dokku
+        uses: dokku/github-action@master
+        with:
+          git_remote_url: 'ssh://dokku@${{ secrets.VPS_HOST }}:22/toan24h-backend'
+          ssh_private_key: ${{ secrets.VPS_SSH_KEY }}
+          git_push_flags: '--force'
+          subtree_path: 'backend'
+
+      - name: Deploy Frontend to Dokku
+        uses: dokku/github-action@master
+        with:
+          git_remote_url: 'ssh://dokku@${{ secrets.VPS_HOST }}:22/toan24h-frontend'
+          ssh_private_key: ${{ secrets.VPS_SSH_KEY }}
+          git_push_flags: '--force'
+          subtree_path: 'frontend'

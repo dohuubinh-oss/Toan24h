@@ -206,11 +206,24 @@ func (h *AuthHandler) UpdateGrade(c *gin.Context) {
 
 	c.SetCookie("accessToken", accessToken, 24*60*60, "/", "", false, true)
 	c.SetCookie("refreshToken", refreshToken, 7*24*60*60, "/", "", false, true)
+	c.SetCookie("userRole", user.Role, 24*60*60, "/", "", false, false)
 	c.SetCookie("userGrade", user.Grade, 24*60*60, "/", "", false, false)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Grade updated successfully",
 		"grade":        user.Grade,
+		"accessToken":  accessToken,
+		"refreshToken": refreshToken,
+		"user": gin.H{
+			"id":        user.ID,
+			"email":     user.Email,
+			"fullName":  user.FullName,
+			"role":      user.Role,
+			"grade":     user.Grade,
+			"points":    user.Points,
+			"status":    user.Status,
+			"expiresAt": user.ExpiresAt,
+		},
 	})
 }
 

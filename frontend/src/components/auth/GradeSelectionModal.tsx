@@ -26,10 +26,13 @@ export default function GradeSelectionModal() {
       
       const role = getCookie('userRole')
       const grade = getCookie('userGrade')
-      const token = getCookie('accessToken')
       
-      if (token && role === 'student' && !grade) {
+      // Admin and teacher NEVER need to select a grade.
+      // Only student without a grade needs to select a grade.
+      if (role === 'student' && (!grade || grade.trim() === '')) {
         setIsOpen(true)
+      } else {
+        setIsOpen(false)
       }
     }
   }, [])
@@ -43,13 +46,20 @@ export default function GradeSelectionModal() {
     try {
       const res = await updateGrade(selectedGrade)
       
-      // Update cookies with new tokens and grade
-      document.cookie = `accessToken=${res.accessToken}; path=/; max-age=86400`
-      document.cookie = `userGrade=${res.grade}; path=/; max-age=86400`
+      const updatedGrade = res.grade || selectedGrade
+      document.cookie = `userGrade=${updatedGrade}; path=/; max-age=86400`
+      
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr)
+          user.grade = updatedGrade
+          localStorage.setItem('user', JSON.stringify(user))
+        } catch (e) {}
+      }
       
       setIsOpen(false)
-      // Redirect to the correct lectures page
-      router.push(`/lectures/lop/${res.grade}`)
+      window.location.href = `/lectures/lop/${updatedGrade}`
     } catch (error) {
       console.error('Failed to update grade', error)
       toast.error('Có lỗi xảy ra khi cập nhật lớp. Vui lòng thử lại.')
