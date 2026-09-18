@@ -14,13 +14,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Prepare Backend Subtree
+        run: |
+          git subtree split --prefix backend -b deploy-backend
+
       - name: Deploy Backend to Dokku
         uses: dokku/github-action@master
         with:
           git_remote_url: 'ssh://dokku@${{ secrets.VPS_HOST }}:22/toan6789-backend'
           ssh_private_key: ${{ secrets.VPS_SSH_KEY }}
           git_push_flags: '--force'
-          subtree_path: 'backend'
+          branch: 'deploy-backend'
+
+      - name: Prepare Frontend Subtree
+        run: |
+          git subtree split --prefix frontend -b deploy-frontend
 
       - name: Deploy Frontend to Dokku
         uses: dokku/github-action@master
@@ -28,4 +36,5 @@ jobs:
           git_remote_url: 'ssh://dokku@${{ secrets.VPS_HOST }}:22/toan6789-frontend'
           ssh_private_key: ${{ secrets.VPS_SSH_KEY }}
           git_push_flags: '--force'
-          subtree_path: 'frontend'
+          branch: 'deploy-frontend'
+
