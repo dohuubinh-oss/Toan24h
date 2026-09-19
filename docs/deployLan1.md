@@ -269,3 +269,44 @@ Dưới đây là danh sách các lệnh **Dokku** phổ biến được phân l
 | `dokku ssh-keys:add <key-name> /path/to/key.pub` | Thêm SSH Public Key mới cho Developer hoặc CI/CD runner. |
 | `dokku ssh-keys:remove <key-name>` | Gỡ bỏ một SSH key khỏi Dokku. |
 
+---
+
+## 🛠️ BƯỚC 11: Tổng hợp các Lưu ý Kỹ thuật & Kinh nghiệm Sửa lỗi Thực tế
+
+Trong quá trình triển khai hệ thống **toan6789.vn** lên Dokku VPS, dưới đây là các lỗi thực tế phổ biến và cách khắc phục triệt để:
+
+### 11.1 Lỗi SSH bị đòi Mật khẩu (`User dokku not allowed because account is locked`)
+- **Triệu chứng:** Khi chạy `ssh dokku@<IP_VPS>` bị hệ thống hỏi mật khẩu dù đã thêm SSH key.
+- **Nguyên nhân:** Linux mặc định khóa mật khẩu của user `dokku` (`!`) khi mới tạo khiến OpenSSH Server từ chối kết nối SSH key.
+- **Khắc phục:** Đăng nhập root VPS và chạy lệnh mở khóa:
+  ```bash
+  usermod -p '*' dokku
+  ```
+
+### 11.2 Lỗi Build Dockerfile Backend (`/.env: not found`)
+- **Triệu chứng:** Tiến trình build Dockerfile trên Dokku báo lỗi `ERROR: failed to compute cache key: "/.env": not found`.
+- **Nguyên nhân:** Trong `Dockerfile` của Backend có dòng `COPY .env ./`, nhưng file `.env` bị chặn bởi `.gitignore` nên không có trong repository khi build.
+- **Khắc phục:** Xóa dòng `COPY .env ./` trong `Dockerfile`. Dokku sẽ tự động tiêm biến môi trường đã cấu hình qua `dokku config:set`.
+
+### 11.3 Lỗi Kết nối Redis (`too many colons in address`)
+- **Triệu chứng:** Backend container crash khi khởi động với thông báo `failed to connect to Redis: dial tcp: address redis://...: too many colons in address`.
+- **Nguyên nhân:** Dokku cấp chuỗi `REDIS_URL` dạng `redis://:password@host:6379`, nhưng thư viện Go Redis dùng `redis.Options{ Addr: url }` chỉ nhận dạng `host:port`.
+- **Khắc phục:** Cập nhật hàm khởi tạo Redis trong Go dùng `redis.ParseURL(rawURL)` để tự động bóc tách scheme, password, host và port.
+
+### 11.4 Lỗi 503 Web Unavailable (`all_upstreams_down`)
+- **Triệu chứng:** Truy cập tên miền bị báo lỗi 503 Service Unavailable hoặc `all_upstreams_down`.
+- **Nguyên nhân:** Dokku chưa mở định tuyến Nginx Proxy cổng 80 của VPS trỏ vào cổng container.
+- **Khắc phục:** Chạy 2 lệnh cấu hình cổng trên VPS:
+  ```bash
+  dokku ports:set toan6789-frontend http:80:3000
+  dokku ports:set toan6789-backend http:80:8080
+  ```
+
+### 11.5 Cấu hình Nhánh Deploy Chuẩn cho Dokku (`deploy-branch`)
+- **Lưu ý:** Để Dokku tự động nhận nhánh `main` khi push code, cần khai báo:
+  ```bash
+  dokku git:set toan6789-backend deploy-branch main
+  dokku git:set toan6789-frontend deploy-branch main
+  ```
+
+
