@@ -185,3 +185,87 @@ Chạy 2 lệnh sau trên VPS sau khi app chạy thành công lần đầu:
 dokku letsencrypt:enable toan6789-backend
 dokku letsencrypt:enable toan6789-frontend
 ```
+
+---
+
+## 💡 BƯỚC 10: Bảng tổng hợp các lệnh Dokku thường dùng & Ý nghĩa Chi tiết
+
+Dưới đây là danh sách các lệnh **Dokku** phổ biến được phân loại theo nhóm chức năng để quản lý, vận hành và debug ứng dụng trên VPS:
+
+### 1. Quản lý Ứng dụng (App Management)
+| Lệnh Dokku | Ý nghĩa & Mục đích sử dụng |
+| :--- | :--- |
+| `dokku apps:list` | Liệt kê tất cả ứng dụng đang tồn tại trên Dokku VPS. |
+| `dokku apps:create <app-name>` | Khởi tạo một ứng dụng mới trên Dokku. |
+| `dokku apps:destroy <app-name>` | Xóa hoàn toàn ứng dụng và tất cả cấu hình liên quan. |
+| `dokku apps:rename <old-name> <new-name>` | Đổi tên ứng dụng đang chạy. |
+
+### 2. Theo dõi Trạng thái & Quản lý Tiến trình (Process & Monitoring)
+| Lệnh Dokku | Ý nghĩa & Mục đích sử dụng |
+| :--- | :--- |
+| `dokku ps:report <app-name>` | Hiển thị báo cáo chi tiết trạng thái (Deploy: true/false, Running: true/false, số lượng process, port, IP). |
+| `dokku ps:restart <app-name>` | Khởi động lại container của ứng dụng (không rebuild lại source code). |
+| `dokku ps:rebuild <app-name>` | Tải lại source code và thực hiện build lại container từ đầu. |
+| `dokku ps:stop <app-name>` | Dừng tạm thời ứng dụng. |
+| `dokku ps:start <app-name>` | Bật lại ứng dụng sau khi đã stop. |
+| `dokku ps:scale <app-name> web=2` | Thay đổi số lượng container instance chạy ứng dụng (Scale up/down). |
+
+### 3. Xem Nhật ký Log & Debug (Logs & Troubleshooting)
+| Lệnh Dokku | Ý nghĩa & Mục đích sử dụng |
+| :--- | :--- |
+| `dokku logs <app-name>` | In ra log gần nhất của ứng dụng. |
+| `dokku logs <app-name> -t` (hoặc `--tail`) | Theo dõi log trực tiếp theo thời gian thực (Real-time stream logs). |
+| `dokku logs <app-name> --tail --num 100` | In ra 100 dòng log gần nhất và tiếp tục stream log mới. |
+| `dokku enter <app-name> web` | Truy cập trực tiếp vào SSH terminal bên trong container đang chạy để debug. |
+
+### 4. Quản lý Biến Môi Trường (Config & Env Vars)
+| Lệnh Dokku | Ý nghĩa & Mục đích sử dụng |
+| :--- | :--- |
+| `dokku config:show <app-name>` | Hiển thị tất cả danh sách các biến môi trường của ứng dụng. |
+| `dokku config:set <app-name> KEY=VALUE` | Cấu hình hoặc cập nhật giá trị biến môi trường (Ví dụ: `JWT_SECRET`, `PORT`). |
+| `dokku config:get <app-name> KEY` | Lấy giá trị của một biến môi trường cụ thể. |
+| `dokku config:unset <app-name> KEY` | Xóa một biến môi trường khỏi ứng dụng. |
+
+### 5. Quản lý Tên miền (Domains & Routing)
+| Lệnh Dokku | Ý nghĩa & Mục đích sử dụng |
+| :--- | :--- |
+| `dokku domains:report <app-name>` | Xem báo cáo danh sách tên miền đang trỏ vào ứng dụng. |
+| `dokku domains:set <app-name> domain.com` | Thiết lập lại toàn bộ tên miền gán cho ứng dụng. |
+| `dokku domains:add <app-name> domain.com` | Bổ sung thêm một tên miền phụ/tên miền mới vào ứng dụng. |
+| `dokku domains:remove <app-name> domain.com` | Hủy bỏ một tên miền khỏi ứng dụng. |
+
+### 6. Quản lý SSL HTTPS (Let's Encrypt Plugin)
+| Lệnh Dokku | Ý nghĩa & Mục đích sử dụng |
+| :--- | :--- |
+| `dokku letsencrypt:enable <app-name>` | Đăng ký và kích hoạt chứng chỉ SSL HTTPS miễn phí cho ứng dụng. |
+| `dokku letsencrypt:disable <app-name>` | Tắt SSL HTTPS của ứng dụng (chuyển về HTTP). |
+| `dokku letsencrypt:auto-renew <app-name>` | Thực hiện gia hạn SSL tự động cho một ứng dụng cụ thể. |
+| `dokku letsencrypt:cron-job --add` | Đăng ký Cronjob trên VPS để tự động gia hạn SSL cho tất cả app định kỳ. |
+| `dokku letsencrypt:list` | Liệt kê danh sách tất cả SSL đã được cấp và ngày hết hạn. |
+
+### 7. Quản lý Cơ sở Dữ liệu & Cache (Postgres & Redis Plugins)
+| Lệnh Dokku | Ý nghĩa & Mục đích sử dụng |
+| :--- | :--- |
+| `dokku postgres:create <db-name>` | Tạo một cơ sở dữ liệu PostgreSQL mới độc lập trên VPS. |
+| `dokku postgres:link <db-name> <app-name>` | Kết nối Database với app (tự động tiêm biến `DATABASE_URL`). |
+| `dokku postgres:unlink <db-name> <app-name>` | Ngắt kết nối Database khỏi app. |
+| `dokku postgres:connect <db-name>` | Truy cập trực tiếp vào giao diện CLI (`psql`) của Database. |
+| `dokku postgres:export <db-name> > backup.sql` | Xuất dữ liệu Database ra file SQL để sao lưu/backup. |
+| `dokku postgres:import <db-name> < backup.sql` | Nạp dữ liệu từ file SQL vào Database trên VPS. |
+| `dokku redis:create <redis-name>` | Tạo một cụm cache Redis mới độc lập trên VPS. |
+| `dokku redis:link <redis-name> <app-name>` | Kết nối Redis với app (tự động tiêm biến `REDIS_URL`). |
+
+### 8. Quản lý Ổ đĩa Lưu trữ (Persistent Storage Volume)
+| Lệnh Dokku | Ý nghĩa & Mục đích sử dụng |
+| :--- | :--- |
+| `dokku storage:list <app-name>` | Danh sách các đường dẫn đĩa cứng ngoài VPS được mount vào container. |
+| `dokku storage:mount <app-name> /vps/path:/container/path` | Gán thư mục ngoài VPS vào thư mục bên trong container (ví dụ: `/app/uploads`). |
+| `dokku storage:unmount <app-name> /vps/path:/container/path` | Gỡ bỏ mount thư mục khỏi container. |
+
+### 9. Quản lý Khóa SSH Truy cập Dokku (SSH Keys)
+| Lệnh Dokku | Ý nghĩa & Mục đích sử dụng |
+| :--- | :--- |
+| `dokku ssh-keys:list` | Danh sách các Public SSH Key được quyền deploy/chạy lệnh Dokku từ xa. |
+| `dokku ssh-keys:add <key-name> /path/to/key.pub` | Thêm SSH Public Key mới cho Developer hoặc CI/CD runner. |
+| `dokku ssh-keys:remove <key-name>` | Gỡ bỏ một SSH key khỏi Dokku. |
+
