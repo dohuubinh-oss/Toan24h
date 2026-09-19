@@ -37,6 +37,18 @@ func SetupRouter() *gin.Engine {
 		c.Next()
 	})
 
+	// Root & Health Check Endpoint
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":  "ok",
+			"message": "Toan6789.vn API Backend is running!",
+			"version": "1.0.0",
+		})
+	})
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "UP"})
+	})
+
 	// Phục vụ các file tĩnh (ảnh đã upload)
 	r.Static("/uploads", "./uploads")
 
