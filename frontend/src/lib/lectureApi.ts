@@ -1,9 +1,15 @@
 import { Lecture, PaginatedLectures } from '@/types/lecture';
 
 const isServer = typeof window === 'undefined';
-const API_BASE_URL = isServer 
-  ? (process.env.BACKEND_URL ? `${process.env.BACKEND_URL}${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}` : 'https://api.toan6789.vn/api/v1')
-  : (process.env.NEXT_PUBLIC_API_URL || 'https://api.toan6789.vn/api/v1');
+function getApiBaseUrl() {
+  if (isServer && process.env.BACKEND_URL) {
+    const backend = process.env.BACKEND_URL.replace(/\/+$/, '');
+    return backend.endsWith('/api/v1') ? backend : `${backend}/api/v1`;
+  }
+  const publicUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+  return publicUrl;
+}
+const API_BASE_URL = getApiBaseUrl();
 
 export interface BackendLectureExample {
   id: string;
@@ -88,4 +94,24 @@ export async function getLectureById(id: string): Promise<BackendLecture> {
 
   const result: BackendLecture = await response.json();
   return result;
+}
+
+export async function getAllLectures(): Promise<BackendLecture[]> {
+  const url = `${API_BASE_URL}/lectures`;
+  const response = await fetch(url, {
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch all lectures: ${response.statusText}`);
+  }
+
+  const result = await response.json();
+  if (Array.isArray(result)) {
+    return result;
+  }
+  if (result && Array.isArray(result.data)) {
+    return result.data;
+  }
+  return [];
 }

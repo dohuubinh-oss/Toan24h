@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { FunctionSquare, Bell, User, ChevronDown, LogOut, Settings } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -24,7 +24,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
   const [isLoggedState, setIsLoggedState] = useState(isLoggedIn)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
-  const [lastNotificationId, setLastNotificationId] = useState<string | null>(null)
+  const lastNotificationIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -45,6 +45,8 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
         } catch (e) {
           console.error('Failed to parse user from localStorage', e)
         }
+      } else {
+        setIsLoggedState(false)
       }
     }
   }, [])
@@ -62,8 +64,8 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
           // Check for new notifications
           if (data.data.length > 0) {
             const latest = data.data[0]
-            if (!latest.isRead && lastNotificationId !== latest.id.toString()) {
-              setLastNotificationId(latest.id.toString())
+            if (!latest.isRead && lastNotificationIdRef.current !== latest.id.toString()) {
+              lastNotificationIdRef.current = latest.id.toString()
               toast.success(
                 (t) => (
                   <span className="flex flex-col gap-1">
@@ -78,7 +80,10 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
             }
           }
         }
-      } catch (e) {
+      } catch (e: any) {
+        if (e?.message?.includes('401') || e?.message?.includes('Unauthorized')) {
+          setIsLoggedState(false)
+        }
         console.error('Failed to fetch notifications', e)
       }
     }
@@ -87,7 +92,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
     interval = setInterval(fetchNotifications, 30 * 60 * 1000) // 30 minutes
 
     return () => clearInterval(interval)
-  }, [isLoggedState, lastNotificationId])
+  }, [isLoggedState])
 
   const unreadCount = notifications.filter(n => !n.isRead).length
   const notificationRef = React.useRef<HTMLDivElement>(null)

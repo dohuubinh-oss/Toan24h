@@ -3,9 +3,11 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/models"
+	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"gorm.io/gorm"
 )
@@ -200,4 +202,106 @@ func (h *AuthHandler) LinkTelegram(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Telegram account linked successfully"})
+}
+
+// CreateTelegramQRSession creates a temporary session ID for mobile Telegram QR / Deep link login
+func (h *AuthHandler) CreateTelegramQRSession(c *gin.Context) {
+	var body struct {
+		SessionID string `json:"sessionId"`
+	}
+	_ = c.ShouldBindJSON(&body)
+
+	botUsername := os.Getenv("TELEGRAM_BOT_USERNAME")
+	if botUsername == "" {
+		botUsername = "toan6789_bot"
+	}
+
+	var sessionID, deepLink string
+	if body.SessionID != "" {
+		sessionID = body.SessionID
+		services.RegisterTelegramQRSession(sessionID)
+		deepLink = fmt.Sprintf("https://t.me/%s?start=login_%s", botUsername, sessionID)
+	} else {
+		sessionID, deepLink = services.CreateTelegramQRSession()
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"sessionId":   sessionID,
+		"botUsername": botUsername,
+		"deepLink":    deepLink,
+	})
+}
+
+// CheckTelegramQRStatus checks if the mobile Telegram login session has completed
+func (h *AuthHandler) CheckTelegramQRStatus(c *gin.Context) {
+	sessionID := c.Param("sessionId")
+	if sessionID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing sessionId"})
+		return
+	}
+
+	data, ok := services.GetTelegramQRSession(sessionID)
+	if !ok {
+		c.JSON(http.StatusOK, gin.H{"status": "waiting"})
+		return
+	}
+
+	if data.Status == "completed" && data.User != nil {
+		// Delete session after single use
+		services.DeleteTelegramQRSession(sessionID)
+
+		// Set HttpOnly cookies for client browser
+		c.SetCookie("accessToken", data.AccessToken, 24*60*60, "/", "", false, true)
+		c.SetCookie("refreshToken", data.RefreshToken, 7*24*60*60, "/", "", false, true)
+		c.SetCookie("userRole", data.User.Role, 24*60*60, "/", "", false, false)
+		c.SetCookie("userGrade", data.User.Grade, 24*60*60, "/", "", false, false)
+
+		c.JSON(http.StatusOK, gin.H{
+			"status":       "completed",
+			"accessToken":  data.AccessToken,
+			"refreshToken": data.RefreshToken,
+			"user": gin.H{
+				"id":        data.User.ID,
+				"email":     data.User.Email,
+				"fullName":  data.User.FullName,
+				"role":      data.User.Role,
+				"grade":     data.User.Grade,
+				"points":    data.User.Points,
+				"status":    data.User.Status,
+			},
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "waiting"})
+}
+
+// CompleteTelegramQRSession completes the login when triggered via mobile deep link / bot or simulated auth
+func (h *AuthHandler) CompleteTelegramQRSession(c *gin.Context) {
+	var req struct {
+		SessionID string `json:"sessionId" binding:"required"`
+		ID        int64  `json:"id"`
+		FirstName string `json:"first_name"`
+		Username  string `json:"username"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	_, _, _, err := services.CompleteTelegramLoginDirect(
+		h.db,
+		req.SessionID,
+		req.ID,
+		req.FirstName,
+		"",
+		req.Username,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Telegram login completed on mobile"})
 }

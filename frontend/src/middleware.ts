@@ -7,13 +7,6 @@ const redirectRoutes = ['/lectures', '/practices']
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
 
-  // Kiểm tra xem đường dẫn hiện tại có nằm trong redirectRoutes không
-  const isRedirectRoute = redirectRoutes.includes(path)
-
-  if (!isRedirectRoute) {
-    return NextResponse.next()
-  }
-
   // Đọc accessToken từ cookies
   const token = request.cookies.get('accessToken')?.value
   const role = request.cookies.get('userRole')?.value
@@ -24,17 +17,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (role === 'admin') {
-    if (path === '/lectures' || path.startsWith('/lectures/lop')) {
+  if (role === 'admin' || role === 'teacher') {
+    // Admin và Teacher truy cập /lectures sẽ được đưa về trang chọn lớp dashboard
+    if (path === '/lectures') {
       return NextResponse.redirect(new URL('/dashboard/lectures', request.url))
     }
-    if (path === '/practices' || path.startsWith('/practices/lop')) {
-      // Tạm thời cũng chuyển practices của admin về một trang dashboard tương tự
-      return NextResponse.redirect(new URL('/dashboard/practices', request.url))
-    }
   } else if (role === 'student') {
-    // Ngăn học sinh vào admin dashboard
+    // Ngăn học sinh vào admin/teacher dashboard -> chuyển thẳng tới bài giảng theo lớp của học sinh
     if (path.startsWith('/dashboard')) {
+      if (grade) {
+        return NextResponse.redirect(new URL(`/lectures/lop/${grade}`, request.url))
+      }
       return NextResponse.redirect(new URL('/student', request.url))
     }
 
@@ -42,9 +35,9 @@ export function middleware(request: NextRequest) {
       if (grade) {
         return NextResponse.redirect(new URL(`/lectures/lop/${grade}`, request.url))
       }
-      // If no grade, let it pass (modal will show on page)
+      // Nếu chưa có grade, cho phép vào để hiển thị modal chọn lớp
     } else if (path.startsWith('/lectures/lop/')) {
-      // Bắt buộc URL phải khớp với lớp
+      // Bắt buộc URL phải khớp với lớp của học sinh
       const urlGrade = path.split('/')[3]
       if (grade && urlGrade !== grade && urlGrade !== undefined) {
         return NextResponse.redirect(new URL(`/lectures/lop/${grade}`, request.url))

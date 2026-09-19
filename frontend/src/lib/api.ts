@@ -1,7 +1,13 @@
 const isServer = typeof window === 'undefined';
-const API_BASE_URL = isServer 
-  ? (process.env.BACKEND_URL ? `${process.env.BACKEND_URL}${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}` : 'https://api.toan6789.vn/api/v1')
-  : (process.env.NEXT_PUBLIC_API_URL || 'https://api.toan6789.vn/api/v1');
+function getApiBaseUrl() {
+  if (isServer && process.env.BACKEND_URL) {
+    const backend = process.env.BACKEND_URL.replace(/\/+$/, '');
+    return backend.endsWith('/api/v1') ? backend : `${backend}/api/v1`;
+  }
+  const publicUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+  return publicUrl;
+}
+const API_BASE_URL = getApiBaseUrl();
 
 import { Question } from '@/types/question'
 
@@ -53,9 +59,20 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
             return retryRes.json()
           }
         } else {
-          // Refresh failed, clear client user data and redirect to login
+          // Refresh failed, clear client user data and cookies
           localStorage.removeItem('user')
-          window.location.href = '/login'
+          document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+          document.cookie = 'userGrade=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+
+          const currentPath = window.location.pathname
+          const isProtectedRoute = currentPath.startsWith('/dashboard') || 
+                                   currentPath.startsWith('/student') || 
+                                   currentPath.startsWith('/profile') || 
+                                   currentPath.startsWith('/exam')
+          
+          if (isProtectedRoute && currentPath !== '/login') {
+            window.location.href = '/login'
+          }
         }
       } catch (e) {
         console.error("Refresh token error", e)

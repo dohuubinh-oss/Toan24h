@@ -47,6 +47,9 @@ func main() {
 	// 3.5. Start Background Workers (e.g., 5 concurrent grading workers)
 	services.StartGradingWorkers(5, handlers.ProcessExamGrading)
 
+	// 3.6. Start Telegram Bot Poller for Mobile Login
+	services.StartTelegramBotPoller(config.DB)
+
 	// 4. Khởi động Web Server (Gin)
 	r := routes.SetupRouter()
 	log.Println("Server running on port 8080...")

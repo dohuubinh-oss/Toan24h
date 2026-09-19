@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react'
@@ -22,6 +22,10 @@ export default function ForgotPasswordForm() {
   const [serverError, setServerError] = useState<string | null>(null)
   const [serverSuccess, setServerSuccess] = useState<string | null>(null)
   
+  // 6 separate OTP input boxes state
+  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', ''])
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
   // States for step 3 password visibility
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -33,10 +37,49 @@ export default function ForgotPasswordForm() {
     watch,
     trigger,
     getValues,
+    setValue,
     formState: { errors }
   } = useForm<ForgotPasswordFormValues>({
     mode: 'onTouched'
   })
+
+  // Handle individual OTP box change
+  const handleOtpDigitChange = (index: number, val: string) => {
+    // Keep only numbers
+    const cleanVal = val.replace(/\D/g, '')
+    const digit = cleanVal.slice(-1)
+
+    const newDigits = [...otpDigits]
+    newDigits[index] = digit
+    setOtpDigits(newDigits)
+    
+    const combinedOtp = newDigits.join('')
+    setValue('otp', combinedOtp, { shouldValidate: true })
+
+    // Auto-focus next box if digit entered
+    if (digit && index < 5) {
+      inputRefs.current[index + 1]?.focus()
+    }
+  }
+
+  // Handle Backspace navigation
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus()
+    }
+  }
+
+  // Handle pasting 6 digits
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').trim()
+    if (pastedData.length === 6) {
+      const digits = pastedData.split('')
+      setOtpDigits(digits)
+      setValue('otp', pastedData, { shouldValidate: true })
+      inputRefs.current[5]?.focus()
+    }
+  }
 
   const onSubmitStep1 = async () => {
     setServerError(null)
@@ -75,17 +118,21 @@ export default function ForgotPasswordForm() {
     setServerError(null)
     setServerSuccess(null)
 
-    const isOtpValid = await trigger('otp')
-    if (!isOtpValid) return
+    const combinedOtp = otpDigits.join('')
+    setValue('otp', combinedOtp)
+
+    if (combinedOtp.length < 6) {
+      setServerError('Vui lòng nhập đủ 6 chữ số mã OTP')
+      return
+    }
 
     const email = getValues('email')
-    const otp = getValues('otp')
     setIsLoading(true)
 
     try {
       const res = await apiFetch('/auth/verify-otp', {
         method: 'POST',
-        body: JSON.stringify({ email, otp })
+        body: JSON.stringify({ email, otp: combinedOtp })
       })
 
       if (!res.ok) {
@@ -112,14 +159,14 @@ export default function ForgotPasswordForm() {
     if (!isPasswordValid) return
 
     const email = getValues('email')
-    const otp = getValues('otp')
+    const combinedOtp = otpDigits.join('')
     const newPassword = getValues('newPassword')
     setIsLoading(true)
 
     try {
       const res = await apiFetch('/auth/reset-password', {
         method: 'POST',
-        body: JSON.stringify({ email, otp, newPassword })
+        body: JSON.stringify({ email, otp: combinedOtp, newPassword })
       })
 
       if (!res.ok) {
@@ -208,30 +255,37 @@ export default function ForgotPasswordForm() {
             </div>
           )}
 
-          {/* STEP 2: OTP */}
+          {/* STEP 2: 6 MODERN OTP BOXES */}
           {step === 2 && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-6">
               <div>
-                <Label htmlFor="otp">Mã xác nhận (OTP)</Label>
-                <Input
-                  {...register('otp', {
-                    required: 'Vui lòng nhập mã OTP',
-                    pattern: {
-                      value: /^\d{6}$/,
-                      message: 'Mã OTP phải bao gồm 6 chữ số'
-                    }
-                  })}
-                  id="otp"
-                  placeholder="Nhập 6 chữ số"
-                  type="text"
-                  maxLength={6}
-                  className="text-center tracking-[0.5em] font-bold text-lg"
-                  error={!!errors.otp}
-                />
-                {errors.otp && (
-                  <p className="text-red-500 text-xs mt-1 font-medium text-center">{errors.otp?.message}</p>
-                )}
+                <Label className="text-center block mb-4 text-slate-700 font-semibold text-base">
+                  Nhập mã xác thực (OTP)
+                </Label>
+                <div className="flex justify-between items-center gap-2 sm:gap-3 my-2">
+                  {otpDigits.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      ref={(el) => {
+                        inputRefs.current[idx] = el
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                      onPaste={handleOtpPaste}
+                      className="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold rounded-xl border-2 border-slate-200 bg-slate-50/50 text-slate-800 transition-all duration-200 outline-none focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 shadow-sm"
+                      autoFocus={idx === 0}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-slate-400 text-center mt-3">
+                  Bạn có thể dán (paste) trực tiếp mã 6 số vào các ô trên.
+                </p>
               </div>
+
               <div className="flex gap-4">
                 <Button type="button" variant="outline" className="flex-1" onClick={handleGoBack} disabled={isLoading}>
                   Quay lại

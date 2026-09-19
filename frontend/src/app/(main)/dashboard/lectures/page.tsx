@@ -14,21 +14,28 @@ export default function AdminLecturesDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto w-full px-4 py-8 space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Quản lý bài giảng theo khối lớp</h1>
-          <p className="text-slate-500 mt-2">Chọn một khối lớp để xem và quản lý danh sách bài giảng (Admin Access).</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-slate-800">Quản lý bài giảng theo khối lớp</h1>
+            <span className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-full border border-primary/20">
+              Admin & Teacher Access
+            </span>
+          </div>
+          <p className="text-slate-500 mt-1">Vui lòng chọn một khối lớp để xem và quản lý danh sách bài giảng.</p>
         </div>
         
         <Link 
           href="/dashboard/lectures/create" 
-          className="px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2 shadow-sm"
+          className="px-5 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-md shadow-primary/20 hover:scale-105"
         >
-          <Plus size={18} />
-          Tạo bài giảng
+          <Plus size={20} />
+          Tạo bài giảng mới
         </Link>
       </div>
 
+      {/* Grade Selector Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {grades.map((grade) => (
           <Link
@@ -40,7 +47,9 @@ export default function AdminLecturesDashboard() {
               <BookOpen size={32} />
             </div>
             <h3 className="text-lg font-bold text-slate-800">{grade.name}</h3>
-            <span className="text-sm text-slate-500 mt-2">Xem danh sách →</span>
+            <span className="text-sm font-semibold text-primary mt-2 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+              Xem bài giảng →
+            </span>
           </Link>
         ))}
       </div>

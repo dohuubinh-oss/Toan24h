@@ -215,7 +215,6 @@ export default function RegisterForm() {
                   botName={telegramBotName}
                   onAuthCallback={handleTelegramAuth}
                 />
-                <span className="text-xs text-slate-400 mt-2">Sử dụng tài khoản Telegram của bạn</span>
               </div>
             );
           })()}
