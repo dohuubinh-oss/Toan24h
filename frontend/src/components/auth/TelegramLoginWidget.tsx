@@ -20,20 +20,10 @@ export default function TelegramLoginWidget({
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [deepLink, setDeepLink] = useState<string>('')
   const [qrStatus, setQrStatus] = useState<'idle' | 'waiting' | 'completed'>('idle')
-  const [isLocalhost, setIsLocalhost] = useState(false)
-  const [isSimulating, setIsSimulating] = useState(false)
 
   useEffect(() => {
     onAuthSuccessRef.current = onAuthSuccess
   }, [onAuthSuccess])
-
-  // Detect localhost
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const host = window.location.hostname
-      setIsLocalhost(host === 'localhost' || host === '127.0.0.1')
-    }
-  }, [])
 
   // Start QR session - Immediately generate sessionId and deepLink so QR renders with 0ms delay
   const startQrSession = async () => {
@@ -93,26 +83,6 @@ export default function TelegramLoginWidget({
     return () => clearInterval(interval)
   }, [showQrModal, sessionId, qrStatus])
 
-  // Simulated login for instant testing in local dev
-  const handleSimulatedLogin = async () => {
-    if (!sessionId) return
-    setIsSimulating(true)
-    try {
-      await apiFetch('/auth/telegram-qr/complete', {
-        method: 'POST',
-        body: JSON.stringify({
-          sessionId,
-          id: 99998888,
-          first_name: 'Học sinh Test',
-          username: 'student_test',
-        }),
-      })
-    } catch (err) {
-      console.error('Simulation error:', err)
-    } finally {
-      setIsSimulating(false)
-    }
-  }
 
   return (
     <div className="flex flex-col items-center w-full gap-3 my-1">
@@ -189,19 +159,7 @@ export default function TelegramLoginWidget({
                   <span>Đang đợi bạn nhấn Start trên Telegram...</span>
                 </div>
 
-                {/* Test button for developer in localhost */}
-                {isLocalhost && (
-                  <div className="pt-2 border-t border-slate-100 text-center">
-                    <button
-                      type="button"
-                      onClick={handleSimulatedLogin}
-                      disabled={isSimulating}
-                      className="text-[11px] text-slate-400 hover:text-[#24A1DE] underline font-medium transition-colors cursor-pointer"
-                    >
-                      {isSimulating ? 'Đang mô phỏng...' : '⚡ Bấm vào đây để test đăng nhập nhanh (Dev simulation)'}
-                    </button>
-                  </div>
-                )}
+
               </div>
             )}
           </div>

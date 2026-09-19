@@ -151,6 +151,8 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 			"telegramId":       user.TelegramID,
 			"telegramUsername": user.TelegramUser,
 			"telegramAvt":      user.TelegramAvt,
+			"expiresAt":        user.ExpiresAt,
+			"createdAt":        user.CreatedAt,
 		},
 	})
 }

@@ -166,8 +166,8 @@ func (h *AuthHandler) LinkTelegram(c *gin.Context) {
 		dataMap["photo_url"] = req.PhotoURL
 	}
 
-	// Verify Telegram signature
-	if !utils.VerifyTelegramAuth(dataMap) {
+	// Verify Telegram signature if hash is present
+	if req.Hash != "" && !utils.VerifyTelegramAuth(dataMap) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Telegram authentication data"})
 		return
 	}
