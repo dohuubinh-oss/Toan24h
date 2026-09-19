@@ -16,9 +16,13 @@ type User struct {
 	TelegramUser *string        `gorm:"type:varchar(255)" json:"telegramUsername"`
 	TelegramAvt  *string        `gorm:"type:text" json:"telegramPhotoUrl"`
 	Role         string         `gorm:"type:varchar(50);not null;default:'student'" json:"role"`
-	Grade        string         `gorm:"type:varchar(50)" json:"grade"`
-	Points       int            `gorm:"not null;default:0" json:"points"`
-	Status       string         `gorm:"type:varchar(50);not null;default:'active'" json:"status"`
+	Grade          string         `gorm:"type:varchar(50)" json:"grade"`
+	Points         int            `gorm:"not null;default:0" json:"points"`
+	LifetimeXP     int            `gorm:"not null;default:0" json:"lifetimeXp"`
+	WeeklyXP       int            `gorm:"not null;default:0" json:"weeklyXp"`
+	CurrentStreak  int            `gorm:"not null;default:0" json:"currentStreak"`
+	LastActiveDate *time.Time     `json:"lastActiveDate"`
+	Status         string         `gorm:"type:varchar(50);not null;default:'active'" json:"status"`
 	ExpiresAt    *time.Time     `json:"expiresAt"`
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
