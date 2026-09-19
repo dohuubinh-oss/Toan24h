@@ -12,6 +12,10 @@ import {
   Calendar,
   LogOut,
   Sparkles,
+  KeyRound,
+  Eye,
+  EyeOff,
+  Lock,
 } from 'lucide-react'
 import TelegramLoginWidget from '@/components/auth/TelegramLoginWidget'
 import { apiFetch } from '@/lib/api'
@@ -39,6 +43,15 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdatingGrade, setIsUpdatingGrade] = useState(false)
   const [linkStatus, setLinkStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+  // Change password states
+  const [showPasswordSection, setShowPasswordSection] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false)
 
   // 1. Instant hydration from cached localStorage user
   useEffect(() => {
@@ -75,7 +88,7 @@ export default function ProfilePage() {
     fetchProfile()
   }, [router])
 
-  // Change grade for student
+  // Change grade
   const handleGradeChange = async (newGrade: string) => {
     if (!newGrade || newGrade === user?.grade) return
     setIsUpdatingGrade(true)
@@ -101,10 +114,31 @@ export default function ProfilePage() {
   // Handle Telegram account link
   const handleTelegramSuccess = async (telegramUser: any) => {
     try {
+      const tgId =
+        telegramUser.telegramId ||
+        telegramUser.id ||
+        telegramUser.user?.telegramId ||
+        telegramUser.user?.id
+
+      const tgUser =
+        telegramUser.telegramUsername ||
+        telegramUser.username ||
+        telegramUser.user?.telegramUsername ||
+        ''
+
+      const tgAvt =
+        telegramUser.telegramAvt ||
+        telegramUser.photo_url ||
+        telegramUser.user?.telegramAvt ||
+        ''
+
       const payload = {
-        id: telegramUser.telegramId || telegramUser.id,
-        username: telegramUser.telegramUsername || telegramUser.username || '',
-        photo_url: telegramUser.telegramAvt || telegramUser.photo_url || '',
+        id: tgId,
+        telegramId: tgId,
+        username: tgUser,
+        telegramUsername: tgUser,
+        photo_url: tgAvt,
+        telegramAvt: tgAvt,
       }
 
       const res = await apiFetch('/users/me/link-telegram', {
@@ -112,7 +146,7 @@ export default function ProfilePage() {
         body: JSON.stringify(payload),
       })
 
-      if (res && (res.message || res.status === 'completed')) {
+      if (res && (res.message || res.status === 'completed' || res.telegramId)) {
         setLinkStatus({ type: 'success', message: 'Liên kết Telegram thành công!' })
         toast.success('Liên kết Telegram thành công!')
         const newRes = await apiFetch('/users/me')
@@ -121,12 +155,50 @@ export default function ProfilePage() {
           localStorage.setItem('user', JSON.stringify(newRes.data))
         }
       } else {
-        setLinkStatus({ type: 'error', message: res.error || 'Liên kết thất bại' })
-        toast.error(res.error || 'Liên kết thất bại')
+        setLinkStatus({ type: 'error', message: res?.error || 'Liên kết thất bại' })
+        toast.error(res?.error || 'Liên kết thất bại')
       }
     } catch (e: any) {
       setLinkStatus({ type: 'error', message: e.message || 'Lỗi kết nối máy chủ' })
       toast.error(e.message || 'Lỗi kết nối máy chủ')
+    }
+  }
+
+  // Handle Change Password
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('Mật khẩu mới phải có ít nhất 6 ký tự')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Xác nhận mật khẩu mới không trùng khớp')
+      return
+    }
+
+    setIsSubmittingPassword(true)
+    try {
+      const res = await apiFetch('/users/me/password', {
+        method: 'PUT',
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      })
+
+      if (res && res.message) {
+        toast.success(res.message || 'Đổi mật khẩu thành công!')
+        setCurrentPassword('')
+        setNewPassword('')
+        setConfirmPassword('')
+        setShowPasswordSection(false)
+      } else if (res && res.error) {
+        toast.error(res.error)
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Không thể đổi mật khẩu. Vui lòng kiểm tra lại mật khẩu hiện tại.')
+    } finally {
+      setIsSubmittingPassword(false)
     }
   }
 
@@ -158,6 +230,16 @@ export default function ProfilePage() {
   }
 
   const isVipActive = user.expiresAt && new Date(user.expiresAt) > new Date()
+  const isAdminOrTeacher = user.role === 'admin' || user.role === 'teacher'
+
+  // Expiration display text
+  const getExpirationText = () => {
+    if (isAdminOrTeacher) return 'xxxxx'
+    if (user.expiresAt) {
+      return new Date(user.expiresAt).toLocaleDateString('vi-VN')
+    }
+    return 'Chưa kích hoạt'
+  }
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6">
@@ -226,25 +308,21 @@ export default function ProfilePage() {
                 </span>
               )}
             </div>
-            <div className="text-xs text-slate-600">
-              {user.expiresAt ? (
-                <>
-                  Hạn dùng đến:{' '}
-                  <span className="font-bold text-slate-900">
-                    {new Date(user.expiresAt).toLocaleDateString('vi-VN')}
-                  </span>
-                </>
-              ) : (
-                'Tài khoản đang dùng gói miễn phí'
-              )}
-            </div>
+            {user.expiresAt && (
+              <div className="text-xs text-slate-600">
+                Hạn dùng đến:{' '}
+                <span className="font-bold text-slate-900">
+                  {new Date(user.expiresAt).toLocaleDateString('vi-VN')}
+                </span>
+              </div>
+            )}
 
             <button
               onClick={() => router.push('/upgrade')}
               className="mt-1 w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Nâng cấp VIP</span>
+              <span>Gia hạn</span>
             </button>
           </div>
         </div>
@@ -266,7 +344,7 @@ export default function ProfilePage() {
               <BookOpen className="w-6 h-6" />
             </div>
             <div className="flex-1">
-              <p className="text-xs text-slate-500 font-medium">Khối lớp hiện tại</p>
+              <p className="text-xs text-slate-500 font-medium">Khối lớp</p>
               <div className="flex items-center gap-2 mt-0.5">
                 <select
                   value={user.grade || '8'}
@@ -289,11 +367,9 @@ export default function ProfilePage() {
               <Calendar className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium">Tham gia từ</p>
-              <p className="text-sm font-bold text-slate-800">
-                {user.createdAt
-                  ? new Date(user.createdAt).toLocaleDateString('vi-VN')
-                  : 'Gần đây'}
+              <p className="text-xs text-slate-500 font-medium">Hết hạn</p>
+              <p className="text-sm font-bold text-slate-800 font-mono tracking-wide">
+                {getExpirationText()}
               </p>
             </div>
           </div>
@@ -301,11 +377,112 @@ export default function ProfilePage() {
 
         {/* Security & Telegram Linking Section */}
         <div className="space-y-6 pt-4 border-t border-slate-100">
-          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Shield className="text-primary" size={20} />
-            Bảo mật & Liên kết
-          </h3>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Shield className="text-primary" size={20} />
+              Bảo mật & Liên kết
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowPasswordSection(!showPasswordSection)}
+              className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors cursor-pointer"
+            >
+              <KeyRound className="w-4 h-4" />
+              <span>{showPasswordSection ? 'Ẩn đổi mật khẩu' : 'Đổi mật khẩu'}</span>
+            </button>
+          </div>
 
+          {/* Change Password Form (Collapsible) */}
+          {showPasswordSection && (
+            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200/80 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center gap-2.5 mb-4">
+                <Lock className="w-5 h-5 text-blue-600" />
+                <h4 className="font-bold text-slate-900 text-base">Cập nhật Mật khẩu mới</h4>
+              </div>
+
+              <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Mật khẩu hiện tại
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Nhập mật khẩu hiện tại (nếu có)"
+                      className="w-full px-3.5 py-2 pr-10 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Mật khẩu mới (tối thiểu 6 ký tự)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Nhập mật khẩu mới"
+                      required
+                      minLength={6}
+                      className="w-full px-3.5 py-2 pr-10 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Xác nhận mật khẩu mới
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Nhập lại mật khẩu mới"
+                    required
+                    minLength={6}
+                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="submit"
+                    disabled={isSubmittingPassword}
+                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSubmittingPassword ? 'Đang cập nhật...' : 'Lưu mật khẩu mới'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordSection(false)}
+                    className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs rounded-xl transition-all cursor-pointer"
+                  >
+                    Hủy
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Telegram Linking Card */}
           <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200/70">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
@@ -328,6 +505,8 @@ export default function ProfilePage() {
                     <TelegramLoginWidget
                       botName={process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'toan6789_bot'}
                       onAuthSuccess={handleTelegramSuccess}
+                      linkUserId={user.id}
+                      buttonText="Liên kết Telegram"
                     />
                   </div>
                 )}

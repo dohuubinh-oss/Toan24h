@@ -134,62 +134,112 @@ func (h *AuthHandler) TelegramLogin(c *gin.Context) {
 	})
 }
 
-// LinkTelegram handles linking a Telegram account to an existing user
+type LinkTelegramRequest struct {
+	ID               interface{} `json:"id"`
+	TelegramID       interface{} `json:"telegramId"`
+	Username         string      `json:"username"`
+	TelegramUsername string      `json:"telegramUsername"`
+	PhotoURL         string      `json:"photo_url"`
+	TelegramAvt      string      `json:"telegramAvt"`
+	FirstName        string      `json:"first_name"`
+	LastName         string      `json:"last_name"`
+	AuthDate         int64       `json:"auth_date"`
+	Hash             string      `json:"hash"`
+}
+
+func parseTelegramID(v interface{}) int64 {
+	switch val := v.(type) {
+	case float64:
+		return int64(val)
+	case int64:
+		return val
+	case int:
+		return int64(val)
+	case string:
+		var n int64
+		fmt.Sscanf(val, "%d", &n)
+		return n
+	default:
+		return 0
+	}
+}
+
+// LinkTelegram links a Telegram account to an existing user
 func (h *AuthHandler) LinkTelegram(c *gin.Context) {
-	// Require authentication
 	userIDStr, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	var req TelegramLoginRequest
+	var req LinkTelegramRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload: " + err.Error()})
 		return
 	}
 
-	// Prepare data map for verification
-	dataMap := map[string]string{
-		"id":         fmt.Sprintf("%d", req.ID),
-		"first_name": req.FirstName,
-		"auth_date":  fmt.Sprintf("%d", req.AuthDate),
-		"hash":       req.Hash,
+	tgID := parseTelegramID(req.ID)
+	if tgID == 0 {
+		tgID = parseTelegramID(req.TelegramID)
 	}
-	if req.LastName != "" {
-		dataMap["last_name"] = req.LastName
+
+	tgUser := req.Username
+	if tgUser == "" {
+		tgUser = req.TelegramUsername
 	}
-	if req.Username != "" {
-		dataMap["username"] = req.Username
+
+	tgAvt := req.PhotoURL
+	if tgAvt == "" {
+		tgAvt = req.TelegramAvt
 	}
-	if req.PhotoURL != "" {
-		dataMap["photo_url"] = req.PhotoURL
+
+	if tgID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing telegram ID"})
+		return
 	}
 
 	// Verify Telegram signature if hash is present
-	if req.Hash != "" && !utils.VerifyTelegramAuth(dataMap) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Telegram authentication data"})
-		return
+	if req.Hash != "" {
+		dataMap := map[string]string{
+			"id":         fmt.Sprintf("%d", tgID),
+			"first_name": req.FirstName,
+			"auth_date":  fmt.Sprintf("%d", req.AuthDate),
+			"hash":       req.Hash,
+		}
+		if req.LastName != "" {
+			dataMap["last_name"] = req.LastName
+		}
+		if tgUser != "" {
+			dataMap["username"] = tgUser
+		}
+		if tgAvt != "" {
+			dataMap["photo_url"] = tgAvt
+		}
+
+		if !utils.VerifyTelegramAuth(dataMap) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Telegram authentication data"})
+			return
+		}
 	}
 
 	// Check if Telegram ID is already linked to another user
 	var existing models.User
-	if err := h.db.Where("telegram_id = ?", req.ID).First(&existing).Error; err == nil {
+	if err := h.db.Where("telegram_id = ?", tgID).First(&existing).Error; err == nil {
 		if existing.ID.String() != userIDStr.(string) {
-			c.JSON(http.StatusConflict, gin.H{"error": "Telegram account is already linked to another user"})
+			c.JSON(http.StatusConflict, gin.H{"error": "Tài khoản Telegram này đã được liên kết với một người dùng khác"})
 			return
 		}
 	}
 
 	// Update current user
 	updates := map[string]interface{}{
-		"telegram_id": req.ID,
+		"telegram_id": tgID,
 	}
-	if req.Username != "" {
-		updates["telegram_user"] = req.Username
+	if tgUser != "" {
+		updates["telegram_user"] = tgUser
 	}
-	if req.PhotoURL != "" {
-		updates["telegram_avt"] = req.PhotoURL
+	if tgAvt != "" {
+		updates["telegram_avt"] = tgAvt
 	}
 
 	if err := h.db.Model(&models.User{}).Where("id = ?", userIDStr).Updates(updates).Error; err != nil {
@@ -197,13 +247,19 @@ func (h *AuthHandler) LinkTelegram(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Telegram account linked successfully"})
+	c.JSON(http.StatusOK, gin.H{
+		"message":          "Telegram account linked successfully",
+		"telegramId":       tgID,
+		"telegramUsername": tgUser,
+		"telegramAvt":      tgAvt,
+	})
 }
 
 // CreateTelegramQRSession creates a temporary session ID for mobile Telegram QR / Deep link login
 func (h *AuthHandler) CreateTelegramQRSession(c *gin.Context) {
 	var body struct {
-		SessionID string `json:"sessionId"`
+		SessionID  string `json:"sessionId"`
+		LinkUserID string `json:"linkUserId"`
 	}
 	_ = c.ShouldBindJSON(&body)
 
@@ -215,10 +271,10 @@ func (h *AuthHandler) CreateTelegramQRSession(c *gin.Context) {
 	var sessionID, deepLink string
 	if body.SessionID != "" {
 		sessionID = body.SessionID
-		services.RegisterTelegramQRSession(sessionID)
+		services.RegisterTelegramQRSessionWithLink(sessionID, body.LinkUserID)
 		deepLink = fmt.Sprintf("https://t.me/%s?start=login_%s", botUsername, sessionID)
 	} else {
-		sessionID, deepLink = services.CreateTelegramQRSession()
+		sessionID, deepLink = services.CreateTelegramQRSessionWithLink(body.LinkUserID)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -249,18 +305,43 @@ func (h *AuthHandler) CheckTelegramQRStatus(c *gin.Context) {
 		// Set cookies
 		setAuthCookies(c, data.AccessToken, data.RefreshToken, data.User.Role, data.User.Grade)
 
+		var tgID int64
+		if data.User.TelegramID != nil {
+			tgID = *data.User.TelegramID
+		} else {
+			tgID = data.TelegramID
+		}
+		var tgUser string
+		if data.User.TelegramUser != nil {
+			tgUser = *data.User.TelegramUser
+		} else {
+			tgUser = data.TelegramUser
+		}
+		var tgAvt string
+		if data.User.TelegramAvt != nil {
+			tgAvt = *data.User.TelegramAvt
+		}
+
 		c.JSON(http.StatusOK, gin.H{
-			"status":       "completed",
-			"accessToken":  data.AccessToken,
-			"refreshToken": data.RefreshToken,
+			"status":           "completed",
+			"accessToken":      data.AccessToken,
+			"refreshToken":     data.RefreshToken,
+			"telegramId":       tgID,
+			"telegramUsername": tgUser,
+			"telegramAvt":      tgAvt,
 			"user": gin.H{
-				"id":        data.User.ID,
-				"email":     data.User.Email,
-				"fullName":  data.User.FullName,
-				"role":      data.User.Role,
-				"grade":     data.User.Grade,
-				"points":    data.User.Points,
-				"status":    data.User.Status,
+				"id":               data.User.ID,
+				"email":            data.User.Email,
+				"fullName":         data.User.FullName,
+				"role":             data.User.Role,
+				"grade":            data.User.Grade,
+				"points":           data.User.Points,
+				"status":           data.User.Status,
+				"telegramId":       tgID,
+				"telegramUsername": tgUser,
+				"telegramAvt":      tgAvt,
+				"expiresAt":        data.User.ExpiresAt,
+				"createdAt":        data.User.CreatedAt,
 			},
 		})
 		return

@@ -114,6 +114,7 @@ func SetupRouter() *gin.Engine {
 			users.POST("/:id/recharge", middleware.RoleMiddleware("admin"), userHandler.RechargeUser)
 
 			users.PUT("/me/grade", authHandler.UpdateGrade)
+			users.PUT("/me/password", authHandler.ChangePassword)
 			users.POST("/me/deduct-points", authHandler.DeductPoints)
 			users.POST("/me/link-telegram", authHandler.LinkTelegram)
 		}

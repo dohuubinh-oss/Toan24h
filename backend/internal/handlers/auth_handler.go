@@ -417,3 +417,54 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 		"message": "Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại!",
 	})
 }
+
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword" binding:"required,min=6"`
+}
+
+func (h *AuthHandler) ChangePassword(c *gin.Context) {
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Mật khẩu mới phải có ít nhất 6 ký tự"})
+		return
+	}
+
+	var user models.User
+	if err := h.db.Where("id = ?", userIDStr).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy người dùng"})
+		return
+	}
+
+	// If user already had a password, check current password
+	if user.PasswordHash != "" {
+		if req.CurrentPassword == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập mật khẩu hiện tại"})
+			return
+		}
+		if err := utils.CheckPasswordHash(req.CurrentPassword, user.PasswordHash); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Mật khẩu hiện tại không chính xác"})
+			return
+		}
+	}
+
+	hashedPassword, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể mã hóa mật khẩu"})
+		return
+	}
+
+	if err := h.db.Model(&user).Update("password_hash", hashedPassword).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể cập nhật mật khẩu"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Đổi mật khẩu thành công"})
+}
+

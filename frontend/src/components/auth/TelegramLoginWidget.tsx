@@ -8,11 +8,15 @@ import { apiFetch } from '@/lib/api'
 interface TelegramLoginWidgetProps {
   botName: string
   onAuthSuccess: (user: any) => void
+  linkUserId?: string
+  buttonText?: string
 }
 
 export default function TelegramLoginWidget({
   botName,
   onAuthSuccess,
+  linkUserId,
+  buttonText,
 }: TelegramLoginWidgetProps) {
   const onAuthSuccessRef = useRef(onAuthSuccess)
   
@@ -40,7 +44,10 @@ export default function TelegramLoginWidget({
     try {
       const res = await apiFetch('/auth/telegram-qr/session', {
         method: 'POST',
-        body: JSON.stringify({ sessionId: localId }),
+        body: JSON.stringify({
+          sessionId: localId,
+          linkUserId: linkUserId || undefined,
+        }),
       })
       if (res && res.sessionId) {
         setSessionId(res.sessionId)
@@ -84,6 +91,9 @@ export default function TelegramLoginWidget({
   }, [showQrModal, sessionId, qrStatus])
 
 
+  const defaultBtnText = linkUserId ? 'Liên kết tài khoản Telegram' : 'Đăng nhập với Telegram'
+  const defaultModalTitle = linkUserId ? 'Liên kết tài khoản Telegram' : 'Đăng nhập với Telegram'
+
   return (
     <div className="flex flex-col items-center w-full gap-3 my-1">
       {/* Single Unified Telegram Button */}
@@ -93,7 +103,7 @@ export default function TelegramLoginWidget({
         className="w-full flex items-center justify-center gap-2.5 py-3 px-4 bg-[#24A1DE] hover:bg-[#208ec4] text-white font-semibold rounded-xl shadow-md shadow-[#24A1DE]/25 transition-all hover:scale-[1.01] active:scale-[0.99] text-sm group cursor-pointer"
       >
         <Send className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-        <span>Đăng nhập với Telegram</span>
+        <span>{buttonText || defaultBtnText}</span>
       </button>
 
       {/* Modal QR & Mobile Login */}
@@ -111,14 +121,18 @@ export default function TelegramLoginWidget({
               <div className="w-12 h-12 rounded-full bg-sky-100 text-[#24A1DE] flex items-center justify-center mx-auto mb-2">
                 <QrCode className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-800">Đăng nhập với Telegram</h3>
+              <h3 className="text-xl font-bold text-slate-800">{defaultModalTitle}</h3>
             </div>
 
             {qrStatus === 'completed' ? (
               <div className="py-8 text-center space-y-3">
                 <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto animate-bounce" />
-                <h4 className="text-lg font-bold text-slate-800">Đăng nhập thành công!</h4>
-                <p className="text-sm text-slate-500">Đang tự động chuyển hướng vào hệ thống...</p>
+                <h4 className="text-lg font-bold text-slate-800">
+                  {linkUserId ? 'Liên kết thành công!' : 'Đăng nhập thành công!'}
+                </h4>
+                <p className="text-sm text-slate-500">
+                  {linkUserId ? 'Thông tin Telegram đã được cập nhật.' : 'Đang tự động chuyển hướng vào hệ thống...'}
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
