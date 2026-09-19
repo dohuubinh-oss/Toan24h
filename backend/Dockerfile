@@ -13,7 +13,6 @@ WORKDIR /app
 RUN apk --no-cache add ca-certificates tzdata
 
 COPY --from=builder /api-server ./
-COPY .env ./
 
 EXPOSE 8080
 CMD ["/app/api-server"]
