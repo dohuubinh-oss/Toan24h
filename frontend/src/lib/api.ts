@@ -155,7 +155,7 @@ export async function recognizeHandwriting(file: File): Promise<string> {
   return data.text || '';
 }
 
-export async function getQuestions(page: number = 1, limit: number = 20, filters?: { ids?: string[], grade?: string, topic?: string, type?: string, difficulty?: string, q?: string }): Promise<{data: Question[], total: number, totalPages?: number}> {
+export async function getQuestions(page: number = 1, limit: number = 20, filters?: { ids?: string[], grade?: string, topic?: string, type?: string, difficulty?: string, q?: string, cate?: string }): Promise<{data: Question[], total: number, totalPages?: number}> {
   let url = `/questions?page=${page}&limit=${limit}`
   if (filters) {
     if (filters.ids && filters.ids.length > 0) url += `&ids=${filters.ids.join(',')}`;
@@ -164,6 +164,7 @@ export async function getQuestions(page: number = 1, limit: number = 20, filters
     if (filters.type) url += `&type=${encodeURIComponent(filters.type)}`;
     if (filters.difficulty) url += `&difficulty=${encodeURIComponent(filters.difficulty)}`;
     if (filters.q) url += `&q=${encodeURIComponent(filters.q)}`;
+    if (filters.cate) url += `&cate=${encodeURIComponent(filters.cate)}`;
   }
   const response = await apiFetch(url)
   if (response.status === 'success' && response.data) {
@@ -547,6 +548,20 @@ export async function submitTeacherGradingReview(submissionId: string, payload: 
     body: JSON.stringify(payload),
   })
   return response
+}
+
+export async function getWeeklyLeaderboard(grade?: string): Promise<any> {
+  try {
+    const query = grade ? `?grade=${encodeURIComponent(grade)}` : '';
+    const response = await apiFetch(`/leaderboard${query}`);
+    if (response.status === 'success' && response.data) {
+      return response.data;
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to fetch weekly leaderboard:', error);
+    return null;
+  }
 }
 
 
