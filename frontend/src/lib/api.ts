@@ -30,7 +30,8 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
   })
 
   if (!response.ok) {
-    if (response.status === 401 && typeof window !== 'undefined' && !options.url_is_refresh) {
+    const isAuthEndpoint = endpoint.includes('/auth/login') || endpoint.includes('/auth/register') || endpoint.includes('/auth/refresh');
+    if (response.status === 401 && typeof window !== 'undefined' && !options.url_is_refresh && !isAuthEndpoint) {
       // Try refresh token
       // Try refresh token via HttpOnly cookies
       try {

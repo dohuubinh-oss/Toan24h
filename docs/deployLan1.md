@@ -252,8 +252,29 @@ Dưới đây là danh sách các lệnh **Dokku** phổ biến được phân l
 | `dokku postgres:connect <db-name>` | Truy cập trực tiếp vào giao diện CLI (`psql`) của Database. |
 | `dokku postgres:export <db-name> > backup.sql` | Xuất dữ liệu Database ra file SQL để sao lưu/backup. |
 | `dokku postgres:import <db-name> < backup.sql` | Nạp dữ liệu từ file SQL vào Database trên VPS. |
+| `dokku postgres:expose <db-name> [port]` | Mở cổng công khai tạm thời để kết nối từ các phần mềm GUI (DBeaver, TablePlus, Navicat). |
+| `dokku postgres:unexpose <db-name>` | Đóng cổng công khai của Database sau khi dùng xong để bảo mật. |
 | `dokku redis:create <redis-name>` | Tạo một cụm cache Redis mới độc lập trên VPS. |
 | `dokku redis:link <redis-name> <app-name>` | Kết nối Redis với app (tự động tiêm biến `REDIS_URL`). |
+
+#### 💡 7.1 Hướng dẫn Kết nối Database bằng Phần mềm Đồ họa (DBeaver, TablePlus, Navicat)
+1. **Mở cổng PostgreSQL công khai tạm thời trên VPS:**
+   ```bash
+   dokku postgres:expose toan6789-db 5432
+   ```
+2. **Xem thông tin đăng nhập Database:**
+   ```bash
+   dokku postgres:info toan6789-db
+   ```
+3. **Nhập thông số vào DBeaver / TablePlus trên máy Mac:**
+   - **Host**: `160.236.192.96` (hoặc IP VPS của bạn)
+   - **Port**: `5432`
+   - **Database**: `toan6789_db`
+   - **User / Password**: Lấy từ kết quả lệnh `postgres:info` ở trên.
+4. **Đóng cổng bảo mật sau khi dùng xong:**
+   ```bash
+   dokku postgres:unexpose toan6789-db
+   ```
 
 ### 8. Quản lý Ổ đĩa Lưu trữ (Persistent Storage Volume)
 | Lệnh Dokku | Ý nghĩa & Mục đích sử dụng |
