@@ -3,23 +3,24 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
-import { cn } from '../../lib/utils'
+import { apiFetch } from '../../lib/api'
 
 type ForgotPasswordFormValues = {
-  identity: string
+  email: string
   otp?: string
   newPassword?: string
   confirmNewPassword?: string
 }
 
 export default function ForgotPasswordForm() {
-  const [activeTab, setActiveTab] = useState<'email' | 'phone'>('email')
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
+  const [serverSuccess, setServerSuccess] = useState<string | null>(null)
   
   // States for step 3 password visibility
   const [showPassword, setShowPassword] = useState(false)
@@ -29,47 +30,118 @@ export default function ForgotPasswordForm() {
 
   const {
     register,
-    handleSubmit,
     watch,
     trigger,
+    getValues,
     formState: { errors }
   } = useForm<ForgotPasswordFormValues>({
     mode: 'onTouched'
   })
 
   const onSubmitStep1 = async () => {
-    const isIdentityValid = await trigger('identity')
-    if (!isIdentityValid) return
+    setServerError(null)
+    setServerSuccess(null)
 
+    const isEmailValid = await trigger('email')
+    if (!isEmailValid) return
+
+    const email = getValues('email')
     setIsLoading(true)
-    await new Promise(r => setTimeout(r, 1000))
-    setIsLoading(false)
-    setStep(2)
+
+    try {
+      const res = await apiFetch('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setServerError(data.error || 'Không thể gửi mã OTP. Vui lòng thử lại sau.')
+        setIsLoading(false)
+        return
+      }
+
+      const data = await res.json()
+      setServerSuccess(data.message || 'Mã OTP đã được gửi đến email của bạn.')
+      setStep(2)
+    } catch (err: any) {
+      setServerError(err.message || 'Lỗi hệ thống. Vui lòng thử lại.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const onSubmitStep2 = async () => {
+    setServerError(null)
+    setServerSuccess(null)
+
     const isOtpValid = await trigger('otp')
     if (!isOtpValid) return
 
+    const email = getValues('email')
+    const otp = getValues('otp')
     setIsLoading(true)
-    await new Promise(r => setTimeout(r, 1000))
-    setIsLoading(false)
-    setStep(3)
+
+    try {
+      const res = await apiFetch('/auth/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp })
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setServerError(data.error || 'Mã OTP không đúng hoặc đã hết hạn.')
+        setIsLoading(false)
+        return
+      }
+
+      setServerSuccess('Xác thực OTP thành công. Vui lòng đặt mật khẩu mới.')
+      setStep(3)
+    } catch (err: any) {
+      setServerError(err.message || 'Lỗi hệ thống khi xác thực OTP.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const onSubmitStep3 = async () => {
+    setServerError(null)
+    setServerSuccess(null)
+
     const isPasswordValid = await trigger(['newPassword', 'confirmNewPassword'])
     if (!isPasswordValid) return
 
+    const email = getValues('email')
+    const otp = getValues('otp')
+    const newPassword = getValues('newPassword')
     setIsLoading(true)
-    await new Promise(r => setTimeout(r, 1000))
-    setIsLoading(false)
-    
-    // Redirect or show success toast
-    router.push('/login')
+
+    try {
+      const res = await apiFetch('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp, newPassword })
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setServerError(data.error || 'Không thể đặt lại mật khẩu. Vui lòng thử lại.')
+        setIsLoading(false)
+        return
+      }
+
+      setServerSuccess('Đặt lại mật khẩu thành công! Đang chuyển đến trang đăng nhập...')
+      setTimeout(() => {
+        router.push('/login')
+      }, 1500)
+    } catch (err: any) {
+      setServerError(err.message || 'Lỗi hệ thống khi đổi mật khẩu.')
+      setIsLoading(false)
+    }
   }
 
   const handleGoBack = () => {
+    setServerError(null)
+    setServerSuccess(null)
     if (step > 1) setStep((prev) => (prev - 1) as 1 | 2 | 3)
   }
 
@@ -77,71 +149,51 @@ export default function ForgotPasswordForm() {
     <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 bg-white">
       <div className="w-full max-w-[520px]">
         {/* Title */}
-        <div className="mb-10 text-center">
+        <div className="mb-8 text-center">
           <h2 className="text-3xl font-bold text-slate-800 mb-2">Quên mật khẩu</h2>
           <p className="text-slate-500 text-base">
-            {step === 1 && "Vui lòng chọn phương thức và nhập thông tin để khôi phục."}
-            {step === 2 && "Nhập mã OTP 6 số vừa được gửi đến bạn."}
+            {step === 1 && "Nhập địa chỉ Email đăng ký để nhận mã khôi phục OTP."}
+            {step === 2 && `Mã OTP 6 chữ số đã gửi tới ${watch('email') || 'email của bạn'}.`}
             {step === 3 && "Vui lòng đặt lại mật khẩu mới cho tài khoản của bạn."}
           </p>
         </div>
 
+        {/* Global Server Messages */}
+        {serverError && (
+          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3 text-red-700 text-sm font-medium animate-in fade-in duration-200">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+            <span>{serverError}</span>
+          </div>
+        )}
+
+        {serverSuccess && (
+          <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 flex items-center gap-3 text-green-700 text-sm font-medium animate-in fade-in duration-200">
+            <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+            <span>{serverSuccess}</span>
+          </div>
+        )}
+
         <form className="space-y-6" onSubmit={(e) => e.preventDefault()} noValidate>
-          {/* STEP 1: IDENTITY */}
+          {/* STEP 1: EMAIL */}
           {step === 1 && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-6">
-              {/* Tabs */}
-              <div className="flex bg-slate-100 p-1 rounded-xl">
-                <button
-                  type="button"
-                  className={cn(
-                    "flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200",
-                    activeTab === 'email' 
-                      ? "bg-white text-primary shadow-sm" 
-                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-                  )}
-                  onClick={() => setActiveTab('email')}
-                >
-                  Email
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    "flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200",
-                    activeTab === 'phone' 
-                      ? "bg-white text-primary shadow-sm" 
-                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-                  )}
-                  onClick={() => setActiveTab('phone')}
-                >
-                  Số điện thoại
-                </button>
-              </div>
-
               <div>
-                <Label htmlFor="identity">
-                  {activeTab === 'email' ? 'Địa chỉ Email' : 'Số điện thoại'}
-                </Label>
+                <Label htmlFor="email">Địa chỉ Email</Label>
                 <Input
-                  {...register('identity', {
-                    required: 'Vui lòng nhập thông tin',
-                    validate: (val: string) => {
-                      if (activeTab === 'email') {
-                        const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
-                        return isValid || "Email không hợp lệ"
-                      } else {
-                        const isValid = /^(84|0[3|5|7|8|9])+([0-9]{8})\b/.test(val)
-                        return isValid || "Số điện thoại không hợp lệ"
-                      }
+                  {...register('email', {
+                    required: 'Vui lòng nhập địa chỉ Email',
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: 'Địa chỉ Email không hợp lệ'
                     }
                   })}
-                  id="identity"
-                  placeholder={activeTab === 'email' ? 'Nhập email của bạn' : 'Nhập số điện thoại của bạn'}
-                  type={activeTab === 'email' ? 'email' : 'tel'}
-                  error={!!errors.identity}
+                  id="email"
+                  placeholder="Nhập email của bạn (ví dụ: student@gmail.com)"
+                  type="email"
+                  error={!!errors.email}
                 />
-                {errors.identity && (
-                  <p className="text-red-500 text-xs mt-1 font-medium">{errors.identity.message}</p>
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1 font-medium">{errors.email.message}</p>
                 )}
               </div>
 
@@ -151,7 +203,7 @@ export default function ForgotPasswordForm() {
                 onClick={onSubmitStep1}
                 isLoading={isLoading}
               >
-                Gửi mã khôi phục
+                Gửi mã khôi phục qua Email
               </Button>
             </div>
           )}
@@ -170,7 +222,7 @@ export default function ForgotPasswordForm() {
                     }
                   })}
                   id="otp"
-                  placeholder="Nhập mã 6 chữ số"
+                  placeholder="Nhập 6 chữ số"
                   type="text"
                   maxLength={6}
                   className="text-center tracking-[0.5em] font-bold text-lg"
@@ -185,7 +237,7 @@ export default function ForgotPasswordForm() {
                   Quay lại
                 </Button>
                 <Button type="button" className="flex-1" onClick={onSubmitStep2} isLoading={isLoading}>
-                  Xác nhận
+                  Xác nhận OTP
                 </Button>
               </div>
             </div>
@@ -199,12 +251,8 @@ export default function ForgotPasswordForm() {
                 <div className="relative mt-2">
                   <Input
                     {...register('newPassword', {
-                      required: 'Vui lòng nhập mật khẩu',
+                      required: 'Vui lòng nhập mật khẩu mới',
                       minLength: { value: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
-                      pattern: {
-                        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/,
-                        message: 'Mật khẩu phải chứa chữ hoa, chữ thường, số và ký tự đặc biệt'
-                      }
                     })}
                     id="newPassword"
                     placeholder="••••••••"
@@ -229,7 +277,7 @@ export default function ForgotPasswordForm() {
                 <div className="relative mt-2">
                   <Input
                     {...register('confirmNewPassword', {
-                      required: 'Vui lòng xác nhận mật khẩu',
+                      required: 'Vui lòng xác nhận mật khẩu mới',
                       validate: (val: string | undefined) => {
                         if (watch('newPassword') !== val) {
                           return "Mật khẩu không khớp"

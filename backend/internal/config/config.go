@@ -8,12 +8,17 @@ import (
 )
 
 type AppConfig struct {
-	Port        string
-	DBDSN       string
+	Port          string
+	DBDSN         string
 	RedisURL      string
 	RedisPassword string
 	FrontendURL   string
 	JWTSecret     string
+	SMTPHost      string
+	SMTPPort      string
+	SMTPUser      string
+	SMTPPass      string
+	SMTPFrom      string
 }
 
 var Env *AppConfig
@@ -50,6 +55,18 @@ func LoadConfig() error {
 
 	redisPassword := os.Getenv("REDIS_PASSWORD")
 
+	smtpHost := os.Getenv("SMTP_HOST")
+	smtpPort := os.Getenv("SMTP_PORT")
+	if smtpPort == "" {
+		smtpPort = "587"
+	}
+	smtpUser := os.Getenv("SMTP_USER")
+	smtpPass := os.Getenv("SMTP_PASS")
+	smtpFrom := os.Getenv("SMTP_FROM")
+	if smtpFrom == "" && smtpUser != "" {
+		smtpFrom = smtpUser
+	}
+
 	Env = &AppConfig{
 		Port:          port,
 		DBDSN:         dbDSN,
@@ -57,6 +74,11 @@ func LoadConfig() error {
 		RedisPassword: redisPassword,
 		FrontendURL:   frontendURL,
 		JWTSecret:     jwtSecret,
+		SMTPHost:      smtpHost,
+		SMTPPort:      smtpPort,
+		SMTPUser:      smtpUser,
+		SMTPPass:      smtpPass,
+		SMTPFrom:      smtpFrom,
 	}
 	return nil
 }

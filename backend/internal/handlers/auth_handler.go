@@ -5,16 +5,23 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/models"
+	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"gorm.io/gorm"
 )
 
 type AuthHandler struct {
-	db *gorm.DB
+	db          *gorm.DB
+	emailService *services.EmailService
+	otpService   *services.OTPService
 }
 
 func NewAuthHandler(db *gorm.DB) *AuthHandler {
-	return &AuthHandler{db: db}
+	return &AuthHandler{
+		db:           db,
+		emailService: services.NewEmailService(),
+		otpService:   services.NewOTPService(),
+	}
 }
 
 type RegisterRequest struct {
@@ -273,4 +280,103 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	c.SetCookie("userRole", "", -1, "/", "", false, false)
 	c.SetCookie("userGrade", "", -1, "/", "", false, false)
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+}
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+func (h *AuthHandler) ForgotPassword(c *gin.Context) {
+	var req ForgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email không hợp lệ"})
+		return
+	}
+
+	// Check if user exists
+	var user models.User
+	if err := h.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Email này chưa được đăng ký trong hệ thống"})
+		return
+	}
+
+	otp := h.otpService.GenerateOTP()
+	if err := h.otpService.SaveOTP(req.Email, otp); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể lưu mã OTP"})
+		return
+	}
+
+	if err := h.emailService.SendOTPEmail(req.Email, otp); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Mã OTP đã được gửi đến email của bạn",
+	})
+}
+
+type VerifyOTPRequest struct {
+	Email string `json:"email" binding:"required,email"`
+	OTP   string `json:"otp" binding:"required,len=6"`
+}
+
+func (h *AuthHandler) VerifyOTP(c *gin.Context) {
+	var req VerifyOTPRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Thông tin nhập không hợp lệ"})
+		return
+	}
+
+	if !h.otpService.VerifyOTP(req.Email, req.OTP) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã OTP không đúng hoặc đã hết hạn"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Xác thực mã OTP thành công",
+	})
+}
+
+type ResetPasswordRequest struct {
+	Email       string `json:"email" binding:"required,email"`
+	OTP         string `json:"otp" binding:"required,len=6"`
+	NewPassword string `json:"newPassword" binding:"required,min=6"`
+}
+
+func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	var req ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Thông tin mật khẩu mới không hợp lệ"})
+		return
+	}
+
+	if !h.otpService.VerifyOTP(req.Email, req.OTP) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã OTP không đúng hoặc đã hết hạn"})
+		return
+	}
+
+	var user models.User
+	if err := h.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy người dùng"})
+		return
+	}
+
+	hashedPassword, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể mã hóa mật khẩu mới"})
+		return
+	}
+
+	user.PasswordHash = hashedPassword
+	if err := h.db.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể cập nhật mật khẩu mới"})
+		return
+	}
+
+	h.otpService.DeleteOTP(req.Email)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại!",
+	})
 }

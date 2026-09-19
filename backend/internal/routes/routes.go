@@ -74,6 +74,9 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/auth/refresh", authHandler.Refresh)
 		v1.POST("/auth/telegram-login", authHandler.TelegramLogin)
 		v1.POST("/auth/logout", authHandler.Logout)
+		v1.POST("/auth/forgot-password", authHandler.ForgotPassword)
+		v1.POST("/auth/verify-otp", authHandler.VerifyOTP)
+		v1.POST("/auth/reset-password", authHandler.ResetPassword)
 
 		v1.POST("/webhooks/bank", webhookHandler.HandleSePayWebhook)
 
