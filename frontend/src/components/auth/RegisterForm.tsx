@@ -8,8 +8,9 @@ import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
 
-import { registerUser, telegramLogin } from '@/lib/authApi'
-import TelegramLoginWidget, { TelegramUser } from './TelegramLoginWidget'
+import { registerUser } from '@/lib/authApi'
+import TelegramLoginWidget from './TelegramLoginWidget'
+import toast from 'react-hot-toast'
 
 type RegisterFormValues = {
   fullname: string
@@ -44,6 +45,7 @@ export default function RegisterForm() {
         email: data.identity,
         password: data.password
       })
+      toast.success('Đăng ký thành công! Vui lòng đăng nhập.')
       router.push('/login?registered=true')
     } catch (error: any) {
       let msg = error.message
@@ -51,27 +53,21 @@ export default function RegisterForm() {
         msg = 'Đăng ký thất bại. Email hoặc số điện thoại có thể đã tồn tại.'
       }
       setErrorMessage(msg || 'Đăng ký thất bại. Vui lòng thử lại sau.')
+      toast.error(msg || 'Đăng ký thất bại.')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleTelegramAuth = async (user: TelegramUser) => {
-    setIsLoading(true)
-    setErrorMessage('')
-    try {
-      const res = await telegramLogin(user)
-      
-      if (res.user?.role === 'admin') {
-        router.push('/dashboard')
+  const handleTelegramSuccess = (user: any) => {
+    toast.success(`Đăng nhập thành công! Xin chào ${user.fullName || 'bạn'}`)
+    setTimeout(() => {
+      if (user.role === 'admin' || user.role === 'teacher') {
+        window.location.href = '/dashboard/lectures'
       } else {
-        router.push('/lectures')
+        window.location.href = '/lectures'
       }
-    } catch (error: any) {
-      setErrorMessage(error.message || 'Lỗi kết nối máy chủ.')
-    } finally {
-      setIsLoading(false)
-    }
+    }, 400)
   }
 
   return (
@@ -213,7 +209,7 @@ export default function RegisterForm() {
               <div className="flex flex-col items-center mt-2">
                 <TelegramLoginWidget
                   botName={telegramBotName}
-                  onAuthCallback={handleTelegramAuth}
+                  onAuthSuccess={handleTelegramSuccess}
                 />
               </div>
             );

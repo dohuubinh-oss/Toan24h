@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { User, Shield, AlertCircle, CheckCircle2 } from 'lucide-react'
-import TelegramLoginWidget, { TelegramUser } from '@/components/auth/TelegramLoginWidget'
+import TelegramLoginWidget from '@/components/auth/TelegramLoginWidget'
 import { apiFetch } from '@/lib/api'
 
 export default function ProfilePage() {
@@ -38,7 +38,7 @@ export default function ProfilePage() {
     fetchProfile()
   }, [router])
 
-  const handleTelegramAuth = async (telegramUser: TelegramUser) => {
+  const handleTelegramSuccess = async (telegramUser: any) => {
     try {
       const res = await apiFetch('/users/me/link-telegram', {
         method: 'POST',
@@ -131,8 +131,7 @@ export default function ProfilePage() {
                   <div>
                     <TelegramLoginWidget 
                       botName={process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'toan6789_bot'}
-                      buttonSize="large"
-                      onAuthCallback={handleTelegramAuth}
+                      onAuthSuccess={handleTelegramSuccess}
                     />
                   </div>
                 )}

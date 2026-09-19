@@ -117,12 +117,8 @@ func (h *AuthHandler) TelegramLogin(c *gin.Context) {
 		return
 	}
 
-	// Set HttpOnly cookies
-	c.SetCookie("accessToken", accessToken, 24*60*60, "/", "", false, true)
-	c.SetCookie("refreshToken", refreshToken, 7*24*60*60, "/", "", false, true)
-	// Set normal cookies for frontend routing (middleware.ts)
-	c.SetCookie("userRole", user.Role, 24*60*60, "/", "", false, false)
-	c.SetCookie("userGrade", user.Grade, 24*60*60, "/", "", false, false)
+	// Set cookies
+	setAuthCookies(c, accessToken, refreshToken, user.Role, user.Grade)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
@@ -250,11 +246,8 @@ func (h *AuthHandler) CheckTelegramQRStatus(c *gin.Context) {
 		// Delete session after single use
 		services.DeleteTelegramQRSession(sessionID)
 
-		// Set HttpOnly cookies for client browser
-		c.SetCookie("accessToken", data.AccessToken, 24*60*60, "/", "", false, true)
-		c.SetCookie("refreshToken", data.RefreshToken, 7*24*60*60, "/", "", false, true)
-		c.SetCookie("userRole", data.User.Role, 24*60*60, "/", "", false, false)
-		c.SetCookie("userGrade", data.User.Grade, 24*60*60, "/", "", false, false)
+		// Set cookies
+		setAuthCookies(c, data.AccessToken, data.RefreshToken, data.User.Role, data.User.Grade)
 
 		c.JSON(http.StatusOK, gin.H{
 			"status":       "completed",

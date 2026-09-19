@@ -2,44 +2,19 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { Smartphone, QrCode, ExternalLink, X, CheckCircle2, Loader2, Send } from 'lucide-react'
+import { QrCode, X, CheckCircle2, Loader2, Send } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
-
-export interface TelegramUser {
-  id: number
-  first_name: string
-  last_name?: string
-  username?: string
-  photo_url?: string
-  auth_date: number
-  hash: string
-}
 
 interface TelegramLoginWidgetProps {
   botName: string
-  buttonSize?: 'large' | 'medium' | 'small'
-  cornerRadius?: number
-  requestAccess?: string
-  usePic?: boolean
-  onAuthCallback: (user: any) => void
-}
-
-declare global {
-  interface Window {
-    onTelegramAuth: (user: TelegramUser) => void
-  }
+  onAuthSuccess: (user: any) => void
 }
 
 export default function TelegramLoginWidget({
   botName,
-  buttonSize = 'large',
-  cornerRadius = 8,
-  requestAccess = 'write',
-  usePic = true,
-  onAuthCallback,
+  onAuthSuccess,
 }: TelegramLoginWidgetProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const onAuthCallbackRef = useRef(onAuthCallback)
+  const onAuthSuccessRef = useRef(onAuthSuccess)
   
   const [showQrModal, setShowQrModal] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -49,8 +24,8 @@ export default function TelegramLoginWidget({
   const [isSimulating, setIsSimulating] = useState(false)
 
   useEffect(() => {
-    onAuthCallbackRef.current = onAuthCallback
-  }, [onAuthCallback])
+    onAuthSuccessRef.current = onAuthSuccess
+  }, [onAuthSuccess])
 
   // Detect localhost
   useEffect(() => {
@@ -59,40 +34,6 @@ export default function TelegramLoginWidget({
       setIsLocalhost(host === 'localhost' || host === '127.0.0.1')
     }
   }, [])
-
-  // Widget embedding logic (only if not localhost to avoid "Bot domain invalid")
-  useEffect(() => {
-    if (isLocalhost) return
-
-    window.onTelegramAuth = (user) => {
-      if (onAuthCallbackRef.current) {
-        onAuthCallbackRef.current(user)
-      }
-    }
-
-    const script = document.createElement('script')
-    script.src = 'https://telegram.org/js/telegram-widget.js?22'
-    script.setAttribute('data-telegram-login', botName)
-    script.setAttribute('data-size', buttonSize)
-    if (cornerRadius !== undefined) {
-      script.setAttribute('data-radius', cornerRadius.toString())
-    }
-    script.setAttribute('data-request-access', requestAccess)
-    script.setAttribute('data-userpic', usePic.toString())
-    script.setAttribute('data-onauth', 'onTelegramAuth(user)')
-    script.async = true
-
-    const currentContainer = containerRef.current
-    if (currentContainer) {
-      currentContainer.appendChild(script)
-    }
-
-    return () => {
-      if (currentContainer) {
-        currentContainer.innerHTML = ''
-      }
-    }
-  }, [botName, buttonSize, cornerRadius, requestAccess, usePic, isLocalhost])
 
   // Start QR session - Immediately generate sessionId and deepLink so QR renders with 0ms delay
   const startQrSession = async () => {
@@ -134,10 +75,14 @@ export default function TelegramLoginWidget({
           clearInterval(interval)
           if (res.user) {
             localStorage.setItem('user', JSON.stringify(res.user))
+            document.cookie = `userRole=${res.user.role}; path=/; max-age=86400; SameSite=Lax`
+            if (res.user.grade) {
+              document.cookie = `userGrade=${res.user.grade}; path=/; max-age=86400; SameSite=Lax`
+            }
           }
           setTimeout(() => {
             setShowQrModal(false)
-            onAuthCallbackRef.current(res.user)
+            onAuthSuccessRef.current(res.user)
           }, 800)
         }
       } catch (err) {
@@ -170,20 +115,15 @@ export default function TelegramLoginWidget({
   }
 
   return (
-    <div className="flex flex-col items-center w-full gap-3 my-2">
-      {/* Telegram Official Widget Container (Only shown when not localhost) */}
-      {!isLocalhost && (
-        <div ref={containerRef} className="flex justify-center w-full"></div>
-      )}
-
-      {/* Button for Mobile Telegram App / QR Code */}
+    <div className="flex flex-col items-center w-full gap-3 my-1">
+      {/* Single Unified Telegram Button */}
       <button
         type="button"
         onClick={startQrSession}
-        className="w-full flex items-center justify-center gap-2.5 py-3 px-4 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-xl shadow-md shadow-sky-500/20 transition-all hover:scale-[1.01] active:scale-[0.99] text-sm group"
+        className="w-full flex items-center justify-center gap-2.5 py-3 px-4 bg-[#24A1DE] hover:bg-[#208ec4] text-white font-semibold rounded-xl shadow-md shadow-[#24A1DE]/25 transition-all hover:scale-[1.01] active:scale-[0.99] text-sm group cursor-pointer"
       >
         <Send className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-        <span>Đăng nhập bằng Telegram (Điện thoại / Quét QR)</span>
+        <span>Đăng nhập với Telegram</span>
       </button>
 
       {/* Modal QR & Mobile Login */}
@@ -192,19 +132,16 @@ export default function TelegramLoginWidget({
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative border border-slate-100">
             <button
               onClick={() => setShowQrModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-lg transition-colors"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="text-center space-y-1.5 mb-5">
-              <div className="w-12 h-12 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center mx-auto mb-2">
+              <div className="w-12 h-12 rounded-full bg-sky-100 text-[#24A1DE] flex items-center justify-center mx-auto mb-2">
                 <QrCode className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-800">Đăng nhập qua Telegram Điện thoại</h3>
-              <p className="text-xs text-slate-500">
-                Quét mã QR bằng điện thoại hoặc bấm nút mở ứng dụng Telegram bên dưới.
-              </p>
+              <h3 className="text-xl font-bold text-slate-800">Đăng nhập với Telegram</h3>
             </div>
 
             {qrStatus === 'completed' ? (
@@ -216,43 +153,30 @@ export default function TelegramLoginWidget({
             ) : (
               <div className="space-y-4">
                 {/* QR Code Container */}
-                <div className="flex flex-col items-center justify-center p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="flex flex-col items-center justify-center p-5 bg-slate-50 border border-slate-200 rounded-xl">
                   {deepLink ? (
-                    <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-100">
+                    <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100">
                       <QRCodeSVG
                         value={deepLink}
-                        size={190}
+                        size={200}
                         level="M"
                         includeMargin={true}
                       />
                     </div>
                   ) : (
-                    <div className="w-[190px] h-[190px] flex items-center justify-center text-slate-400">
+                    <div className="w-[200px] h-[200px] flex items-center justify-center text-slate-400">
                       <Loader2 className="w-8 h-8 animate-spin" />
                     </div>
                   )}
-                  <span className="text-[11px] text-slate-400 mt-2 font-mono">
+                  <span className="text-xs text-slate-500 mt-2.5 font-mono">
                     Bot: @{botName}
                   </span>
                 </div>
 
-                {/* Direct Deep Link Button for Mobile Users */}
-                {deepLink && (
-                  <a
-                    href={deepLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl transition-all shadow-md text-sm text-center"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    <span>Mở ứng dụng Telegram trên Điện thoại</span>
-                  </a>
-                )}
-
                 {/* Instructions */}
-                <div className="bg-sky-50/70 border border-sky-100 rounded-xl p-3 text-xs text-sky-900 space-y-1.5">
-                  <p className="font-bold text-sky-950">📌 Các bước thực hiện rất đơn giản:</p>
-                  <p>1. Dùng <strong>Camera điện thoại</strong> quét mã QR ở trên (hoặc bấm nút mở Telegram).</p>
+                <div className="bg-sky-50/70 border border-sky-100 rounded-xl p-3.5 text-xs text-sky-900 space-y-1.5">
+                  <p className="font-bold text-sky-950">📌 Các bước thực hiện:</p>
+                  <p>1. Dùng <strong>Camera điện thoại</strong> hoặc <strong>App Telegram</strong> quét mã QR trên.</p>
                   <p>2. Trên ứng dụng Telegram, nhấn nút <strong>Bắt đầu (Start)</strong>.</p>
                   <p>3. Màn hình máy tính sẽ <strong>tự động đăng nhập</strong> ngay lập tức!</p>
                 </div>
@@ -272,7 +196,7 @@ export default function TelegramLoginWidget({
                       type="button"
                       onClick={handleSimulatedLogin}
                       disabled={isSimulating}
-                      className="text-[11px] text-slate-400 hover:text-sky-600 underline font-medium transition-colors"
+                      className="text-[11px] text-slate-400 hover:text-[#24A1DE] underline font-medium transition-colors cursor-pointer"
                     >
                       {isSimulating ? 'Đang mô phỏng...' : '⚡ Bấm vào đây để test đăng nhập nhanh (Dev simulation)'}
                     </button>

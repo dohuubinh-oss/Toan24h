@@ -8,8 +8,9 @@ import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
 import { Checkbox } from '../ui/Checkbox'
-import { login, telegramLogin } from '@/lib/authApi'
-import TelegramLoginWidget, { TelegramUser } from './TelegramLoginWidget'
+import { login } from '@/lib/authApi'
+import TelegramLoginWidget from './TelegramLoginWidget'
+import toast from 'react-hot-toast'
 
 type LoginFormValues = {
   identity: string
@@ -46,46 +47,43 @@ export default function LoginForm() {
         password: data.password
       })
 
-      // Note: The backend now sets HttpOnly cookies automatically, and regular cookies for userRole/userGrade
-      // so Next.js middleware will read them seamlessly.
-
-      // Update user state in local storage (optional, for UI)
       if (res.user) {
         localStorage.setItem('user', JSON.stringify(res.user))
+        document.cookie = `userRole=${res.user.role}; path=/; max-age=86400; SameSite=Lax`
+        if (res.user.grade) {
+          document.cookie = `userGrade=${res.user.grade}; path=/; max-age=86400; SameSite=Lax`
+        }
       }
 
-      if (res.user?.role === 'admin') {
-        window.location.href = '/dashboard/lectures'
-      } else {
-        window.location.href = '/lectures'
-      }
+      toast.success('Đăng nhập thành công! Đang chuyển hướng...')
+      setTimeout(() => {
+        if (res.user?.role === 'admin' || res.user?.role === 'teacher') {
+          window.location.href = '/dashboard/lectures'
+        } else {
+          window.location.href = '/lectures'
+        }
+      }, 500)
     } catch (error: any) {
       let msg = error.message
-      if (msg.includes('Invalid email or password')) {
+      if (msg.includes('Invalid email or password') || msg.includes('401')) {
         msg = 'Email hoặc mật khẩu không chính xác.'
       }
       setErrorMessage(msg || 'Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.')
+      toast.error(msg || 'Đăng nhập thất bại')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleTelegramAuth = async (user: TelegramUser) => {
-    setIsLoading(true)
-    setErrorMessage('')
-    try {
-      const res = await telegramLogin(user)
-
-      if (res.user?.role === 'admin') {
+  const handleTelegramSuccess = (user: any) => {
+    toast.success(`Đăng nhập thành công! Xin chào ${user.fullName || 'bạn'}`)
+    setTimeout(() => {
+      if (user.role === 'admin' || user.role === 'teacher') {
         window.location.href = '/dashboard/lectures'
       } else {
         window.location.href = '/lectures'
       }
-    } catch (error: any) {
-      setErrorMessage(error.message || 'Lỗi kết nối máy chủ.')
-    } finally {
-      setIsLoading(false)
-    }
+    }, 400)
   }
 
   return (
@@ -188,7 +186,7 @@ export default function LoginForm() {
               <div className="flex flex-col items-center mt-2">
                 <TelegramLoginWidget
                   botName={telegramBotName}
-                  onAuthCallback={handleTelegramAuth}
+                  onAuthSuccess={handleTelegramSuccess}
                 />
               </div>
             );

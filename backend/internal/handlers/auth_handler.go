@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/models"
@@ -9,6 +11,53 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"gorm.io/gorm"
 )
+
+func setAuthCookies(c *gin.Context, accessToken, refreshToken, role, grade string) {
+	domain := ""
+	secure := false
+	host := c.Request.Host
+	origin := c.GetHeader("Origin")
+
+	if strings.Contains(host, "toan6789.vn") || strings.Contains(origin, "toan6789.vn") {
+		domain = ".toan6789.vn"
+		secure = true
+	} else if os.Getenv("GIN_MODE") == "release" && !strings.Contains(host, "localhost") && !strings.Contains(host, "127.0.0.1") {
+		secure = true
+	}
+
+	c.SetCookie("accessToken", accessToken, 24*60*60, "/", domain, secure, true)
+	if refreshToken != "" {
+		c.SetCookie("refreshToken", refreshToken, 7*24*60*60, "/", domain, secure, true)
+	}
+	c.SetCookie("userRole", role, 24*60*60, "/", domain, secure, false)
+	c.SetCookie("userGrade", grade, 24*60*60, "/", domain, secure, false)
+}
+
+func clearAuthCookies(c *gin.Context) {
+	domain := ""
+	secure := false
+	host := c.Request.Host
+	origin := c.GetHeader("Origin")
+
+	if strings.Contains(host, "toan6789.vn") || strings.Contains(origin, "toan6789.vn") {
+		domain = ".toan6789.vn"
+		secure = true
+	} else if os.Getenv("GIN_MODE") == "release" && !strings.Contains(host, "localhost") && !strings.Contains(host, "127.0.0.1") {
+		secure = true
+	}
+
+	c.SetCookie("accessToken", "", -1, "/", domain, secure, true)
+	c.SetCookie("refreshToken", "", -1, "/", domain, secure, true)
+	c.SetCookie("userRole", "", -1, "/", domain, secure, false)
+	c.SetCookie("userGrade", "", -1, "/", domain, secure, false)
+
+	if domain != "" {
+		c.SetCookie("accessToken", "", -1, "/", "", false, true)
+		c.SetCookie("refreshToken", "", -1, "/", "", false, true)
+		c.SetCookie("userRole", "", -1, "/", "", false, false)
+		c.SetCookie("userGrade", "", -1, "/", "", false, false)
+	}
+}
 
 type AuthHandler struct {
 	db          *gorm.DB
@@ -111,12 +160,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// Set HttpOnly cookies
-	c.SetCookie("accessToken", accessToken, 24*60*60, "/", "", false, true)
-	c.SetCookie("refreshToken", refreshToken, 7*24*60*60, "/", "", false, true)
-	// Set normal cookies for frontend routing (middleware.ts)
-	c.SetCookie("userRole", user.Role, 24*60*60, "/", "", false, false)
-	c.SetCookie("userGrade", user.Grade, 24*60*60, "/", "", false, false)
+	// Set cookies
+	setAuthCookies(c, accessToken, refreshToken, user.Role, user.Grade)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Login successful",
@@ -160,9 +205,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("accessToken", accessToken, 24*60*60, "/", "", false, true)
-	c.SetCookie("userRole", user.Role, 24*60*60, "/", "", false, false)
-	c.SetCookie("userGrade", user.Grade, 24*60*60, "/", "", false, false)
+	setAuthCookies(c, accessToken, "", user.Role, user.Grade)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Token refreshed successfully",
@@ -211,10 +254,7 @@ func (h *AuthHandler) UpdateGrade(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("accessToken", accessToken, 24*60*60, "/", "", false, true)
-	c.SetCookie("refreshToken", refreshToken, 7*24*60*60, "/", "", false, true)
-	c.SetCookie("userRole", user.Role, 24*60*60, "/", "", false, false)
-	c.SetCookie("userGrade", user.Grade, 24*60*60, "/", "", false, false)
+	setAuthCookies(c, accessToken, refreshToken, user.Role, user.Grade)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Grade updated successfully",
@@ -275,10 +315,7 @@ func (h *AuthHandler) DeductPoints(c *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	c.SetCookie("accessToken", "", -1, "/", "", false, true)
-	c.SetCookie("refreshToken", "", -1, "/", "", false, true)
-	c.SetCookie("userRole", "", -1, "/", "", false, false)
-	c.SetCookie("userGrade", "", -1, "/", "", false, false)
+	clearAuthCookies(c)
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
