@@ -2,8 +2,8 @@ import { Lecture, PaginatedLectures } from '@/types/lecture';
 
 const isServer = typeof window === 'undefined';
 const API_BASE_URL = isServer 
-  ? (process.env.BACKEND_URL ? `${process.env.BACKEND_URL}${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}` : 'http://localhost:8080/api/v1')
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1');
+  ? (process.env.BACKEND_URL ? `${process.env.BACKEND_URL}${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}` : 'https://api.toan6789.vn/api/v1')
+  : (process.env.NEXT_PUBLIC_API_URL || 'https://api.toan6789.vn/api/v1');
 
 export interface BackendLectureExample {
   id: string;
