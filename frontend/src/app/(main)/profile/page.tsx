@@ -129,15 +129,11 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div>
-                    {process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ? (
-                      <TelegramLoginWidget 
-                        botName={process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME}
-                        buttonSize="large"
-                        onAuthCallback={handleTelegramAuth}
-                      />
-                    ) : (
-                      <div className="text-sm text-red-500">Chưa cấu hình Telegram Bot</div>
-                    )}
+                    <TelegramLoginWidget 
+                      botName={process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'toan6789_bot'}
+                      buttonSize="large"
+                      onAuthCallback={handleTelegramAuth}
+                    />
                   </div>
                 )}
               </div>

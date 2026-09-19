@@ -207,19 +207,18 @@ export default function RegisterForm() {
         </div>
 
         <div className="grid gap-4">
-          {process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ? (
-            <div className="flex flex-col items-center mt-2">
-              <TelegramLoginWidget
-                botName={process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME}
-                onAuthCallback={handleTelegramAuth}
-              />
-              <span className="text-xs text-slate-400 mt-2">Sử dụng tài khoản Telegram của bạn</span>
-            </div>
-          ) : (
-             <div className="text-center text-red-500 text-sm p-4 bg-red-50 rounded-lg border border-red-100">
-               Lỗi: Chưa cấu hình Telegram Bot. Vui lòng cập nhật biến môi trường NEXT_PUBLIC_TELEGRAM_BOT_USERNAME.
-             </div>
-          )}
+          {(() => {
+            const telegramBotName = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'toan6789_bot';
+            return (
+              <div className="flex flex-col items-center mt-2">
+                <TelegramLoginWidget
+                  botName={telegramBotName}
+                  onAuthCallback={handleTelegramAuth}
+                />
+                <span className="text-xs text-slate-400 mt-2">Sử dụng tài khoản Telegram của bạn</span>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Footer */}
