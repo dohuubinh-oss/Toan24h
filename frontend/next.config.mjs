@@ -5,7 +5,7 @@ const nextConfig = {
     return [
       {
         source: '/uploads/:path*',
-        destination: `${process.env.BACKEND_URL || 'http://localhost:8080'}/uploads/:path*`, // Proxy to Backend
+        destination: `${process.env.BACKEND_URL || 'https://api.toan6789.vn'}/uploads/:path*`, // Proxy to Backend
       },
     ]
   },

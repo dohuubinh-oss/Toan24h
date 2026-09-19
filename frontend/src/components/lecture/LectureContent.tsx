@@ -14,7 +14,7 @@ interface LectureExamplesProps {
 const getMediaUrl = (url: string) => {
   if (!url) return '';
   if (url.startsWith('http')) return url;
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '') : 'http://localhost:8080';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '') : 'https://api.toan6789.vn';
   return baseUrl + url;
 }
 

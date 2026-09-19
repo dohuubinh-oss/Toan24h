@@ -17,12 +17,12 @@ func SetupRouter() *gin.Engine {
 	// Cấu hình CORS an toàn
 	r.Use(func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		allowedOrigin := "http://localhost:3000"
+		allowedOrigin := "https://toan6789.vn"
 		if config.Env != nil && config.Env.FrontendURL != "" {
 			allowedOrigin = config.Env.FrontendURL
 		}
 
-		if origin == allowedOrigin || origin == "http://localhost:3000" || origin == "http://127.0.0.1:3000" {
+		if origin == allowedOrigin || origin == "https://toan6789.vn" || origin == "https://www.toan6789.vn" || origin == "http://localhost:3000" || origin == "http://127.0.0.1:3000" {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		} else {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", allowedOrigin)

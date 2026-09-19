@@ -44,7 +44,7 @@ function MobileUploadContent() {
       const formData = new FormData()
       formData.append('file', selectedFile)
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1'
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.toan6789.vn/api/v1'
       const response = await fetch(`${API_URL}/mobile-upload/${sessionId}`, {
         method: 'POST',
         body: formData
