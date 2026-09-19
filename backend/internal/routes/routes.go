@@ -91,6 +91,10 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/exams", handlers.GetExams)
 		v1.GET("/exams/:id", handlers.GetExamByID)
 
+		// Leaderboard
+		leaderboardHandler := handlers.NewLeaderboardHandler(config.DB)
+		v1.GET("/leaderboard", leaderboardHandler.GetWeeklyLeaderboard)
+
 		// Read-only Public Lectures
 		v1.GET("/lectures", lectureController.GetAllLectures)
 		v1.GET("/lectures/grade/:grade", lectureController.GetLecturesByGrade)

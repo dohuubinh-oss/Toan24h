@@ -321,6 +321,15 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 	config.DB.Save(&submission)
 
 	if submission.UserID != nil {
+		var exam models.Exam
+		config.DB.First(&exam, "id = ?", submission.ExamID)
+		earnedXP, streakBonus, err := services.AwardExamXP(config.DB, *submission.UserID, submission.ExamID, exam.Cate, submission.TotalScore)
+		if err != nil {
+			fmt.Printf("Failed to award XP: %v\n", err)
+		} else {
+			fmt.Printf("Awarded %d XP to user %s (streakBonus: %v)\n", earnedXP, *submission.UserID, streakBonus)
+		}
+
 		var user models.User
 		config.DB.First(&user, "id = ?", submission.UserID)
 
