@@ -18,6 +18,9 @@ type GradingJob struct {
 
 // QueueGradingJob pushes a grading job to the Redis queue.
 func QueueGradingJob(submissionID uuid.UUID) error {
+	if config.RedisClient == nil {
+		return nil
+	}
 	ctx := context.Background()
 	job := GradingJob{SubmissionID: submissionID}
 	
