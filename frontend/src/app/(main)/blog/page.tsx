@@ -82,7 +82,7 @@ export default function BlogListPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-[1400px] mx-auto space-y-10">
+      <div className="max-w-7xl mx-auto space-y-10">
         
         {/* Page Header */}
         <div className="text-center space-y-3 max-w-3xl mx-auto pt-4">
@@ -202,11 +202,11 @@ export default function BlogListPage() {
           </div>
         </div>
 
-        {/* 2-Column Main Section: Articles (Left - 3 Cards/Row) & Sidebar (Right - Newsletter & Categories) */}
+        {/* 2-Column Main Section: Articles (Left - 2 Cards/Row) & Sidebar (Right - Newsletter & Categories) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column: Articles Grid & Pagination */}
-          <div className="lg:col-span-8 xl:col-span-9 space-y-6">
+          <div className="lg:col-span-8 space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-primary" />
@@ -229,7 +229,7 @@ export default function BlogListPage() {
                 <p className="text-xs text-slate-500">Thử thay đổi từ khóa tìm kiếm hoặc chọn danh mục bài viết khác.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {paginatedPosts.map((post, index) => (
                   <article 
                     key={post.id}
@@ -242,9 +242,9 @@ export default function BlogListPage() {
                           src={post.coverImage} 
                           alt={post.title}
                           fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          loading={index < 3 ? 'eager' : 'lazy'}
-                          priority={index < 3}
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          loading={index < 2 ? 'eager' : 'lazy'}
+                          priority={index < 2}
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute top-3 left-3 z-10">
@@ -331,7 +331,7 @@ export default function BlogListPage() {
           </div>
 
           {/* Right Column: Sidebar with Newsletter & Quick Categories */}
-          <div className="lg:col-span-4 xl:col-span-3 space-y-6 lg:sticky lg:top-24">
+          <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
             {/* Newsletter Subscription Card */}
             <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-700 text-white rounded-3xl p-6 sm:p-7 shadow-lg relative overflow-hidden">
               <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-40 h-40 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
