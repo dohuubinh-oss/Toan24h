@@ -30,7 +30,11 @@ export interface DangToanItem {
 
 
 
+export type LectureContentType = 'lecture' | 'practice'
+
 interface LectureCreatorState {
+  contentType: LectureContentType;
+  setContentType: (val: LectureContentType) => void;
   title: string;
   grade: string;
   category: string;
@@ -53,6 +57,7 @@ interface LectureCreatorState {
 const LectureCreatorContext = createContext<LectureCreatorState | undefined>(undefined)
 
 export function LectureCreatorProvider({ children, editId }: { children: React.ReactNode; editId?: string | null }) {
+  const [contentType, setContentType] = useState<LectureContentType>('lecture')
   const [title, setTitle] = useState('')
   const [grade, setGrade] = useState('')
   const [category, setCategory] = useState('')
@@ -100,6 +105,13 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
           if (parsedExamples && parsedExamples.length > 0) {
             setDangToanList(parsedExamples)
           }
+
+          // Auto-detect if this is a standalone practice card
+          if ((!data.basicConcept || data.basicConcept.trim() === '') && (!parsedExamples || parsedExamples.length === 0)) {
+            setContentType('practice')
+          } else {
+            setContentType('lecture')
+          }
         }
       } catch (error: any) {
         console.error('Failed to load lecture:', error)
@@ -117,7 +129,7 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
 
   const validateAndSubmit = async () => {
     if (!title.trim()) {
-      toast.error('Vui lòng nhập tiêu đề bài giảng')
+      toast.error('Vui lòng nhập tiêu đề')
       return
     }
     if (!grade) {
@@ -125,27 +137,29 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
       return
     }
     if (!category) {
-      toast.error('Vui lòng chọn danh mục')
+      toast.error('Vui lòng chọn danh mục / chuyên đề')
       return
     }
 
-    // check dangToanList
-    for (let i = 0; i < dangToanList.length; i++) {
-      const dt = dangToanList[i]
-      if (!dt.dangToanName.trim()) {
-        toast.error(`Dạng toán ${i + 1} chưa có tên`)
-        return
-      }
-      for (let j = 0; j < dt.methods.length; j++) {
-        const m = dt.methods[j]
-
-        if (!m.exercise) {
-          toast.error(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có nội dung bài tập (JSON)`)
+    // If lecture mode, check dangToanList
+    if (contentType === 'lecture') {
+      for (let i = 0; i < dangToanList.length; i++) {
+        const dt = dangToanList[i]
+        if (!dt.dangToanName.trim()) {
+          toast.error(`Dạng toán ${i + 1} chưa có tên`)
           return
         }
-        if (!m.exercise.content.trim()) {
-          toast.error(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có đề bài / nội dung`)
-          return
+        for (let j = 0; j < dt.methods.length; j++) {
+          const m = dt.methods[j]
+
+          if (!m.exercise) {
+            toast.error(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có nội dung bài tập (JSON)`)
+            return
+          }
+          if (!m.exercise.content.trim()) {
+            toast.error(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có đề bài / nội dung`)
+            return
+          }
         }
       }
     }
@@ -155,28 +169,34 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
     try {
       const { apiFetch, uploadObjectUrlIfNeeded } = await import('@/lib/api')
 
-      const processedDangToanList = await Promise.all(
-        dangToanList.map(async (dt) => ({
-          id: dt.id,
-          dangToanName: dt.dangToanName,
-          methods: await Promise.all(
-            dt.methods.map(async (m) => ({
-              id: m.id,
-              methodName: m.methodName,
-              methodContent: m.methodContent,
-              exercise: m.exercise!,
-              problemImage: await uploadObjectUrlIfNeeded(m.problemImage),
-              solutionImage: await uploadObjectUrlIfNeeded(m.solutionImage)
-            }))
-          )
-        }))
-      )
+      let processedDangToanList: any[] = []
+      let processedBasicConcept = ''
+
+      if (contentType === 'lecture') {
+        processedBasicConcept = basicConcept
+        processedDangToanList = await Promise.all(
+          dangToanList.map(async (dt) => ({
+            id: dt.id,
+            dangToanName: dt.dangToanName,
+            methods: await Promise.all(
+              dt.methods.map(async (m) => ({
+                id: m.id,
+                methodName: m.methodName,
+                methodContent: m.methodContent,
+                exercise: m.exercise!,
+                problemImage: await uploadObjectUrlIfNeeded(m.problemImage),
+                solutionImage: await uploadObjectUrlIfNeeded(m.solutionImage)
+              }))
+            )
+          }))
+        )
+      }
 
       const payload = {
         title,
         grade,
         category,
-        basicConcept,
+        basicConcept: processedBasicConcept,
         examples: processedDangToanList
       }
 
@@ -185,13 +205,13 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
           method: 'PUT',
           body: JSON.stringify(payload)
         })
-        toast.success('Cập nhật bài giảng thành công!')
+        toast.success(contentType === 'practice' ? 'Cập nhật Card Luyện tập thành công!' : 'Cập nhật bài giảng thành công!')
       } else {
         await apiFetch('/lectures', {
           method: 'POST',
           body: JSON.stringify(payload)
         })
-        toast.success('Tạo bài giảng thành công!')
+        toast.success(contentType === 'practice' ? 'Tạo Card Luyện tập thành công!' : 'Tạo bài giảng thành công!')
         resetForm()
       }
     } catch (error: any) {
@@ -203,6 +223,7 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
   }
 
   const resetForm = () => {
+    setContentType('lecture')
     setTitle('')
     setGrade('')
     setCategory('')
@@ -225,6 +246,8 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
 
   return (
     <LectureCreatorContext.Provider value={{
+      contentType,
+      setContentType,
       title,
       grade,
       category,
