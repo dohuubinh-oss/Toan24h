@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
@@ -118,7 +119,7 @@ func (h *AuthHandler) TelegramLogin(c *gin.Context) {
 	}
 
 	// Set cookies
-	setAuthCookies(c, accessToken, refreshToken, user.Role, user.Grade)
+	setAuthCookies(c, accessToken, refreshToken, user.Role, user.Grade, formatExpiresAt(user.ExpiresAt))
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
@@ -222,13 +223,31 @@ func (h *AuthHandler) LinkTelegram(c *gin.Context) {
 		}
 	}
 
+	var currentUID string
+	switch id := userIDStr.(type) {
+	case uuid.UUID:
+		currentUID = id.String()
+	case string:
+		currentUID = id
+	default:
+		currentUID = fmt.Sprintf("%v", id)
+	}
+
 	// Check if Telegram ID is already linked to another user
 	var existing models.User
-	if err := h.db.Where("telegram_id = ?", tgID).First(&existing).Error; err == nil {
-		if existing.ID.String() != userIDStr.(string) {
+	if err := h.db.Unscoped().Where("telegram_id = ?", tgID).First(&existing).Error; err == nil {
+		if existing.ID.String() != currentUID {
 			c.JSON(http.StatusConflict, gin.H{"error": "Tài khoản Telegram này đã được liên kết với một người dùng khác"})
 			return
 		}
+		// Already linked to current user, return success directly
+		c.JSON(http.StatusOK, gin.H{
+			"message":          "Telegram account linked successfully",
+			"telegramId":       tgID,
+			"telegramUsername": tgUser,
+			"telegramAvt":      tgAvt,
+		})
+		return
 	}
 
 	// Update current user
@@ -242,8 +261,8 @@ func (h *AuthHandler) LinkTelegram(c *gin.Context) {
 		updates["telegram_avt"] = tgAvt
 	}
 
-	if err := h.db.Model(&models.User{}).Where("id = ?", userIDStr).Updates(updates).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to link Telegram account"})
+	if err := h.db.Model(&models.User{}).Where("id = ?", currentUID).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to link Telegram account: " + err.Error()})
 		return
 	}
 
@@ -303,7 +322,7 @@ func (h *AuthHandler) CheckTelegramQRStatus(c *gin.Context) {
 		services.DeleteTelegramQRSession(sessionID)
 
 		// Set cookies
-		setAuthCookies(c, data.AccessToken, data.RefreshToken, data.User.Role, data.User.Grade)
+		setAuthCookies(c, data.AccessToken, data.RefreshToken, data.User.Role, data.User.Grade, formatExpiresAt(data.User.ExpiresAt))
 
 		var tgID int64
 		if data.User.TelegramID != nil {

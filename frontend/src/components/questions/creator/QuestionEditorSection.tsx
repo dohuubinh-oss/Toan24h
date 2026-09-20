@@ -31,32 +31,36 @@ function QuestionEditorSection({
 
   const isGroup = currentBlock?.is_group === true || currentQuestion?.type_question === 'group';
 
-  // Helper to check if a multiple-choice option is selected as correct
+  // Helper to check if a multiple-choice option is selected as correct (accurate KaTeX / HTML matching for AI questions & shuffled answers)
   const isOptionSelected = (optLetter: string, optValue: string, optIdx: number) => {
     if (!currentQuestion?.correct_answer) return false;
     const ans = currentQuestion.correct_answer.trim();
     if (!ans) return false;
 
-    // 1. Match letter 'A', 'B', 'C', 'D' or 'A.', 'B.', etc.
-    if (ans.toUpperCase() === optLetter || ans.toUpperCase() === `${optLetter}.`) {
-      return true;
-    }
-
-    // 2. Match 0-based index '0', '1', '2', '3'
-    if (ans === optIdx.toString()) {
-      return true;
-    }
-
-    // 3. Match exact content (if option has content)
+    // 1. Direct exact or trimmed match with option content
     if (optValue && (ans === optValue || ans === optValue.trim())) {
       return true;
     }
 
-    // 4. Match stripped HTML content
-    const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, '').trim();
-    const cleanAns = stripHtml(ans);
-    const cleanOpt = stripHtml(optValue);
+    // 2. Normalize math delimiters and HTML tags for precise AI KaTeX / HTML matching
+    const normalizeContent = (text: string) => {
+      if (!text) return '';
+      return text
+        .replace(/<[^>]*>?/gm, '') // Strip HTML tags
+        .replace(/\\\(/g, '$').replace(/\\\)/g, '$') // Normalize \( \) to $
+        .replace(/\\\[/g, '$$').replace(/\\\]/g, '$$') // Normalize \[ \] to $$
+        .replace(/\s+/g, ' ') // Collapse multiple spaces
+        .trim();
+    };
+
+    const cleanAns = normalizeContent(ans);
+    const cleanOpt = normalizeContent(optValue);
     if (cleanOpt && cleanAns && cleanAns === cleanOpt) {
+      return true;
+    }
+
+    // 3. Fallback matching letter 'A', 'B', 'C', 'D' or '0', '1', '2', '3'
+    if (ans.toUpperCase() === optLetter || ans.toUpperCase() === `${optLetter}.` || ans === optIdx.toString()) {
       return true;
     }
 

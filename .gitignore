@@ -18,9 +18,12 @@ bin/
 *.dylib
 backend/backend
 backend/server
+backend/api
 uploads/temp/
 backend/uploads/
 backend/internal/handlers/uploads/
+*.tsbuildinfo
+
 
 # Docker
 *.log

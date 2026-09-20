@@ -30,6 +30,7 @@ func ConnectDB(dsn string) error {
 		&models.Submission{},
 		&models.LectureBookmark{},
 		&models.Notification{},
+		&models.Transaction{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)

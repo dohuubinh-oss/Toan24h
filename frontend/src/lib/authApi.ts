@@ -11,6 +11,11 @@ export async function login(data: any) {
     if (res.user.grade) {
       document.cookie = `userGrade=${res.user.grade}; path=/; max-age=86400; SameSite=Lax`
     }
+    if (res.user.expiresAt) {
+      document.cookie = `userExpiresAt=${res.user.expiresAt}; path=/; max-age=86400; SameSite=Lax`
+    } else {
+      document.cookie = `userExpiresAt=; path=/; max-age=0; SameSite=Lax`
+    }
     if (res.accessToken) {
       document.cookie = `accessToken=${res.accessToken}; path=/; max-age=86400; SameSite=Lax`
     }
@@ -37,6 +42,11 @@ export async function telegramLogin(data: any) {
     if (res.user.grade) {
       document.cookie = `userGrade=${res.user.grade}; path=/; max-age=86400; SameSite=Lax`
     }
+    if (res.user.expiresAt) {
+      document.cookie = `userExpiresAt=${res.user.expiresAt}; path=/; max-age=86400; SameSite=Lax`
+    } else {
+      document.cookie = `userExpiresAt=; path=/; max-age=0; SameSite=Lax`
+    }
     if (res.accessToken) {
       document.cookie = `accessToken=${res.accessToken}; path=/; max-age=86400; SameSite=Lax`
     }
@@ -59,6 +69,7 @@ export async function logout() {
     // Explicitly clear non-HttpOnly cookies
     document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     document.cookie = 'userGrade=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    document.cookie = 'userExpiresAt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     
     // Call backend to clear HttpOnly cookies
     try {
@@ -100,6 +111,11 @@ export async function getUserProfile() {
   if (res && res.data) {
     if (typeof window !== 'undefined') {
       localStorage.setItem('user', JSON.stringify(res.data))
+      if (res.data.expiresAt) {
+        document.cookie = `userExpiresAt=${res.data.expiresAt}; path=/; max-age=86400; SameSite=Lax`
+      } else {
+        document.cookie = `userExpiresAt=; path=/; max-age=0; SameSite=Lax`
+      }
     }
   }
   return res

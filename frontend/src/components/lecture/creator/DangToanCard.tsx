@@ -99,7 +99,6 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
       
       if (parsed.problem) {
          html += `<div class="bg-slate-50 p-5 rounded-lg border border-slate-200 mb-8">
-            <p class="font-bold text-slate-900 mb-2 mt-0">Đề bài:</p>
             <p class="italic text-slate-700 m-0">${parsed.problem}</p>
           </div>`
       }
@@ -181,11 +180,15 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
 
       html += `</div>`
 
-      onChange({ ...method, exercise: { content: html } })
+      onChange({
+        ...method,
+        methodContent: parsed.theory || method.methodContent,
+        exercise: { content: html }
+      })
       setIsModalOpen(false)
       setJsonInput('')
-    } catch (e: any) {
-      setJsonError('JSON không hợp lệ: ' + e.message)
+    } catch (err: any) {
+      setJsonError(err.message || 'JSON không hợp lệ')
     }
   }
 
@@ -215,16 +218,6 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
       {isExpanded && (
         <div className="p-5 flex flex-col gap-6">
           <div className="flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Tên Phương pháp giải</label>
-              <input
-                type="text"
-                placeholder="VD: Sử dụng định nghĩa..."
-                value={method.methodName}
-                onChange={(e) => onChange({ ...method, methodName: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-primary/50 transition-colors"
-              />
-            </div>
             <div>
               <SharedEditorCard
                 title="Nội dung phương pháp"

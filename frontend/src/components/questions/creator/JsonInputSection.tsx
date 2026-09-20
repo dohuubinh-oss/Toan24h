@@ -51,7 +51,6 @@ export default function JsonInputSection({
               
               if (parsed.problem) {
                  html += `<div class="bg-slate-50 p-5 rounded-lg border border-slate-200 mb-8">
-                    <p class="font-bold text-slate-900 mb-2 !mt-0">Đề bài:</p>
                     <p class="italic text-slate-700 !m-0">${parsed.problem}</p>
                   </div>`
               }

@@ -11,7 +11,9 @@ import SharedEditorCard from '@/components/questions/creator/editor/SharedEditor
 import MathText from '@/components/ui/MathText'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/ToastProvider'
-import { addBlogPost, BlogPost } from '@/data/blogData'
+import { useSearchParams } from 'next/navigation'
+import { addBlogPost, getBlogPostByIdOrSlug, BlogPost } from '@/data/blogData'
+import { Suspense } from 'react'
 
 function slugify(text: string): string {
   return text
@@ -28,10 +30,20 @@ function slugify(text: string): string {
 }
 
 export default function CreateBlogPostPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-slate-500 font-semibold text-sm">Đang tải...</div>}>
+      <CreateBlogPostContent />
+    </Suspense>
+  )
+}
+
+function CreateBlogPostContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const toast = useToast()
 
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit')
+  const [editPostId, setEditPostId] = useState<string | null>(null)
 
   // Form Fields State
   const [title, setTitle] = useState('')
@@ -42,22 +54,51 @@ export default function CreateBlogPostPage() {
   const [category, setCategory] = useState<BlogPost['category']>('Bi-Quyet-Thi')
   const [categoryLabel, setCategoryLabel] = useState('Bí quyết thi THPT')
   const [tagInput, setTagInput] = useState('')
-  const [tags, setTags] = useState<string[]>(['Toán học', 'Ôn thi THPT'])
-  const [authorName, setAuthorName] = useState('ThS. Nguyễn Văn An')
-  const [authorRole, setAuthorRole] = useState('Chuyên gia Chuyên môn Toán Toan24h')
+  const [tags, setTags] = useState<string[]>(['Toán học'])
+  const [authorName, setAuthorName] = useState('Nhóm Toan6789')
+  const [authorRole, setAuthorRole] = useState('Ban biên tập Toan6789')
   const [authorAvatar, setAuthorAvatar] = useState('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200')
   
-  // Editor Content State
-  const [content, setContent] = useState(`Tích phân và Ứng dụng trong Đề thi THPT Quốc gia
+  // Editor Content State (empty by default)
+  const [content, setContent] = useState('')
 
-Bài viết này hướng dẫn chi tiết các phương pháp giải toán Tích phân kết hợp giữa tự luận và máy tính CASIO.
+  // Check for Edit Mode via Query Params
+  useEffect(() => {
+    const id = searchParams.get('id') || searchParams.get('slug')
+    if (id) {
+      const existing = getBlogPostByIdOrSlug(id)
+      if (existing) {
+        setEditPostId(existing.id)
+        setTitle(existing.title)
+        setSlug(existing.slug)
+        setIsCustomSlug(true)
+        setIsFeatured(!!existing.featured)
+        setSummary(existing.summary || '')
+        setCategory(existing.category)
+        setCategoryLabel(existing.categoryLabel)
+        setTags(existing.tags || ['Toán học'])
+        setContent(existing.content || '')
+        if (existing.author) {
+          setAuthorName(existing.author.name || '')
+          setAuthorRole(existing.author.role || '')
+          setAuthorAvatar(existing.author.avatar || '')
+        }
+        return
+      }
+    }
 
-### 1. Công thức cơ bản
-\\[ \\int_{a}^{b} f(x) dx = F(b) - F(a) \\]
-
-### 2. Ví dụ áp dụng
-Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đến 2:
-\\[ I = \\int_{0}^{2} (x^2 + 2x) dx = \\left[ \\frac{x^3}{3} + x^2 \\right]_0^2 = \\frac{8}{3} + 4 = \\frac{20}{3} \\]`)
+    // Otherwise Load logged in author information for new post
+    try {
+      const cached = localStorage.getItem('user')
+      if (cached) {
+        const u = JSON.parse(cached)
+        if (u.fullName) setAuthorName(u.fullName)
+        if (u.telegramAvt) setAuthorAvatar(u.telegramAvt)
+        if (u.role === 'teacher') setAuthorRole('Giáo viên Toán 6789')
+        else if (u.role === 'admin') setAuthorRole('Ban Quản Trị Toan6789')
+      }
+    } catch (_) {}
+  }, [searchParams])
 
   // Auto-generate slug from title unless manually edited
   useEffect(() => {
@@ -72,14 +113,23 @@ Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đ�
       case 'Bi-Quyet-Thi':
         setCategoryLabel('Bí quyết thi THPT')
         break
-      case 'Toan-10-12':
-        setCategoryLabel('Toán Lớp 10 - 12')
-        break
-      case 'Meo-AI':
-        setCategoryLabel('Mẹo AI & Công nghệ')
-        break
       case 'Tin-Tuc':
         setCategoryLabel('Tin tức & Sự kiện')
+        break
+      case 'Toan-6':
+        setCategoryLabel('Toán lớp 6')
+        break
+      case 'Toan-7':
+        setCategoryLabel('Toán lớp 7')
+        break
+      case 'Toan-8':
+        setCategoryLabel('Toán lớp 8')
+        break
+      case 'Toan-9':
+        setCategoryLabel('Toán lớp 9')
+        break
+      case 'Meo-Casio':
+        setCategoryLabel('Mẹo Casio')
         break
     }
   }
@@ -118,7 +168,7 @@ Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đ�
     const coverImage = extractFirstImageFromContent(content)
 
     const newPost: BlogPost = {
-      id: String(Date.now()),
+      id: editPostId || String(Date.now()),
       slug: finalSlug,
       title: title.trim(),
       summary: isFeatured ? summary.trim() : undefined,
@@ -127,18 +177,18 @@ Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đ�
       categoryLabel: categoryLabel,
       coverImage: coverImage,
       author: {
-        name: authorName.trim() || 'Biên tập viên Toan24h',
+        name: authorName.trim() || 'Biên tập viên Toan6789',
         avatar: authorAvatar,
-        role: authorRole.trim() || 'Ban biên tập Toan24h'
+        role: authorRole.trim() || 'Ban biên tập Toan6789'
       },
       publishedAt: 'Hôm nay',
       readTime: '5 phút đọc',
       featured: isFeatured,
-      tags: tags.length > 0 ? tags : ['Toán24h']
+      tags: tags.length > 0 ? tags : ['Toán6789']
     }
 
     addBlogPost(newPost)
-    toast.success("Xuất bản bài viết Blog thành công!")
+    toast.success(editPostId ? "Cập nhật bài viết Blog thành công!" : "Xuất bản bài viết Blog thành công!")
     router.push(`/blog/${finalSlug}`)
   }
 
@@ -152,7 +202,9 @@ Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đ�
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-semibold text-slate-800">Tạo bài viết Blog mới</h1>
+              <h1 className="text-xl font-semibold text-slate-800">
+                {editPostId ? 'Chỉnh sửa bài viết Blog' : 'Tạo bài viết Blog mới'}
+              </h1>
             </div>
           </div>
           
@@ -327,9 +379,12 @@ Cho hàm số \\( f(x) = x^2 + 2x \\). Tính tích phân xác định từ 0 đ�
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
                   >
                     <option value="Bi-Quyet-Thi">Bí quyết thi THPT</option>
-                    <option value="Toan-10-12">Toán Lớp 10 - 12</option>
-                    <option value="Meo-AI">Mẹo AI & Công nghệ</option>
                     <option value="Tin-Tuc">Tin tức & Sự kiện</option>
+                    <option value="Toan-6">Toán lớp 6</option>
+                    <option value="Toan-7">Toán lớp 7</option>
+                    <option value="Toan-8">Toán lớp 8</option>
+                    <option value="Toan-9">Toán lớp 9</option>
+                    <option value="Meo-Casio">Mẹo Casio</option>
                   </select>
                 </div>
 

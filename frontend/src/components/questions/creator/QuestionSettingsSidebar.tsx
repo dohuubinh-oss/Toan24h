@@ -3,6 +3,7 @@ import { Settings2, X, PlusCircle, Wand2, ChevronDown } from 'lucide-react'
 import { Question } from '../../../types/question'
 import { Label } from '../../ui/Label'
 import { Input } from '../../ui/Input'
+import { cn } from '@/lib/utils'
 
 interface QuestionSettingsSidebarProps {
   currentQuestion?: Question | null;
@@ -86,6 +87,36 @@ export default function QuestionSettingsSidebar({
         </div>
 
         <div className="p-5 space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs ml-1 mb-1">Phân loại</Label>
+            <div className="flex bg-slate-100 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => updateQuestion('cate', 'exam')}
+                className={cn(
+                  "flex-1 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer",
+                  (!currentQuestion?.cate || currentQuestion?.cate === 'exam')
+                    ? "bg-white text-primary shadow-sm font-semibold"
+                    : "text-slate-500 hover:text-slate-700"
+                )}
+              >
+                Đề thi
+              </button>
+              <button
+                type="button"
+                onClick={() => updateQuestion('cate', 'practice')}
+                className={cn(
+                  "flex-1 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer",
+                  currentQuestion?.cate === 'practice'
+                    ? "bg-white text-primary shadow-sm font-semibold"
+                    : "text-slate-500 hover:text-slate-700"
+                )}
+              >
+                Bài tập
+              </button>
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <Label className="text-xs ml-1 mb-1">Tên Sách</Label>
             <Input

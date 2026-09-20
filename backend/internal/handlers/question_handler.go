@@ -27,6 +27,7 @@ type APIResponse struct {
 // QuestionDetail DTO cho từng câu hỏi con
 type QuestionDetail struct {
 	BookName        string   `json:"book_name"`
+	Cate            string   `json:"cate"`
 	Content         string   `json:"content"`
 	Type            string   `json:"type"`
 	Grade           int      `json:"grade"`
@@ -142,9 +143,15 @@ func BulkCreateQuestions(c *gin.Context) {
 			tagsBytes, _ := json.Marshal(detail.Tags)
 			optionsBytes, _ := json.Marshal(detail.Options)
 
+			cate := detail.Cate
+			if cate == "" {
+				cate = "exam"
+			}
+
 			childQ := models.Question{
 				ParentID:        parentID,
 				BookName:        detail.BookName,
+				Cate:            cate,
 				TypeQuestion:    "single",
 				Content:         processHtmlImages(detail.Content, detail.Grade),
 				Type:            detail.Type,
@@ -212,6 +219,11 @@ func GetQuestions(c *gin.Context) {
 			Args  []interface{}
 		}
 		var filters []filter
+
+		cateParam := c.Query("cate")
+		if cateParam != "" {
+			filters = append(filters, filter{"cate = ?", []interface{}{cateParam}})
+		}
 
 		gradeParam := c.Query("grade")
 		if gradeParam != "" {

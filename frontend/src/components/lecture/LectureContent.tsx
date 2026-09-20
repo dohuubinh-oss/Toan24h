@@ -93,7 +93,7 @@ export function LectureExamples({ examples = [] }: LectureExamplesProps) {
                         <div className="space-y-6 w-full mt-4">
                           <MathText 
                             className="prose max-w-none text-slate-800"
-                            content={method.exercise.content}
+                            content={method.exercise.content.replace(/<p[^>]*>\s*Đề bài:\s*<\/p>/gi, '')}
                           />
                         </div>
                       )}

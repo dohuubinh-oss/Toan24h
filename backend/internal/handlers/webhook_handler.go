@@ -90,11 +90,23 @@ func (h *WebhookHandler) HandleSePayWebhook(c *gin.Context) {
 		var user models.User
 		if err := db.First(&user, "id = ?", tx.UserID).Error; err == nil {
 			now := time.Now()
+			monthsToAdd := 3
+			switch tx.Plan {
+			case "1_month":
+				monthsToAdd = 1
+			case "3_months":
+				monthsToAdd = 3
+			case "9_months":
+				monthsToAdd = 9
+			case "1_year", "12_months":
+				monthsToAdd = 12
+			}
+
 			if user.ExpiresAt != nil && user.ExpiresAt.After(now) {
-				newTime := user.ExpiresAt.AddDate(0, 3, 0)
+				newTime := user.ExpiresAt.AddDate(0, monthsToAdd, 0)
 				user.ExpiresAt = &newTime
 			} else {
-				newTime := now.AddDate(0, 3, 0)
+				newTime := now.AddDate(0, monthsToAdd, 0)
 				user.ExpiresAt = &newTime
 			}
 			if err := db.Save(&user).Error; err != nil {

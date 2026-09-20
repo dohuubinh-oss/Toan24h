@@ -1,6 +1,7 @@
 export interface Question {
   id?: string;
   book_name?: string;
+  cate?: 'exam' | 'practice';
   type_question: 'group' | 'single';
   content: string;
   type: 'Trắc nghiệm' | 'Tự luận';

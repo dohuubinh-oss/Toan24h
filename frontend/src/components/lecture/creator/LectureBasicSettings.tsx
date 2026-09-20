@@ -82,11 +82,6 @@ export default function LectureBasicSettings() {
                 <span>Luyện tập / Đề</span>
               </button>
             </div>
-            {contentType === 'practice' && (
-              <p className="text-[11px] text-emerald-700 font-medium bg-emerald-50 border border-emerald-200/60 rounded-lg p-2 leading-tight">
-                Chế độ <b>Card Luyện tập & Đề kiểm tra</b>: Phần lý thuyết và dạng toán mẫu sẽ bị vô hiệu hóa. Card này sẽ liên kết trực tiếp với các đề luyện tập.
-              </p>
-            )}
           </div>
 
           <div className="space-y-2">

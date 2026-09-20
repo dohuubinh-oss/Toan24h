@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/models"
@@ -12,7 +13,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func setAuthCookies(c *gin.Context, accessToken, refreshToken, role, grade string) {
+func formatExpiresAt(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.Format(time.RFC3339)
+}
+
+func setAuthCookies(c *gin.Context, accessToken, refreshToken, role, grade, expiresAt string) {
 	domain := ""
 	secure := false
 	host := c.Request.Host
@@ -31,6 +39,7 @@ func setAuthCookies(c *gin.Context, accessToken, refreshToken, role, grade strin
 	}
 	c.SetCookie("userRole", role, 24*60*60, "/", domain, secure, false)
 	c.SetCookie("userGrade", grade, 24*60*60, "/", domain, secure, false)
+	c.SetCookie("userExpiresAt", expiresAt, 24*60*60, "/", domain, secure, false)
 }
 
 func clearAuthCookies(c *gin.Context) {
@@ -50,12 +59,14 @@ func clearAuthCookies(c *gin.Context) {
 	c.SetCookie("refreshToken", "", -1, "/", domain, secure, true)
 	c.SetCookie("userRole", "", -1, "/", domain, secure, false)
 	c.SetCookie("userGrade", "", -1, "/", domain, secure, false)
+	c.SetCookie("userExpiresAt", "", -1, "/", domain, secure, false)
 
 	if domain != "" {
 		c.SetCookie("accessToken", "", -1, "/", "", false, true)
 		c.SetCookie("refreshToken", "", -1, "/", "", false, true)
 		c.SetCookie("userRole", "", -1, "/", "", false, false)
 		c.SetCookie("userGrade", "", -1, "/", "", false, false)
+		c.SetCookie("userExpiresAt", "", -1, "/", "", false, false)
 	}
 }
 
@@ -161,7 +172,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	// Set cookies
-	setAuthCookies(c, accessToken, refreshToken, user.Role, user.Grade)
+	setAuthCookies(c, accessToken, refreshToken, user.Role, user.Grade, formatExpiresAt(user.ExpiresAt))
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Login successful",
@@ -205,7 +216,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	setAuthCookies(c, accessToken, "", user.Role, user.Grade)
+	setAuthCookies(c, accessToken, "", user.Role, user.Grade, formatExpiresAt(user.ExpiresAt))
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Token refreshed successfully",
@@ -254,7 +265,7 @@ func (h *AuthHandler) UpdateGrade(c *gin.Context) {
 		return
 	}
 
-	setAuthCookies(c, accessToken, refreshToken, user.Role, user.Grade)
+	setAuthCookies(c, accessToken, refreshToken, user.Role, user.Grade, formatExpiresAt(user.ExpiresAt))
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Grade updated successfully",
@@ -442,12 +453,8 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	// If user already had a password, check current password
-	if user.PasswordHash != "" {
-		if req.CurrentPassword == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập mật khẩu hiện tại"})
-			return
-		}
+	// If current password was provided, verify it
+	if req.CurrentPassword != "" && user.PasswordHash != "" {
 		if err := utils.CheckPasswordHash(req.CurrentPassword, user.PasswordHash); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Mật khẩu hiện tại không chính xác"})
 			return

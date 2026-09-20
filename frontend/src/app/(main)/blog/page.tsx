@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { 
   Search, Sparkles, Clock, Calendar, ArrowRight, BookOpen, Send, 
-  CheckCircle2, ChevronRight, Tag, Mail, Layers, ShieldCheck, UserCheck 
+  CheckCircle2, Tag, Mail, Layers, Edit3, PlusCircle 
 } from 'lucide-react'
 import { getBlogPosts, BLOG_CATEGORIES, BlogPost } from '@/data/blogData'
 import { Pagination } from '@/components/ui/Pagination'
@@ -17,12 +17,13 @@ export default function BlogListPage() {
   const [emailInput, setEmailInput] = useState<string>('')
   const [subscribed, setSubscribed] = useState<boolean>(false)
   const [currentPage, setCurrentPage] = useState<number>(1)
+  const [isAdminOrTeacher, setIsAdminOrTeacher] = useState<boolean>(false)
   const ITEMS_PER_PAGE = 9
 
   useEffect(() => {
     setPosts(getBlogPosts())
 
-    // Auto-filter by grade for student role if present
+    // Detect user role & auto-filter by grade for student role
     try {
       const getCookie = (name: string) => {
         const value = `; ${document.cookie}`
@@ -33,6 +34,20 @@ export default function BlogListPage() {
 
       const role = getCookie('userRole')
       const grade = getCookie('userGrade')
+
+      let roleMatch = role === 'admin' || role === 'teacher'
+      if (!roleMatch) {
+        try {
+          const userStored = localStorage.getItem('user')
+          if (userStored) {
+            const parsed = JSON.parse(userStored)
+            if (parsed.role === 'admin' || parsed.role === 'teacher') {
+              roleMatch = true
+            }
+          }
+        } catch (_) {}
+      }
+      setIsAdminOrTeacher(roleMatch)
 
       if (role === 'student' && grade && ['6', '7', '8', '9'].includes(grade)) {
         setSelectedCategory(`Toan-${grade}`)
@@ -111,7 +126,7 @@ export default function BlogListPage() {
                   sizes="(max-width: 1024px) 100vw, 60vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-4 left-4 z-10">
+                <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
                   <span className="px-3 py-1.5 rounded-xl bg-primary text-white text-xs font-bold shadow-md flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" />
                     Bài viết Nổi bật
@@ -145,7 +160,7 @@ export default function BlogListPage() {
                   )}
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-3">
                     <img 
                       src={featuredPost.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(featuredPost.author.name)}`} 
@@ -157,13 +172,25 @@ export default function BlogListPage() {
                       <p className="text-[11px] text-slate-500">{featuredPost.author.role || 'Ban biên tập Toan6789'}</p>
                     </div>
                   </div>
-                  <Link 
-                    href={`/blog/${featuredPost.slug}`}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-xs group-hover:gap-3"
-                  >
-                    Đọc ngay
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
+
+                  <div className="flex items-center gap-2">
+                    {isAdminOrTeacher && (
+                      <Link 
+                        href={`/dashboard/blog/create?id=${featuredPost.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-xs font-bold hover:bg-amber-100 transition-all shadow-2xs"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-amber-600" />
+                        Sửa bài
+                      </Link>
+                    )}
+                    <Link 
+                      href={`/blog/${featuredPost.slug}`}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-xs group-hover:gap-3"
+                    >
+                      Đọc ngay
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
@@ -202,7 +229,7 @@ export default function BlogListPage() {
           </div>
         </div>
 
-        {/* 2-Column Main Section: Articles (Left - 2 Cards/Row) & Sidebar (Right - Newsletter & Categories) */}
+        {/* 2-Column Main Section: Articles (Left - 2 Cards/Row) & Sidebar (Right - Create Button, Newsletter & Categories) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column: Articles Grid & Pagination */}
@@ -285,7 +312,7 @@ export default function BlogListPage() {
                       </div>
                     </div>
 
-                    {/* Footer with Real Author */}
+                    {/* Footer with Real Author & Action Buttons */}
                     <div className="p-5 pt-4 border-t border-slate-100 mt-4 flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
                         <img 
@@ -298,13 +325,25 @@ export default function BlogListPage() {
                         </span>
                       </div>
 
-                      <Link 
-                        href={`/blog/${post.slug}`}
-                        className="text-xs font-bold text-primary hover:text-blue-700 flex items-center gap-1 group-hover:translate-x-1 transition-transform"
-                      >
-                        Đọc tiếp
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        {isAdminOrTeacher && (
+                          <Link 
+                            href={`/dashboard/blog/create?id=${post.id}`}
+                            className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 text-[11px] font-bold flex items-center gap-1 transition-all shadow-2xs cursor-pointer"
+                            title="Chỉnh sửa bài viết"
+                          >
+                            <Edit3 className="w-3 h-3 text-amber-600" />
+                            Sửa
+                          </Link>
+                        )}
+                        <Link 
+                          href={`/blog/${post.slug}`}
+                          className="text-xs font-bold text-primary hover:text-blue-700 flex items-center gap-1 group-hover:translate-x-1 transition-transform"
+                        >
+                          Đọc tiếp
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
                     </div>
                   </article>
                 ))}
@@ -330,24 +369,32 @@ export default function BlogListPage() {
             )}
           </div>
 
-          {/* Right Column: Sidebar with Newsletter & Quick Categories */}
+          {/* Right Column: Sidebar with Create Button, Newsletter & Quick Categories */}
           <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+            {/* Admin / Teacher Create New Blog Post Button */}
+            {isAdminOrTeacher && (
+              <Link
+                href="/dashboard/blog/create"
+                className="w-full py-3.5 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-md hover:shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center gap-2 active:scale-98"
+              >
+                <PlusCircle className="w-4 h-4 text-white" />
+                Tạo bài blog mới
+              </Link>
+            )}
+
             {/* Newsletter Subscription Card */}
             <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-700 text-white rounded-3xl p-6 sm:p-7 shadow-lg relative overflow-hidden">
               <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-40 h-40 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
               
               <div className="relative z-10 space-y-4">
-                <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md text-amber-300 flex items-center justify-center border border-white/20 shadow-inner">
-                  <Mail className="w-5 h-5 animate-pulse" />
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-black tracking-tight text-white">
+                {/* Header: Icon Mail and Title on same horizontal line */}
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-md text-amber-300 flex items-center justify-center border border-white/20 shadow-inner shrink-0">
+                    <Mail className="w-4 h-4 animate-pulse" />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black tracking-tight text-white">
                     Đăng ký nhận tin
                   </h3>
-                  <p className="text-xs text-blue-100 mt-1 leading-relaxed">
-                    Nhận các bài viết mới nhất, phương pháp giải nhanh và đề thi thử chọn lọc vào hòm thư của bạn.
-                  </p>
                 </div>
 
                 {subscribed ? (
@@ -410,3 +457,4 @@ export default function BlogListPage() {
     </div>
   )
 }
+

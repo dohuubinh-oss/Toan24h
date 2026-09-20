@@ -1,10 +1,19 @@
+export type BlogCategoryType = 
+  | 'Bi-Quyet-Thi' 
+  | 'Tin-Tuc' 
+  | 'Toan-6' 
+  | 'Toan-7' 
+  | 'Toan-8' 
+  | 'Toan-9' 
+  | 'Meo-Casio'
+
 export interface BlogPost {
   id: string
   slug: string
   title: string
   summary?: string
   content: string
-  category: 'Bi-Quyet-Thi' | 'Toan-10-12' | 'Meo-AI' | 'Tin-Tuc'
+  category: BlogCategoryType
   categoryLabel: string
   coverImage: string
   author: {
@@ -18,12 +27,15 @@ export interface BlogPost {
   tags: string[]
 }
 
-export const BLOG_CATEGORIES = [
+export const BLOG_CATEGORIES: { id: string; label: string }[] = [
   { id: 'all', label: 'Tất cả bài viết' },
   { id: 'Bi-Quyet-Thi', label: 'Bí quyết thi THPT' },
-  { id: 'Toan-10-12', label: 'Toán Lớp 10 - 12' },
-  { id: 'Meo-AI', label: 'Mẹo AI & Công nghệ' },
   { id: 'Tin-Tuc', label: 'Tin tức & Sự kiện' },
+  { id: 'Toan-6', label: 'Toán lớp 6' },
+  { id: 'Toan-7', label: 'Toán lớp 7' },
+  { id: 'Toan-8', label: 'Toán lớp 8' },
+  { id: 'Toan-9', label: 'Toán lớp 9' },
+  { id: 'Meo-Casio', label: 'Mẹo Casio' },
 ]
 
 export const BLOG_POSTS: BlogPost[] = [
@@ -93,8 +105,8 @@ Biệt số \\( \\Delta = b^2 - 4ac \\). Nếu \\( \\Delta < 0 \\), phương tr�
 ### Trải nghiệm chấm điểm cá nhân hóa
 
 Nhờ tính năng **"Xem Nhận xét"**, học sinh có thể theo dõi đánh giá tư duy tổng quan và nhận gợi ý thông minh (AI Hint) khi gặp bài toán khó mà không làm mất đi tính độc lập tư duy.`,
-    category: 'Meo-AI',
-    categoryLabel: 'Mẹo AI & Công nghệ',
+    category: 'Meo-Casio',
+    categoryLabel: 'Mẹo Casio',
     coverImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200',
     author: {
       name: 'Dr. Lê Hoàng Nam',
@@ -104,12 +116,12 @@ Nhờ tính năng **"Xem Nhận xét"**, học sinh có thể theo dõi đánh g
     publishedAt: '10 Tháng 9, 2026',
     readTime: '5 phút đọc',
     featured: false,
-    tags: ['AI Grader', 'Công nghệ Giáo dục', 'Chấm tự luận', 'Toan24h']
+    tags: ['AI Grader', 'Công nghệ Giáo dục', 'Chấm tự luận', 'Toan6789']
   },
   {
     id: '3',
     slug: 'nam-vung-hinh-hoc-khong-gian-lop-12-voi-so-do-tu-duy',
-    title: 'Nắm vững Hình học Không gian Lớp 12 với Sơ đồ Tư duy & Hình chiếu 3D',
+    title: 'Nắm vững Hình học Không gian Lớp 9 và Lớp 8 với Sơ đồ Tư duy & Hình chiếu 3D',
     content: `Hình học không gian thường là "nỗi sợ" của nhiều học sinh do yêu cầu khả năng tưởng tượng hình học cao. Tuy nhiên, nếu nắm vững các mô hình gốc, bạn có thể dễ dàng giải quyết 90% các dạng bài trong đề thi.
 
 ### 1. Công thức Thể tích Khối Chóp và Khối Lăng Trụ
@@ -125,21 +137,21 @@ Thể tích khối lăng trụ:
 Khoảng cách từ điểm \\(M(x_0, y_0, z_0)\\) đến mặt phẳng \\((P): Ax + By + Cz + D = 0\\):
 \\[ d(M, (P)) = \\frac{|Ax_0 + By_0 + Cz_0 + D|}{\\sqrt{A^2 + B^2 + C^2}} \\]
 
-### Bí quyết dựng hình trên Toan24h
+### Bí quyết dựng hình trên Toan6789
 
-Học sinh có thể xem hình minh họa 3D tương tác ngay tại phần **Bài giảng lý thuyết theo khối lớp** trên Toan24h để hình dung trực quan góc giữa đường thẳng và mặt phẳng.`,
-    category: 'Toan-10-12',
-    categoryLabel: 'Toán Lớp 10 - 12',
+Học sinh có thể xem hình minh họa 3D tương tác ngay tại phần **Bài giảng lý thuyết theo khối lớp** trên Toan6789 để hình dung trực quan góc giữa đường thẳng và mặt phẳng.`,
+    category: 'Toan-8',
+    categoryLabel: 'Toán lớp 8',
     coverImage: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&q=80&w=1200',
     author: {
       name: 'Cô Trần Minh Anh',
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200',
-      role: 'Giảng viên Hình học Không gian'
+      role: 'Giảng viên Hình học'
     },
     publishedAt: '08 Tháng 9, 2026',
     readTime: '8 phút đọc',
     featured: false,
-    tags: ['Hình học 12', 'Thể tích khối chóp', 'Oxyz', 'Hình không gian']
+    tags: ['Hình học 8', 'Hình học 9', 'Thể tích khối chóp', 'Hình không gian']
   },
   {
     id: '4',
@@ -216,7 +228,7 @@ export function addBlogPost(post: BlogPost): BlogPost {
   if (typeof window !== 'undefined') {
     try {
       const customPostsStr = localStorage.getItem(LOCAL_STORAGE_KEY)
-      const existing: BlogPost[] = customPostsStr ? JSON.parse(customPostsStr) : []
+      let existing: BlogPost[] = customPostsStr ? JSON.parse(customPostsStr) : []
       
       if (post.featured) {
         // Unmark all existing default posts
@@ -225,12 +237,28 @@ export function addBlogPost(post: BlogPost): BlogPost {
         existing.forEach(p => { p.featured = false })
       }
 
-      const updated = [post, ...existing]
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated))
+      // Check if post already exists (update mode)
+      const existingIdx = existing.findIndex(p => p.id === post.id || p.slug === post.slug)
+      if (existingIdx >= 0) {
+        existing[existingIdx] = post
+      } else {
+        existing = [post, ...existing]
+      }
+      
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(existing))
     } catch (e) {
       console.error('Error saving blog post to localStorage', e)
     }
   }
   return post
+}
+
+export function updateBlogPost(post: BlogPost): BlogPost {
+  return addBlogPost(post)
+}
+
+export function getBlogPostByIdOrSlug(idOrSlug: string): BlogPost | undefined {
+  const allPosts = getBlogPosts()
+  return allPosts.find(p => p.id === idOrSlug || p.slug === idOrSlug)
 }
 

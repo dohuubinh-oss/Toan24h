@@ -14,6 +14,7 @@ type Question struct {
 	SubQuestions    []Question     `gorm:"foreignKey:ParentID" json:"subQuestions,omitempty"` // Dùng cho 'group' để tự động nạp các câu con
 
 	BookName        string         `gorm:"type:varchar(255)" json:"bookName"` // Tiêu đề câu hỏi, VD: Bài 1, Câu 1
+	Cate            string         `gorm:"type:varchar(50);not null;default:'exam';index" json:"cate"` // 'exam' or 'practice'
 	TypeQuestion    string         `gorm:"type:varchar(20);not null" json:"typeQuestion"` // 'group', 'single'
 	Content         string         `gorm:"type:text;not null" json:"content"`
 	Type            string         `gorm:"type:varchar(50);not null" json:"type"`         // 'Trắc nghiệm', 'Tự luận'

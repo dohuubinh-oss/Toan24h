@@ -32,20 +32,39 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 		return
 	}
 
-	amount := 450000
-	if req.Plan != "3_months" {
-		c.JSON(400, gin.H{"error": "Invalid plan"})
+	var amount int
+	switch req.Plan {
+	case "1_month":
+		amount = 200000
+	case "3_months":
+		amount = 450000
+	case "9_months":
+		amount = 1080000
+	case "1_year", "12_months":
+		amount = 1200000
+	default:
+		c.JSON(400, gin.H{"error": "Gói nâng cấp không hợp lệ"})
 		return
 	}
 
-	uidStr, _ := userID.(string)
-	userUUID, err := uuid.Parse(uidStr)
-	if err != nil {
+	var userUUID uuid.UUID
+	switch v := userID.(type) {
+	case uuid.UUID:
+		userUUID = v
+	case string:
+		var err error
+		userUUID, err = uuid.Parse(v)
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Invalid User ID"})
+			return
+		}
+	default:
 		c.JSON(400, gin.H{"error": "Invalid User ID"})
 		return
 	}
 	
 	tx := models.Transaction{
+		ID:     uuid.New(),
 		UserID: userUUID,
 		Amount: amount,
 		Plan:   req.Plan,
@@ -53,7 +72,7 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 	}
 
 	if err := h.DB.Create(&tx).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Could not create transaction"})
+		c.JSON(500, gin.H{"error": "Could not create transaction: " + err.Error()})
 		return
 	}
 
@@ -71,9 +90,16 @@ func (h *PaymentHandler) GetMyTransactions(c *gin.Context) {
 		return
 	}
 
-	uidStr, _ := userID.(string)
+	var userUUID uuid.UUID
+	switch v := userID.(type) {
+	case uuid.UUID:
+		userUUID = v
+	case string:
+		userUUID, _ = uuid.Parse(v)
+	}
+
 	var transactions []models.Transaction
-	h.DB.Where("user_id = ?", uidStr).Order("created_at desc").Find(&transactions)
+	h.DB.Where("user_id = ?", userUUID).Order("created_at desc").Find(&transactions)
 
 	c.JSON(200, transactions)
 }

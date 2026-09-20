@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Các route cần middleware can thiệp để chuyển hướng
-const redirectRoutes = ['/lectures', '/practices']
-
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
 
@@ -11,10 +8,23 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('accessToken')?.value
   const role = request.cookies.get('userRole')?.value
   const grade = request.cookies.get('userGrade')?.value
+  const expiresAt = request.cookies.get('userExpiresAt')?.value
 
   if (!token) {
     // Không có token -> redirect về login
     return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // Kiểm tra hạn sử dụng: ngoại trừ admin và teacher, nếu expiresAt < hiện tại thì chuyển hướng sang /upgrade
+  if (role !== 'admin' && role !== 'teacher') {
+    if (expiresAt) {
+      const expiresTime = new Date(expiresAt).getTime()
+      if (!isNaN(expiresTime) && expiresTime < Date.now()) {
+        if (path !== '/' && path !== '/upgrade' && !path.startsWith('/login') && !path.startsWith('/register')) {
+          return NextResponse.redirect(new URL('/upgrade', request.url))
+        }
+      }
+    }
   }
 
   if (role === 'admin' || role === 'teacher') {
@@ -59,7 +69,14 @@ export function middleware(request: NextRequest) {
   return NextResponse.next()
 }
 
-// Cấu hình matcher để middleware chỉ chạy trên các route cụ thể (tối ưu hiệu suất)
+// Cấu hình matcher để middleware kiểm tra trên các route học tập & quản lý
 export const config = {
-  matcher: ['/lectures/:path*', '/practices/:path*', '/dashboard/:path*'],
+  matcher: [
+    '/lectures/:path*',
+    '/practices/:path*',
+    '/dashboard/:path*',
+    '/profile/:path*',
+    '/exams/:path*',
+    '/student/:path*',
+  ],
 }

@@ -160,7 +160,7 @@ export default function TelegramLoginWidget({
                 {/* Instructions */}
                 <div className="bg-sky-50/70 border border-sky-100 rounded-xl p-3.5 text-xs text-sky-900 space-y-1.5">
                   <p className="font-bold text-sky-950">📌 Các bước thực hiện:</p>
-                  <p>1. Dùng <strong>Camera điện thoại</strong> hoặc <strong>App Telegram</strong> quét mã QR trên.</p>
+                  <p>1. Dùng <strong>Camera điện thoại</strong> hoặc <strong>App Zalo</strong> quét mã QR trên.</p>
                   <p>2. Trên ứng dụng Telegram, nhấn nút <strong>Bắt đầu (Start)</strong>.</p>
                   <p>3. Màn hình máy tính sẽ <strong>tự động đăng nhập</strong> ngay lập tức!</p>
                 </div>

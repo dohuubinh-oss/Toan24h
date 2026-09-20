@@ -32,15 +32,6 @@ export default function LectureContentEditor() {
 
   return (
     <div className="space-y-6">
-      {contentType === 'practice' && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200/80 rounded-2xl flex items-center gap-3 text-emerald-900 text-sm font-medium shadow-sm">
-          <AlertCircle className="w-5 h-5 text-emerald-600 shrink-0" />
-          <span>
-            <b>Đang ở chế độ Card Luyện tập & Đề kiểm tra:</b> Khu vực soạn thảo Lý thuyết và Dạng toán mẫu bên dưới được vô hiệu hóa. Bạn chỉ cần cấu hình Tiêu đề, Khối lớp và Chuyên đề ở khung bên phải để tạo Card.
-          </span>
-        </div>
-      )}
-
       <div className={`space-y-6 transition-opacity duration-300 ${
         contentType === 'practice' ? 'opacity-35 pointer-events-none select-none filter grayscale-[30%]' : ''
       }`}>
