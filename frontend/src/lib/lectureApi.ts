@@ -75,13 +75,27 @@ export async function getLecturesByGrade(grade: string, page: number = 1, limit:
       }
     } catch(e) {}
     
+    const isPracticeCard = (!item.basicConcept || item.basicConcept.trim() === '') && (!item.examples || item.examples === '[]' || item.examples === '');
+
+    let practiceCount = 0;
+    if (item.practiceIds) {
+      try {
+        const parsed = JSON.parse(item.practiceIds);
+        if (Array.isArray(parsed)) {
+          practiceCount = parsed.length;
+        }
+      } catch (e) {}
+    }
+
     return {
       id: item.id,
       title: item.title,
       chapter: item.category, // Map category to chapter for UI
       status: 'NOT_STARTED', // TODO: Implement real progress tracking
-      practiceCount: 0, // TODO: Implement real practice count
+      practiceCount,
       thumbnailUrl: coverImage ? `${process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '') : 'https://api.toan6789.vn'}${coverImage}` : undefined,
+      isPracticeCard,
+      practiceIds: item.practiceIds,
     }
   });
 

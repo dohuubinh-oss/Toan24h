@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight, BookOpen } from 'lucide-react';
-import { LectureCard } from '@/components/lectures/LectureCard';
+import { LectureCard, PracticeLectureCard } from '@/components/lectures/LectureCard';
 import { ClientPagination } from '@/components/ui/ClientPagination';
 import { getLecturesByGrade } from '@/lib/lectureApi';
 import { getExams, getMyExamResults } from '@/lib/api';
@@ -81,15 +81,31 @@ export default async function GradeLecturesPage({
         </div>
       </div>
 
-      {/* Grid danh sách Bài giảng */}
+      {/* Grid danh sách Bài giảng & Bài luyện tập */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mappedLectures.map((lecture) => (
-          <LectureCard 
-            key={lecture.id}
-            grade={grade}
-            {...lecture}
-          />
-        ))}
+        {mappedLectures.map((item) => {
+          if (item.isPracticeCard) {
+            const practiceUrl = `/practices/lop/${grade}?lecture=${item.id}&lectureName=${encodeURIComponent(item.title)}${item.practiceIds ? `&practiceIds=${encodeURIComponent(item.practiceIds)}` : ''}`
+            return (
+              <PracticeLectureCard 
+                key={item.id}
+                grade={grade}
+                title={item.title}
+                chapter={item.chapter}
+                practiceCount={item.practiceCount}
+                href={practiceUrl}
+              />
+            )
+          }
+
+          return (
+            <LectureCard 
+              key={item.id}
+              grade={grade}
+              {...item}
+            />
+          )
+        })}
         {mappedLectures.length === 0 && (
           <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-500 bg-white rounded-2xl border border-slate-200/60 shadow-sm">
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">

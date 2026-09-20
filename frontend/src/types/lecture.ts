@@ -7,6 +7,8 @@ export interface Lecture {
   status: LectureStatus;
   practiceCount: number;
   thumbnailUrl?: string;
+  isPracticeCard?: boolean;
+  practiceIds?: string;
 }
 
 export interface PaginatedLectures {
