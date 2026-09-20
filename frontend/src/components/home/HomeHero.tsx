@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { ArrowRight, Flame, Bell, Sparkles, TrendingUp } from 'lucide-react'
 
 export default function HomeHero() {
@@ -27,12 +28,27 @@ export default function HomeHero() {
           
           <div className="flex items-center gap-4 py-6 border-t border-slate-200">
             <div className="flex -space-x-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="Student 1" className="w-10 h-10 rounded-full border-2 border-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkg2j1eQxe8m9S3Yhptdh96e6OUu_RZ-rwmBhDF5piZGVUws4S2-y8OF4EikVbhklBkU9IB6_9GrPb1F8AOblKwxq1FGUtKjOydvTMfYkLsYVL5Ape6mJ27plYyHP47fJpwLrAgtbxy-AcoLBDCdh8xGSsrd7xTjlV0zcF9QaEaTtotCSe8Cy5J_XO3WCCTnMNKNQVrXIEsl5uhPYsnSmcVzYxjUjCdwkDZNfXOkSV9HTD8QvdaxO63ZhfE0ZV4GcHm8pxX3tMEMZm"/>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="Student 2" className="w-10 h-10 rounded-full border-2 border-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLLhO8u-iBzfHpy648Tt1cNuk7COYKl_yWeI7H15Y31w-DcTYEKRakeXWZPldOxjwFG6-H0FYqimLhGecYjcHLbxvGP1fnwbrHHM45u-7WeBDYBckxr5GSkWUFxLoS7nzWogEP1Ni45cd8_g-alCnQuUDJ6EnB7uPUZkEFT3h1qj10GKXTuylWvrQPEwIuX-g13g_x2YffKW2IwtKt2rI3gPnTIvbqOiTERMeO10H7Rb429QwrhIm1DlRzauvGXW037bu7r-dOYBMn"/>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="Student 3" className="w-10 h-10 rounded-full border-2 border-white object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnYWjVSOz64s5rTjt6fGCdrHutCZKy1q7_5jx4c49sXHt8goVaMj6OWXpUwi6ZuHKiJ8QNHjRXAE0DB-NPoGp7rEkKoKmOuhufMb2fWjFXhJ5gFQR53hxiFRuL-GwXxaSVTkQqWaiqmF4_vZbFw0ioWqKnNkQZNkClbgxO3q61rU1zMOUxTlC725DMg8pmvOf5yWd0XAin_obayiDvbShW1z7kIr49gWci08wSSe4ScepETs6bRMDNJCIGGbj5KdTYxKrLty62xdsg"/>
+              <Image 
+                alt="Student 1" 
+                width={40} 
+                height={40} 
+                className="w-10 h-10 rounded-full border-2 border-white object-cover" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkg2j1eQxe8m9S3Yhptdh96e6OUu_RZ-rwmBhDF5piZGVUws4S2-y8OF4EikVbhklBkU9IB6_9GrPb1F8AOblKwxq1FGUtKjOydvTMfYkLsYVL5Ape6mJ27plYyHP47fJpwLrAgtbxy-AcoLBDCdh8xGSsrd7xTjlV0zcF9QaEaTtotCSe8Cy5J_XO3WCCTnMNKNQVrXIEsl5uhPYsnSmcVzYxjUjCdwkDZNfXOkSV9HTD8QvdaxO63ZhfE0ZV4GcHm8pxX3tMEMZm"
+              />
+              <Image 
+                alt="Student 2" 
+                width={40} 
+                height={40} 
+                className="w-10 h-10 rounded-full border-2 border-white object-cover" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLLhO8u-iBzfHpy648Tt1cNuk7COYKl_yWeI7H15Y31w-DcTYEKRakeXWZPldOxjwFG6-H0FYqimLhGecYjcHLbxvGP1fnwbrHHM45u-7WeBDYBckxr5GSkWUFxLoS7nzWogEP1Ni45cd8_g-alCnQuUDJ6EnB7uPUZkEFT3h1qj10GKXTuylWvrQPEwIuX-g13g_x2YffKW2IwtKt2rI3gPnTIvbqOiTERMeO10H7Rb429QwrhIm1DlRzauvGXW037bu7r-dOYBMn"
+              />
+              <Image 
+                alt="Student 3" 
+                width={40} 
+                height={40} 
+                className="w-10 h-10 rounded-full border-2 border-white object-cover" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnYWjVSOz64s5rTjt6fGCdrHutCZKy1q7_5jx4c49sXHt8goVaMj6OWXpUwi6ZuHKiJ8QNHjRXAE0DB-NPoGp7rEkKoKmOuhufMb2fWjFXhJ5gFQR53hxiFRuL-GwXxaSVTkQqWaiqmF4_vZbFw0ioWqKnNkQZNkClbgxO3q61rU1zMOUxTlC725DMg8pmvOf5yWd0XAin_obayiDvbShW1z7kIr49gWci08wSSe4ScepETs6bRMDNJCIGGbj5KdTYxKrLty62xdsg"
+              />
               <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-xs font-bold text-slate-600">+100k</div>
             </div>
             <p className="text-sm font-medium text-slate-500">100,000+ Học sinh tin dùng trên toàn quốc</p>

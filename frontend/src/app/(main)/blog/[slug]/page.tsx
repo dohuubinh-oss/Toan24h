@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowLeft, Calendar, Clock, Share2, Sparkles, BookOpen, ChevronRight } from 'lucide-react'
 import { getBlogPosts, BlogPost } from '@/data/blogData'
 import MathText from '@/components/ui/MathText'
@@ -143,11 +144,14 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
                   className="bg-white rounded-2xl border border-slate-200/70 p-4 shadow-xs hover:border-primary/30 hover:shadow-md transition-all group flex flex-col justify-between"
                 >
                   <div className="space-y-3">
-                    <div className="h-32 rounded-xl overflow-hidden bg-slate-100">
-                      <img 
+                    <div className="relative h-32 rounded-xl overflow-hidden bg-slate-100">
+                      <Image 
                         src={rel.coverImage} 
                         alt={rel.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        loading="lazy"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     </div>
                     <span className="px-2.5 py-0.5 rounded-md bg-slate-100 text-primary font-bold text-[10px]">
