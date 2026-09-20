@@ -49,7 +49,13 @@ func SetupRouter() *gin.Engine {
 		c.JSON(200, gin.H{"status": "UP"})
 	})
 
-	// Phục vụ các file tĩnh (ảnh đã upload)
+	// Phục vụ các file tĩnh (ảnh đã upload) với Cache-Control tối ưu
+	r.Use(func(c *gin.Context) {
+		if len(c.Request.URL.Path) >= 8 && c.Request.URL.Path[:8] == "/uploads" {
+			c.Header("Cache-Control", "public, max-age=31536000, immutable")
+		}
+		c.Next()
+	})
 	r.Static("/uploads", "./uploads")
 
 	// Dependencies
