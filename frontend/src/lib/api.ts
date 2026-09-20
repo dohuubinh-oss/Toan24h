@@ -554,12 +554,12 @@ export async function getWeeklyLeaderboard(grade?: string): Promise<any> {
   try {
     const query = grade ? `?grade=${encodeURIComponent(grade)}` : '';
     const response = await apiFetch(`/leaderboard${query}`);
-    if (response.status === 'success' && response.data) {
+    if (response && response.status === 'success' && response.data) {
       return response.data;
     }
     return null;
   } catch (error) {
-    console.error('Failed to fetch weekly leaderboard:', error);
+    // Safe fallback when backend is unreachable or returns non-200
     return null;
   }
 }
