@@ -36,3 +36,9 @@ Thumbs.db
 .agent/
 .claude/
 .gemini/
+
+# Docs and Examples
+docs/
+fileExample/
+fileExamples/
+

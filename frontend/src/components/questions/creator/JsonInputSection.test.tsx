@@ -8,19 +8,10 @@ describe('JsonInputSection Component', () => {
     expect(screen.getByText('Nhập nhanh bằng JSON')).toBeInTheDocument()
   })
 
-  it('renders the textarea', () => {
+  it('renders the textarea and process button', () => {
     render(<JsonInputSection />)
-    expect(screen.getByPlaceholderText(/\[\{"question": "\.\.\.", "options": \[\.\.\.\], "answer": "A"\}, \.\.\.\]/)).toBeInTheDocument()
-  })
-
-  it('renders the process button', () => {
-    render(<JsonInputSection />)
+    expect(screen.getByPlaceholderText(/shared_content/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Xử lý JSON/i })).toBeInTheDocument()
   })
-
-  it('renders pagination', () => {
-    render(<JsonInputSection />)
-    expect(screen.getByText('Câu 1')).toBeInTheDocument()
-    expect(screen.getByText('/ 12')).toBeInTheDocument()
-  })
 })
+

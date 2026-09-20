@@ -87,13 +87,25 @@ export async function getLecturesByGrade(grade: string, page: number = 1, limit:
       } catch (e) {}
     }
 
+    let thumbnailUrl: string | undefined;
+    if (coverImage) {
+      if (coverImage.startsWith('http://') || coverImage.startsWith('https://') || coverImage.startsWith('data:')) {
+        thumbnailUrl = coverImage;
+      } else {
+        const base = process.env.NEXT_PUBLIC_API_URL
+          ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, '')
+          : 'https://api.toan6789.vn';
+        thumbnailUrl = `${base.replace(/\/+$/, '')}/${coverImage.replace(/^\/+/, '')}`;
+      }
+    }
+
     return {
       id: item.id,
       title: item.title,
       chapter: item.category, // Map category to chapter for UI
       status: 'NOT_STARTED', // TODO: Implement real progress tracking
       practiceCount,
-      thumbnailUrl: coverImage ? `${process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '') : 'https://api.toan6789.vn'}${coverImage}` : undefined,
+      thumbnailUrl,
       isPracticeCard,
       practiceIds: item.practiceIds,
     }

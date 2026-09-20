@@ -72,11 +72,11 @@ function CreateQuestionContent() {
   }
 
   const handleProcessJson = useCallback((blocks: QuestionBlock[]) => {
-    setQuestionBlocks(blocks)
-    setCurrentBlockIndex(0)
-    setCurrentQuestionIndex(0)
-    scrollToEditor()
-  }, [])
+    setQuestionBlocks(blocks);
+    setCurrentBlockIndex(0);
+    setCurrentQuestionIndex(0);
+    scrollToEditor();
+  }, []);
 
   const handleNext = useCallback(() => {
     if (questionBlocks.length === 0) return;
@@ -159,19 +159,23 @@ function CreateQuestionContent() {
       const newBlocks = [...prev];
       
       if (field === 'book_name') {
-        let updateFromNowOn = false;
-        for (let bIdx = 0; bIdx < newBlocks.length; bIdx++) {
-           const block = { ...newBlocks[bIdx], questions: [...newBlocks[bIdx].questions] };
-           newBlocks[bIdx] = block;
-           for (let qIdx = 0; qIdx < block.questions.length; qIdx++) {
-             if (bIdx === currentBlockIndex && qIdx === currentQuestionIndex) {
-               updateFromNowOn = true;
-             }
-             if (updateFromNowOn) {
-               block.questions[qIdx] = { ...block.questions[qIdx], book_name: value };
-             }
-           }
-        }
+        // Đồng bộ Tên Sách cho TẤT CẢ các câu hỏi trong tất cả các block
+        return newBlocks.map(block => ({
+          ...block,
+          questions: block.questions.map(q => ({
+            ...q,
+            book_name: value
+          }))
+        }));
+      } else if (field === 'cate') {
+        // Đồng bộ Phân loại (Bài tập / Đề thi) cho TẤT CẢ các câu hỏi khi có thay đổi
+        return newBlocks.map(block => ({
+          ...block,
+          questions: block.questions.map(q => ({
+            ...q,
+            cate: value
+          }))
+        }));
       } else {
         const newQuestions = [...currentBlock.questions];
         newQuestions[currentQuestionIndex] = {
@@ -182,9 +186,8 @@ function CreateQuestionContent() {
           ...currentBlock,
           questions: newQuestions
         };
+        return newBlocks;
       }
-      
-      return newBlocks;
     });
   }, [currentBlockIndex, currentQuestionIndex])
 

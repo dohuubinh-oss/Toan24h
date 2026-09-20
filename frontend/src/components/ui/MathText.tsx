@@ -23,6 +23,16 @@ export default function MathText({ content, className = '' }: MathTextProps) {
       .replace(/<math-inline[^>]*latex="([^"]*)"[^>]*>[\s\S]*?<\/math-inline>/gi, '$$$1$$')
       .replace(/<span[^>]*data-type="math"[^>]*data-latex="([^"]*)"[^>]*>[\s\S]*?<\/span>/gi, '$$$1$$');
 
+    // Replace relative /uploads/ image sources with absolute backend URL for reliable rendering
+    const apiBase = typeof window !== 'undefined'
+      ? (process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, '') : 'https://api.toan6789.vn')
+      : (process.env.BACKEND_URL || 'https://api.toan6789.vn');
+
+    processed = processed.replace(/<img([^>]+)src=["'](\/uploads\/[^"']+)["']/gi, (match, before, srcPath) => {
+      const fullUrl = `${apiBase.replace(/\/+$/, '')}/${srcPath.replace(/^\/+/, '')}`;
+      return `<img${before}src="${fullUrl}"`;
+    });
+
     // Thay thế các công thức $$...$$, \[...\], $...$, \(...\) bằng chuỗi HTML của KaTeX
     return processed.replace(/\$\$([\s\S]*?)\$\$|\\\[([\s\S]*?)\\\]|\$([^$]+)\$|\\\(([\s\S]*?)\\\)/g, (match, b1, b2, i1, i2) => {
       const math = b1 || b2 || i1 || i2;
