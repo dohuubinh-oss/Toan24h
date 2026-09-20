@@ -27,6 +27,15 @@ func (ctrl *LectureController) CreateLecture(c *gin.Context) {
 		return
 	}
 
+	// If AuthorID is not provided, default to authenticated user ID
+	if req.AuthorID == nil || *req.AuthorID == "" {
+		if userIDVal, exists := c.Get("userID"); exists {
+			if uidStr, ok := userIDVal.(string); ok && uidStr != "" {
+				req.AuthorID = &uidStr
+			}
+		}
+	}
+
 	if err := ctrl.service.CreateLecture(c.Request.Context(), req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),

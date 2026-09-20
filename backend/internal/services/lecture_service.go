@@ -31,7 +31,7 @@ type ExerciseRequest struct {
 
 type MethodRequest struct {
 	ID            string           `json:"id"`
-	MethodName    string           `json:"methodName"`
+	MethodName    string           `json:"methodName,omitempty"`
 	MethodContent string           `json:"methodContent"`
 	Exercise      *ExerciseRequest `json:"exercise"`
 	ProblemImage  string           `json:"problemImage"`
@@ -45,11 +45,12 @@ type DangToanRequest struct {
 }
 
 type CreateLectureRequest struct {
-	Title        string             `json:"title"`
-	Grade        string             `json:"grade"`
-	Category     string             `json:"category"`
-	BasicConcept string             `json:"basicConcept"`
-	Examples     []DangToanRequest  `json:"examples"`
+	Title        string            `json:"title"`
+	Grade        string            `json:"grade"`
+	Category     string            `json:"category"`
+	BasicConcept string            `json:"basicConcept"`
+	Examples     []DangToanRequest `json:"examples"`
+	AuthorID     *string           `json:"authorId,omitempty"`
 }
 
 type PaginatedLectures struct {
@@ -169,6 +170,13 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 	lectureID := uuid.New()
 	processedConcept, examplesStr := processLectureImagesAndSerialize(req.Grade, req.BasicConcept, req.Examples)
 
+	var authorUUID *uuid.UUID
+	if req.AuthorID != nil && *req.AuthorID != "" {
+		if uid, err := uuid.Parse(*req.AuthorID); err == nil {
+			authorUUID = &uid
+		}
+	}
+
 	// Mapping DTO to Model
 	lecture := &models.Lecture{
 		ID:           lectureID,
@@ -177,6 +185,7 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		Category:     req.Category,
 		BasicConcept: processedConcept,
 		Examples:     examplesStr,
+		AuthorID:     authorUUID,
 	}
 
 	return s.repo.CreateLecture(ctx, lecture)
@@ -213,6 +222,11 @@ func (s *lectureService) UpdateLecture(ctx context.Context, id string, req Creat
 	lecture.Category = req.Category
 	lecture.BasicConcept = processedConcept
 	lecture.Examples = examplesStr
+	if req.AuthorID != nil && *req.AuthorID != "" {
+		if uid, err := uuid.Parse(*req.AuthorID); err == nil {
+			lecture.AuthorID = &uid
+		}
+	}
 
 	return s.repo.UpdateLecture(ctx, lecture)
 }
