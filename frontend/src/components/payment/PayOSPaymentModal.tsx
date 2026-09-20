@@ -283,7 +283,40 @@ export default function PayOSPaymentModal({
 
         {/* Modal Footer */}
         <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Hệ thống PayOS tự động kích hoạt sau vài giây. Không cần tải lại trang.</span>
+          <div className="flex items-center gap-3">
+            <span>Hệ thống PayOS tự động kích hoạt sau vài giây.</span>
+            {/* Dev Mock Simulation Button */}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  toast.loading('Đang giả lập thanh toán...', { id: 'mock-pay' })
+                  await apiFetch('/webhooks/payos', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      code: '00',
+                      desc: 'success',
+                      data: {
+                        orderCode: paymentData.orderCode,
+                        amount: paymentData.amount,
+                        description: content,
+                        code: '00',
+                        desc: 'success',
+                      },
+                      signature: 'mock_dev_signature',
+                    }),
+                  })
+                  toast.success('Đã gửi webhook PayOS thành công!', { id: 'mock-pay' })
+                } catch (e: any) {
+                  toast.error(`Lỗi mock: ${e.message}`, { id: 'mock-pay' })
+                }
+              }}
+              className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold rounded-lg transition-colors border border-amber-300 flex items-center gap-1 cursor-pointer"
+              title="Click để kích hoạt webhook giả lập PayOS mà không cần chuyển khoản thật"
+            >
+              <span>⚡ Test giả lập PayOS (Dev)</span>
+            </button>
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -296,3 +329,4 @@ export default function PayOSPaymentModal({
     </div>
   )
 }
+
