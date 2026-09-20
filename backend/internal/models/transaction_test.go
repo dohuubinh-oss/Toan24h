@@ -69,9 +69,13 @@ func TestTransactionModel_CRUD(t *testing.T) {
 
 	// 2. Create Transaction
 	tx := models.Transaction{
-		UserID: u.ID,
-		Amount: 450000,
-		Plan:   "3_months",
+		UserID:        u.ID,
+		OrderCode:     1710900000000,
+		Amount:        450000,
+		Plan:          "3_months",
+		PaymentLinkID: "link_123456",
+		CheckoutURL:   "https://pay.payos.vn/web/123456",
+		QRCode:        "00020101021238540010A000000727...",
 	}
 
 	res := db.Create(&tx)
@@ -83,7 +87,20 @@ func TestTransactionModel_CRUD(t *testing.T) {
 		t.Errorf("Expected UUID to be generated, got empty")
 	}
 
+	if tx.OrderCode != 1710900000000 {
+		t.Errorf("Expected OrderCode 1710900000000, got %v", tx.OrderCode)
+	}
+
 	if tx.Status != "pending" {
 		t.Errorf("Expected default status pending, got %v", tx.Status)
 	}
+
+	var found models.Transaction
+	if err := db.First(&found, "order_code = ?", 1710900000000).Error; err != nil {
+		t.Fatalf("Failed to query transaction by order_code: %v", err)
+	}
+	if found.PaymentLinkID != "link_123456" || found.CheckoutURL != "https://pay.payos.vn/web/123456" {
+		t.Errorf("Mismatch in PayOS link fields: %+v", found)
+	}
 }
+
