@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { Settings2, ChevronDown } from 'lucide-react'
+import { Settings2, ChevronDown, BookOpen, PenTool } from 'lucide-react'
 import { Card, CardHeader, CardContent } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
@@ -41,7 +41,7 @@ const TOPIC_MAPPING: Record<string, string[]> = {
 };
 
 export default function LectureBasicSettings() {
-  const { title, setTitle, grade, setGrade, category, setCategory } = useLectureCreator()
+  const { contentType, setContentType, title, setTitle, grade, setGrade, category, setCategory } = useLectureCreator()
 
   return (
     <>
@@ -53,10 +53,46 @@ export default function LectureBasicSettings() {
           </h3>
         </CardHeader>
         <CardContent className="p-5 space-y-5">
+          {/* Content Type Selector */}
           <div className="space-y-2">
-            <Label>Tên bài giảng</Label>
+            <Label className="text-xs uppercase tracking-wider text-slate-500 font-bold">Loại nội dung</Label>
+            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100/90 rounded-xl border border-slate-200/80">
+              <button
+                type="button"
+                onClick={() => setContentType('lecture')}
+                className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  contentType === 'lecture'
+                    ? 'bg-white text-blue-700 shadow-sm border border-slate-200/60'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Bài giảng</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setContentType('practice')}
+                className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  contentType === 'practice'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+              >
+                <PenTool className="w-3.5 h-3.5" />
+                <span>Luyện tập / Đề</span>
+              </button>
+            </div>
+            {contentType === 'practice' && (
+              <p className="text-[11px] text-emerald-700 font-medium bg-emerald-50 border border-emerald-200/60 rounded-lg p-2 leading-tight">
+                Chế độ <b>Card Luyện tập & Đề kiểm tra</b>: Phần lý thuyết và dạng toán mẫu sẽ bị vô hiệu hóa. Card này sẽ liên kết trực tiếp với các đề luyện tập.
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>{contentType === 'practice' ? 'Tiêu đề Card Luyện tập / Đề kiểm tra' : 'Tên bài giảng'}</Label>
             <Input
-              placeholder="Nhập tên bài giảng..."
+              placeholder={contentType === 'practice' ? "VD: Ôn tập Chương 1, Đề kiểm tra 15 phút..." : "Nhập tên bài giảng..."}
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}

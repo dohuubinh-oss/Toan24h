@@ -1,12 +1,13 @@
 'use client'
 import React from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, AlertCircle } from 'lucide-react'
 import LectureMediaCard from './LectureMediaCard'
 import { useLectureCreator } from './LectureCreatorContext'
 import DangToanCard from './DangToanCard'
 
 export default function LectureContentEditor() {
   const { 
+    contentType,
     dangToanList,
     setDangToanList,
     removeDangToan
@@ -31,30 +32,44 @@ export default function LectureContentEditor() {
 
   return (
     <div className="space-y-6">
-      <LectureMediaCard />
+      {contentType === 'practice' && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200/80 rounded-2xl flex items-center gap-3 text-emerald-900 text-sm font-medium shadow-sm">
+          <AlertCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+          <span>
+            <b>Đang ở chế độ Card Luyện tập & Đề kiểm tra:</b> Khu vực soạn thảo Lý thuyết và Dạng toán mẫu bên dưới được vô hiệu hóa. Bạn chỉ cần cấu hình Tiêu đề, Khối lớp và Chuyên đề ở khung bên phải để tạo Card.
+          </span>
+        </div>
+      )}
 
-      <div className="flex items-center gap-2 mb-4">
-        <h2 className="text-xl font-bold text-slate-800">2. Phân tích bài tập mẫu</h2>
-      </div>
+      <div className={`space-y-6 transition-opacity duration-300 ${
+        contentType === 'practice' ? 'opacity-35 pointer-events-none select-none filter grayscale-[30%]' : ''
+      }`}>
+        <LectureMediaCard />
 
-      {dangToanList.map((dt, index) => (
-        <DangToanCard
-          key={dt.id}
-          dangToan={dt}
-          index={index}
-          onChange={(updatedDt) => updateDangToan(dt.id, updatedDt)}
-          onRemove={dangToanList.length > 1 ? () => removeDangToan(dt.id) : undefined}
-        />
-      ))}
+        <div className="flex items-center gap-2 mb-4">
+          <h2 className="text-xl font-bold text-slate-800">2. Phân tích bài tập mẫu</h2>
+        </div>
 
-      <div className="flex justify-center mt-6">
-        <button
-          onClick={addDangToan}
-          className="px-6 py-3 bg-white rounded-full shadow-[0_4px_20px_rgb(0,0,0,0.08)] flex items-center justify-center hover:shadow-[0_4px_25px_rgb(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-200 border border-slate-50 gap-2 font-bold text-primary"
-          title="Thêm Dạng Toán mới"
-        >
-          <Plus className="w-5 h-5 stroke-[3]" /> Thêm Dạng Toán Mới
-        </button>
+        {dangToanList.map((dt, index) => (
+          <DangToanCard
+            key={dt.id}
+            dangToan={dt}
+            index={index}
+            onChange={(updatedDt) => updateDangToan(dt.id, updatedDt)}
+            onRemove={dangToanList.length > 1 ? () => removeDangToan(dt.id) : undefined}
+          />
+        ))}
+
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={addDangToan}
+            disabled={contentType === 'practice'}
+            className="px-6 py-3 bg-white rounded-full shadow-[0_4px_20px_rgb(0,0,0,0.08)] flex items-center justify-center hover:shadow-[0_4px_25px_rgb(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-200 border border-slate-50 gap-2 font-bold text-primary disabled:opacity-50"
+            title="Thêm Dạng Toán mới"
+          >
+            <Plus className="w-5 h-5 stroke-[3]" /> Thêm Dạng Toán Mới
+          </button>
+        </div>
       </div>
     </div>
   )
