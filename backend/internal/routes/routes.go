@@ -65,11 +65,25 @@ func SetupRouter() *gin.Engine {
 	ocrController := controllers.NewOCRController()
 	mobileUploadController := controllers.NewMobileUploadController()
 
+	// Services
+	var payosClientID, payosAPIKey, payosChecksumKey string
+	if config.Env != nil {
+		payosClientID = config.Env.PayOSClientID
+		payosAPIKey = config.Env.PayOSAPIKey
+		payosChecksumKey = config.Env.PayOSChecksumKey
+	}
+	payosService := services.NewPayOSService(payosClientID, payosAPIKey, payosChecksumKey)
+
 	// Auth & other Handlers
 	authHandler := handlers.NewAuthHandler(config.DB)
 	userHandler := handlers.NewUserHandler(config.DB)
-	paymentHandler := handlers.NewPaymentHandler(config.DB)
-	webhookHandler := handlers.NewWebhookHandler(config.DB)
+	paymentHandler := handlers.NewPaymentHandler(config.DB, payosService)
+	webhookHandler := handlers.NewWebhookHandler(config.DB, payosService)
+
+	// Direct root Webhook endpoints for external gateways
+	r.POST("/webhook/payos", webhookHandler.HandlePayOSWebhook)
+	r.POST("/webhook/sepay", webhookHandler.HandleSePayWebhook)
+
 
 	// API Version 1 (Public Routes)
 	v1 := r.Group("/api/v1")
@@ -87,7 +101,10 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/auth/verify-otp", authHandler.VerifyOTP)
 		v1.POST("/auth/reset-password", authHandler.ResetPassword)
 
+		// Webhook routes
+		v1.POST("/webhooks/payos", webhookHandler.HandlePayOSWebhook)
 		v1.POST("/webhooks/bank", webhookHandler.HandleSePayWebhook)
+
 
 		// Read-only Public Questions
 		v1.GET("/questions", handlers.GetQuestions)

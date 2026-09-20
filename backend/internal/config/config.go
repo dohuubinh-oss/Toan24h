@@ -19,7 +19,11 @@ type AppConfig struct {
 	SMTPUser      string
 	SMTPPass      string
 	SMTPFrom      string
+	PayOSClientID    string
+	PayOSAPIKey      string
+	PayOSChecksumKey string
 }
+
 
 var Env *AppConfig
 
@@ -67,18 +71,26 @@ func LoadConfig() error {
 		smtpFrom = smtpUser
 	}
 
+	payosClientID := os.Getenv("PAYOS_CLIENT_ID")
+	payosAPIKey := os.Getenv("PAYOS_API_KEY")
+	payosChecksumKey := os.Getenv("PAYOS_CHECKSUM_KEY")
+
 	Env = &AppConfig{
-		Port:          port,
-		DBDSN:         dbDSN,
-		RedisURL:      redisURL,
-		RedisPassword: redisPassword,
-		FrontendURL:   frontendURL,
-		JWTSecret:     jwtSecret,
-		SMTPHost:      smtpHost,
-		SMTPPort:      smtpPort,
-		SMTPUser:      smtpUser,
-		SMTPPass:      smtpPass,
-		SMTPFrom:      smtpFrom,
+		Port:             port,
+		DBDSN:            dbDSN,
+		RedisURL:         redisURL,
+		RedisPassword:    redisPassword,
+		FrontendURL:      frontendURL,
+		JWTSecret:        jwtSecret,
+		SMTPHost:         smtpHost,
+		SMTPPort:         smtpPort,
+		SMTPUser:         smtpUser,
+		SMTPPass:         smtpPass,
+		SMTPFrom:         smtpFrom,
+		PayOSClientID:    payosClientID,
+		PayOSAPIKey:      payosAPIKey,
+		PayOSChecksumKey: payosChecksumKey,
 	}
 	return nil
 }
+

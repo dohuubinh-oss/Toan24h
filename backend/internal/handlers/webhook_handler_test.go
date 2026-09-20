@@ -129,3 +129,88 @@ func TestHandleSePayWebhook(t *testing.T) {
 		t.Errorf("Expected expires at ~%v, got %v", expectedEnd, updatedUser.ExpiresAt)
 	}
 }
+
+func TestHandlePayOSWebhook(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db, cleanup := setupWebhookTestDB(t)
+	defer cleanup()
+
+	// Setup data
+	u := models.User{
+		Email:        "payos_student@example.com",
+		PasswordHash: "hashed",
+		FullName:     "PayOS Student",
+		ExpiresAt:    nil,
+	}
+	db.Create(&u)
+
+	var orderCode int64 = 1710999888777
+	tx := models.Transaction{
+		UserID:    u.ID,
+		OrderCode: orderCode,
+		Amount:    1080000,
+		Plan:      "9_months",
+		Status:    "pending",
+	}
+	db.Create(&tx)
+
+	checksumKey := "0d54020a13ee42a8b9f71c4c8d55a7ee"
+	payosService := handlers.NewPayOSService("client_id", "api_key", checksumKey)
+	webhookHandler := handlers.NewWebhookHandler(db, payosService)
+	router := gin.Default()
+	router.POST("/api/webhook/payos", webhookHandler.HandlePayOSWebhook)
+
+	webhookData := handlers.PayOSWebhookData{
+		OrderCode:           orderCode,
+		Amount:              1080000,
+		Description:         "T24H 1710999888777",
+		AccountNumber:       "1234567890",
+		Reference:           "FT_PAYOS_123",
+		TransactionDateTime: "2026-03-20 15:30:00",
+		Currency:            "VND",
+		PaymentLinkID:       "link_payos_123",
+		Code:                "00",
+		Desc:                "success",
+	}
+
+	sig := payosService.GenerateWebhookDataSignature(webhookData)
+
+	payload := handlers.PayOSWebhookBody{
+		Code:      "00",
+		Desc:      "success",
+		Data:      webhookData,
+		Signature: sig,
+	}
+
+	payloadBytes, _ := json.Marshal(payload)
+	req, _ := http.NewRequest("POST", "/api/webhook/payos", bytes.NewBuffer(payloadBytes))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %v. Body: %v", w.Code, w.Body.String())
+	}
+
+	// Verify Transaction Status
+	var updatedTx models.Transaction
+	db.First(&updatedTx, "order_code = ?", orderCode)
+	if updatedTx.Status != "completed" {
+		t.Errorf("Expected transaction status to be completed, got %v", updatedTx.Status)
+	}
+
+	// Verify User ExpiresAt updated for 9 months
+	var updatedUser models.User
+	db.First(&updatedUser, "id = ?", u.ID)
+	if updatedUser.ExpiresAt == nil {
+		t.Fatalf("Expected user ExpiresAt to be updated, got nil")
+	}
+
+	expectedEnd := time.Now().AddDate(0, 9, 0)
+	diff := updatedUser.ExpiresAt.Sub(expectedEnd)
+	if diff < -time.Minute || diff > time.Minute {
+		t.Errorf("Expected expires at ~%v, got %v", expectedEnd, updatedUser.ExpiresAt)
+	}
+}
+
