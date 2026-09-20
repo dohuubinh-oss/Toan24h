@@ -1,10 +1,15 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"gorm.io/gorm"
 )
@@ -156,3 +161,64 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 		},
 	})
 }
+
+// UploadAvatar xử lý tải ảnh đại diện của người dùng và cập nhật vào profile
+func (h *UserHandler) UploadAvatar(c *gin.Context) {
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded"})
+		return
+	}
+
+	// Max 5MB
+	if file.Size > 5*1024*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File size exceeds 5MB limit"})
+		return
+	}
+
+	// Validate format
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file format, only jpg, jpeg, png, webp allowed"})
+		return
+	}
+
+	// Create directory if not exists
+	avatarDir := "./uploads/avatars"
+	if err := os.MkdirAll(avatarDir, os.ModePerm); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create avatars directory"})
+		return
+	}
+
+	newFileName := uuid.New().String() + ext
+	dst := filepath.Join(avatarDir, newFileName)
+	if err := c.SaveUploadedFile(file, dst); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save avatar file"})
+		return
+	}
+
+	avatarURL := fmt.Sprintf("/uploads/avatars/%s", newFileName)
+
+	if h.db != nil {
+		var user models.User
+		if err := h.db.Where("id = ?", userIDStr).First(&user).Error; err == nil {
+			user.TelegramAvt = &avatarURL
+			h.db.Save(&user)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Avatar uploaded successfully",
+		"data": gin.H{
+			"avatarUrl": avatarURL,
+		},
+	})
+}
+
