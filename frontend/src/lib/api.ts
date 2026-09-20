@@ -564,4 +564,15 @@ export async function getWeeklyLeaderboard(grade?: string): Promise<any> {
   }
 }
 
+export async function uploadUserAvatar(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await apiFetch('/users/me/avatar', {
+    method: 'POST',
+    body: formData,
+  });
+  return res.data?.avatarUrl || res.avatarUrl;
+}
+
+
 

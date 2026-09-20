@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   User,
@@ -16,9 +16,11 @@ import {
   Eye,
   EyeOff,
   Lock,
+  Camera,
+  Loader2,
 } from 'lucide-react'
 import TelegramLoginWidget from '@/components/auth/TelegramLoginWidget'
-import { apiFetch } from '@/lib/api'
+import { apiFetch, uploadUserAvatar } from '@/lib/api'
 import { logout } from '@/lib/authApi'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -44,14 +46,48 @@ export default function ProfilePage() {
   const [isUpdatingGrade, setIsUpdatingGrade] = useState(false)
   const [linkStatus, setLinkStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  // Change password states
-  const [showPasswordSection, setShowPasswordSection] = useState(false)
-  const [currentPassword, setCurrentPassword] = useState('')
+  // Change password states (inline row)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Max 5MB, images only
+    if (!file.type.startsWith('image/')) {
+      toast.error('Vui lòng chọn file hình ảnh (JPG, PNG, WEBP, GIF)')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Dung lượng ảnh tối đa là 5MB')
+      return
+    }
+
+    setIsUploadingAvatar(true)
+    try {
+      const avatarUrl = await uploadUserAvatar(file)
+      if (avatarUrl && user) {
+        const updated = { ...user, telegramAvt: avatarUrl }
+        setUser(updated)
+        localStorage.setItem('user', JSON.stringify(updated))
+        toast.success('Cập nhật ảnh đại diện thành công!')
+      }
+    } catch (err: any) {
+      console.error('Avatar upload error:', err)
+      toast.error(err.message || 'Không thể tải lên ảnh đại diện')
+    } finally {
+      setIsUploadingAvatar(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
 
   // 1. Instant hydration from cached localStorage user
   useEffect(() => {
@@ -141,6 +177,16 @@ export default function ProfilePage() {
         telegramAvt: tgAvt,
       }
 
+      // Check if user is already updated from backend bot poller
+      const freshUserRes = await apiFetch('/users/me')
+      if (freshUserRes && freshUserRes.data && (freshUserRes.data.telegramId || freshUserRes.data.telegramUsername)) {
+        setUser(freshUserRes.data)
+        localStorage.setItem('user', JSON.stringify(freshUserRes.data))
+        setLinkStatus({ type: 'success', message: 'Liên kết Telegram thành công!' })
+        toast.success('Liên kết Telegram thành công!')
+        return
+      }
+
       const res = await apiFetch('/users/me/link-telegram', {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -159,6 +205,17 @@ export default function ProfilePage() {
         toast.error(res?.error || 'Liên kết thất bại')
       }
     } catch (e: any) {
+      // If error occurred, attempt to fetch user one more time in case it actually succeeded on backend
+      try {
+        const checkRes = await apiFetch('/users/me')
+        if (checkRes && checkRes.data && (checkRes.data.telegramId || checkRes.data.telegramUsername)) {
+          setUser(checkRes.data)
+          localStorage.setItem('user', JSON.stringify(checkRes.data))
+          setLinkStatus({ type: 'success', message: 'Liên kết Telegram thành công!' })
+          toast.success('Liên kết Telegram thành công!')
+          return
+        }
+      } catch {}
       setLinkStatus({ type: 'error', message: e.message || 'Lỗi kết nối máy chủ' })
       toast.error(e.message || 'Lỗi kết nối máy chủ')
     }
@@ -181,22 +238,19 @@ export default function ProfilePage() {
       const res = await apiFetch('/users/me/password', {
         method: 'PUT',
         body: JSON.stringify({
-          currentPassword,
           newPassword,
         }),
       })
 
       if (res && res.message) {
         toast.success(res.message || 'Đổi mật khẩu thành công!')
-        setCurrentPassword('')
         setNewPassword('')
         setConfirmPassword('')
-        setShowPasswordSection(false)
       } else if (res && res.error) {
         toast.error(res.error)
       }
     } catch (err: any) {
-      toast.error(err.message || 'Không thể đổi mật khẩu. Vui lòng kiểm tra lại mật khẩu hiện tại.')
+      toast.error(err.message || 'Không thể đổi mật khẩu. Vui lòng thử lại sau.')
     } finally {
       setIsSubmittingPassword(false)
     }
@@ -263,17 +317,59 @@ export default function ProfilePage() {
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm mb-8">
         {/* User Header */}
         <div className="flex items-center gap-6 pb-8 border-b border-slate-100 flex-wrap">
-          {user.telegramAvt ? (
-            <img
-              src={user.telegramAvt}
-              alt={user.fullName}
-              className="w-20 h-20 rounded-full object-cover shadow-sm border-2 border-primary/20 shrink-0"
+          <div className="relative group shrink-0">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleAvatarFileSelect}
+              accept="image/png, image/jpeg, image/webp, image/gif"
+              className="hidden"
             />
-          ) : (
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-black uppercase shrink-0 shadow-md shadow-blue-500/20">
-              {user.fullName ? user.fullName.charAt(0) : <User size={40} />}
-            </div>
-          )}
+            {user.telegramAvt ? (
+              <img
+                src={user.telegramAvt}
+                alt={user.fullName}
+                className="w-20 h-20 rounded-full object-cover shadow-sm border-2 border-primary/20 shrink-0"
+              />
+            ) : (
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-black uppercase shrink-0 shadow-md shadow-blue-500/20">
+                {user.fullName ? user.fullName.charAt(0) : <User size={40} />}
+              </div>
+            )}
+
+            {/* Upload Button Overlay */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="absolute inset-0 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer backdrop-blur-[1px] disabled:cursor-not-allowed"
+              title="Thay đổi ảnh đại diện"
+            >
+              {isUploadingAvatar ? (
+                <Loader2 className="w-6 h-6 animate-spin text-white" />
+              ) : (
+                <>
+                  <Camera className="w-5 h-5 mb-0.5" />
+                  <span className="text-[10px] font-semibold">Đổi ảnh</span>
+                </>
+              )}
+            </button>
+
+            {/* Mini Camera Badge for Mobile/Touch Visibility */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="absolute -bottom-1 -right-1 p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-md border-2 border-white transition-colors cursor-pointer sm:hidden"
+              title="Đổi ảnh"
+            >
+              {isUploadingAvatar ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Camera className="w-3.5 h-3.5" />
+              )}
+            </button>
+          </div>
 
           <div className="flex-1 min-w-[220px]">
             <div className="flex items-center gap-2.5 flex-wrap mb-1">
@@ -319,7 +415,14 @@ export default function ProfilePage() {
 
             <button
               onClick={() => router.push('/upgrade')}
-              className="mt-1 w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+              className={`mt-1 w-full py-2 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer ${
+                user.role !== 'admin' &&
+                user.role !== 'teacher' &&
+                (!user.expiresAt ||
+                  Math.ceil((new Date(user.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) <= 10)
+                  ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 shadow-red-500/20'
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+              }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Gia hạn</span>
@@ -382,105 +485,63 @@ export default function ProfilePage() {
               <Shield className="text-primary" size={20} />
               Bảo mật & Liên kết
             </h3>
-            <button
-              type="button"
-              onClick={() => setShowPasswordSection(!showPasswordSection)}
-              className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors cursor-pointer"
-            >
-              <KeyRound className="w-4 h-4" />
-              <span>{showPasswordSection ? 'Ẩn đổi mật khẩu' : 'Đổi mật khẩu'}</span>
-            </button>
           </div>
 
-          {/* Change Password Form (Collapsible) */}
-          {showPasswordSection && (
-            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200/80 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="flex items-center gap-2.5 mb-4">
-                <Lock className="w-5 h-5 text-blue-600" />
-                <h4 className="font-bold text-slate-900 text-base">Cập nhật Mật khẩu mới</h4>
+          {/* Change Password Inline Row (2 inputs + 1 button on 1 horizontal row) */}
+          <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200/80">
+            <div className="flex items-center gap-2 mb-3">
+              <KeyRound className="w-4 h-4 text-blue-600" />
+              <h4 className="font-bold text-slate-800 text-sm">Đổi mật khẩu tài khoản</h4>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="relative flex-1">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Mật khẩu mới (tối thiểu 6 ký tự)"
+                  required
+                  minLength={6}
+                  className="w-full px-3.5 py-2.5 pr-10 text-xs sm:text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  {showNewPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
               </div>
 
-              <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Mật khẩu hiện tại
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showCurrentPassword ? 'text' : 'password'}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="Nhập mật khẩu hiện tại (nếu có)"
-                      className="w-full px-3.5 py-2 pr-10 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </div>
+              <div className="relative flex-1">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Xác nhận mật khẩu mới"
+                  required
+                  minLength={6}
+                  className="w-full px-3.5 py-2.5 pr-10 text-xs sm:text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Mật khẩu mới (tối thiểu 6 ký tự)
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showNewPassword ? 'text' : 'password'}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Nhập mật khẩu mới"
-                      required
-                      minLength={6}
-                      className="w-full px-3.5 py-2 pr-10 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    Xác nhận mật khẩu mới
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Nhập lại mật khẩu mới"
-                    required
-                    minLength={6}
-                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-1">
-                  <button
-                    type="submit"
-                    disabled={isSubmittingPassword}
-                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm disabled:opacity-50 cursor-pointer"
-                  >
-                    {isSubmittingPassword ? 'Đang cập nhật...' : 'Lưu mật khẩu mới'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswordSection(false)}
-                    className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs rounded-xl transition-all cursor-pointer"
-                  >
-                    Hủy
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+              <button
+                type="submit"
+                disabled={isSubmittingPassword}
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm shrink-0 disabled:opacity-50 cursor-pointer"
+              >
+                {isSubmittingPassword ? 'Đang lưu...' : 'Lưu mật khẩu'}
+              </button>
+            </form>
+          </div>
 
           {/* Telegram Linking Card */}
           <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200/70">
@@ -488,7 +549,7 @@ export default function ProfilePage() {
               <div>
                 <h4 className="font-bold text-slate-900 text-base">Tài khoản Telegram</h4>
                 <p className="text-slate-500 text-xs mt-1 max-w-md">
-                  Liên kết tài khoản Telegram để đăng nhập nhanh bằng điện thoại, nhận bài tập và thông báo điểm số tự động.
+                  Liên kết tài khoản Telegram để nhận bài tập và thông báo điểm số tự động.
                 </p>
               </div>
 

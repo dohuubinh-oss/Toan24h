@@ -5,6 +5,13 @@ import Link from 'next/link'
 import { toggleBookmark as toggleBookmarkApi, getBookmarkedLectures } from '@/lib/bookmarkApi'
 import { toast } from '@/components/ui/ToastProvider'
 
+export interface LectureAuthor {
+  id?: string;
+  fullName?: string;
+  telegramAvt?: string;
+  role?: string;
+}
+
 interface LectureHeaderProps {
   initialBookmarked?: boolean;
   title: string;
@@ -12,9 +19,10 @@ interface LectureHeaderProps {
   category: string;
   createdAt: string;
   id?: string;
+  author?: LectureAuthor;
 }
 
-export default function LectureHeader({ initialBookmarked = false, title, grade, category, createdAt, id }: LectureHeaderProps) {
+export default function LectureHeader({ initialBookmarked = false, title, grade, category, createdAt, id, author }: LectureHeaderProps) {
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -57,6 +65,9 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
     }
   };
 
+  const authorName = author?.fullName?.trim() ? author.fullName : 'Nhóm Toan6789'
+  const authorAvt = author?.telegramAvt || (author?.fullName ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(author.fullName)}` : null)
+
   return (
     <div className="space-y-8">
       {/* Breadcrumbs */}
@@ -76,14 +87,18 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
             <div className="flex items-center gap-2">
-              <div 
-                className="size-6 rounded-full bg-slate-200" 
-                style={{
-                  backgroundImage: "url('https://api.dicebear.com/7.x/avataaars/svg?seed=Teacher')",
-                  backgroundSize: 'cover'
-                }}
-              ></div>
-              <span className="font-semibold text-slate-700">Thầy Nguyễn Văn A</span>
+              {authorAvt ? (
+                <img
+                  src={authorAvt}
+                  alt={authorName}
+                  className="size-6 rounded-full object-cover border border-slate-200"
+                />
+              ) : (
+                <div className="size-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">
+                  T
+                </div>
+              )}
+              <span className="font-semibold text-slate-700">{authorName}</span>
             </div>
             <span>•</span>
             <div className="flex items-center gap-1">

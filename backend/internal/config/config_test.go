@@ -18,6 +18,7 @@ func TestLoadConfig_Success(t *testing.T) {
 	os.Setenv("DB_DSN", "dummy-dsn")
 	os.Setenv("PORT", "9090")
 	os.Setenv("REDIS_URL", "dummy-redis")
+	os.Setenv("JWT_SECRET", "test-secret-key-12345")
 
 	err := LoadConfig()
 	if err != nil {

@@ -24,6 +24,13 @@ export interface BackendLectureExample {
   updatedAt: string;
 }
 
+export interface BackendLectureAuthor {
+  id: string;
+  fullName: string;
+  telegramAvt?: string;
+  role?: string;
+}
+
 export interface BackendLecture {
   id: string;
   title: string;
@@ -32,6 +39,8 @@ export interface BackendLecture {
   basicConcept: string;
   practiceIds: string; // JSON string array
   examples: string; // JSON string array of DangToanItem
+  authorId?: string;
+  author?: BackendLectureAuthor;
   createdAt: string;
   updatedAt: string;
 }
