@@ -29,9 +29,62 @@ function QuestionEditorSection({
     }
   };
 
+  const isGroup = currentBlock?.is_group === true || currentQuestion?.type_question === 'group';
 
+  // Helper to check if a multiple-choice option is selected as correct
+  const isOptionSelected = (optLetter: string, optValue: string, optIdx: number) => {
+    if (!currentQuestion?.correct_answer) return false;
+    const ans = currentQuestion.correct_answer.trim();
+    if (!ans) return false;
 
-  const isGroup = currentBlock?.is_group === true;
+    // 1. Match letter 'A', 'B', 'C', 'D' or 'A.', 'B.', etc.
+    if (ans.toUpperCase() === optLetter || ans.toUpperCase() === `${optLetter}.`) {
+      return true;
+    }
+
+    // 2. Match 0-based index '0', '1', '2', '3'
+    if (ans === optIdx.toString()) {
+      return true;
+    }
+
+    // 3. Match exact content (if option has content)
+    if (optValue && (ans === optValue || ans === optValue.trim())) {
+      return true;
+    }
+
+    // 4. Match stripped HTML content
+    const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, '').trim();
+    const cleanAns = stripHtml(ans);
+    const cleanOpt = stripHtml(optValue);
+    if (cleanOpt && cleanAns && cleanAns === cleanOpt) {
+      return true;
+    }
+
+    return false;
+  };
+
+  // Handler when selecting an option as correct
+  const handleSelectCorrectOption = (optLetter: string, optIdx: number) => {
+    const currentOptValue = currentQuestion?.options?.[optIdx] || '';
+    // If option has non-empty text, use that text; otherwise use the letter (A, B, C, D)
+    const targetValue = currentOptValue.trim() !== '' ? currentOptValue : optLetter;
+    updateQuestion('correct_answer', targetValue);
+  };
+
+  // Handler when option content changes
+  const handleOptionContentChange = (val: string, optLetter: string, optIdx: number) => {
+    const currentOptValue = currentQuestion?.options?.[optIdx] || '';
+    const wasSelected = isOptionSelected(optLetter, currentOptValue, optIdx);
+
+    const newOptions = [...(currentQuestion?.options || ['', '', '', ''])];
+    newOptions[optIdx] = val;
+    updateQuestion('options', newOptions);
+
+    // If this option was selected as the correct answer, keep correct_answer in sync
+    if (wasSelected) {
+      updateQuestion('correct_answer', val.trim() !== '' ? val : optLetter);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -64,13 +117,13 @@ function QuestionEditorSection({
           </h2>
           <div className="bg-slate-100 p-1 rounded-xl flex">
             <button
-              className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${!isEssay ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-5 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${!isEssay ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
               onClick={() => handleSetEssay(false)}
             >
               Trắc nghiệm
             </button>
             <button
-              className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${isEssay ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-5 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer ${isEssay ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
               onClick={() => handleSetEssay(true)}
             >
               Tự luận
@@ -82,59 +135,61 @@ function QuestionEditorSection({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {['A', 'B', 'C', 'D'].map((opt, idx) => {
               const currentOptValue = currentQuestion?.options?.[idx] || '';
-              const isSelected = currentQuestion?.correct_answer === currentOptValue && currentOptValue !== '';
+              const isSelected = isOptionSelected(opt, currentOptValue, idx);
               
               return (
-              <div key={opt} className="flex items-center gap-4 group">
-                <div className="flex-shrink-0">
-                  <input
-                    className="w-6 h-6 text-primary border-slate-300 focus:ring-primary rounded-full"
-                    name="correct-ans"
-                    type="radio"
-                    checked={isSelected}
-                    onChange={() => updateQuestion('correct_answer', currentOptValue)}
-                  />
-                </div>
-                <div
-                  onClick={() => updateQuestion('correct_answer', currentOptValue)}
-                  className={`flex-grow flex items-center rounded-2xl px-4 py-2.5 transition-all cursor-text ${isSelected
-                      ? 'bg-white border-[1.5px] border-primary/50 ring-[3px] ring-primary/10 shadow-sm'
-                      : 'bg-[#F8FAFC] border border-slate-100 hover:border-slate-200/80 focus-within:bg-white focus-within:border-primary/30 focus-within:shadow-sm'
-                    }`}
+                <div 
+                  key={opt} 
+                  className={`flex items-start gap-3.5 p-3 rounded-2xl border transition-all ${
+                    isSelected
+                      ? 'bg-primary/5 border-primary ring-2 ring-primary/20 shadow-sm'
+                      : 'bg-[#F8FAFC] border-slate-200/80 hover:border-slate-300'
+                  }`}
                 >
-                  <span className={`font-bold mr-3 text-sm ${isSelected ? 'text-primary' : 'text-slate-400'}`}>
-                    {opt}.
-                  </span>
-                  <div className="flex-grow">
+                  <div className="flex items-center gap-2 pt-2 shrink-0">
+                    <input
+                      id={`opt-radio-${opt}`}
+                      className="w-5 h-5 text-primary border-slate-300 focus:ring-primary rounded-full cursor-pointer"
+                      name="correct-ans"
+                      type="radio"
+                      checked={isSelected}
+                      onChange={() => handleSelectCorrectOption(opt, idx)}
+                    />
+                    <label 
+                      htmlFor={`opt-radio-${opt}`}
+                      onClick={() => handleSelectCorrectOption(opt, idx)}
+                      className={`font-black text-sm px-2.5 py-1 rounded-lg cursor-pointer transition-colors ${
+                        isSelected 
+                          ? 'bg-primary text-white shadow-xs' 
+                          : 'bg-slate-200/80 text-slate-700 hover:bg-primary/10 hover:text-primary'
+                      }`}
+                    >
+                      {opt}.
+                    </label>
+                  </div>
+                  <div className="flex-grow bg-white rounded-xl border border-slate-200/70 p-1 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20">
                     <RichTextEditor
                       inline={true}
                       hideToolbar={true}
                       placeholder={`Nhập đáp án ${opt}...`}
                       content={currentOptValue}
-                      onChange={(val) => {
-                        const newOptions = [...(currentQuestion?.options || ['', '', '', ''])];
-                        const oldVal = newOptions[idx];
-                        newOptions[idx] = val;
-                        updateQuestion('options', newOptions);
-                        
-                        // Update correct_answer if the changed option was the correct one
-                        if (currentQuestion?.correct_answer === oldVal && oldVal !== '') {
-                           updateQuestion('correct_answer', val);
-                        }
-                      }}
+                      onChange={(val) => handleOptionContentChange(val, opt, idx)}
                     />
                   </div>
                 </div>
-              </div>
-            )})}
+              );
+            })}
           </div>
         ) : (
-          <RichTextEditor
-            hideToolbar={true}
-            inline={true}
-            content={currentQuestion?.correct_answer || ''}
-            onChange={(val) => updateQuestion('correct_answer', val)}
-          />
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label className="text-xs font-bold text-slate-600 block mb-2">Đáp án / Lời giải mẫu tự luận</label>
+            <RichTextEditor
+              hideToolbar={true}
+              inline={true}
+              content={currentQuestion?.correct_answer || ''}
+              onChange={(val) => updateQuestion('correct_answer', val)}
+            />
+          </div>
         )}
       </div>
 
