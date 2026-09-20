@@ -71,19 +71,6 @@ function UsersPageContent() {
     }
   }
 
-  const handleRecharge = async (id: string, name: string, months: number) => {
-    try {
-      await apiFetch(`/users/${id}/recharge`, {
-        method: 'POST',
-        body: JSON.stringify({ months })
-      });
-      toast.success(`Đã gia hạn thêm ${months} tháng cho ${name}`);
-      fetchUsers();
-    } catch (err: any) {
-      toast.error(`Lỗi nạp tiền: ${err.message}`);
-    }
-  }
-
   // Paginate locally for now (can be moved to server-side if needed)
   const itemsPerPage = 10
   const totalItems = users.length
@@ -100,8 +87,9 @@ function UsersPageContent() {
         {loading ? (
           <div className="p-8 text-center text-slate-500">Đang tải dữ liệu...</div>
         ) : (
-          <UserTable users={paginatedUsers} onSoftDelete={handleSoftDelete} onRecharge={handleRecharge} />
+          <UserTable users={paginatedUsers} onSoftDelete={handleSoftDelete} />
         )}
+
         
         {!loading && totalItems > 0 && (
           <div className="pt-0">
