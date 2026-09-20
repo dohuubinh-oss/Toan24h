@@ -1,7 +1,23 @@
+'use client'
+
 import React from 'react'
-import { CheckCircle2, XCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { CheckCircle2, XCircle, Sparkles } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 
 export default function HomePricing() {
+  const router = useRouter()
+
+  const handleSelectPlan = (planId?: string) => {
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+    if (!userStr) {
+      toast.error('Vui lòng đăng nhập để nâng cấp gói học')
+      router.push('/login?redirect=/upgrade')
+      return
+    }
+    router.push('/upgrade')
+  }
+
   return (
     <section className="py-24">
       <div className="max-w-7xl mx-auto px-6">
@@ -13,7 +29,7 @@ export default function HomePricing() {
               <div className="w-5 h-5 bg-primary rounded-full translate-x-7"></div>
             </button>
             <span className="text-sm font-bold uppercase text-slate-900">
-              Hàng năm <span className="text-primary">(Tiết kiệm 20%)</span>
+              Hàng năm <span className="text-primary">(Tiết kiệm 50%)</span>
             </span>
           </div>
         </div>
@@ -47,22 +63,26 @@ export default function HomePricing() {
                 <span className="line-through text-slate-500">Lộ trình học cá nhân hóa</span>
               </li>
             </ul>
-            <button className="w-full py-4 rounded-xl border-2 border-slate-200 font-bold hover:bg-primary hover:text-white hover:border-primary transition-all text-slate-700">
+            <button
+              onClick={() => handleSelectPlan('free')}
+              className="w-full py-4 rounded-xl border-2 border-slate-200 font-bold hover:bg-primary hover:text-white hover:border-primary transition-all text-slate-700 cursor-pointer"
+            >
               Đăng ký ngay
             </button>
           </div>
 
           {/* Gói Pro */}
           <div className="relative bg-white p-10 rounded-[2rem] border-2 border-primary shadow-[0_10px_30px_-10px_rgba(37,99,235,0.12)] flex flex-col h-full">
-            <div className="absolute -top-4 right-8 bg-primary text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase">
-              Được chọn nhiều nhất
+            <div className="absolute -top-4 right-8 bg-primary text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Được chọn nhiều nhất</span>
             </div>
             <div className="mb-8">
-              <h3 className="text-2xl font-bold mb-2 text-slate-900">Gói Pro</h3>
+              <h3 className="text-2xl font-bold mb-2 text-slate-900">Gói Pro (VIP)</h3>
               <p className="text-slate-500">Tối ưu điểm số cùng chuyên gia AI</p>
             </div>
             <div className="mb-8 flex items-baseline gap-1">
-              <span className="text-5xl font-bold text-slate-900">199k</span>
+              <span className="text-5xl font-bold text-slate-900">150k</span>
               <span className="text-slate-500">/tháng</span>
             </div>
             <ul className="space-y-4 mb-10 flex-grow">
@@ -87,8 +107,11 @@ export default function HomePricing() {
                 <span className="text-slate-700">Hỗ trợ 1:1 qua hotline VIP</span>
               </li>
             </ul>
-            <button className="w-full py-4 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-              Nâng cấp Pro ngay
+            <button
+              onClick={() => handleSelectPlan('pro')}
+              className="w-full py-4 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all cursor-pointer"
+            >
+              Nâng cấp Pro ngay (PayOS)
             </button>
           </div>
         </div>

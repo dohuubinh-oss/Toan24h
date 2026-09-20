@@ -1,23 +1,20 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   CheckCircle2,
   QrCode,
   Loader2,
   AlertCircle,
-  Copy,
-  Check,
-  X,
   Sparkles,
   ShieldCheck,
   Zap,
-  Clock,
   HelpCircle,
 } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { toast } from 'react-hot-toast'
+import PayOSPaymentModal, { PayOSPaymentData } from '@/components/payment/PayOSPaymentModal'
 
 interface Plan {
   id: string
@@ -106,23 +103,23 @@ export default function UpgradePage() {
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Transaction state for modal
-  const [transaction, setTransaction] = useState<{
-    transactionId: string
-    amount: number
-    content: string
-  } | null>(null)
-  const [isPaymentSuccess, setIsPaymentSuccess] = useState(false)
-  const [copiedField, setCopiedField] = useState<string | null>(null)
-  const [qrImageError, setQrImageError] = useState(false)
+  // PayOS Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [paymentData, setPaymentData] = useState<PayOSPaymentData | null>(null)
 
-  // Handle Payment Creation
+  // Handle Payment Creation with Auth Check
   const handleCreatePayment = async (plan: Plan) => {
+    // 1. Check Auth
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+    if (!userStr) {
+      toast.error('Vui lòng đăng nhập để nâng cấp gói học')
+      router.push('/login?redirect=/upgrade')
+      return
+    }
+
     setSelectedPlan(plan)
     setLoadingPlanId(plan.id)
     setError(null)
-    setQrImageError(false)
-    setIsPaymentSuccess(false)
 
     try {
       const res = await apiFetch('/payments/create', {
@@ -131,18 +128,32 @@ export default function UpgradePage() {
       })
 
       if (res && res.error) {
+        if (res.error.includes('Unauthorized') || res.error.includes('401')) {
+          toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+          router.push('/login?redirect=/upgrade')
+          return
+        }
         setError(res.error)
         toast.error(res.error)
         return
       }
 
       const txData = res?.transactionId ? res : res?.data
-      if (txData && txData.transactionId) {
-        setTransaction({
+      if (txData && (txData.transactionId || txData.orderCode)) {
+        setPaymentData({
           transactionId: txData.transactionId,
+          orderCode: txData.orderCode,
           amount: txData.amount,
-          content: txData.content || `T24H ${txData.transactionId}`,
+          plan: txData.plan,
+          planName: plan.name,
+          qrCode: txData.qrCode,
+          checkoutUrl: txData.checkoutUrl,
+          accountNumber: txData.accountNumber,
+          accountName: txData.accountName,
+          bin: txData.bin,
+          content: txData.content || `T24H ${txData.orderCode || txData.transactionId}`,
         })
+        setIsModalOpen(true)
       } else {
         toast.error('Không thể tạo mã thanh toán. Vui lòng đăng nhập lại.')
       }
@@ -153,55 +164,6 @@ export default function UpgradePage() {
       setLoadingPlanId(null)
     }
   }
-
-  // Poll transaction status
-  useEffect(() => {
-    if (!transaction || isPaymentSuccess) return
-
-    const interval = setInterval(async () => {
-      try {
-        const res = await apiFetch('/payments/my-transactions')
-        const transactions = Array.isArray(res) ? res : res?.data
-        if (Array.isArray(transactions)) {
-          const tx = transactions.find((t: any) => t.id === transaction.transactionId)
-          if (tx && tx.status === 'completed') {
-            setIsPaymentSuccess(true)
-            toast.success('🎉 Thanh toán thành công! Tài khoản của bạn đã được gia hạn.')
-            setTimeout(() => {
-              router.push('/profile?upgraded=true')
-            }, 2500)
-          }
-        }
-      } catch (e) {
-        console.error('Polling error', e)
-      }
-    }, 3500)
-
-    return () => clearInterval(interval)
-  }, [transaction, isPaymentSuccess, router])
-
-  const copyToClipboard = (text: string, fieldName: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedField(fieldName)
-    toast.success(`Đã sao chép ${fieldName}`)
-    setTimeout(() => setCopiedField(null), 2000)
-  }
-
-  const bankAccount = '1234567890'
-  const bankName = 'MB Bank (Ngân hàng Quân Đội)'
-  const accountHolder = 'TOAN24H EDUCATION'
-
-  const sepayQrUrl = transaction
-    ? `https://qr.sepay.vn/img?acc=${bankAccount}&bank=MB&amount=${transaction.amount}&des=${encodeURIComponent(
-        transaction.content
-      )}&template=compact`
-    : ''
-
-  const vietQrFallbackUrl = transaction
-    ? `https://img.vietqr.io/image/MB-${bankAccount}-compact2.png?amount=${
-        transaction.amount
-      }&addInfo=${encodeURIComponent(transaction.content)}&accountName=${encodeURIComponent(accountHolder)}`
-    : ''
 
   return (
     <div className="min-h-screen bg-slate-50/60 py-12 px-4 sm:px-6 lg:px-8">
@@ -230,7 +192,6 @@ export default function UpgradePage() {
         {/* Pricing Cards Grid (4 plans) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {PLANS.map((plan) => {
-            const isSelected = selectedPlan.id === plan.id
             const isLoading = loadingPlanId === plan.id
 
             return (
@@ -321,7 +282,7 @@ export default function UpgradePage() {
                     ) : (
                       <>
                         <QrCode className="w-4 h-4" />
-                        <span>Tạo mã thanh toán</span>
+                        <span>Tạo mã thanh toán PayOS</span>
                       </>
                     )}
                   </button>
@@ -340,7 +301,7 @@ export default function UpgradePage() {
             <div>
               <h4 className="font-bold text-slate-900 text-sm mb-1">Kích hoạt tức thì</h4>
               <p className="text-xs text-slate-500">
-                Hệ thống quét SePay tự động cộng thời hạn VIP trong vòng 30 giây ngay sau khi bạn chuyển khoản thành công.
+                Hệ thống PayOS tự động cộng thời hạn VIP trong vòng vài giây ngay sau khi bạn quét mã VietQR thành công.
               </p>
             </div>
           </div>
@@ -352,7 +313,7 @@ export default function UpgradePage() {
             <div>
               <h4 className="font-bold text-slate-900 text-sm mb-1">Bảo mật & Chuẩn xác</h4>
               <p className="text-xs text-slate-500">
-                Thanh toán qua mã VietQR tiêu chuẩn Ngân hàng Nhà nước, không qua cổng trung gian, đảm bảo an toàn tuyệt đối.
+                Thanh toán qua cổng PayOS chuẩn Open Banking và VietQR Ngân hàng Nhà nước, an toàn tuyệt đối.
               </p>
             </div>
           </div>
@@ -371,169 +332,12 @@ export default function UpgradePage() {
         </div>
       </div>
 
-      {/* POPUP MODAL THANH TOÁN SEPAY */}
-      {transaction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden relative max-h-[92vh] flex flex-col animate-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
-                  <QrCode className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-base">Thanh Toán Nâng Cấp Tài Khoản</h3>
-                  <p className="text-xs text-slate-500">Gói {selectedPlan.name} • Tự động kích hoạt</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setTransaction(null)}
-                className="w-8 h-8 rounded-full bg-slate-200/60 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto">
-              {isPaymentSuccess ? (
-                <div className="py-12 text-center">
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 animate-bounce">
-                    <CheckCircle2 className="w-10 h-10" />
-                  </div>
-                  <h4 className="text-2xl font-black text-slate-900 mb-2">Thanh Toán Thành Công!</h4>
-                  <p className="text-sm text-slate-600 max-w-sm mx-auto mb-6">
-                    Tài khoản của bạn đã được nâng cấp lên <strong>{selectedPlan.name}</strong>. Đang đưa bạn về trang cá nhân...
-                  </p>
-                  <button
-                    onClick={() => router.push('/profile?upgraded=true')}
-                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-all cursor-pointer"
-                  >
-                    Đến Hồ sơ ngay
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                  {/* QR Code Column */}
-                  <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
-                    <p className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">
-                      Quét mã bằng ứng dụng Ngân hàng
-                    </p>
-                    <div className="bg-white p-3 rounded-2xl border-2 border-blue-500/20 shadow-sm relative mb-3">
-                      <img
-                        src={qrImageError ? vietQrFallbackUrl : sepayQrUrl}
-                        alt="QR Code SePay"
-                        onError={() => setQrImageError(true)}
-                        className="w-56 h-56 object-contain rounded-lg"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-100">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                      <span>Đang chờ chuyển khoản tự động...</span>
-                    </div>
-                  </div>
-
-                  {/* Transfer Details Column */}
-                  <div className="space-y-3.5">
-                    <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/70">
-                      <p className="text-[11px] font-semibold text-slate-500">Ngân hàng</p>
-                      <p className="font-bold text-slate-800 text-sm">{bankName}</p>
-                    </div>
-
-                    <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/70 flex items-center justify-between">
-                      <div>
-                        <p className="text-[11px] font-semibold text-slate-500">Số tài khoản</p>
-                        <p className="font-mono font-bold text-slate-900 text-base tracking-wide">{bankAccount}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(bankAccount, 'Số tài khoản')}
-                        className="p-2 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors cursor-pointer"
-                        title="Sao chép số tài khoản"
-                      >
-                        {copiedField === 'Số tài khoản' ? (
-                          <Check className="w-4 h-4 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-
-                    <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/70">
-                      <p className="text-[11px] font-semibold text-slate-500">Chủ tài khoản</p>
-                      <p className="font-bold text-slate-800 text-sm uppercase">{accountHolder}</p>
-                    </div>
-
-                    <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/70 flex items-center justify-between">
-                      <div>
-                        <p className="text-[11px] font-semibold text-slate-500">Số tiền cần thanh toán</p>
-                        <p className="font-extrabold text-blue-600 text-lg">
-                          {transaction.amount.toLocaleString('vi-VN')} đ
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(transaction.amount.toString(), 'Số tiền')}
-                        className="p-2 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors cursor-pointer"
-                        title="Sao chép số tiền"
-                      >
-                        {copiedField === 'Số tiền' ? (
-                          <Check className="w-4 h-4 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-
-                    {/* Content Required Box */}
-                    <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 flex items-center justify-between">
-                      <div className="flex-1 mr-2">
-                        <div className="flex items-center gap-1.5 text-amber-800 font-bold text-xs mb-0.5">
-                          <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                          <span>Nội dung chuyển khoản (Bắt buộc)</span>
-                        </div>
-                        <p className="font-mono font-black text-slate-900 text-sm break-all">
-                          {transaction.content}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(transaction.content, 'Nội dung chuyển khoản')}
-                        className="px-3 py-1.5 bg-amber-200 hover:bg-amber-300 text-amber-900 font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
-                      >
-                        {copiedField === 'Nội dung chuyển khoản' ? (
-                          <>
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Đã chép</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3.5 h-3.5" />
-                            <span>Sao chép</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-              <span>Hệ thống tự động kích hoạt sau 30s. Không cần tải lại trang.</span>
-              <button
-                type="button"
-                onClick={() => setTransaction(null)}
-                className="font-bold text-slate-600 hover:text-slate-900 cursor-pointer"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* PayOS Payment Modal Component */}
+      <PayOSPaymentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        paymentData={paymentData}
+      />
     </div>
   )
 }
