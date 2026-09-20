@@ -35,6 +35,9 @@ func main() {
 		&models.LectureBookmark{},
 		&models.Exam{},
 		&models.Submission{},
+		&models.Notification{},
+		&models.Transaction{},
+		&models.XPTransaction{},
 	); err != nil {
 		log.Fatalf("Auto Migrate failed: %v", err)
 	}
