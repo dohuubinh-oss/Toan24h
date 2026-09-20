@@ -43,7 +43,7 @@ func (r *lectureRepository) GetLecturesByGrade(ctx context.Context, grade string
 		return nil, 0, err
 	}
 
-	if err := query.Order("created_at asc").Limit(limit).Offset(offset).Find(&lectures).Error; err != nil {
+	if err := query.Preload("Author").Order("updated_at asc").Limit(limit).Offset(offset).Find(&lectures).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -52,7 +52,7 @@ func (r *lectureRepository) GetLecturesByGrade(ctx context.Context, grade string
 
 func (r *lectureRepository) GetAllLectures(ctx context.Context) ([]models.Lecture, error) {
 	var lectures []models.Lecture
-	if err := r.db.WithContext(ctx).Model(&models.Lecture{}).Order("created_at asc").Find(&lectures).Error; err != nil {
+	if err := r.db.WithContext(ctx).Model(&models.Lecture{}).Preload("Author").Order("updated_at asc").Find(&lectures).Error; err != nil {
 		return nil, err
 	}
 	return lectures, nil
@@ -60,7 +60,7 @@ func (r *lectureRepository) GetAllLectures(ctx context.Context) ([]models.Lectur
 
 func (r *lectureRepository) GetLectureByID(ctx context.Context, id string) (*models.Lecture, error) {
 	var lecture models.Lecture
-	if err := r.db.WithContext(ctx).First(&lecture, "id = ?", id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Author").First(&lecture, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &lecture, nil
