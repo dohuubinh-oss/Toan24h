@@ -4,10 +4,21 @@ import React from 'react';
 import { ChevronDown, BookOpen } from 'lucide-react';
 import { FilterWrapper } from './FilterWrapper';
 import { useSidebarFilter } from '@/hooks/useSidebarFilter';
+import { usePathname } from 'next/navigation';
+import { TOPIC_MAPPING } from '@/constants/topics';
 
 export function StudentLectureFilter() {
   const { currentTopic, setFilter } = useSidebarFilter();
-  const topics = ['Hệ thống số', 'Số thập phân', 'Diện tích', 'Hình khối', 'Hình trụ', 'Giải toán', 'Phân số', 'Hình học'];
+  const pathname = usePathname();
+
+  // Extract grade from pathname e.g. /lectures/lop/6 -> 6
+  const segments = pathname?.split('/') || [];
+  const gradeIndex = segments.indexOf('lop');
+  const gradeFromPath = gradeIndex !== -1 && segments[gradeIndex + 1] ? segments[gradeIndex + 1] : '';
+
+  const topics = gradeFromPath && TOPIC_MAPPING[gradeFromPath] 
+    ? TOPIC_MAPPING[gradeFromPath] 
+    : Object.values(TOPIC_MAPPING).flat();
 
   return (
     <FilterWrapper searchPlaceholder="Tìm kiếm theo tên, nội dung...">
@@ -19,15 +30,15 @@ export function StudentLectureFilter() {
           </div>
           <ChevronDown className="w-4 h-4 group-open:rotate-180 transition-transform" />
         </summary>
-        <div className="mt-3 grid grid-cols-2 gap-2 pl-6">
+        <div className="mt-3 flex flex-col gap-2 pl-6">
           {topics.map(topic => (
             <label key={topic} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1">
               <input 
-                className="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer" 
+                className="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer flex-shrink-0" 
                 type="checkbox" 
                 checked={currentTopic === topic}
                 onChange={() => setFilter('topic', topic)}
-              /> <span className="truncate">{topic}</span>
+              /> <span className="line-clamp-2">{topic}</span>
             </label>
           ))}
         </div>
@@ -35,3 +46,4 @@ export function StudentLectureFilter() {
     </FilterWrapper>
   );
 }
+
