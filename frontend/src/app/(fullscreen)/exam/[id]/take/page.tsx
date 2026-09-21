@@ -67,17 +67,12 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
     }
     setIsRestored(true)
 
-    // Check penalty ngay khi quay lại nếu đã vi phạm từ trang bài giảng
-    if (restoredCheatCount >= 3 || restoredTotalTime > 180000) {
+    // Check penalty ngay khi quay lại nếu đã vi phạm từ trang bài giảng hoặc trước đó
+    if (restoredCheatCount >= 3 || restoredTotalTime > 300000) {
         import('@/lib/api').then(mod => mod.sendCheatWarning(id, 3));
-        toast.error("Bài làm đã bị thu tự động do vi phạm quy chế. (Đã gửi cảnh báo Zalo cho phụ huynh)");
-        const finalAnswers = parsed?.answers || {};
-        const answersList = Object.entries(finalAnswers).map(([qId, ans]) => ({ questionId: qId, studentAnswer: ans as string, isEssay: false }));
-        import('@/lib/api').then(mod => mod.submitExam(id, answersList).then(() => {
-          sessionStorage.removeItem(`exam_state_${id}`);
-          toast.success("Bài làm của bạn đang được chấm");
-          router.back();
-        }));
+        toast.error("Bài làm đã bị thu hồi và HỦY KẾT QUẢ do vi phạm quy chế thi. (Đã gửi cảnh báo Zalo cho phụ huynh)");
+        sessionStorage.removeItem(`exam_state_${id}`);
+        router.back();
     } else if (restoredCheatCount > 0) {
         setShowCheatModal(true)
     }
@@ -157,20 +152,15 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
     if (!exam) return;
 
     const enforceCheatPenalty = (count: number, totalTime: number) => {
-      // Mức 3: Lần 3 hoặc tổng thời gian > 3 phút (180s)
-      if (count >= 3 || totalTime > 180000) {
+      // Mức 3: Lần 3 hoặc tổng thời gian > 5 phút (300s = 300000ms)
+      if (count >= 3 || totalTime > 300000) {
         if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
         import('@/lib/api').then(mod => mod.sendCheatWarning(id, 3));
-        toast.error("Bài làm đã bị thu tự động do vi phạm quy chế. (Đã gửi cảnh báo Zalo cho phụ huynh)");
+        toast.error("Bài làm đã bị thu hồi và HỦY KẾT QUẢ do vi phạm quy chế thi. (Đã gửi cảnh báo Zalo cho phụ huynh)");
         
-        // Auto submit
-        const answersList = Object.entries(answers).map(([qId, ans]) => ({ questionId: qId, studentAnswer: ans as string, isEssay: false })); // Approximate
-        import('@/lib/api').then(mod => mod.submitExam(id, answersList).then(() => {
-          sessionStorage.removeItem(`exam_state_${id}`);
-          toast.success("Bài làm của bạn đang được chấm");
-          router.back();
-        }));
-        return true; // was submitted
+        sessionStorage.removeItem(`exam_state_${id}`);
+        router.back();
+        return true; // was handled
       }
       
       // Mức 2: Lần 2 hoặc tổng thời gian > 1 phút (60s)
