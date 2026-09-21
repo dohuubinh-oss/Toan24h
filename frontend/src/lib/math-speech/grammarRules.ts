@@ -15,7 +15,7 @@ export const GRAMMAR_RULES: GrammarRule[] = [
   // 2. Căn bậc n (ví dụ: căn bậc 3 của 8 -> \sqrt[3]{8}, căn bậc 2 -> \sqrt{...})
   {
     name: 'nth_root',
-    pattern: /căn bậc\s+(\d+|[a-zA-Z])\s+của\s+([^+\-=:<>\n]+)/gi,
+    pattern: /căn bậc\s+(\d+|[a-zA-Z])\s+của\s+(.+?)(?=\s+(?:bằng|lớn hơn|nhỏ hơn|bé hơn|tương đương|suy ra)|[=\-:<>]|$)/gi,
     replace: (_m, n, expr) => {
       const cleanExpr = expr.trim()
       if (n === '2') {
@@ -28,14 +28,14 @@ export const GRAMMAR_RULES: GrammarRule[] = [
   // 3. Căn bậc hai (ví dụ: căn bậc hai của 3x + 5 -> \sqrt{3x + 5}, căn của x -> \sqrt{x})
   {
     name: 'sqrt',
-    pattern: /căn(?: bậc hai)?(?: của)?\s+([^+\-=:<>\n]+)/gi,
+    pattern: /căn(?: bậc hai)?(?: của)?\s+(.+?)(?=\s+(?:bằng|lớn hơn|nhỏ hơn|bé hơn|tương đương|suy ra)|[=\-:<>]|$)/gi,
     replace: (_m, expr) => `\\sqrt{${expr.trim()}}`,
   },
 
   // 4. Phân số rõ ràng: "phân số A trên B" hoặc "phân số A phần B"
   {
     name: 'fraction_explicit',
-    pattern: /phân số\s+(.*?)\s+(?:trên|phần)\s+([^+\-=:<>\n]+)/gi,
+    pattern: /phân số\s+(.+?)\s+(?:trên|phần)\s+(.+?)(?=\s+(?:bằng|lớn hơn|nhỏ hơn|bé hơn|tương đương|suy ra)|[=\-:<>]|$)/gi,
     replace: (_m, num, den) => `\\frac{${num.trim()}}{${den.trim()}}`,
   },
 
