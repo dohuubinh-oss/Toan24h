@@ -20,7 +20,7 @@ export function ExamFilter() {
   ];
 
   const durations = ['0 phút', '15 phút', '45 phút', '90 phút'];
-  const examTypes = ['Giữa kỳ', 'Cuối kỳ', 'Chuyên'];
+  const examTypes = ['Giữa kỳ', 'Cuối kỳ', 'Chuyên đề', 'Ôn tập'];
 
   return (
     <FilterWrapper searchPlaceholder="Tìm kiếm đề thi...">

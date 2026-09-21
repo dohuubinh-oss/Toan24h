@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation'
 import { Calculator, Trash2, Edit2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { Button } from '../ui/Button'
 
-export type ExamType = 'Giữa kỳ' | 'Cuối kỳ' | 'Chuyên'
+export type ExamType = 'Giữa kỳ' | 'Cuối kỳ' | 'Chuyên đề' | 'Ôn tập' | 'Chuyên'
 
 export interface Exam {
   id: string
