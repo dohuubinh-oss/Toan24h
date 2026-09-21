@@ -245,10 +245,10 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   const currentQuestion = questions[currentQuestionIndex]
 
   let lectureUrl = undefined
-  if (exam?.cate === 'practice' && exam?.lectureId) {
-    const gradeStr = exam?.grade || '12'
+  if (exam?.cate === 'practice') {
+    const gradeStr = exam?.grade || '8'
     const returnUrl = encodeURIComponent(`/exam/${id}/take`)
-    lectureUrl = `/lectures/lop/${gradeStr}/${exam.lectureId}?returnUrl=${returnUrl}&examId=${id}`
+    lectureUrl = `/lectures/lop/${gradeStr}?returnUrl=${returnUrl}&examId=${id}`
   }
 
   const handleAnswerSelect = (questionId: string, answer: string, explanation?: string) => {

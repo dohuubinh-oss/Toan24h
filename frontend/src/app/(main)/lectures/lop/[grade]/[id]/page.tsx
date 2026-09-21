@@ -52,6 +52,23 @@ export default async function GradeLecturePage({
   return (
     <div className="max-w-7xl mx-auto w-full px-4 py-8 space-y-8">
       {examId && <LectureAntiCheatTracker examId={examId} />}
+
+      {returnUrl && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-indigo-50/80 border border-indigo-200 rounded-2xl shadow-sm">
+          <div className="flex items-center gap-3 text-indigo-950 font-medium">
+            <ArrowLeft className="w-5 h-5 text-indigo-600 shrink-0" />
+            <span className="text-sm">Bạn đang tham khảo bài giảng này trong quá trình làm bài tập.</span>
+          </div>
+          <Link
+            href={returnUrl}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all text-sm shadow-sm active:scale-95 shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Trở về bài tập đang làm
+          </Link>
+        </div>
+      )}
+
       <LectureHeader 
         title={lecture.title}
         grade={lecture.grade}

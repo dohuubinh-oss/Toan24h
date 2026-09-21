@@ -13,6 +13,8 @@ export interface LectureCardProps {
   completedWellCount?: number;
   thumbnailUrl?: string;
   grade?: string; // Tùy chọn để tương thích với các view khác
+  returnUrl?: string;
+  examId?: string;
 }
 
 export function LectureCard({
@@ -24,12 +26,19 @@ export function LectureCard({
   completedWellCount,
   thumbnailUrl,
   grade,
+  returnUrl,
+  examId,
 }: LectureCardProps) {
   const isCompleted = status === 'COMPLETED';
   const isInProgress = status === 'PENDING';
   
   // Xây dựng URL động, nếu có grade thì chèn grade vào URL
-  const hrefUrl = grade ? `/lectures/lop/${grade}/${id}` : `/lectures/${id}`;
+  let hrefUrl = grade ? `/lectures/lop/${grade}/${id}` : `/lectures/${id}`;
+  if (returnUrl) {
+    const params = new URLSearchParams({ returnUrl });
+    if (examId) params.set('examId', examId);
+    hrefUrl += `?${params.toString()}`;
+  }
   
   return (
     <Link href={hrefUrl} className="group bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden hover:shadow-md hover:border-primary/30 transition-all duration-300 flex flex-col h-full hover:-translate-y-1 cursor-pointer">

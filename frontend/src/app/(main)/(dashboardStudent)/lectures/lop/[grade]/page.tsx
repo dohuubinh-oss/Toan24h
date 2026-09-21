@@ -1,10 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
-import { ChevronRight, BookOpen } from 'lucide-react';
+import { ChevronRight, BookOpen, ArrowLeft } from 'lucide-react';
 import { LectureCard, PracticeLectureCard } from '@/components/lectures/LectureCard';
 import { ClientPagination } from '@/components/ui/ClientPagination';
 import { getLecturesByGrade } from '@/lib/lectureApi';
 import { getExams, getMyExamResults } from '@/lib/api';
+import LectureAntiCheatTracker from '@/components/lecture/LectureAntiCheatTracker';
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -21,6 +22,8 @@ export default async function GradeLecturesPage({
   
   const grade = resolvedParams.grade; // VD: '5', '8', '9'
   const page = parseInt(resolvedSearchParams.page as string || '1', 10);
+  const returnUrl = resolvedSearchParams?.returnUrl as string | undefined;
+  const examId = resolvedSearchParams?.examId as string | undefined;
 
   // Lấy userGrade từ cookie để tự động redirect
   const cookieStore = await cookies();
@@ -67,7 +70,25 @@ export default async function GradeLecturesPage({
   });
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
+      {examId && <LectureAntiCheatTracker examId={examId} />}
+
+      {returnUrl && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-indigo-50/80 border border-indigo-200 rounded-2xl shadow-sm">
+          <div className="flex items-center gap-3 text-indigo-950 font-medium">
+            <BookOpen className="w-5 h-5 text-indigo-600 shrink-0" />
+            <span className="text-sm">Bạn đang tham khảo danh sách bài giảng trong quá trình làm bài tập.</span>
+          </div>
+          <Link
+            href={returnUrl}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all text-sm shadow-sm active:scale-95 shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Trở về bài tập đang làm
+          </Link>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
@@ -102,6 +123,8 @@ export default async function GradeLecturesPage({
             <LectureCard 
               key={item.id}
               grade={grade}
+              returnUrl={returnUrl}
+              examId={examId}
               {...item}
             />
           )
@@ -139,3 +162,4 @@ export default async function GradeLecturesPage({
     </div>
   );
 }
+
