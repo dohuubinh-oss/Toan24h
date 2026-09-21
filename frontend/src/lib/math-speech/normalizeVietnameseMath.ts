@@ -43,12 +43,10 @@ const VARIABLE_WORDS: Record<string, string> = {
 
 function replaceWord(text: string, word: string, replacement: string): string {
   const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  // Không match nếu từ này đang nằm ngay sau dấu gạch chéo ngược \ (đã là lệnh LaTeX)
   const regex = new RegExp(`(^|[^a-zA-Z0-9_àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ\\\\])(${escaped})($|[^a-zA-Z0-9_àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ])`, 'gi')
   return text.replace(regex, (_m, p1, _p2, p3) => `${p1}${replacement}${p3}`)
 }
 
-// Chuyển đổi cụm từ số tiếng Việt sang dạng số
 export function convertVietnameseNumberWords(inputText: string): string {
   let text = inputText
 
@@ -127,8 +125,8 @@ export function normalizeVietnameseMath(rawText: string): string {
   // 5. Xử lý dấu phẩy thập phân sau khi đã convert số: "0 phẩy 25" -> "0.25", "3 phẩy 14" -> "3.14"
   text = text.replace(/(\d+)\s+phẩy\s+(\d+)/gi, '$1.$2')
 
-  // 6. Xử lý số âm: "âm 5" -> "-5"
-  text = text.replace(/(^|\s+)âm\s+(\d+(?:\.\d+)?)/gi, '$1-$2')
+  // 6. Xử lý số âm hoặc dấu âm trước biến: "âm 5" -> "-5", "âm b" -> "-b"
+  text = text.replace(/(^|\s+)âm\s+([a-zA-Z0-9_\\]+)/gi, '$1-$2')
 
   // Dọn dẹp khoảng trắng
   return text.replace(/\s+/g, ' ').trim()
