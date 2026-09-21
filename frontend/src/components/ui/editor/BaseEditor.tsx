@@ -93,74 +93,31 @@ export const preprocessMath = (html: string) => {
   return processed;
 };
 
+import VoiceMathAssistantModal from './VoiceMathAssistantModal'
+
 export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomAction }: { editor: any, mathOnlyToolbar?: boolean, smallToolbar?: boolean, rightCustomAction?: React.ReactNode }) => {
-  const [isListening, setIsListening] = useState(false)
-  const recognitionRef = useRef<any>(null)
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
 
-  const toggleListening = useCallback(() => {
-    if (isListening) {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop()
-      }
-      setIsListening(false)
-      return
+  const handleVoiceInsert = (latex: string, isMath?: boolean) => {
+    if (!editor) return
+    if (isMath) {
+      editor.chain().focus().insertContent({ type: 'math', attrs: { latex } }).run()
+    } else {
+      editor.chain().focus().insertContent(latex + ' ').run()
     }
-
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SpeechRecognition) {
-      alert('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói. Vui lòng dùng Chrome hoặc Edge.')
-      return
-    }
-
-    if (!recognitionRef.current) {
-      const recognition = new SpeechRecognition()
-      recognition.lang = 'vi-VN'
-      recognition.continuous = true
-      recognition.interimResults = false
-
-      recognition.onresult = (event: any) => {
-        let finalTranscript = ''
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript
-          }
-        }
-        if (finalTranscript) {
-          editor.chain().focus().insertContent(finalTranscript + ' ').run()
-        }
-      }
-
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error', event.error)
-        setIsListening(false)
-      }
-
-      recognition.onend = () => {
-        setIsListening(false)
-      }
-
-      recognitionRef.current = recognition
-    }
-
-    try {
-      recognitionRef.current.start()
-      setIsListening(true)
-    } catch (e) {
-      console.error(e)
-    }
-  }, [editor, isListening])
+  }
 
   // Phím tắt Ctrl+M / Cmd+M
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'm') {
         e.preventDefault()
-        toggleListening()
+        setIsVoiceModalOpen(prev => !prev)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [toggleListening])
+  }, [])
 
   if (!editor) return null
 
@@ -177,6 +134,18 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
         >
           <Sigma className={iconClass} />
         </button>
+        <button
+          onClick={() => setIsVoiceModalOpen(true)}
+          className={`${btnClass} text-slate-600 hover:text-primary hover:bg-white flex items-center justify-center flex-shrink-0`}
+          title="Trợ lý Nói & Nhập Toán tiếng Việt (Ctrl+M)"
+        >
+          <Mic className={iconClass} />
+        </button>
+        <VoiceMathAssistantModal
+          isOpen={isVoiceModalOpen}
+          onClose={() => setIsVoiceModalOpen(false)}
+          onInsert={handleVoiceInsert}
+        />
       </div>
     );
   }
@@ -258,21 +227,11 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
         </button>
         <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
         <button
-          onClick={toggleListening}
-          className={`${btnClass} flex items-center justify-center flex-shrink-0 relative ${
-            isListening 
-              ? 'text-red-500 bg-red-50 hover:bg-red-100' 
-              : 'text-slate-600 hover:bg-white'
-          }`}
-          title="Nhập bằng giọng nói (Ctrl+M)"
+          onClick={() => setIsVoiceModalOpen(true)}
+          className={`${btnClass} flex items-center justify-center flex-shrink-0 text-slate-600 hover:text-primary hover:bg-white`}
+          title="Trợ lý Nói & Nhập Toán tiếng Việt (Ctrl+M)"
         >
           <Mic className={iconClass} />
-          {isListening && (
-            <span className="absolute top-0 right-0 flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-            </span>
-          )}
         </button>
       </div>
 
@@ -281,6 +240,13 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
           {rightCustomAction}
         </div>
       )}
+
+      {/* Modal Trợ lý Nói & Nhập Toán */}
+      <VoiceMathAssistantModal
+        isOpen={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+        onInsert={handleVoiceInsert}
+      />
     </div>
   )
 }
