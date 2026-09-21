@@ -99,7 +99,9 @@
     vertical-align: middle;
   }
 
-  .ProseMirror img {
+  .ProseMirror img,
+  .latex-font img,
+  .prose img {
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
