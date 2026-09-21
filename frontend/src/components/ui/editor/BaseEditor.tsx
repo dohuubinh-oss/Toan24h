@@ -93,7 +93,7 @@ export const preprocessMath = (html: string) => {
   return processed;
 };
 
-import { vietnameseMathToLatex } from '@/lib/math-speech/vietnameseMathToLatex'
+import { segmentSpeechTextAndMath } from '@/lib/math-speech/segmentSpeechTextAndMath'
 
 export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomAction }: { editor: any, mathOnlyToolbar?: boolean, smallToolbar?: boolean, rightCustomAction?: React.ReactNode }) => {
   const [isListening, setIsListening] = useState(false)
@@ -126,16 +126,18 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
           if (event.results[i].isFinal) {
             const rawSentence = event.results[i][0].transcript.trim()
             if (rawSentence && editor) {
-              const converted = vietnameseMathToLatex(rawSentence)
-              if (converted.isMath && converted.latex) {
-                // Chèn công thức toán học và render KaTeX trực tiếp tại vị trí con trỏ
-                editor.chain().focus().insertContent({
-                  type: 'math',
-                  attrs: { latex: converted.latex }
-                }).insertContent(' ').run()
-              } else {
-                // Chèn văn bản thường
-                editor.chain().focus().insertContent(rawSentence + ' ').run()
+              const segments = segmentSpeechTextAndMath(rawSentence)
+              for (const seg of segments) {
+                if (seg.type === 'math' && seg.content) {
+                  // Chèn công thức toán học và render KaTeX trực tiếp tại vị trí con trỏ
+                  editor.chain().focus().insertContent({
+                    type: 'math',
+                    attrs: { latex: seg.content }
+                  }).insertContent(' ').run()
+                } else if (seg.type === 'text' && seg.content) {
+                  // Chèn văn bản thường giữ nguyên dấu cách tự nhiên
+                  editor.chain().focus().insertContent(seg.content + ' ').run()
+                }
               }
             }
           }
