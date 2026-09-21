@@ -330,4 +330,52 @@ Trong quá trình triển khai hệ thống **toan6789.vn** lên Dokku VPS, dư�
   dokku git:set toan6789-frontend deploy-branch main
   ```
 
+### 11.6 Lỗi Cảnh báo "Trang web này không hỗ trợ kết nối bảo mật" (SSL / HTTPS)
+- **Triệu chứng:** Truy cập `toan6789.vn` trên Chrome điện thoại Android hoặc iOS bị cảnh báo đỏ/vàng: *"Trang web này không hỗ trợ kết nối bảo mật. Những kẻ tấn công có thể xem và thay đổi thông tin..."*.
+- **Nguyên nhân:**
+  1. Chỉ mới cài plugin Let's Encrypt (`dokku plugin:install ... letsencrypt`) mà chưa chạy lệnh xin cấp chứng chỉ (`dokku letsencrypt:enable ...`).
+  2. Nginx chỉ mới mở cổng 80 (HTTP không bảo mật), chưa có chứng chỉ SSL trên cổng 443 (HTTPS).
+- **Khắc phục (Thực hiện tuần tự trên VPS):**
+  ```bash
+  # 1. Đảm bảo domain đã gán đúng
+  dokku domains:set toan6789-frontend toan6789.vn www.toan6789.vn
+  dokku domains:set toan6789-backend api.toan6789.vn
+
+  # 2. Cấu hình email nhận thông báo
+  dokku letsencrypt:set toan6789-frontend email admin@toan6789.vn
+  dokku letsencrypt:set toan6789-backend email admin@toan6789.vn
+
+  # 3. Kích hoạt chứng chỉ SSL HTTPS (Quan trọng nhất)
+  dokku letsencrypt:enable toan6789-backend
+  dokku letsencrypt:enable toan6789-frontend
+
+  # 4. Bật tự động gia hạn định kỳ (Auto-renew)
+  dokku letsencrypt:cron-job --add
+  ```
+
+### 11.7 Lỗi "Failed to fetch / Tải trang chậm sau một thời gian không truy cập" (CDN Proxy Health Check)
+- **Triệu chứng:** Một thời gian không ai truy cập web, khi mở lại thì báo lỗi `Failed to fetch` hoặc không tải được trang, nhưng bấm F5 refresh thì lại vào bình thường.
+- **Nguyên nhân:** Tên miền `toan6789.vn` đi qua CDN Anti-DDoS / Proxy (PA Việt Nam / Vietnix). CDN liên tục gửi yêu cầu `GET /health` qua cổng 80 để kiểm tra máy chủ. Do Nginx mặc định chuyển hướng cổng 80 sang HTTPS (301 Redirect), bot CDN coi `301` là server "chưa sẵn sàng/Unhealthy" và đưa vào trạng thái chờ/ngắt kết nối tạm thời.
+- **Khắc phục:** Cấu hình Nginx trên VPS trả về mã `200 OK` ngay lập tức cho endpoint `/health`:
+  ```bash
+  echo 'location = /health { return 200 "OK"; add_header Content-Type text/plain; }' > /home/dokku/toan6789-frontend/nginx.conf.d/health.conf
+  echo 'location = /health { return 200 "OK"; add_header Content-Type text/plain; }' > /home/dokku/toan6789-backend/nginx.conf.d/health.conf
+  dokku proxy:build-config toan6789-frontend
+  dokku proxy:build-config toan6789-backend
+  systemctl reload nginx
+  ```
+
+---
+
+## ⏰ BƯỚC 12: Tổng hợp Danh sách Cronjob & Tác vụ Chạy Ngầm trong Hệ thống
+
+Hệ thống **toan6789.vn** hiện có **3 tác vụ chạy ngầm định kỳ** được phân bổ ở 2 tầng:
+
+| Tầng / Nơi chạy | Tên tác vụ | Tần suất / Chu kỳ | Chức năng chi tiết | File nguồn |
+| :--- | :--- | :--- | :--- | :--- |
+| **VPS Host (Dokku)** | `dokku-letsencrypt auto-renew` | Hàng ngày (Nửa đêm) | Tự động kiểm tra hạn sử dụng của chứng chỉ SSL Let's Encrypt. Nếu còn dưới 30 ngày, hệ thống tự động gia hạn và nạp lại cấu hình Nginx để website không bao giờ bị hết hạn HTTPS. | `crontab -l` trên VPS |
+| **Backend Go (Goroutine)** | `cleanupTempUploads` | Mỗi 7 ngày (và chạy ngay khi khởi động) | Quét thư mục `./uploads/temp`, tự động xóa các file/ảnh nháp tải lên quá **1 giờ** trước mà không được gắn vào câu hỏi/bài giảng chính thức, giúp giải phóng dung lượng đĩa cứng VPS. | `backend/internal/services/cronjob.go` |
+| **Backend Go (Goroutine)** | `ResetWeeklyXP` | **00:00 sáng Thứ Hai** hàng tuần (GMT+7) | Đặt lại điểm kinh nghiệm tuần (`weekly_xp = 0`) cho toàn bộ tài khoản học sinh để bắt đầu tuần đua top BXH mới. Tổng điểm tích lũy (`points` / `xp`) cả năm vẫn được bảo toàn nguyên vẹn. | `backend/internal/services/cronjob.go` |
+
+
 

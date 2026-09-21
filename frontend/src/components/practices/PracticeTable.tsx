@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useRouter } from 'next/navigation'
 import { PenTool, CheckCircle2, Clock, HelpCircle, Trophy, AlertCircle, PlayCircle, RotateCcw } from 'lucide-react'
 import { Practice } from '@/types/practice'
@@ -12,10 +12,6 @@ interface PracticeTableProps {
 
 export default function PracticeTable({ practices }: PracticeTableProps) {
   const router = useRouter()
-
-  useEffect(() => {
-    router.refresh();
-  }, [router]);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden">
