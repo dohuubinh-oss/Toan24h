@@ -96,6 +96,26 @@ export function convertVietnameseNumberWords(inputText: string): string {
   return text
 }
 
+const VOICE_CONTROL_COMMANDS: Record<string, string> = {
+  'hai chấm': ':',
+  'chấm phẩy': ';',
+  'chấm hỏi': '?',
+  'chấm than': '!',
+  'dấu phẩy': ',',
+  'dấu chấm': '.',
+  'xuống dòng': '\n',
+  'xuống hàng': '\n',
+  'qua dòng': '\n',
+  'mở ngoặc đơn': '(',
+  'đóng ngoặc đơn': ')',
+  'mở ngoặc': '(',
+  'đóng ngoặc': ')',
+  'mở ngoặc nhọn': '{',
+  'đóng ngoặc nhọn': '}',
+  'mở ngoặc vuông': '[',
+  'đóng ngoặc vuông': ']',
+}
+
 export function normalizeVietnameseMath(rawText: string): string {
   if (!rawText) return ''
   let text = rawText.trim()
@@ -106,7 +126,13 @@ export function normalizeVietnameseMath(rawText: string): string {
     text = replaceWord(text, filler, '')
   }
 
-  // 2. Chuẩn hóa biến số và chữ Hy Lạp
+  // 2. Chuyển đổi các khẩu lệnh điều khiển văn bản (ưu tiên các cụm dài trước: mở ngoặc vuông -> mở ngoặc)
+  const sortedVoiceCommands = Object.keys(VOICE_CONTROL_COMMANDS).sort((a, b) => b.length - a.length)
+  for (const key of sortedVoiceCommands) {
+    text = replaceWord(text, key, VOICE_CONTROL_COMMANDS[key])
+  }
+
+  // 3. Chuẩn hóa biến số và chữ Hy Lạp
   for (const [key, val] of Object.entries(GREEK_WORDS)) {
     text = replaceWord(text, key, val)
   }
@@ -114,20 +140,24 @@ export function normalizeVietnameseMath(rawText: string): string {
     text = replaceWord(text, key, val)
   }
 
-  // 3. Chuẩn hóa số thập phân trước: "không phẩy hai lăm" -> "0.25", "ba phẩy mười bốn" -> "3.14"
+  // 4. Chuẩn hóa số thập phân trước: "không phẩy hai lăm" -> "0.25", "ba phẩy mười bốn" -> "3.14"
   text = text.replace(/(không|\d+)\s+phẩy\s+hai\s+lăm/gi, '$1.25')
   text = text.replace(/(không|\d+)\s+phẩy\s+mười\s+bốn/gi, '$1.14')
   text = text.replace(/(không|\d+)\s+phẩy\s+năm/gi, '$1.5')
 
-  // 4. Chuyển đổi các từ chỉ số tiếng Việt sang dạng số
+  // 5. Chuyển đổi các từ chỉ số tiếng Việt sang dạng số
   text = convertVietnameseNumberWords(text)
 
-  // 5. Xử lý dấu phẩy thập phân sau khi đã convert số: "0 phẩy 25" -> "0.25", "3 phẩy 14" -> "3.14"
+  // 6. Xử lý dấu phẩy thập phân sau khi đã convert số: "0 phẩy 25" -> "0.25", "3 phẩy 14" -> "3.14"
   text = text.replace(/(\d+)\s+phẩy\s+(\d+)/gi, '$1.$2')
 
-  // 6. Xử lý số âm hoặc dấu âm trước biến: "âm 5" -> "-5", "âm b" -> "-b"
+  // 7. Xử lý số âm hoặc dấu âm trước biến: "âm 5" -> "-5", "âm b" -> "-b"
   text = text.replace(/(^|\s+)âm\s+([a-zA-Z0-9_\\]+)/gi, '$1-$2')
 
-  // Dọn dẹp khoảng trắng
-  return text.replace(/\s+/g, ' ').trim()
+  // 8. Dọn dẹp khoảng trắng trước dấu câu và sau dấu mở ngoặc
+  text = text.replace(/\s+([:,;?.!\]\)\}])/g, '$1')
+  text = text.replace(/([\[\(\{])\s+/g, '$1')
+
+  // 9. Dọn dẹp khoảng trắng nhưng bảo tồn dấu xuống dòng
+  return text.replace(/[^\S\r\n]+/g, ' ').replace(/\s*\n\s*/g, '\n').replace(/^[^\S\r\n]+|[^\S\r\n]+$/g, '')
 }

@@ -59,4 +59,12 @@ describe('segmentSpeechTextAndMath', () => {
       { type: 'math', content: '\\sqrt{x + 1} = 3' }
     ])
   })
+
+  it('handles voice control punctuation commands like hai chấm xuống dòng', () => {
+    const res = segmentSpeechTextAndMath('Giải phương trình sau hai chấm xuống dòng 3 x bình phương cộng 1 bằng 0')
+    expect(res).toEqual([
+      { type: 'text', content: 'Giải phương trình sau:\n' },
+      { type: 'math', content: '3x^2 + 1 = 0' }
+    ])
+  })
 })

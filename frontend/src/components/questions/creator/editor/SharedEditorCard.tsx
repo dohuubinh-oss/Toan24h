@@ -20,7 +20,7 @@ export default function SharedEditorCard({
   headerRightExtra,
 }: SharedEditorCardProps) {
   
-  const editorClass = 'flex-grow min-h-[200px] focus:outline-none text-sm leading-relaxed p-5 max-w-none [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_strong]:font-bold [&_em]:italic [&_s]:line-through [&_li>p]:mb-0 outline-none [&_.exercise-content]:!bg-transparent [&_.rounded-full]:!m-0 [&_h4]:!mt-0'
+  const editorClass = 'flex-grow min-h-[200px] focus:outline-none text-sm leading-relaxed p-5 max-w-none [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_strong]:font-bold [&_em]:italic [&_s]:line-through [&_li>p]:mb-0 outline-none [&_.exercise-content]:!bg-transparent [&_.rounded-full]:!m-0 [&_h4]:!mt-0 [&_img]:w-full [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-xl [&_img]:object-contain [&_img]:my-2'
 
   return (
     <BaseEditor
@@ -43,7 +43,7 @@ export default function SharedEditorCard({
           </div>
           <div className="p-8 flex-grow">
             <div className="flex flex-col h-full">
-              <div className="flex-grow rounded-xl border border-slate-200 bg-slate-50 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/5 overflow-y-auto min-h-[250px] flex flex-col">
+              <div className="flex-grow rounded-xl border border-slate-200 bg-slate-50 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/5 overflow-y-auto max-h-[480px] min-h-[250px] flex flex-col">
                 <EditorContent editor={editor} className="flex-grow flex flex-col" />
               </div>
             </div>

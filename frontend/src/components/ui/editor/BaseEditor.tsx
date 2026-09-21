@@ -135,8 +135,23 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
                     attrs: { latex: seg.content }
                   }).insertContent(' ').run()
                 } else if (seg.type === 'text' && seg.content) {
-                  // Chèn văn bản thường giữ nguyên dấu cách tự nhiên
-                  editor.chain().focus().insertContent(seg.content + ' ').run()
+                  // Xử lý các dòng nếu có khẩu lệnh xuống dòng (\n)
+                  if (seg.content.includes('\n')) {
+                    const lines = seg.content.split('\n')
+                    lines.forEach((line, idx) => {
+                      if (line) {
+                        editor.chain().focus().insertContent(line).run()
+                      }
+                      if (idx < lines.length - 1) {
+                        editor.chain().focus().setHardBreak().run()
+                      } else {
+                        editor.chain().focus().insertContent(' ').run()
+                      }
+                    })
+                  } else {
+                    // Chèn văn bản thường giữ nguyên dấu cách tự nhiên
+                    editor.chain().focus().insertContent(seg.content + ' ').run()
+                  }
                 }
               }
             }

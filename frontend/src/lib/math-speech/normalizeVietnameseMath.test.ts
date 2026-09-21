@@ -28,4 +28,11 @@ describe('normalizeVietnameseMath', () => {
     expect(normalizeVietnameseMath('ta có x bằng hai')).toBe('x bằng 2')
     expect(normalizeVietnameseMath('thì x bằng một')).toBe('x bằng 1')
   })
+
+  it('nhận diện các khẩu lệnh điều khiển văn bản', () => {
+    expect(normalizeVietnameseMath('Giải phương trình sau hai chấm')).toBe('Giải phương trình sau:')
+    expect(normalizeVietnameseMath('xét đa thức hai chấm xuống dòng')).toBe('xét đa thức:\n')
+    expect(normalizeVietnameseMath('mở ngoặc x cộng một đóng ngoặc')).toBe('(x cộng 1)')
+    expect(normalizeVietnameseMath('mở ngoặc vuông hai chấm đóng ngoặc vuông')).toBe('[:]')
+  })
 })

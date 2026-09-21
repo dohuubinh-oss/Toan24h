@@ -1,4 +1,5 @@
 import { vietnameseMathToLatex } from './vietnameseMathToLatex'
+import { normalizeVietnameseMath } from './normalizeVietnameseMath'
 
 export interface SpeechSegment {
   type: 'text' | 'math'
@@ -61,7 +62,7 @@ export function segmentSpeechTextAndMath(rawInput: string): SpeechSegment[] {
   const match = input.match(mathTriggerPattern)
   if (!match || match.index === undefined) {
     // Không tìm thấy dấu hiệu toán học -> Văn bản thuần
-    return [{ type: 'text', content: input }]
+    return [{ type: 'text', content: normalizeVietnameseMath(input) }]
   }
 
   const splitIdx = match.index
@@ -72,7 +73,7 @@ export function segmentSpeechTextAndMath(rawInput: string): SpeechSegment[] {
     if (mathConversion.isMath && mathConversion.latex) {
       return [{ type: 'math', content: mathConversion.latex }]
     }
-    return [{ type: 'text', content: input }]
+    return [{ type: 'text', content: normalizeVietnameseMath(input) }]
   }
 
   // Nếu vị trí bắt đầu toán nằm ở giữa/cuối câu -> Tách thành [Text, Math]
@@ -81,7 +82,7 @@ export function segmentSpeechTextAndMath(rawInput: string): SpeechSegment[] {
 
   const segments: SpeechSegment[] = []
   if (textPart) {
-    segments.push({ type: 'text', content: textPart })
+    segments.push({ type: 'text', content: normalizeVietnameseMath(textPart) })
   }
 
   if (mathPart) {
@@ -89,7 +90,7 @@ export function segmentSpeechTextAndMath(rawInput: string): SpeechSegment[] {
     if (mathConversion.isMath && mathConversion.latex) {
       segments.push({ type: 'math', content: mathConversion.latex })
     } else {
-      segments.push({ type: 'text', content: mathPart })
+      segments.push({ type: 'text', content: normalizeVietnameseMath(mathPart) })
     }
   }
 
