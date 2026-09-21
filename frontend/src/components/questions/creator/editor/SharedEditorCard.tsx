@@ -43,7 +43,7 @@ export default function SharedEditorCard({
           </div>
           <div className="p-8 flex-grow">
             <div className="flex flex-col h-full">
-              <div className="flex-grow rounded-xl border border-slate-200 bg-slate-50 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/5 overflow-y-auto max-h-[480px] min-h-[250px] flex flex-col">
+              <div className="flex-grow rounded-xl border border-slate-200 bg-slate-50 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/5 overflow-y-auto max-h-[480px] min-h-[250px] flex flex-col custom-scrollbar">
                 <EditorContent editor={editor} className="flex-grow flex flex-col" />
               </div>
             </div>
