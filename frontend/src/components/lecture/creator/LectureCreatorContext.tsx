@@ -1,5 +1,6 @@
 'use client'
 import React, { createContext, useContext, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from '@/components/ui/ToastProvider'
 
 export interface ExampleStep {
@@ -57,6 +58,7 @@ interface LectureCreatorState {
 const LectureCreatorContext = createContext<LectureCreatorState | undefined>(undefined)
 
 export function LectureCreatorProvider({ children, editId }: { children: React.ReactNode; editId?: string | null }) {
+  const router = useRouter()
   const [contentType, setContentType] = useState<LectureContentType>('lecture')
   const [title, setTitle] = useState('')
   const [grade, setGrade] = useState('')
@@ -206,6 +208,9 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
           body: JSON.stringify(payload)
         })
         toast.success(contentType === 'practice' ? 'Cập nhật Card Luyện tập thành công!' : 'Cập nhật bài giảng thành công!')
+        setTimeout(() => {
+          router.push('/dashboard/lectures')
+        }, 500)
       } else {
         await apiFetch('/lectures', {
           method: 'POST',
@@ -213,6 +218,9 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
         })
         toast.success(contentType === 'practice' ? 'Tạo Card Luyện tập thành công!' : 'Tạo bài giảng thành công!')
         resetForm()
+        setTimeout(() => {
+          router.push('/dashboard/lectures')
+        }, 500)
       }
     } catch (error: any) {
       console.error('Submit error:', error)

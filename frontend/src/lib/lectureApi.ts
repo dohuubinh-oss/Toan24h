@@ -54,10 +54,34 @@ export interface BackendPaginatedLectures {
   endIndex: number;
 }
 
+async function fetchWithRetry(url: string, options: RequestInit = {}, retries: number = 2, delayMs: number = 300): Promise<Response> {
+  let lastError: any;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok || response.status === 404) {
+        return response;
+      }
+      if (attempt < retries) {
+        await new Promise(res => setTimeout(res, delayMs * (attempt + 1)));
+        continue;
+      }
+      return response;
+    } catch (err: any) {
+      lastError = err;
+      if (attempt < retries) {
+        await new Promise(res => setTimeout(res, delayMs * (attempt + 1)));
+        continue;
+      }
+    }
+  }
+  throw lastError || new Error(`Failed to fetch from ${url}`);
+}
+
 export async function getLecturesByGrade(grade: string, page: number = 1, limit: number = 9): Promise<PaginatedLectures> {
   const url = `${API_BASE_URL}/lectures/grade/${grade}?page=${page}&limit=${limit}`;
-  const response = await fetch(url, {
-    cache: 'no-store', // Always fetch fresh data for now
+  const response = await fetchWithRetry(url, {
+    cache: 'no-store', // Always fetch fresh data
   });
 
   if (!response.ok) {
@@ -119,7 +143,7 @@ export async function getLecturesByGrade(grade: string, page: number = 1, limit:
 
 export async function getLectureById(id: string): Promise<BackendLecture> {
   const url = `${API_BASE_URL}/lectures/${id}`;
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     cache: 'no-store',
   });
 
@@ -133,7 +157,7 @@ export async function getLectureById(id: string): Promise<BackendLecture> {
 
 export async function getAllLectures(): Promise<BackendLecture[]> {
   const url = `${API_BASE_URL}/lectures`;
-  const response = await fetch(url, {
+  const response = await fetchWithRetry(url, {
     cache: 'no-store',
   });
 

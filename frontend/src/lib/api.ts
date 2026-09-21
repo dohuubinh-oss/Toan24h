@@ -29,11 +29,22 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
     headers.set('Content-Type', 'application/json')
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-    credentials: 'include',
-  })
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include',
+    });
+  } catch (netErr: any) {
+    // Retry once after short delay for network glitches / cold start
+    await new Promise(res => setTimeout(res, 300));
+    response = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include',
+    });
+  }
 
   if (!response.ok) {
     const isAuthEndpoint = endpoint.includes('/auth/login') || endpoint.includes('/auth/register') || endpoint.includes('/auth/refresh');
