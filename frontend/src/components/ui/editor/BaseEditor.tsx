@@ -93,31 +93,87 @@ export const preprocessMath = (html: string) => {
   return processed;
 };
 
-import VoiceMathAssistantModal from './VoiceMathAssistantModal'
+import { vietnameseMathToLatex } from '@/lib/math-speech/vietnameseMathToLatex'
 
 export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomAction }: { editor: any, mathOnlyToolbar?: boolean, smallToolbar?: boolean, rightCustomAction?: React.ReactNode }) => {
-  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
 
-  const handleVoiceInsert = (latex: string, isMath?: boolean) => {
-    if (!editor) return
-    if (isMath) {
-      editor.chain().focus().insertContent({ type: 'math', attrs: { latex } }).run()
-    } else {
-      editor.chain().focus().insertContent(latex + ' ').run()
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop() } catch {}
+      }
+      setIsListening(false)
+      return
     }
-  }
+
+    if (typeof window === 'undefined') return
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      toast.error('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói. Vui lòng dùng Chrome hoặc Edge.')
+      return
+    }
+
+    if (!recognitionRef.current) {
+      const recognition = new SpeechRecognition()
+      recognition.lang = 'vi-VN'
+      recognition.continuous = true
+      recognition.interimResults = false
+
+      recognition.onresult = (event: any) => {
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            const rawSentence = event.results[i][0].transcript.trim()
+            if (rawSentence && editor) {
+              const converted = vietnameseMathToLatex(rawSentence)
+              if (converted.isMath && converted.latex) {
+                // Chèn công thức toán học và render KaTeX trực tiếp tại vị trí con trỏ
+                editor.chain().focus().insertContent({
+                  type: 'math',
+                  attrs: { latex: converted.latex }
+                }).insertContent(' ').run()
+              } else {
+                // Chèn văn bản thường
+                editor.chain().focus().insertContent(rawSentence + ' ').run()
+              }
+            }
+          }
+        }
+      }
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error)
+        setIsListening(false)
+      }
+
+      recognition.onend = () => {
+        setIsListening(false)
+      }
+
+      recognitionRef.current = recognition
+    }
+
+    try {
+      recognitionRef.current.start()
+      setIsListening(true)
+      toast.success('🎙️ Đang lắng nghe giọng nói... Hãy nói công thức toán!')
+    } catch (e) {
+      console.error(e)
+    }
+  }, [editor, isListening])
 
   // Phím tắt Ctrl+M / Cmd+M
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'm') {
         e.preventDefault()
-        setIsVoiceModalOpen(prev => !prev)
+        toggleListening()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [toggleListening])
 
   if (!editor) return null
 
@@ -135,17 +191,21 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
           <Sigma className={iconClass} />
         </button>
         <button
-          onClick={() => setIsVoiceModalOpen(true)}
-          className={`${btnClass} text-slate-600 hover:text-primary hover:bg-white flex items-center justify-center flex-shrink-0`}
-          title="Trợ lý Nói & Nhập Toán tiếng Việt (Ctrl+M)"
+          onClick={toggleListening}
+          className={`${btnClass} flex items-center gap-1.5 justify-center flex-shrink-0 relative transition-all ${
+            isListening
+              ? 'text-rose-600 bg-rose-50 border border-rose-200 shadow-xs'
+              : 'text-slate-600 hover:text-primary hover:bg-white'
+          }`}
+          title={isListening ? "Đang lắng nghe... Bấm để dừng" : "Nói để nhập Toán trực tiếp (Ctrl+M)"}
         >
-          <Mic className={iconClass} />
+          <Mic className={`${iconClass} ${isListening ? 'animate-pulse text-rose-600' : ''}`} />
+          {isListening && (
+            <span className="text-[11px] font-bold text-rose-600 pr-1 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> Đang nghe...
+            </span>
+          )}
         </button>
-        <VoiceMathAssistantModal
-          isOpen={isVoiceModalOpen}
-          onClose={() => setIsVoiceModalOpen(false)}
-          onInsert={handleVoiceInsert}
-        />
       </div>
     );
   }
@@ -227,11 +287,20 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
         </button>
         <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
         <button
-          onClick={() => setIsVoiceModalOpen(true)}
-          className={`${btnClass} flex items-center justify-center flex-shrink-0 text-slate-600 hover:text-primary hover:bg-white`}
-          title="Trợ lý Nói & Nhập Toán tiếng Việt (Ctrl+M)"
+          onClick={toggleListening}
+          className={`${btnClass} flex items-center gap-1.5 justify-center flex-shrink-0 relative transition-all ${
+            isListening 
+              ? 'text-rose-600 bg-rose-50 border border-rose-200 shadow-xs' 
+              : 'text-slate-600 hover:text-primary hover:bg-white'
+          }`}
+          title={isListening ? "Đang lắng nghe... Bấm để dừng" : "Nói để nhập Toán trực tiếp (Ctrl+M)"}
         >
-          <Mic className={iconClass} />
+          <Mic className={`${iconClass} ${isListening ? 'animate-pulse text-rose-600' : ''}`} />
+          {isListening && (
+            <span className="text-[11px] font-bold text-rose-600 pr-1 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> Đang nghe...
+            </span>
+          )}
         </button>
       </div>
 
@@ -240,13 +309,6 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
           {rightCustomAction}
         </div>
       )}
-
-      {/* Modal Trợ lý Nói & Nhập Toán */}
-      <VoiceMathAssistantModal
-        isOpen={isVoiceModalOpen}
-        onClose={() => setIsVoiceModalOpen(false)}
-        onInsert={handleVoiceInsert}
-      />
     </div>
   )
 }
