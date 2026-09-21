@@ -270,12 +270,16 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
             input.onchange = async (e: any) => {
               const file = e.target.files?.[0];
               if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                  toast.error('Dung lượng ảnh vượt quá giới hạn 5MB!');
+                  return;
+                }
                 try {
                   const url = await uploadTempImage(file);
                   editor.chain().focus().insertContentAt(selection.to, { type: 'image', attrs: { src: url } }).run();
-                } catch (error) {
+                } catch (error: any) {
                   console.error("Error uploading image", error);
-                  toast.error('Tải ảnh thất bại!');
+                  toast.error(error?.message || 'Tải ảnh thất bại! Vui lòng thử lại.');
                 }
               }
             };

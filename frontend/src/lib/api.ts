@@ -102,23 +102,35 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
 }
 
 export async function uploadTempImage(file: File | Blob): Promise<string> {
-  const formData = new FormData()
-  // Ensure we have a filename
   const filename = file instanceof File ? file.name : 'upload.png'
-  formData.append('file', file, filename)
 
-  const response = await apiFetch('/uploads/temp', {
-    method: 'POST',
-    body: formData,
-    // Note: Do not set Content-Type header when sending FormData,
-    // the browser will automatically set it with the correct boundary
-  })
-
-  if (response.status === 'success' && response.data?.url) {
-    return response.data.url
+  const doUpload = async () => {
+    const formData = new FormData()
+    formData.append('file', file, filename)
+    return await apiFetch('/uploads/temp', {
+      method: 'POST',
+      body: formData,
+    })
   }
-  
-  throw new Error('Upload failed')
+
+  try {
+    const response = await doUpload()
+    if (response.status === 'success' && response.data?.url) {
+      return response.data.url
+    }
+    throw new Error(response.error || 'Upload failed')
+  } catch (err: any) {
+    // Retry once in case of token refresh or temporary network glitch
+    try {
+      const retryResponse = await doUpload()
+      if (retryResponse.status === 'success' && retryResponse.data?.url) {
+        return retryResponse.data.url
+      }
+      throw new Error(retryResponse.error || 'Upload failed')
+    } catch (retryErr: any) {
+      throw new Error(retryErr?.message || err?.message || 'Tải ảnh thất bại! Vui lòng thử lại.')
+    }
+  }
 }
 
 // Helper to convert object URL (blob:http...) to File and upload
