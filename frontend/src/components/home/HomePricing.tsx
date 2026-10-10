@@ -1,121 +1,263 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, XCircle, Sparkles } from 'lucide-react'
+import { CheckCircle2, QrCode, Loader2, Sparkles, AlertCircle } from 'lucide-react'
+import { apiFetch } from '@/lib/api'
 import { toast } from 'react-hot-toast'
+import PayOSPaymentModal, { PayOSPaymentData } from '@/components/payment/PayOSPaymentModal'
+
+export interface HomePricingPlan {
+  id: string
+  name: string
+  durationMonths: number
+  price: number
+  originalPrice?: number
+  pricePerMonth: string
+  discountBadge?: string
+  topBadge?: string
+  theme: 'blue' | 'green'
+  description: string
+  features: string[]
+}
+
+export const HOME_PRICING_PLANS: HomePricingPlan[] = [
+  {
+    id: '3_months',
+    name: 'Gói 3 Tháng',
+    durationMonths: 3,
+    price: 450000,
+    originalPrice: 600000,
+    pricePerMonth: '150.000đ / tháng',
+    discountBadge: 'Tiết kiệm 25%',
+    topBadge: 'PHỔ BIẾN NHẤT',
+    theme: 'blue',
+    description: 'Lựa chọn phổ biến nhất cho giai đoạn ôn tập và bứt phá điểm số.',
+    features: [
+      'Toàn bộ quyền lợi gói 1 tháng',
+      'Ngân hàng 50.000+ câu hỏi phân loại theo độ khó',
+      'Hệ thống gợi ý bài tập khắc phục điểm yếu',
+      'Ưu tiên hỗ trợ giải đáp thắc mắc 24/7',
+    ],
+  },
+  {
+    id: '1_year',
+    name: 'Gói 1 Năm',
+    durationMonths: 12,
+    price: 1200000,
+    originalPrice: 2400000,
+    pricePerMonth: '100.000đ / tháng',
+    discountBadge: 'Tiết kiệm 50%',
+    topBadge: 'TIẾT KIỆM NHẤT',
+    theme: 'green',
+    description: 'Giải pháp đầu tư tiết kiệm và hiệu quả nhất cho cả năm học và ôn thi chuyển cấp.',
+    features: [
+      'Toàn bộ đặc quyền VIP cao cấp nhất',
+      'Học tập không giới hạn trong 365 ngày',
+      'Kho đề thi vào 10 độc quyền cập nhật mới liên tục',
+      'Hỗ trợ lộ trình học tập cá nhân hóa 1-1',
+    ],
+  },
+]
 
 export default function HomePricing() {
   const router = useRouter()
+  const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSelectPlan = (planId?: string) => {
+  // PayOS Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [paymentData, setPaymentData] = useState<PayOSPaymentData | null>(null)
+
+  const handleCreatePayment = async (plan: HomePricingPlan) => {
     const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null
     if (!userStr) {
       toast.error('Vui lòng đăng nhập để nâng cấp gói học')
       router.push('/login?redirect=/upgrade')
       return
     }
-    router.push('/upgrade')
+
+    setLoadingPlanId(plan.id)
+    setError(null)
+
+    try {
+      const res = await apiFetch('/payments/create', {
+        method: 'POST',
+        body: JSON.stringify({ plan: plan.id }),
+      })
+
+      if (res && res.error) {
+        if (res.error.includes('Unauthorized') || res.error.includes('401')) {
+          toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+          router.push('/login?redirect=/upgrade')
+          return
+        }
+        setError(res.error)
+        toast.error(res.error)
+        return
+      }
+
+      const txData = res?.transactionId ? res : res?.data
+      if (txData && (txData.transactionId || txData.orderCode)) {
+        setPaymentData({
+          transactionId: txData.transactionId,
+          orderCode: txData.orderCode,
+          amount: txData.amount,
+          plan: txData.plan,
+          planName: plan.name,
+          qrCode: txData.qrCode,
+          checkoutUrl: txData.checkoutUrl,
+          accountNumber: txData.accountNumber,
+          accountName: txData.accountName,
+          bin: txData.bin,
+          content: txData.content || `T24H ${txData.orderCode || txData.transactionId}`,
+        })
+        setIsModalOpen(true)
+      } else {
+        toast.error('Không thể tạo mã thanh toán. Vui lòng đăng nhập lại.')
+      }
+    } catch (err: any) {
+      setError(err.message || 'Có lỗi xảy ra khi tạo giao dịch')
+      toast.error(err.message || 'Có lỗi xảy ra')
+    } finally {
+      setLoadingPlanId(null)
+    }
   }
 
   return (
-    <section className="py-24">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-4xl font-bold mb-6 text-slate-900">Lựa chọn gói học phù hợp</h2>
-          <div className="flex items-center justify-center gap-4 mt-8">
-            <span className="text-sm font-bold text-slate-400 uppercase">Hàng tháng</span>
-            <button className="w-14 h-7 bg-primary/20 rounded-full relative p-1 flex items-center">
-              <div className="w-5 h-5 bg-primary rounded-full translate-x-7"></div>
-            </button>
-            <span className="text-sm font-bold uppercase text-slate-900">
-              Hàng năm <span className="text-primary">(Tiết kiệm 50%)</span>
-            </span>
-          </div>
+    <section id="pricing" className="py-20 bg-slate-50/50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
+            Chọn Gói Học Phù Hợp Với Bạn
+          </h2>
+          <p className="text-base sm:text-lg text-slate-600">
+            Mở khóa toàn bộ ngân hàng bài giảng, đề thi thông minh và lời giải chi tiết trên Toan6789.vn.
+          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* Basic Plan */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-200/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all flex flex-col h-full">
-            <div className="mb-8">
-              <h3 className="text-2xl font-bold mb-2 text-slate-900">Gói Cơ Bản</h3>
-              <p className="text-slate-500">Khám phá phương pháp học AI</p>
-            </div>
-            <div className="mb-8 flex items-baseline gap-1">
-              <span className="text-5xl font-bold text-slate-900">0đ</span>
-              <span className="text-slate-500">/tháng</span>
-            </div>
-            <ul className="space-y-4 mb-10 flex-grow">
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="text-primary w-5 h-5" />
-                <span className="text-slate-700">Học liệu chuẩn lớp 6-12</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="text-primary w-5 h-5" />
-                <span className="text-slate-700">5 câu hỏi AI mỗi ngày</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="text-primary w-5 h-5" />
-                <span className="text-slate-700">Tham gia bảng xếp hạng</span>
-              </li>
-              <li className="flex items-center gap-3 opacity-40">
-                <XCircle className="text-slate-400 w-5 h-5" />
-                <span className="line-through text-slate-500">Lộ trình học cá nhân hóa</span>
-              </li>
-            </ul>
-            <button
-              onClick={() => handleSelectPlan('free')}
-              className="w-full py-4 rounded-xl border-2 border-slate-200 font-bold hover:bg-primary hover:text-white hover:border-primary transition-all text-slate-700 cursor-pointer"
-            >
-              Đăng ký ngay
-            </button>
+        {error && (
+          <div className="max-w-md mx-auto mb-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
+            <span>{error}</span>
           </div>
+        )}
 
-          {/* Gói Pro */}
-          <div className="relative bg-white p-10 rounded-[2rem] border-2 border-primary shadow-[0_10px_30px_-10px_rgba(37,99,235,0.12)] flex flex-col h-full">
-            <div className="absolute -top-4 right-8 bg-primary text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Được chọn nhiều nhất</span>
-            </div>
-            <div className="mb-8">
-              <h3 className="text-2xl font-bold mb-2 text-slate-900">Gói Pro (VIP)</h3>
-              <p className="text-slate-500">Tối ưu điểm số cùng chuyên gia AI</p>
-            </div>
-            <div className="mb-8 flex items-baseline gap-1">
-              <span className="text-5xl font-bold text-slate-900">150k</span>
-              <span className="text-slate-500">/tháng</span>
-            </div>
-            <ul className="space-y-4 mb-10 flex-grow">
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="text-primary w-5 h-5" />
-                <span className="font-bold text-slate-900">Không giới hạn hỏi đáp AI</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="text-primary w-5 h-5" />
-                <span className="text-slate-700">Lộ trình học cá nhân hóa</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="text-primary w-5 h-5" />
-                <span className="text-slate-700">Kho 100,000+ đề thi có lời giải</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="text-primary w-5 h-5" />
-                <span className="text-slate-700">Phân tích điểm mạnh/yếu 24/7</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <CheckCircle2 className="text-primary w-5 h-5" />
-                <span className="text-slate-700">Hỗ trợ 1:1 qua hotline VIP</span>
-              </li>
-            </ul>
-            <button
-              onClick={() => handleSelectPlan('pro')}
-              className="w-full py-4 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all cursor-pointer"
-            >
-              Nâng cấp Pro ngay (PayOS)
-            </button>
-          </div>
+        {/* 2 Plans Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+          {HOME_PRICING_PLANS.map((plan) => {
+            const isLoading = loadingPlanId === plan.id
+            const isBlue = plan.theme === 'blue'
+
+            return (
+              <div
+                key={plan.id}
+                className={`relative bg-white rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 border-2 ${
+                  isBlue
+                    ? 'border-blue-600 shadow-xl shadow-blue-500/10 hover:shadow-2xl hover:shadow-blue-500/15'
+                    : 'border-emerald-500 shadow-xl shadow-emerald-500/10 hover:shadow-2xl hover:shadow-emerald-500/15'
+                }`}
+              >
+                {/* Top Badge (PHỔ BIẾN NHẤT / TIẾT KIỆM NHẤT) */}
+                {plan.topBadge && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                    <span
+                      className={`px-4 py-1 text-white text-xs font-black rounded-full shadow-md uppercase tracking-wider ${
+                        isBlue
+                          ? 'bg-blue-600'
+                          : 'bg-emerald-600'
+                      }`}
+                    >
+                      {plan.topBadge}
+                    </span>
+                  </div>
+                )}
+
+                <div>
+                  {/* Plan Name & Discount Pill */}
+                  <div className="flex items-center justify-between gap-3 mb-2 pt-2">
+                    <h3 className="text-2xl font-bold text-slate-900">{plan.name}</h3>
+                    {plan.discountBadge && (
+                      <span className="px-3 py-0.5 rounded-full text-xs font-black bg-rose-100 text-rose-700 border border-rose-200">
+                        {plan.discountBadge}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-sm text-slate-500 min-h-[40px] leading-relaxed">
+                    {plan.description}
+                  </p>
+
+                  {/* Price Section */}
+                  <div className="mt-5 pb-5 border-b border-slate-100">
+                    <div className="flex items-baseline gap-2.5">
+                      <span className="text-4xl font-extrabold text-slate-900 tracking-tight">
+                        {plan.price.toLocaleString('vi-VN')}đ
+                      </span>
+                      {plan.originalPrice && (
+                        <span className="text-base font-semibold text-slate-400 line-through">
+                          {plan.originalPrice.toLocaleString('vi-VN')}đ
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm font-semibold text-blue-600 mt-1.5">
+                      {plan.pricePerMonth}
+                    </div>
+                  </div>
+
+                  {/* Features List */}
+                  <div className="my-6">
+                    <p className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4">
+                      ĐẶC QUYỀN BAO GỒM:
+                    </p>
+                    <ul className="space-y-3.5">
+                      {plan.features.map((feat, idx) => (
+                        <li key={idx} className="flex items-start gap-3 text-sm text-slate-700">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <div className="pt-4">
+                  <button
+                    onClick={() => handleCreatePayment(plan)}
+                    disabled={isLoading}
+                    className={`w-full py-4 px-6 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2.5 cursor-pointer shadow-lg active:scale-98 ${
+                      isBlue
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/25'
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/25'
+                    } disabled:opacity-50`}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Đang tạo mã thanh toán...</span>
+                      </>
+                    ) : (
+                      <>
+                        <QrCode className="w-5 h-5" />
+                        <span>Tạo mã thanh toán PayOS</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
+
+      {/* PayOS Payment Modal */}
+      <PayOSPaymentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        paymentData={paymentData}
+      />
     </section>
   )
 }

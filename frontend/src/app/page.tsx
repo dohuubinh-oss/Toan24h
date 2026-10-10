@@ -10,7 +10,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-primary/30">
       <HomeNavigation />
-      
+
       <main>
         <HomeHero />
         <HomeFeatures />
