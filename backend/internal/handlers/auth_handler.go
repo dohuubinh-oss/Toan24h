@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -359,6 +360,12 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 		return
 	}
 
+	if user.TelegramID != nil {
+		notifier := services.NewTelegramNotifier()
+		msg := fmt.Sprintf("🔐 <b>Mã OTP khôi phục mật khẩu:</b> <code>%s</code>\n\nMã có hiệu lực trong 10 phút. Nếu bạn không yêu cầu mã này, hãy bỏ qua tin nhắn.", otp)
+		_ = notifier.SendMessage(*user.TelegramID, msg)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Mã OTP đã được gửi đến email của bạn",
 	})
@@ -423,6 +430,12 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	}
 
 	h.otpService.DeleteOTP(req.Email)
+
+	if user.TelegramID != nil {
+		notifier := services.NewTelegramNotifier()
+		msg := "⚠️ <b>Thông báo bảo mật:</b> Mật khẩu tài khoản Toán 6789 của bạn vừa được thay đổi thành công. Nếu không phải bạn thực hiện, vui lòng liên hệ quản trị viên ngay."
+		_ = notifier.SendMessage(*user.TelegramID, msg)
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại!",
