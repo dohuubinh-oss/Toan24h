@@ -9,6 +9,7 @@ interface TelegramLoginWidgetProps {
   botName: string
   onAuthSuccess: (user: any) => void
   linkUserId?: string
+  slot?: 1 | 2
   buttonText?: string
 }
 
@@ -16,6 +17,7 @@ export default function TelegramLoginWidget({
   botName,
   onAuthSuccess,
   linkUserId,
+  slot = 1,
   buttonText,
 }: TelegramLoginWidgetProps) {
   const onAuthSuccessRef = useRef(onAuthSuccess)
@@ -47,6 +49,7 @@ export default function TelegramLoginWidget({
         body: JSON.stringify({
           sessionId: localId,
           linkUserId: linkUserId || undefined,
+          linkSlot: String(slot),
         }),
       })
       if (res && res.sessionId) {
@@ -90,9 +93,16 @@ export default function TelegramLoginWidget({
     return () => clearInterval(interval)
   }, [showQrModal, sessionId, qrStatus])
 
-
-  const defaultBtnText = linkUserId ? 'Liên kết tài khoản Telegram' : 'Đăng nhập với Telegram'
-  const defaultModalTitle = linkUserId ? 'Liên kết tài khoản Telegram' : 'Đăng nhập với Telegram'
+  const defaultBtnText = linkUserId
+    ? slot === 2
+      ? 'Liên kết Telegram (Phụ huynh)'
+      : 'Liên kết Telegram (Học sinh)'
+    : 'Đăng nhập với Telegram'
+  const defaultModalTitle = linkUserId
+    ? slot === 2
+      ? 'Liên kết Telegram Phụ huynh'
+      : 'Liên kết Telegram Học sinh'
+    : 'Đăng nhập với Telegram'
 
   return (
     <div className="flex flex-col items-center w-full gap-3 my-1">
