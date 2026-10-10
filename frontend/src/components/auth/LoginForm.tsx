@@ -90,7 +90,7 @@ export default function LoginForm() {
     <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 bg-white">
       <div className="w-full max-w-[520px]">
         {/* Title */}
-        <div className="mb-10 text-center">
+        <div className="mb-8 text-center flex flex-col items-center">
           <h2 className="text-3xl font-bold text-slate-800 mb-2">Đăng nhập</h2>
           <p className="text-slate-500 text-base">Vui lòng nhập thông tin để truy cập bài học của bạn.</p>
         </div>
@@ -104,18 +104,18 @@ export default function LoginForm() {
           )}
 
           <div>
-            <Label htmlFor="identity">Số điện thoại hoặc Email</Label>
+            <Label htmlFor="identity">Email</Label>
             <Input
               {...register('identity', {
-                required: 'Vui lòng nhập email hoặc số điện thoại',
+                required: 'Vui lòng nhập địa chỉ email',
                 pattern: {
-                  value: /^([^\s@]+@[^\s@]+\.[^\s@]+|(84|0[3|5|7|8|9])+([0-9]{8})\b)$/,
-                  message: 'Email hoặc số điện thoại không hợp lệ'
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: 'Địa chỉ email không hợp lệ (ví dụ: name@gmail.com)'
                 }
               })}
               id="identity"
-              placeholder="Nhập email hoặc số điện thoại"
-              type="text"
+              placeholder="name@example.com"
+              type="email"
               error={!!errors.identity}
             />
             {errors.identity && (
