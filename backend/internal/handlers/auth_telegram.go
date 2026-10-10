@@ -55,9 +55,9 @@ func (h *AuthHandler) TelegramLogin(c *gin.Context) {
 		return
 	}
 
-	// Find user by Telegram ID
+	// Find user by Telegram ID in either slot 1 or slot 2
 	var user models.User
-	result := h.db.Where("telegram_id = ?", req.ID).First(&user)
+	result := h.db.Where("telegram_id = ? OR telegram_id2 = ?", req.ID, req.ID).First(&user)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
@@ -95,11 +95,20 @@ func (h *AuthHandler) TelegramLogin(c *gin.Context) {
 	} else {
 		// Update existing user info if needed
 		updates := map[string]interface{}{}
-		if req.Username != "" && (user.TelegramUser == nil || *user.TelegramUser != req.Username) {
-			updates["telegram_user"] = req.Username
-		}
-		if req.PhotoURL != "" && (user.TelegramAvt == nil || *user.TelegramAvt != req.PhotoURL) {
-			updates["telegram_avt"] = req.PhotoURL
+		if user.TelegramID != nil && *user.TelegramID == req.ID {
+			if req.Username != "" && (user.TelegramUser == nil || *user.TelegramUser != req.Username) {
+				updates["telegram_user"] = req.Username
+			}
+			if req.PhotoURL != "" && (user.TelegramAvt == nil || *user.TelegramAvt != req.PhotoURL) {
+				updates["telegram_avt"] = req.PhotoURL
+			}
+		} else if user.TelegramID2 != nil && *user.TelegramID2 == req.ID {
+			if req.Username != "" && (user.TelegramUser2 == nil || *user.TelegramUser2 != req.Username) {
+				updates["telegram_user2"] = req.Username
+			}
+			if req.PhotoURL != "" && (user.TelegramAvt2 == nil || *user.TelegramAvt2 != req.PhotoURL) {
+				updates["telegram_avt2"] = req.PhotoURL
+			}
 		}
 		if len(updates) > 0 {
 			h.db.Model(&user).Updates(updates)
@@ -124,13 +133,19 @@ func (h *AuthHandler) TelegramLogin(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"user": gin.H{
-			"id":       user.ID,
-			"email":    user.Email,
-			"fullName": user.FullName,
-			"role":     user.Role,
-			"grade":    user.Grade,
-			"points":   user.Points,
-			"status":   user.Status,
+			"id":                user.ID,
+			"email":             user.Email,
+			"fullName":          user.FullName,
+			"role":              user.Role,
+			"grade":             user.Grade,
+			"points":            user.Points,
+			"status":            user.Status,
+			"telegramId":        user.TelegramID,
+			"telegramUsername":  user.TelegramUser,
+			"telegramAvt":       user.TelegramAvt,
+			"telegramId2":       user.TelegramID2,
+			"telegramUsername2": user.TelegramUser2,
+			"telegramAvt2":      user.TelegramAvt2,
 		},
 	})
 }
@@ -146,6 +161,7 @@ type LinkTelegramRequest struct {
 	LastName         string      `json:"last_name"`
 	AuthDate         int64       `json:"auth_date"`
 	Hash             string      `json:"hash"`
+	Slot             interface{} `json:"slot"`
 }
 
 func parseTelegramID(v interface{}) int64 {
@@ -165,7 +181,7 @@ func parseTelegramID(v interface{}) int64 {
 	}
 }
 
-// LinkTelegram links a Telegram account to an existing user
+// LinkTelegram links a Telegram account to an existing user (Slot 1 or Slot 2)
 func (h *AuthHandler) LinkTelegram(c *gin.Context) {
 	userIDStr, exists := c.Get("userID")
 	if !exists {
@@ -192,6 +208,11 @@ func (h *AuthHandler) LinkTelegram(c *gin.Context) {
 	tgAvt := req.PhotoURL
 	if tgAvt == "" {
 		tgAvt = req.TelegramAvt
+	}
+
+	slot := int(parseTelegramID(req.Slot))
+	if slot != 2 {
+		slot = 1
 	}
 
 	if tgID == 0 {
@@ -233,32 +254,31 @@ func (h *AuthHandler) LinkTelegram(c *gin.Context) {
 		currentUID = fmt.Sprintf("%v", id)
 	}
 
-	// Check if Telegram ID is already linked to another user
+	// Check if Telegram ID is already linked to another user across either slot 1 or slot 2
 	var existing models.User
-	if err := h.db.Unscoped().Where("telegram_id = ?", tgID).First(&existing).Error; err == nil {
-		if existing.ID.String() != currentUID {
-			c.JSON(http.StatusConflict, gin.H{"error": "Tài khoản Telegram này đã được liên kết với một người dùng khác"})
-			return
-		}
-		// Already linked to current user, return success directly
-		c.JSON(http.StatusOK, gin.H{
-			"message":          "Telegram account linked successfully",
-			"telegramId":       tgID,
-			"telegramUsername": tgUser,
-			"telegramAvt":      tgAvt,
-		})
+	if err := h.db.Unscoped().Where("(telegram_id = ? OR telegram_id2 = ?) AND id != ?", tgID, tgID, currentUID).First(&existing).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Tài khoản Telegram này đã được liên kết với một người dùng khác"})
 		return
 	}
 
-	// Update current user
-	updates := map[string]interface{}{
-		"telegram_id": tgID,
-	}
-	if tgUser != "" {
-		updates["telegram_user"] = tgUser
-	}
-	if tgAvt != "" {
-		updates["telegram_avt"] = tgAvt
+	// Update current user for the selected slot
+	updates := map[string]interface{}{}
+	if slot == 2 {
+		updates["telegram_id2"] = tgID
+		if tgUser != "" {
+			updates["telegram_user2"] = tgUser
+		}
+		if tgAvt != "" {
+			updates["telegram_avt2"] = tgAvt
+		}
+	} else {
+		updates["telegram_id"] = tgID
+		if tgUser != "" {
+			updates["telegram_user"] = tgUser
+		}
+		if tgAvt != "" {
+			updates["telegram_avt"] = tgAvt
+		}
 	}
 
 	if err := h.db.Model(&models.User{}).Where("id = ?", currentUID).Updates(updates).Error; err != nil {
@@ -268,9 +288,60 @@ func (h *AuthHandler) LinkTelegram(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":          "Telegram account linked successfully",
+		"slot":             slot,
 		"telegramId":       tgID,
 		"telegramUsername": tgUser,
 		"telegramAvt":      tgAvt,
+	})
+}
+
+type UnlinkTelegramRequest struct {
+	Slot int `json:"slot"`
+}
+
+// UnlinkTelegram removes a linked Telegram account from slot 1 or slot 2
+func (h *AuthHandler) UnlinkTelegram(c *gin.Context) {
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req UnlinkTelegramRequest
+	_ = c.ShouldBindJSON(&req)
+	if req.Slot != 2 {
+		req.Slot = 1
+	}
+
+	var currentUID string
+	switch id := userIDStr.(type) {
+	case uuid.UUID:
+		currentUID = id.String()
+	case string:
+		currentUID = id
+	default:
+		currentUID = fmt.Sprintf("%v", id)
+	}
+
+	updates := map[string]interface{}{}
+	if req.Slot == 2 {
+		updates["telegram_id2"] = nil
+		updates["telegram_user2"] = nil
+		updates["telegram_avt2"] = nil
+	} else {
+		updates["telegram_id"] = nil
+		updates["telegram_user"] = nil
+		updates["telegram_avt"] = nil
+	}
+
+	if err := h.db.Model(&models.User{}).Where("id = ?", currentUID).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi hủy liên kết Telegram: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Hủy liên kết Telegram thành công",
+		"slot":    req.Slot,
 	})
 }
 
@@ -279,6 +350,7 @@ func (h *AuthHandler) CreateTelegramQRSession(c *gin.Context) {
 	var body struct {
 		SessionID  string `json:"sessionId"`
 		LinkUserID string `json:"linkUserId"`
+		LinkSlot   string `json:"linkSlot"`
 	}
 	_ = c.ShouldBindJSON(&body)
 
@@ -290,10 +362,10 @@ func (h *AuthHandler) CreateTelegramQRSession(c *gin.Context) {
 	var sessionID, deepLink string
 	if body.SessionID != "" {
 		sessionID = body.SessionID
-		services.RegisterTelegramQRSessionWithLink(sessionID, body.LinkUserID)
+		services.RegisterTelegramQRSessionWithLink(sessionID, body.LinkUserID, body.LinkSlot)
 		deepLink = fmt.Sprintf("https://t.me/%s?start=login_%s", botUsername, sessionID)
 	} else {
-		sessionID, deepLink = services.CreateTelegramQRSessionWithLink(body.LinkUserID)
+		sessionID, deepLink = services.CreateTelegramQRSessionWithLink(body.LinkUserID, body.LinkSlot)
 	}
 
 	c.JSON(http.StatusOK, gin.H{

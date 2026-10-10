@@ -144,6 +144,7 @@ func SetupRouter() *gin.Engine {
 			users.PUT("/me/password", authHandler.ChangePassword)
 			users.POST("/me/deduct-points", authHandler.DeductPoints)
 			users.POST("/me/link-telegram", authHandler.LinkTelegram)
+			users.POST("/me/unlink-telegram", authHandler.UnlinkTelegram)
 			users.POST("/me/avatar", userHandler.UploadAvatar)
 		}
 

@@ -12,10 +12,13 @@ type User struct {
 	Email        string         `gorm:"type:varchar(255);uniqueIndex" json:"email"`
 	PasswordHash string         `gorm:"type:varchar(255)" json:"-"`
 	FullName     string         `gorm:"type:varchar(255);not null" json:"fullName"`
-	TelegramID   *int64         `gorm:"uniqueIndex" json:"telegramId"`
-	TelegramUser *string        `gorm:"type:varchar(255)" json:"telegramUsername"`
-	TelegramAvt  *string        `gorm:"type:text" json:"telegramPhotoUrl"`
-	Role         string         `gorm:"type:varchar(50);not null;default:'student'" json:"role"`
+	TelegramID    *int64         `gorm:"index" json:"telegramId"`
+	TelegramUser  *string        `gorm:"type:varchar(255)" json:"telegramUsername"`
+	TelegramAvt   *string        `gorm:"type:text" json:"telegramPhotoUrl"`
+	TelegramID2   *int64         `gorm:"index" json:"telegramId2"`
+	TelegramUser2 *string        `gorm:"type:varchar(255)" json:"telegramUsername2"`
+	TelegramAvt2  *string        `gorm:"type:text" json:"telegramPhotoUrl2"`
+	Role          string         `gorm:"type:varchar(50);not null;default:'student'" json:"role"`
 	Grade          string         `gorm:"type:varchar(50)" json:"grade"`
 	Points         int            `gorm:"not null;default:0" json:"points"`
 	LifetimeXP     int            `gorm:"not null;default:0" json:"lifetimeXp"`

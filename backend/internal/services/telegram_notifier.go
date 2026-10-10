@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
@@ -60,4 +61,23 @@ func (s *TelegramNotifier) SendMessage(chatID int64, text string) error {
 	}
 
 	return nil
+}
+
+// SendToUser sends a text message to all linked Telegram accounts of a user (Slot 1 & Slot 2)
+func (s *TelegramNotifier) SendToUser(user *models.User, text string) error {
+	if user == nil {
+		return nil
+	}
+	var lastErr error
+	if user.TelegramID != nil {
+		if err := s.SendMessage(*user.TelegramID, text); err != nil {
+			lastErr = err
+		}
+	}
+	if user.TelegramID2 != nil {
+		if err := s.SendMessage(*user.TelegramID2, text); err != nil {
+			lastErr = err
+		}
+	}
+	return lastErr
 }

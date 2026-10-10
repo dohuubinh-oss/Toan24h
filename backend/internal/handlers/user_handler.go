@@ -146,18 +146,21 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"data": gin.H{
-			"id":               user.ID,
-			"email":            user.Email,
-			"fullName":         user.FullName,
-			"role":             user.Role,
-			"grade":            user.Grade,
-			"points":           user.Points,
-			"status":           user.Status,
-			"telegramId":       user.TelegramID,
-			"telegramUsername": user.TelegramUser,
-			"telegramAvt":      user.TelegramAvt,
-			"expiresAt":        user.ExpiresAt,
-			"createdAt":        user.CreatedAt,
+			"id":                user.ID,
+			"email":             user.Email,
+			"fullName":          user.FullName,
+			"role":              user.Role,
+			"grade":             user.Grade,
+			"points":            user.Points,
+			"status":            user.Status,
+			"telegramId":        user.TelegramID,
+			"telegramUsername":  user.TelegramUser,
+			"telegramAvt":       user.TelegramAvt,
+			"telegramId2":       user.TelegramID2,
+			"telegramUsername2": user.TelegramUser2,
+			"telegramAvt2":      user.TelegramAvt2,
+			"expiresAt":         user.ExpiresAt,
+			"createdAt":         user.CreatedAt,
 		},
 	})
 }

@@ -20,7 +20,8 @@ import (
 type TelegramQRSessionData struct {
 	SessionID    string       `json:"sessionId"`
 	LinkUserID   string       `json:"linkUserId,omitempty"`
-	Status       string       `json:"status"` // "waiting" | "completed"
+	LinkSlot     string       `json:"linkSlot,omitempty"` // "1" | "2"
+	Status       string       `json:"status"`             // "waiting" | "completed"
 	TelegramID   int64        `json:"telegramId"`
 	TelegramUser string       `json:"telegramUsername"`
 	User         *models.User `json:"user,omitempty"`
@@ -35,11 +36,11 @@ var (
 
 // CreateTelegramQRSession generates a new session and returns sessionID + deepLink
 func CreateTelegramQRSession() (string, string) {
-	return CreateTelegramQRSessionWithLink("")
+	return CreateTelegramQRSessionWithLink("", "1")
 }
 
-// CreateTelegramQRSessionWithLink generates a new session with optional user linking
-func CreateTelegramQRSessionWithLink(linkUserID string) (string, string) {
+// CreateTelegramQRSessionWithLink generates a new session with optional user linking and slot
+func CreateTelegramQRSessionWithLink(linkUserID string, linkSlot string) (string, string) {
 	bytes := make([]byte, 16)
 	_, _ = rand.Read(bytes)
 	sessionID := hex.EncodeToString(bytes)
@@ -49,9 +50,14 @@ func CreateTelegramQRSessionWithLink(linkUserID string) (string, string) {
 		botUsername = "toan6789_bot"
 	}
 
+	if linkSlot == "" {
+		linkSlot = "1"
+	}
+
 	session := TelegramQRSessionData{
 		SessionID:  sessionID,
 		LinkUserID: linkUserID,
+		LinkSlot:   linkSlot,
 		Status:     "waiting",
 		CreatedAt:  time.Now(),
 	}
@@ -63,15 +69,19 @@ func CreateTelegramQRSessionWithLink(linkUserID string) (string, string) {
 
 // RegisterTelegramQRSession ensures a sessionID is tracked
 func RegisterTelegramQRSession(sessionID string) {
-	RegisterTelegramQRSessionWithLink(sessionID, "")
+	RegisterTelegramQRSessionWithLink(sessionID, "", "1")
 }
 
-// RegisterTelegramQRSessionWithLink ensures a sessionID is tracked with optional linkUserID
-func RegisterTelegramQRSessionWithLink(sessionID string, linkUserID string) {
+// RegisterTelegramQRSessionWithLink ensures a sessionID is tracked with optional linkUserID and linkSlot
+func RegisterTelegramQRSessionWithLink(sessionID string, linkUserID string, linkSlot string) {
+	if linkSlot == "" {
+		linkSlot = "1"
+	}
 	if val, ok := TelegramQRStore.Load(sessionID); !ok {
 		TelegramQRStore.Store(sessionID, TelegramQRSessionData{
 			SessionID:  sessionID,
 			LinkUserID: linkUserID,
+			LinkSlot:   linkSlot,
 			Status:     "waiting",
 			CreatedAt:  time.Now(),
 		})
@@ -79,6 +89,7 @@ func RegisterTelegramQRSessionWithLink(sessionID string, linkUserID string) {
 		data := val.(TelegramQRSessionData)
 		if linkUserID != "" && data.LinkUserID == "" {
 			data.LinkUserID = linkUserID
+			data.LinkSlot = linkSlot
 			TelegramQRStore.Store(sessionID, data)
 		}
 	}
@@ -110,23 +121,33 @@ func CompleteTelegramLoginDirect(db *gorm.DB, sessionID string, telegramID int64
 	if hasSession && sessionData.LinkUserID != "" {
 		// LINKING MODE: Link this telegram account to the already logged-in user
 		if err := db.Where("id = ?", sessionData.LinkUserID).First(&user).Error; err == nil {
-			updates := map[string]interface{}{
-				"telegram_id": telegramID,
-			}
-			if username != "" {
-				updates["telegram_user"] = username
+			updates := map[string]interface{}{}
+			if sessionData.LinkSlot == "2" {
+				updates["telegram_id2"] = telegramID
+				if username != "" {
+					updates["telegram_user2"] = username
+				}
+				user.TelegramID2 = &telegramID
+				if username != "" {
+					user.TelegramUser2 = &username
+				}
+			} else {
+				updates["telegram_id"] = telegramID
+				if username != "" {
+					updates["telegram_user"] = username
+				}
+				user.TelegramID = &telegramID
+				if username != "" {
+					user.TelegramUser = &username
+				}
 			}
 			db.Model(&user).Updates(updates)
-			user.TelegramID = &telegramID
-			if username != "" {
-				user.TelegramUser = &username
-			}
 		} else {
 			return nil, "", "", fmt.Errorf("user to link not found")
 		}
 	} else {
-		// LOGIN / REGISTRATION MODE
-		err := db.Where("telegram_id = ?", telegramID).First(&user).Error
+		// LOGIN / REGISTRATION MODE (Search across both slot 1 and slot 2)
+		err := db.Where("telegram_id = ? OR telegram_id2 = ?", telegramID, telegramID).First(&user).Error
 		if err != nil {
 			email := fmt.Sprintf("tg_%d@telegram.local", telegramID)
 			fullName := strings.TrimSpace(firstName + " " + lastName)
@@ -148,9 +169,14 @@ func CompleteTelegramLoginDirect(db *gorm.DB, sessionID string, telegramID int64
 				return nil, "", "", err
 			}
 		} else {
-			if username != "" && (user.TelegramUser == nil || *user.TelegramUser != username) {
-				db.Model(&user).Update("telegram_user", username)
-				user.TelegramUser = &username
+			if username != "" {
+				if user.TelegramID != nil && *user.TelegramID == telegramID && (user.TelegramUser == nil || *user.TelegramUser != username) {
+					db.Model(&user).Update("telegram_user", username)
+					user.TelegramUser = &username
+				} else if user.TelegramID2 != nil && *user.TelegramID2 == telegramID && (user.TelegramUser2 == nil || *user.TelegramUser2 != username) {
+					db.Model(&user).Update("telegram_user2", username)
+					user.TelegramUser2 = &username
+				}
 			}
 		}
 	}
