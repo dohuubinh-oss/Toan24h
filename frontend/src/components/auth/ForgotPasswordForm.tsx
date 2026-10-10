@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react'
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
@@ -30,6 +30,10 @@ export default function ForgotPasswordForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   
+  // 60s cooldown timer for resending OTP
+  const [resendTimer, setResendTimer] = useState(0)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+
   const router = useRouter()
 
   const {
@@ -43,9 +47,28 @@ export default function ForgotPasswordForm() {
     mode: 'onTouched'
   })
 
+  const startResendTimer = () => {
+    setResendTimer(60)
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [])
+
   // Handle individual OTP box change
   const handleOtpDigitChange = (index: number, val: string) => {
-    // Keep only numbers
     const cleanVal = val.replace(/\D/g, '')
     const digit = cleanVal.slice(-1)
 
@@ -56,7 +79,6 @@ export default function ForgotPasswordForm() {
     const combinedOtp = newDigits.join('')
     setValue('otp', combinedOtp, { shouldValidate: true })
 
-    // Auto-focus next box if digit entered
     if (digit && index < 5) {
       inputRefs.current[index + 1]?.focus()
     }
@@ -107,8 +129,38 @@ export default function ForgotPasswordForm() {
       const data = await res.json()
       setServerSuccess(data.message || 'Mã OTP đã được gửi đến email của bạn.')
       setStep(2)
+      startResendTimer()
     } catch (err: any) {
       setServerError(err.message || 'Lỗi hệ thống. Vui lòng thử lại.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleResendOtp = async () => {
+    if (resendTimer > 0 || isLoading) return
+    setServerError(null)
+    setServerSuccess(null)
+    const email = getValues('email')
+    setIsLoading(true)
+
+    try {
+      const res = await apiFetch('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setServerError(data.error || 'Không thể gửi lại mã OTP.')
+        setIsLoading(false)
+        return
+      }
+
+      setServerSuccess('Mã OTP mới đã được gửi lại vào email.')
+      startResendTimer()
+    } catch (err: any) {
+      setServerError(err.message || 'Lỗi gửi lại mã OTP.')
     } finally {
       setIsLoading(false)
     }
@@ -278,12 +330,25 @@ export default function ForgotPasswordForm() {
                       onPaste={handleOtpPaste}
                       className="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold rounded-xl border-2 border-slate-200 bg-slate-50/50 text-slate-800 transition-all duration-200 outline-none focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 shadow-sm"
                       autoFocus={idx === 0}
+                      aria-label={`Digit ${idx + 1}`}
                     />
                   ))}
                 </div>
-                <p className="text-xs text-slate-400 text-center mt-3">
-                  Bạn có thể dán (paste) trực tiếp mã 6 số vào các ô trên.
-                </p>
+                <div className="flex items-center justify-between mt-3 text-xs text-slate-500">
+                  <span>Bạn có thể dán trực tiếp mã 6 số.</span>
+                  {resendTimer > 0 ? (
+                    <span className="text-slate-400 font-medium">Gửi lại sau {resendTimer}s</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={isLoading}
+                      className="text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3 h-3" /> Gửi lại mã
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-4">
@@ -316,6 +381,7 @@ export default function ForgotPasswordForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label="Toggle password visibility"
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -346,6 +412,7 @@ export default function ForgotPasswordForm() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label="Toggle confirm password visibility"
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
