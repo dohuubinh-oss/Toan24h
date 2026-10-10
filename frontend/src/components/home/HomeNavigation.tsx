@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
-import { FunctionSquare, Bell, User, ChevronDown, LogOut, Settings } from 'lucide-react'
+import { Bell, User, ChevronDown, LogOut, Settings } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { apiFetch } from '@/lib/api'
+import Logo from '@/components/common/Logo'
 
 interface HomeNavigationProps {
   isLoggedIn?: boolean;
@@ -114,13 +115,8 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <FunctionSquare className="text-white w-6 h-6" />
-          </div>
-          <span className="text-2xl font-bold tracking-tight text-slate-900">
-            Math<span className="text-primary">AI</span>
-          </span>
+        <Link href="/" className="flex items-center">
+          <Logo size="md" />
         </Link>
         <div className="hidden lg:flex items-center gap-8 font-medium">
           <Link className="hover:text-primary transition-colors text-slate-700" href="/">Trang chủ</Link>

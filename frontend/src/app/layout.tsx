@@ -12,8 +12,12 @@ const lexend = Lexend({
 })
 
 export const metadata: Metadata = {
-  title: 'Ngân hàng câu hỏi | Math EdTech',
-  description: 'Hệ thống quản lý ngân hàng câu hỏi môn Toán.',
+  title: 'toan6789.vn - Nền tảng Học và Luyện thi Toán THCS | MathAI',
+  description: 'Nền tảng học và thi thử Toán THCS Lớp 6, 7, 8, 9 với trợ lý thông minh MathAI.',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/logo-icon.png',
+  },
 }
 
 export default function RootLayout({

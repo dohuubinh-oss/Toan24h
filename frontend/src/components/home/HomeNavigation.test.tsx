@@ -7,7 +7,7 @@ describe('HomeNavigation', () => {
     render(<HomeNavigation />)
     expect(screen.getByText(/Math/i)).toBeInTheDocument()
     expect(screen.getByText(/AI/i)).toBeInTheDocument()
-    expect(screen.getByText('Tính năng')).toBeInTheDocument()
+    expect(screen.getByText('Trang chủ')).toBeInTheDocument()
     expect(screen.getByText('Đăng nhập')).toBeInTheDocument()
     expect(screen.getByText('Học ngay')).toBeInTheDocument()
   })
