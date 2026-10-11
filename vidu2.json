@@ -1,0 +1,52 @@
+[
+  {
+    "mathType": "Dạng 1. Nhận biết đơn thức (Trường hợp nhiều phương pháp giải)",
+    "method": [
+      {
+        "Solution": "Đơn thức: Là biểu thức đại số chỉ gồm một số hoặc một biến, hoặc có dạng tích của những số và biến.",
+        "exams": [
+          {
+            "problem": "Nội dung đề bài toán (tuân thủ các quy tắc LaTeX và thẻ <br> nếu cần)...",
+            "conclusion": "Nội dung kết luận/đáp số chung (định dạng HTML/LaTeX) hoặc để trống \"\" nếu không cần thiết",
+            "problemImage": "",
+            "solutionImage": "",
+            "steps": [
+              {
+                "step": 1,
+                "title": "Tên bước thực hiện (hoặc Câu a)",
+                "content": "Nội dung giải thích ngắn gọn nhất có thể, không dùng \\n, thêm thẻ <br> sau dấu ;",
+                "formula": "Biểu thức LaTeX của bước này (hoặc \"\" nếu không cần thiết)"
+              },
+              {
+                "step": 2,
+                "title": "Tên bước tiếp theo (hoặc Câu b)",
+                "content": "Nội dung giải thích ngắn gọn nhất có thể, không dùng \\n, thêm thẻ <br> sau dấu ;",
+                "formula": "Biểu thức LaTeX của bước này (hoặc \"\" nếu không cần thiết)"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "mathType": "Dạng 2. Thu gọn đơn thức (Trường hợp 1 phương pháp giải trực tiếp)",
+    "Solution": "Để thu gọn một đơn thức, ta nhân các hệ số với nhau và nhân các phần biến có cùng cơ số với nhau.",
+    "exams": [
+      {
+        "problem": "Nội dung đề bài toán ví dụ mẫu...",
+        "conclusion": "Kết luận bài toán",
+        "problemImage": "",
+        "solutionImage": "",
+        "steps": [
+          {
+            "step": 1,
+            "title": "Bước 1",
+            "content": "Nhân các hệ số và nhóm các biến cùng phần biến",
+            "formula": "2x^2y \\cdot 3xy^3 = 6x^3y^4"
+          }
+        ]
+      }
+    ]
+  }
+]
