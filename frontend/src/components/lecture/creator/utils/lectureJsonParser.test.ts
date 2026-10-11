@@ -1,0 +1,55 @@
+import { describe, it, expect } from 'vitest'
+import { parseLectureJson, buildExerciseHtmlFromExams } from './lectureJsonParser'
+
+describe('lectureJsonParser', () => {
+  it('throws error for invalid JSON string', () => {
+    expect(() => parseLectureJson('invalid json')).toThrow('JSON không hợp lệ')
+  })
+
+  it('throws error if JSON is not an array', () => {
+    expect(() => parseLectureJson('{"mathType": "Dạng 1"}')).toThrow('Dữ liệu JSON phải là một danh sách (mảng []) các Dạng toán')
+  })
+
+  it('throws error if JSON array is empty', () => {
+    expect(() => parseLectureJson('[]')).toThrow('Danh sách Dạng toán không được để trống')
+  })
+
+  it('parses valid math types and maps to DangToanItem array', () => {
+    const sample = JSON.stringify([
+      {
+        mathType: 'Dạng 1. Nhận biết đơn thức',
+        Solution: 'Đơn thức là biểu thức...',
+        exams: [
+          {
+            problem: 'Ví dụ 1',
+            conclusion: 'Kết luận 1',
+            steps: [
+              { step: 1, title: 'Bước 1', content: 'Giải thích', formula: '-x^2y' }
+            ]
+          }
+        ]
+      }
+    ])
+
+    const result = parseLectureJson(sample)
+    expect(result).toHaveLength(1)
+    expect(result[0].dangToanName).toBe('Dạng 1. Nhận biết đơn thức')
+    expect(result[0].methods).toHaveLength(1)
+    expect(result[0].methods[0].methodContent).toBe('Đơn thức là biểu thức...')
+    expect(result[0].methods[0].exercise?.content).toContain('Ví dụ 1')
+    expect(result[0].methods[0].exercise?.content).toContain('Kết luận 1')
+    expect(result[0].methods[0].exercise?.content).toContain('$$ -x^2y $$'.replace(/\s+/g, ''))
+  })
+
+  it('combines multiple exams in a single method exercise content', () => {
+    const exams = [
+      { problem: 'Ví dụ 1', steps: [{ step: 1, content: 'B1' }] },
+      { problem: 'Ví dụ 2', steps: [{ step: 1, content: 'B2' }] }
+    ]
+
+    const html = buildExerciseHtmlFromExams(exams)
+    expect(html).toContain('Ví dụ 1')
+    expect(html).toContain('Ví dụ 2')
+    expect(html).toContain('my-8 border-t border-dashed')
+  })
+})
