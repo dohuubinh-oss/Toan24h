@@ -12,14 +12,11 @@ Dự án tuân thủ nghiêm ngặt các **Thiết luật (Iron Laws)** của Su
 - **Bite-sized Planning**: Kế hoạch chia nhỏ 2-5 phút.
 - **Strict TDD**: Test trước, code sau. Không test = Xóa code.
 - **Subagent SDD**: Chạy subagent cho từng task biệt lập.
-- **Karpathy Principles**: Code đơn giản nhất, thay đổi chính xác (surgical), không đoán mò. Xem: [.agent/rules/karpathy-guidelines.md](file:///Users/modeptrai/Desktop/toan6789.vn/.agent/rules/karpathy-guidelines.md)
+- **Karpathy Principles**: Code đơn giản nhất, thay đổi chính xác (surgical), không đoán mò.
 
-Xem chi tiết tại: [.agent/rules/superpowers.md](file:///Users/modeptrai/Desktop/toan6789.vn/.agent/rules/superpowers.md)
-
-### 2. ECC Infrastructure (`.agent/`)
-- **Quy tắc (`.agent/rules/`)**: Chứa 110+ quy chuẩn kỹ thuật (TS, Go, Security).
-- **Kỹ năng (`.agent/skills/`)**: Thư viện kỹ năng chuyên sâu (Superpowers & ECC skills).
-- **Quy trình (`.agent/workflows/`)**: Slash commands điều khiển dự án.
+### 2. ECC & Superpowers Infrastructure (Global Plugins)
+- **Quy tắc & Kỹ năng**: Được cung cấp và quản lý tập trung toàn cục qua các plugins (`superpowers`, `ecc`, `ui-ux-pro-max`).
+- **Quy trình**: Slash commands và workflows điều khiển dự án.
 
 ## 🛡️ ABSOLUTE ISOLATION POLICY (CRITICAL)
 
