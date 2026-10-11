@@ -82,3 +82,69 @@ func TestAuthMiddleware(t *testing.T) {
 		})
 	}
 }
+
+func TestRoleMiddleware(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	tests := []struct {
+		name          string
+		userRole      string
+		requiredRoles []string
+		expectedCode  int
+	}{
+		{
+			name:          "Admin matches single admin requirement",
+			userRole:      "admin",
+			requiredRoles: []string{"admin"},
+			expectedCode:  http.StatusOK,
+		},
+		{
+			name:          "Teacher denied when only admin required",
+			userRole:      "teacher",
+			requiredRoles: []string{"admin"},
+			expectedCode:  http.StatusForbidden,
+		},
+		{
+			name:          "Teacher allowed when admin or teacher required",
+			userRole:      "teacher",
+			requiredRoles: []string{"admin", "teacher"},
+			expectedCode:  http.StatusOK,
+		},
+		{
+			name:          "Student denied when admin or teacher required",
+			userRole:      "student",
+			requiredRoles: []string{"admin", "teacher"},
+			expectedCode:  http.StatusForbidden,
+		},
+		{
+			name:          "Missing role denied",
+			userRole:      "",
+			requiredRoles: []string{"admin"},
+			expectedCode:  http.StatusForbidden,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := gin.New()
+			r.Use(func(c *gin.Context) {
+				if tt.userRole != "" {
+					c.Set("userRole", tt.userRole)
+				}
+				c.Next()
+			})
+			r.Use(middleware.RoleMiddleware(tt.requiredRoles...))
+			r.GET("/role-check", func(c *gin.Context) {
+				c.Status(http.StatusOK)
+			})
+
+			req, _ := http.NewRequest("GET", "/role-check", nil)
+			w := httptest.NewRecorder()
+			r.ServeHTTP(w, req)
+
+			if w.Code != tt.expectedCode {
+				t.Errorf("Expected status %d, got %d", tt.expectedCode, w.Code)
+			}
+		})
+	}
+}

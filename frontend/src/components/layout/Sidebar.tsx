@@ -7,10 +7,10 @@ import {
   LayoutDashboard, Database, ClipboardList, Users, BookOpen, Trophy, PenTool, MessageSquareWarning
 } from 'lucide-react';
 
-export type SidebarRole = 'student' | 'teacher';
+export type SidebarRole = 'student' | 'teacher' | 'admin';
 
 export interface SidebarProps {
-  role: SidebarRole;
+  role?: SidebarRole;
   filterNode?: React.ReactNode;
 }
 
@@ -24,19 +24,36 @@ const STUDENT_LINKS = [
 const TEACHER_LINKS = [
   { href: '/dashboard/questions', icon: Database, label: 'Ngân hàng câu hỏi', matchPrefix: true },
   { href: '/dashboard/exams', icon: ClipboardList, label: 'Ngân hàng đề thi', matchPrefix: true },
+  { href: '/dashboard/appeals', icon: MessageSquareWarning, label: 'Báo lỗi/Kháng cáo', matchPrefix: true },
+];
+
+const ADMIN_LINKS = [
+  { href: '/dashboard/questions', icon: Database, label: 'Ngân hàng câu hỏi', matchPrefix: true },
+  { href: '/dashboard/exams', icon: ClipboardList, label: 'Ngân hàng đề thi', matchPrefix: true },
   { href: '/dashboard/users', icon: Users, label: 'Quản lý người dùng', matchPrefix: true },
   { href: '/dashboard/appeals', icon: MessageSquareWarning, label: 'Báo lỗi/Kháng cáo', matchPrefix: true },
 ];
 
-export default function Sidebar({ role, filterNode }: SidebarProps) {
+export default function Sidebar({ role: initialRole, filterNode }: SidebarProps) {
   const pathname = usePathname();
+  const [role, setRole] = React.useState<SidebarRole>(initialRole || 'teacher');
+
+  React.useEffect(() => {
+    const match = document.cookie.match(/(?:^|; )userRole=([^;]*)/);
+    if (match) {
+      const parsedRole = decodeURIComponent(match[1]) as SidebarRole;
+      if (parsedRole) {
+        setRole(parsedRole);
+      }
+    }
+  }, []);
 
   // Hide sidebar on specific "create" pages to maximize focus area
   if (pathname === '/dashboard/questions/create' || pathname === '/dashboard/exams/create') {
     return null;
   }
   
-  const links = role === 'student' ? STUDENT_LINKS : TEACHER_LINKS;
+  const links = role === 'student' ? STUDENT_LINKS : (role === 'admin' ? ADMIN_LINKS : TEACHER_LINKS);
 
   return (
     <aside className="w-64 border-r border-slate-200 hidden md:block bg-white shrink-0">

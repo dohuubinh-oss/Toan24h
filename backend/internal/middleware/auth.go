@@ -47,15 +47,28 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// RoleMiddleware checks if the user has the required role
-func RoleMiddleware(requiredRole string) gin.HandlerFunc {
+// RoleMiddleware checks if the user has one of the required roles
+func RoleMiddleware(requiredRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		role, exists := c.Get("userRole")
-		if !exists || role != requiredRole {
+		roleVal, exists := c.Get("userRole")
+		if !exists {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: insufficient permissions"})
 			c.Abort()
 			return
 		}
-		c.Next()
+		userRole, ok := roleVal.(string)
+		if !ok {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: insufficient permissions"})
+			c.Abort()
+			return
+		}
+		for _, requiredRole := range requiredRoles {
+			if userRole == requiredRole {
+				c.Next()
+				return
+			}
+		}
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: insufficient permissions"})
+		c.Abort()
 	}
 }

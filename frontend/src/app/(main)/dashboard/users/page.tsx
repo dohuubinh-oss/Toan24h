@@ -27,7 +27,22 @@ function UsersPageContent() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
 
+  useEffect(() => {
+    const match = document.cookie.match(/(?:^|; )userRole=([^;]*)/);
+    const userRole = match ? decodeURIComponent(match[1]) : null;
+    if (userRole && userRole !== 'admin') {
+      router.replace('/dashboard/questions');
+    }
+  }, [router]);
+
   const fetchUsers = async () => {
+    const match = document.cookie.match(/(?:^|; )userRole=([^;]*)/);
+    const userRole = match ? decodeURIComponent(match[1]) : null;
+    if (userRole && userRole !== 'admin') {
+      router.replace('/dashboard/questions');
+      return;
+    }
+
     try {
       setLoading(true);
       const queryParams = new URLSearchParams();

@@ -27,6 +27,11 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Chỉ cho phép admin truy cập /dashboard/users, giáo viên và các role khác sẽ chuyển hướng về /dashboard/questions
+  if (path.startsWith('/dashboard/users') && role !== 'admin') {
+    return NextResponse.redirect(new URL('/dashboard/questions', request.url))
+  }
+
   if (role === 'admin' || role === 'teacher') {
     // Admin và Teacher truy cập /lectures sẽ được đưa về trang chọn lớp dashboard
     if (path === '/lectures') {

@@ -175,36 +175,36 @@ func SetupRouter() *gin.Engine {
 		protected.GET("/exam-results/:id", handlers.GetExamResultByID)
 		protected.POST("/exam-results/:id/appeal", handlers.AppealExamResult)
 
-		// Admin Management Group
-		admin := protected.Group("")
-		admin.Use(middleware.RoleMiddleware("admin"))
+		// Staff Management Group (Admin & Teacher)
+		staff := protected.Group("")
+		staff.Use(middleware.RoleMiddleware("admin", "teacher"))
 		{
 			// Questions admin
-			admin.POST("/questions/bulk", handlers.BulkCreateQuestions)
-			admin.PUT("/questions/:id", handlers.UpdateQuestion)
-			admin.DELETE("/questions/:id", handlers.DeleteQuestion)
+			staff.POST("/questions/bulk", handlers.BulkCreateQuestions)
+			staff.PUT("/questions/:id", handlers.UpdateQuestion)
+			staff.DELETE("/questions/:id", handlers.DeleteQuestion)
 
 			// Exams admin
-			admin.POST("/exams", handlers.CreateExam)
-			admin.PUT("/exams/:id", handlers.UpdateExam)
-			admin.DELETE("/exams/:id", handlers.DeleteExam)
+			staff.POST("/exams", handlers.CreateExam)
+			staff.PUT("/exams/:id", handlers.UpdateExam)
+			staff.DELETE("/exams/:id", handlers.DeleteExam)
 
 			// Lectures admin
-			admin.POST("/lectures", lectureController.CreateLecture)
-			admin.PUT("/lectures/:id", lectureController.UpdateLecture)
-			admin.DELETE("/lectures/:id", lectureController.DeleteLecture)
+			staff.POST("/lectures", lectureController.CreateLecture)
+			staff.PUT("/lectures/:id", lectureController.UpdateLecture)
+			staff.DELETE("/lectures/:id", lectureController.DeleteLecture)
 
 			// Appeals admin
-			admin.GET("/appeals", handlers.GetAppeals)
-			admin.POST("/appeals/:id/resolve", handlers.ResolveAppeal)
+			staff.GET("/appeals", handlers.GetAppeals)
+			staff.POST("/appeals/:id/resolve", handlers.ResolveAppeal)
 
 			// Submissions needs review admin
-			admin.GET("/submissions/needs-review", handlers.GetNeedsReviewSubmissions)
-			admin.POST("/submissions/:id/grade-review", handlers.ResolveSubmissionReview)
+			staff.GET("/submissions/needs-review", handlers.GetNeedsReviewSubmissions)
+			staff.POST("/submissions/:id/grade-review", handlers.ResolveSubmissionReview)
 
 			// Reported questions admin
-			admin.GET("/questions/reported", handlers.GetReportedQuestions)
-			admin.POST("/questions/reported/:id/resolve", handlers.ResolveReportQuestion)
+			staff.GET("/questions/reported", handlers.GetReportedQuestions)
+			staff.POST("/questions/reported/:id/resolve", handlers.ResolveReportQuestion)
 		}
 
 		protected.POST("/ocr", ocrController.ExtractText)
