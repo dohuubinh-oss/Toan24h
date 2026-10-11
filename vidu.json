@@ -26,6 +26,31 @@
             ]
           }
         ]
+      },
+      {
+        "Solution": "Đơn thức là biểu thức đại số chỉ gồm một số hoặc một biến, hoặc có dạng tích của những số và biến.",
+        "exams": [
+          {
+            "problem": "Nội dung đề bài toán (tuân thủ các quy tắc LaTeX và thẻ <br> nếu cần)...",
+            "conclusion": "Nội dung kết luận/đáp số chung (định dạng HTML/LaTeX) hoặc để trống \"\" nếu không cần thiết",
+            "problemImage": "",
+            "solutionImage": "",
+            "steps": [
+              {
+                "step": 1,
+                "title": "Tên bước thực hiện (hoặc Câu a)",
+                "content": "Nội dung giải thích ngắn gọn nhất có thể, không dùng \\n, thêm thẻ <br> sau dấu ;",
+                "formula": "Biểu thức LaTeX của bước này (hoặc \"\" nếu không cần thiết)"
+              },
+              {
+                "step": 2,
+                "title": "Tên bước tiếp theo (hoặc Câu b)",
+                "content": "Nội dung giải thích ngắn gọn nhất có thể, không dùng \\n, thêm thẻ <br> sau dấu ;",
+                "formula": "Biểu thức LaTeX của bước này (hoặc \"\" nếu không cần thiết)"
+              }
+            ]
+          }
+        ]
       }
     ]
   }
