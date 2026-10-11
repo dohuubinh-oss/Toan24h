@@ -14,10 +14,17 @@ export interface RawExamItem {
   steps?: RawExamStep[];
 }
 
+export interface RawMethodItem {
+  methodName?: string;
+  Solution?: string;
+  exams?: RawExamItem[];
+}
+
 export interface RawMathTypeItem {
   mathType: string;
   Solution?: string;
   exams?: RawExamItem[];
+  methods?: RawMethodItem[];
 }
 
 export function buildExerciseHtmlFromExams(exams: RawExamItem[]): string {
@@ -143,14 +150,25 @@ export function parseLectureJson(jsonString: string): DangToanItem[] {
 
   return parsed.map((item: RawMathTypeItem, index: number) => {
     const dangToanId = Math.random().toString(36).substr(2, 9)
-    const methodId = Math.random().toString(36).substr(2, 9)
 
-    const exerciseContent = buildExerciseHtmlFromExams(item.exams || [])
-
-    return {
-      id: dangToanId,
-      dangToanName: item.mathType || `Dạng toán ${index + 1}`,
-      methods: [
+    let methodsList = []
+    if (Array.isArray(item.methods) && item.methods.length > 0) {
+      methodsList = item.methods.map((m, mIdx) => {
+        const methodId = Math.random().toString(36).substr(2, 9)
+        const exerciseContent = buildExerciseHtmlFromExams(m.exams || [])
+        return {
+          id: methodId,
+          methodName: m.methodName || '',
+          methodContent: m.Solution || '',
+          exercise: exerciseContent ? { content: exerciseContent } : null,
+          problemImage: null,
+          solutionImage: null
+        }
+      })
+    } else {
+      const methodId = Math.random().toString(36).substr(2, 9)
+      const exerciseContent = buildExerciseHtmlFromExams(item.exams || [])
+      methodsList = [
         {
           id: methodId,
           methodName: '',
@@ -160,6 +178,12 @@ export function parseLectureJson(jsonString: string): DangToanItem[] {
           solutionImage: null
         }
       ]
+    }
+
+    return {
+      id: dangToanId,
+      dangToanName: item.mathType || `Dạng toán ${index + 1}`,
+      methods: methodsList
     }
   })
 }

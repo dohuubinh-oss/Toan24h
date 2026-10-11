@@ -52,4 +52,35 @@ describe('lectureJsonParser', () => {
     expect(html).toContain('Ví dụ 2')
     expect(html).toContain('my-8 border-t border-dashed')
   })
+
+  it('parses math types with explicit methods array and multiple methods', () => {
+    const sample = JSON.stringify([
+      {
+        mathType: 'Dạng 1. Đơn thức',
+        methods: [
+          {
+            methodName: 'Phương pháp A',
+            Solution: 'Lý thuyết PP A',
+            exams: [{ problem: 'Ví dụ PP A' }]
+          },
+          {
+            methodName: 'Phương pháp B',
+            Solution: 'Lý thuyết PP B',
+            exams: [{ problem: 'Ví dụ PP B' }]
+          }
+        ]
+      }
+    ])
+
+    const result = parseLectureJson(sample)
+    expect(result).toHaveLength(1)
+    expect(result[0].dangToanName).toBe('Dạng 1. Đơn thức')
+    expect(result[0].methods).toHaveLength(2)
+    expect(result[0].methods[0].methodName).toBe('Phương pháp A')
+    expect(result[0].methods[0].methodContent).toBe('Lý thuyết PP A')
+    expect(result[0].methods[0].exercise?.content).toContain('Ví dụ PP A')
+    expect(result[0].methods[1].methodName).toBe('Phương pháp B')
+    expect(result[0].methods[1].methodContent).toBe('Lý thuyết PP B')
+    expect(result[0].methods[1].exercise?.content).toContain('Ví dụ PP B')
+  })
 })
