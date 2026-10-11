@@ -13,6 +13,7 @@ type LectureRepository interface {
 	GetAllLectures(ctx context.Context) ([]models.Lecture, error)
 	GetLectureByID(ctx context.Context, id string) (*models.Lecture, error)
 	UpdateLecture(ctx context.Context, lecture *models.Lecture) error
+	DeleteLecture(ctx context.Context, id string) error
 }
 
 type lectureRepository struct {
@@ -71,3 +72,10 @@ func (r *lectureRepository) UpdateLecture(ctx context.Context, lecture *models.L
 		return tx.Save(lecture).Error
 	})
 }
+
+func (r *lectureRepository) DeleteLecture(ctx context.Context, id string) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return tx.Where("id = ?", id).Delete(&models.Lecture{}).Error
+	})
+}
+

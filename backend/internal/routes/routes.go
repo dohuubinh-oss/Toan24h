@@ -192,6 +192,7 @@ func SetupRouter() *gin.Engine {
 			// Lectures admin
 			admin.POST("/lectures", lectureController.CreateLecture)
 			admin.PUT("/lectures/:id", lectureController.UpdateLecture)
+			admin.DELETE("/lectures/:id", lectureController.DeleteLecture)
 
 			// Appeals admin
 			admin.GET("/appeals", handlers.GetAppeals)

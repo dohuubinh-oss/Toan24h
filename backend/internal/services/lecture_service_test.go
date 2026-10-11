@@ -14,6 +14,14 @@ type mockLectureRepository struct {
 	GetLecturesByGradeFunc func(ctx context.Context, grade string, limit, offset int) ([]models.Lecture, int64, error)
 	GetAllLecturesFunc     func(ctx context.Context) ([]models.Lecture, error)
 	GetLectureByIDFunc     func(ctx context.Context, id string) (*models.Lecture, error)
+	DeleteLectureFunc      func(ctx context.Context, id string) error
+}
+
+func (m *mockLectureRepository) DeleteLecture(ctx context.Context, id string) error {
+	if m.DeleteLectureFunc != nil {
+		return m.DeleteLectureFunc(ctx, id)
+	}
+	return nil
 }
 
 func (m *mockLectureRepository) CreateLecture(ctx context.Context, lecture *models.Lecture) error {
@@ -221,3 +229,39 @@ func TestUpdateLectureService(t *testing.T) {
 		}
 	})
 }
+
+func TestLectureService_DeleteLecture(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		deletedID := ""
+		mockRepo := &mockLectureRepository{
+			DeleteLectureFunc: func(ctx context.Context, id string) error {
+				deletedID = id
+				return nil
+			},
+		}
+		service := NewLectureService(mockRepo)
+
+		err := service.DeleteLecture(context.Background(), "123")
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if deletedID != "123" {
+			t.Errorf("Expected deletedID to be '123', got '%s'", deletedID)
+		}
+	})
+
+	t.Run("Repository Error", func(t *testing.T) {
+		mockRepo := &mockLectureRepository{
+			DeleteLectureFunc: func(ctx context.Context, id string) error {
+				return errors.New("db delete failed")
+			},
+		}
+		service := NewLectureService(mockRepo)
+
+		err := service.DeleteLecture(context.Background(), "123")
+		if err == nil || err.Error() != "db delete failed" {
+			t.Errorf("Expected 'db delete failed', got %v", err)
+		}
+	})
+}
+

@@ -105,3 +105,18 @@ func (ctrl *LectureController) GetLectureByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+func (ctrl *LectureController) DeleteLecture(c *gin.Context) {
+	id := c.Param("id")
+
+	if err := ctrl.service.DeleteLecture(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Lecture deleted successfully",
+	})
+}

@@ -68,6 +68,7 @@ type LectureService interface {
 	GetLecturesByGrade(ctx context.Context, grade string, page, limit int) (*PaginatedLectures, error)
 	GetAllLectures(ctx context.Context) ([]models.Lecture, error)
 	GetLectureByID(ctx context.Context, id string) (*models.Lecture, error)
+	DeleteLecture(ctx context.Context, id string) error
 }
 
 type lectureService struct {
@@ -270,3 +271,8 @@ func (s *lectureService) GetAllLectures(ctx context.Context) ([]models.Lecture, 
 func (s *lectureService) GetLectureByID(ctx context.Context, id string) (*models.Lecture, error) {
 	return s.repo.GetLectureByID(ctx, id)
 }
+
+func (s *lectureService) DeleteLecture(ctx context.Context, id string) error {
+	return s.repo.DeleteLecture(ctx, id)
+}
+
