@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import { Microscope, ImagePlus, Code, Plus, Trash2, ChevronDown, ChevronRight, GripVertical, CheckCircle2 } from 'lucide-react'
+import { Microscope, ImagePlus, Plus, Trash2, ChevronDown, ChevronRight, GripVertical, CheckCircle2 } from 'lucide-react'
 import { Button } from '../../ui/Button'
 import MathText from '@/components/ui/MathText'
 import SharedEditorCard from '@/components/questions/creator/editor/SharedEditorCard'
@@ -81,116 +81,6 @@ function ImageUploadArea({
 
 function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem, index: number, onChange: (m: MethodItem) => void, onRemove?: () => void }) {
   const [isExpanded, setIsExpanded] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [jsonInput, setJsonInput] = useState('')
-  const [jsonError, setJsonError] = useState('')
-
-  const handleSaveJson = () => {
-    try {
-      setJsonError('')
-      const parsed = JSON.parse(jsonInput)
-      
-      const stepsData = parsed.steps || parsed.Steps;
-      if (!stepsData || !Array.isArray(stepsData)) {
-         throw new Error('JSON cần chứa mảng "Steps" (hoặc "steps").')
-      }
-
-      let html = `<div class="exercise-content bg-white p-4">`
-      
-      if (parsed.problem) {
-         html += `<div class="bg-slate-50 p-5 rounded-lg border border-slate-200 mb-8">
-            <p class="italic text-slate-700 m-0">${parsed.problem}</p>
-          </div>`
-      }
-
-      const hasTimeline = (stepsData && Array.isArray(stepsData) && stepsData.length > 0) || parsed.conclusion || parsed.tips;
-
-      if (hasTimeline) {
-        html += `<div class="space-y-0">`
-        
-        let timelineItems: any[] = [];
-        if (stepsData && Array.isArray(stepsData)) {
-            stepsData.forEach((step: any, idx: number) => {
-                timelineItems.push({
-                    type: 'step',
-                    idx: step.step || idx + 1,
-                    title: step.title,
-                    content: step.content,
-                    formula: step.formula
-                });
-            });
-        }
-        if (parsed.conclusion) {
-            timelineItems.push({
-                type: 'conclusion',
-                content: parsed.conclusion
-            });
-        }
-        if (parsed.tips) {
-            timelineItems.push({
-                type: 'tips',
-                content: parsed.tips
-            });
-        }
-
-        timelineItems.forEach((item: any, i: number) => {
-            const isLast = i === timelineItems.length - 1;
-            
-            html += `<div class="flex gap-4">
-                <div class="flex-none flex flex-col items-center">`
-                
-            if (item.type === 'step') {
-                html += `<p class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm m-0">${item.idx}</p>`
-            } else if (item.type === 'conclusion') {
-                html += `<p class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm m-0">✓</p>`
-            } else if (item.type === 'tips') {
-                html += `<p class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm m-0">💡</p>`
-            }
-
-            if (!isLast) {
-                html += `<div class="w-0.5 h-full bg-slate-200 my-1"></div>`
-            }
-            
-            html += `</div>
-                <div class="${isLast ? '' : 'pb-8'} flex-1 pt-1">`
-                
-            if (item.type === 'step') {
-                if (item.title) {
-                    html += `<h4 class="font-bold text-slate-900 m-0">${item.title}</h4>`
-                }
-                if (item.content) {
-                    html += `<p class="text-slate-600 mt-1 mb-0">${item.content}</p>`
-                }
-                if (item.formula) {
-                    html += `<p class="mt-3 text-blue-600 font-bold m-0">${item.formula.includes('$') ? item.formula : '$$' + item.formula + '$$'}</p>`
-                }
-            } else if (item.type === 'conclusion') {
-                html += `<h4 class="font-bold text-slate-900 m-0">Kết luận</h4>
-                         <p class="text-slate-600 mt-1 mb-0">${item.content}</p>`
-            } else if (item.type === 'tips') {
-                html += `<h4 class="font-bold text-slate-900 m-0">Gợi ý</h4>
-                         <p class="text-slate-600 mt-1 mb-0">${item.content}</p>`
-            }
-
-            html += `</div></div>`
-        });
-
-        html += `</div>`
-      }
-
-      html += `</div>`
-
-      onChange({
-        ...method,
-        methodContent: parsed.theory || method.methodContent,
-        exercise: { content: html }
-      })
-      setIsModalOpen(false)
-      setJsonInput('')
-    } catch (err: any) {
-      setJsonError(err.message || 'JSON không hợp lệ')
-    }
-  }
 
   const exercise = method.exercise || { content: '' }
 
@@ -230,16 +120,6 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
           </div>
 
           <div className="border-t border-slate-100 pt-6">
-            <div className="flex justify-end mb-3">
-              <Button
-                variant="outline"
-                onClick={() => setIsModalOpen(true)}
-                className="border-slate-300 hover:border-primary hover:text-primary transition-colors text-xs font-medium h-8 px-3 bg-white shadow-sm"
-              >
-                <Code className="w-3 h-3 mr-1.5" />
-                Nhập JSON
-              </Button>
-            </div>
             <div className="flex flex-col gap-6">
               <SharedEditorCard
                 title="BÀI TẬP MẪU"
@@ -248,69 +128,6 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
                 onContentChange={(html) => onChange({ ...method, exercise: { content: html } })}
                 placeholder="Nhập nội dung bài tập (Đề bài và Các bước giải)..."
               />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* JSON Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col border-0">
-            <div className="p-5 flex items-center justify-between bg-white">
-              <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                <Code className="w-5 h-5 text-primary" />
-                Nhập JSON
-              </h3>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div className="p-6 bg-white">
-              <textarea
-                value={jsonInput}
-                onChange={(e) => setJsonInput(e.target.value)}
-                className="w-full h-64 p-4 rounded-xl border border-slate-200 font-mono text-sm bg-slate-50 focus:bg-slate-50 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 focus:outline-none transition-all resize-none whitespace-pre"
-                placeholder={`{
-  "problem": "Nội dung đề bài (hỗ trợ LaTex với cặp $$)",
-  "steps": [
-    {
-      "step": 1,
-      "title": "Bước 1",
-      "content": "Nội dung diễn giải",
-      "formula": "x = 1"
-    }
-  ],
-  "conclusion": "Vậy x = 1 là nghiệm",
-  "tips": "Nhớ đặt điều kiện trước khi giải nhé!"
-}`}
-              />
-              {jsonError && (
-                <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-lg flex items-start gap-2">
-                  <div className="text-red-500 text-sm">{jsonError}</div>
-                </div>
-              )}
-            </div>
-
-            <div className="p-5 bg-white flex justify-end gap-3">
-              <Button
-                variant="ghost"
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-600 hover:bg-slate-100"
-              >
-                Hủy bỏ
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleSaveJson}
-                className="bg-primary hover:bg-primary-dark text-white px-6 shadow-sm"
-              >
-                Xác nhận
-              </Button>
             </div>
           </div>
         </div>
