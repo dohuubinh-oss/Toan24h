@@ -91,8 +91,10 @@ func SetupRouter() *gin.Engine {
 		// Auth routes
 		v1.POST("/auth/register", authHandler.Register)
 		v1.POST("/auth/login", authHandler.Login)
+		v1.POST("/auth/google", authHandler.GoogleLogin)
 		v1.POST("/auth/refresh", authHandler.Refresh)
 		v1.POST("/auth/telegram-login", authHandler.TelegramLogin)
+		v1.POST("/auth/telegram", authHandler.TelegramLogin)
 		v1.POST("/auth/telegram-qr/session", authHandler.CreateTelegramQRSession)
 		v1.GET("/auth/telegram-qr/status/:sessionId", authHandler.CheckTelegramQRStatus)
 		v1.POST("/auth/telegram-qr/complete", authHandler.CompleteTelegramQRSession)

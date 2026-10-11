@@ -12,6 +12,7 @@ type User struct {
 	Email        string         `gorm:"type:varchar(255);uniqueIndex" json:"email"`
 	PasswordHash string         `gorm:"type:varchar(255)" json:"-"`
 	FullName     string         `gorm:"type:varchar(255);not null" json:"fullName"`
+	GoogleID     *string        `gorm:"type:varchar(255);index" json:"googleId,omitempty"`
 	TelegramID    *int64         `gorm:"index" json:"telegramId"`
 	TelegramUser  *string        `gorm:"type:varchar(255)" json:"telegramUsername"`
 	TelegramAvt   *string        `gorm:"type:text" json:"telegramPhotoUrl"`
