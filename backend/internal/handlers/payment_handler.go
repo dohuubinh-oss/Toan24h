@@ -57,7 +57,7 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 		amount = 675000
 		description = "T24H 3 thang"
 	case "9_months":
-		amount = 1620000
+		amount = 1755000
 		description = "T24H 9 thang"
 	case "1_year", "12_months":
 		amount = 1800000

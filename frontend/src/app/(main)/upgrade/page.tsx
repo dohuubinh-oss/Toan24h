@@ -66,10 +66,10 @@ const PLANS: Plan[] = [
     id: '9_months',
     name: 'Gói 9 Tháng',
     durationMonths: 9,
-    price: 1620000,
+    price: 1755000,
     originalPrice: 2700000,
-    pricePerMonth: '180.000đ / tháng',
-    discountBadge: 'Tiết kiệm 40%',
+    pricePerMonth: '195.000đ / tháng',
+    discountBadge: 'Tiết kiệm 35%',
     description: 'Đồng hành trọn vẹn năm học từ kiến thức nền tảng đến ôn thi cuối kỳ.',
     features: [
       'Toàn bộ quyền lợi gói 3 tháng',
