@@ -31,6 +31,29 @@ export async function registerUser(data: any) {
   return res
 }
 
+export async function loginWithGoogle(credential: string) {
+  const res = await apiFetch('/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({ credential })
+  })
+  if (res.user && typeof window !== 'undefined') {
+    localStorage.setItem('user', JSON.stringify(res.user))
+    document.cookie = `userRole=${res.user.role}; path=/; max-age=86400; SameSite=Lax`
+    if (res.user.grade) {
+      document.cookie = `userGrade=${res.user.grade}; path=/; max-age=86400; SameSite=Lax`
+    }
+    if (res.user.expiresAt) {
+      document.cookie = `userExpiresAt=${res.user.expiresAt}; path=/; max-age=86400; SameSite=Lax`
+    } else {
+      document.cookie = `userExpiresAt=; path=/; max-age=0; SameSite=Lax`
+    }
+    if (res.accessToken) {
+      document.cookie = `accessToken=${res.accessToken}; path=/; max-age=86400; SameSite=Lax`
+    }
+  }
+  return res
+}
+
 export async function telegramLogin(data: any) {
   const res = await apiFetch('/auth/telegram-login', {
     method: 'POST',
