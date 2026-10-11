@@ -14,8 +14,8 @@ describe('HomePricing Component', () => {
     expect(screen.getByText('Gói 1 Năm')).toBeInTheDocument()
     expect(screen.getByText('PHỔ BIẾN NHẤT')).toBeInTheDocument()
     expect(screen.getByText('TIẾT KIỆM NHẤT')).toBeInTheDocument()
-    expect(screen.getByText('450.000đ')).toBeInTheDocument()
-    expect(screen.getByText('1.200.000đ')).toBeInTheDocument()
+    expect(screen.getByText('675.000đ')).toBeInTheDocument()
+    expect(screen.getByText('1.800.000đ')).toBeInTheDocument()
   })
 
   it('renders upgrade account links pointing to /upgrade', () => {

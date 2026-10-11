@@ -51,16 +51,16 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 	var description string
 	switch req.Plan {
 	case "1_month":
-		amount = 299000
+		amount = 300000
 		description = "T24H 1 thang"
 	case "3_months":
-		amount = 450000
+		amount = 675000
 		description = "T24H 3 thang"
 	case "9_months":
-		amount = 1080000
+		amount = 1620000
 		description = "T24H 9 thang"
 	case "1_year", "12_months":
-		amount = 1200000
+		amount = 1800000
 		description = "T24H 12 thang"
 	default:
 		c.JSON(400, gin.H{"error": "Gói nâng cấp không hợp lệ"})
