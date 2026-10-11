@@ -9,7 +9,7 @@ import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
 import { Checkbox } from '../ui/Checkbox'
 import { login } from '@/lib/authApi'
-import TelegramLoginWidget from './TelegramLoginWidget'
+import GoogleSignInButton from './GoogleSignInButton'
 import toast from 'react-hot-toast'
 
 type LoginFormValues = {
@@ -75,8 +75,7 @@ export default function LoginForm() {
     }
   }
 
-  const handleTelegramSuccess = (user: any) => {
-    toast.success(`Đăng nhập thành công! Xin chào ${user.fullName || 'bạn'}`)
+  const handleGoogleSuccess = (user: any) => {
     setTimeout(() => {
       if (user.role === 'admin' || user.role === 'teacher') {
         window.location.href = '/dashboard/lectures'
@@ -180,17 +179,7 @@ export default function LoginForm() {
         </div>
 
         <div className="grid gap-4">
-          {(() => {
-            const telegramBotName = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'toan6789_bot';
-            return (
-              <div className="flex flex-col items-center mt-2">
-                <TelegramLoginWidget
-                  botName={telegramBotName}
-                  onAuthSuccess={handleTelegramSuccess}
-                />
-              </div>
-            );
-          })()}
+          <GoogleSignInButton onSuccess={handleGoogleSuccess} />
         </div>
 
         {/* Footer */}

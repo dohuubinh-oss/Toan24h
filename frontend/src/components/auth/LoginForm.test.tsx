@@ -103,4 +103,11 @@ describe('LoginForm Component', () => {
       expect(document.cookie).toContain('userRole=teacher')
     })
   })
+
+  it('renders Google sign-in button and does not render Telegram widget', () => {
+    render(<LoginForm />)
+    expect(screen.getByRole('button', { name: /tiếp tục với google/i })).toBeInTheDocument()
+    expect(screen.queryByTestId('telegram-login-widget')).not.toBeInTheDocument()
+  })
 })
+
