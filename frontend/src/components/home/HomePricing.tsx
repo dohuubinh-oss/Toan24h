@@ -1,11 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { CheckCircle2, QrCode, Loader2, Sparkles, AlertCircle } from 'lucide-react'
-import { apiFetch } from '@/lib/api'
-import { toast } from 'react-hot-toast'
-import PayOSPaymentModal, { PayOSPaymentData } from '@/components/payment/PayOSPaymentModal'
+import React from 'react'
+import Link from 'next/link'
+import { CheckCircle2, Sparkles } from 'lucide-react'
 
 export interface HomePricingPlan {
   id: string
@@ -61,69 +58,6 @@ export const HOME_PRICING_PLANS: HomePricingPlan[] = [
 ]
 
 export default function HomePricing() {
-  const router = useRouter()
-  const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  // PayOS Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [paymentData, setPaymentData] = useState<PayOSPaymentData | null>(null)
-
-  const handleCreatePayment = async (plan: HomePricingPlan) => {
-    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null
-    if (!userStr) {
-      toast.error('Vui lòng đăng nhập để nâng cấp gói học')
-      router.push('/login?redirect=/upgrade')
-      return
-    }
-
-    setLoadingPlanId(plan.id)
-    setError(null)
-
-    try {
-      const res = await apiFetch('/payments/create', {
-        method: 'POST',
-        body: JSON.stringify({ plan: plan.id }),
-      })
-
-      if (res && res.error) {
-        if (res.error.includes('Unauthorized') || res.error.includes('401')) {
-          toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
-          router.push('/login?redirect=/upgrade')
-          return
-        }
-        setError(res.error)
-        toast.error(res.error)
-        return
-      }
-
-      const txData = res?.transactionId ? res : res?.data
-      if (txData && (txData.transactionId || txData.orderCode)) {
-        setPaymentData({
-          transactionId: txData.transactionId,
-          orderCode: txData.orderCode,
-          amount: txData.amount,
-          plan: txData.plan,
-          planName: plan.name,
-          qrCode: txData.qrCode,
-          checkoutUrl: txData.checkoutUrl,
-          accountNumber: txData.accountNumber,
-          accountName: txData.accountName,
-          bin: txData.bin,
-          content: txData.content || `T24H ${txData.orderCode || txData.transactionId}`,
-        })
-        setIsModalOpen(true)
-      } else {
-        toast.error('Không thể tạo mã thanh toán. Vui lòng đăng nhập lại.')
-      }
-    } catch (err: any) {
-      setError(err.message || 'Có lỗi xảy ra khi tạo giao dịch')
-      toast.error(err.message || 'Có lỗi xảy ra')
-    } finally {
-      setLoadingPlanId(null)
-    }
-  }
-
   return (
     <section id="pricing" className="py-20 bg-slate-50/50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -137,17 +71,9 @@ export default function HomePricing() {
           </p>
         </div>
 
-        {error && (
-          <div className="max-w-md mx-auto mb-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
-            <span>{error}</span>
-          </div>
-        )}
-
         {/* 2 Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
           {HOME_PRICING_PLANS.map((plan) => {
-            const isLoading = loadingPlanId === plan.id
             const isBlue = plan.theme === 'blue'
 
             return (
@@ -224,40 +150,23 @@ export default function HomePricing() {
 
                 {/* Action Button */}
                 <div className="pt-4">
-                  <button
-                    onClick={() => handleCreatePayment(plan)}
-                    disabled={isLoading}
+                  <Link
+                    href="/upgrade"
                     className={`w-full py-4 px-6 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2.5 cursor-pointer shadow-lg active:scale-98 ${
                       isBlue
                         ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/25'
                         : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/25'
-                    } disabled:opacity-50`}
+                    }`}
                   >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Đang tạo mã thanh toán...</span>
-                      </>
-                    ) : (
-                      <>
-                        <QrCode className="w-5 h-5" />
-                        <span>Tạo mã thanh toán PayOS</span>
-                      </>
-                    )}
-                  </button>
+                    <Sparkles className="w-5 h-5" />
+                    <span>Nâng cấp tài khoản</span>
+                  </Link>
                 </div>
               </div>
             )
           })}
         </div>
       </div>
-
-      {/* PayOS Payment Modal */}
-      <PayOSPaymentModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        paymentData={paymentData}
-      />
     </section>
   )
 }

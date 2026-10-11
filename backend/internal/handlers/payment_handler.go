@@ -51,7 +51,7 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 	var description string
 	switch req.Plan {
 	case "1_month":
-		amount = 200000
+		amount = 299000
 		description = "T24H 1 thang"
 	case "3_months":
 		amount = 450000

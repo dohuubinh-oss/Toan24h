@@ -35,8 +35,8 @@ const PLANS: Plan[] = [
     id: '1_month',
     name: 'Gói 1 Tháng',
     durationMonths: 1,
-    price: 200000,
-    pricePerMonth: '200.000đ / tháng',
+    price: 299000,
+    pricePerMonth: '299.000đ / tháng',
     description: 'Trải nghiệm học tập và làm quen với phương pháp luyện thi thông minh.',
     features: [
       'Toàn quyền truy cập tất cả bài giảng',
