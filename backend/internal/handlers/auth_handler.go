@@ -364,8 +364,13 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	msg := fmt.Sprintf("🔐 <b>Mã OTP khôi phục mật khẩu:</b> <code>%s</code>\n\nMã có hiệu lực trong 10 phút. Nếu bạn không yêu cầu mã này, hãy bỏ qua tin nhắn.", otp)
 	_ = notifier.SendToUser(&user, msg)
 
+	msgText := "Mã OTP đã được gửi đến email của bạn"
+	if user.TelegramID != nil || user.TelegramID2 != nil {
+		msgText = "Mã OTP đã được gửi đến email và tài khoản Telegram bot của bạn"
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Mã OTP đã được gửi đến email của bạn",
+		"message": msgText,
 	})
 }
 

@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/handlers"
 	"github.com/modeptrai/exam-model-backend/internal/models"
+	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -140,3 +141,81 @@ func TestAuthRegisterAndLogin(t *testing.T) {
 		t.Fatalf("Expected 200 OK for refresh, got %d. Body: %s", refreshW.Code, refreshW.Body.String())
 	}
 }
+
+func TestForgotPasswordAndReset_GoogleUser(t *testing.T) {
+	r, db, cleanup := setupAuthTestEnv(t)
+	defer cleanup()
+
+	authHandler := handlers.NewAuthHandler(db)
+	r.POST("/api/v1/auth/forgot-password", authHandler.ForgotPassword)
+	r.POST("/api/v1/auth/verify-otp", authHandler.VerifyOTP)
+	r.POST("/api/v1/auth/reset-password", authHandler.ResetPassword)
+
+	// User created via Google (PasswordHash is empty)
+	googleSub := "google_999888"
+	googleUser := models.User{
+		Email:    "google_reset@example.com",
+		FullName: "Google User",
+		Role:     "student",
+		GoogleID: &googleSub,
+	}
+	if err := db.Create(&googleUser).Error; err != nil {
+		t.Fatalf("Failed to create user: %v", err)
+	}
+
+	// 1. Forgot Password
+	body, _ := json.Marshal(map[string]string{"email": "google_reset@example.com"})
+	req, _ := http.NewRequest("POST", "/api/v1/auth/forgot-password", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for forgot-password, got %d. Body: %s", w.Code, w.Body.String())
+	}
+
+	// Inject OTP
+	otpService := services.NewOTPService()
+	otpService.SaveOTP("google_reset@example.com", "123456")
+
+	// 2. Verify OTP
+	verifyBody, _ := json.Marshal(map[string]string{
+		"email": "google_reset@example.com",
+		"otp":   "123456",
+	})
+	vReq, _ := http.NewRequest("POST", "/api/v1/auth/verify-otp", bytes.NewBuffer(verifyBody))
+	vReq.Header.Set("Content-Type", "application/json")
+	vW := httptest.NewRecorder()
+	r.ServeHTTP(vW, vReq)
+	if vW.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for verify-otp, got %d", vW.Code)
+	}
+
+	// 3. Reset Password
+	resetBody, _ := json.Marshal(map[string]string{
+		"email":       "google_reset@example.com",
+		"otp":         "123456",
+		"newPassword": "NewPassword123!",
+	})
+	rReq, _ := http.NewRequest("POST", "/api/v1/auth/reset-password", bytes.NewBuffer(resetBody))
+	rReq.Header.Set("Content-Type", "application/json")
+	rW := httptest.NewRecorder()
+	r.ServeHTTP(rW, rReq)
+	if rW.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for reset-password, got %d", rW.Code)
+	}
+
+	// 4. User should now be able to log in with newPassword!
+	loginBody, _ := json.Marshal(map[string]string{
+		"email":    "google_reset@example.com",
+		"password": "NewPassword123!",
+	})
+	lReq, _ := http.NewRequest("POST", "/api/v1/auth/login", bytes.NewBuffer(loginBody))
+	lReq.Header.Set("Content-Type", "application/json")
+	lW := httptest.NewRecorder()
+	r.ServeHTTP(lW, lReq)
+	if lW.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for login after reset-password, got %d. Body: %s", lW.Code, lW.Body.String())
+	}
+}
+

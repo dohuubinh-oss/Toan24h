@@ -251,8 +251,8 @@ export default function ForgotPasswordForm() {
         <div className="mb-8 text-center">
           <h2 className="text-3xl font-bold text-slate-800 mb-2">Quên mật khẩu</h2>
           <p className="text-slate-500 text-base">
-            {step === 1 && "Nhập địa chỉ Email đăng ký để nhận mã khôi phục OTP."}
-            {step === 2 && `Mã OTP 6 chữ số đã gửi tới ${watch('email') || 'email của bạn'}.`}
+            {step === 1 && "Nhập địa chỉ Email đăng ký để nhận mã khôi phục OTP qua Email (hoặc Telegram nếu đã liên kết)."}
+            {step === 2 && `Mã OTP 6 chữ số đã gửi tới ${watch('email') || 'email của bạn'} (và Telegram bot nếu đã liên kết).`}
             {step === 3 && "Vui lòng đặt lại mật khẩu mới cho tài khoản của bạn."}
           </p>
         </div>
