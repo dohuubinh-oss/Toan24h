@@ -114,24 +114,16 @@ export default function ForgotPasswordForm() {
     setIsLoading(true)
 
     try {
-      const res = await apiFetch('/auth/forgot-password', {
+      const data = await apiFetch('/auth/forgot-password', {
         method: 'POST',
         body: JSON.stringify({ email })
       })
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        setServerError(data.error || 'Không thể gửi mã OTP. Vui lòng thử lại sau.')
-        setIsLoading(false)
-        return
-      }
-
-      const data = await res.json()
-      setServerSuccess(data.message || 'Mã OTP đã được gửi đến email của bạn.')
+      setServerSuccess(data?.message || 'Mã OTP đã được gửi đến email của bạn.')
       setStep(2)
       startResendTimer()
     } catch (err: any) {
-      setServerError(err.message || 'Lỗi hệ thống. Vui lòng thử lại.')
+      setServerError(err.message || 'Không thể gửi mã OTP. Vui lòng thử lại sau.')
     } finally {
       setIsLoading(false)
     }
@@ -145,19 +137,12 @@ export default function ForgotPasswordForm() {
     setIsLoading(true)
 
     try {
-      const res = await apiFetch('/auth/forgot-password', {
+      const data = await apiFetch('/auth/forgot-password', {
         method: 'POST',
         body: JSON.stringify({ email })
       })
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        setServerError(data.error || 'Không thể gửi lại mã OTP.')
-        setIsLoading(false)
-        return
-      }
-
-      setServerSuccess('Mã OTP mới đã được gửi lại vào email.')
+      setServerSuccess(data?.message || 'Mã OTP mới đã được gửi lại vào email.')
       startResendTimer()
     } catch (err: any) {
       setServerError(err.message || 'Lỗi gửi lại mã OTP.')
@@ -182,22 +167,15 @@ export default function ForgotPasswordForm() {
     setIsLoading(true)
 
     try {
-      const res = await apiFetch('/auth/verify-otp', {
+      const data = await apiFetch('/auth/verify-otp', {
         method: 'POST',
         body: JSON.stringify({ email, otp: combinedOtp })
       })
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        setServerError(data.error || 'Mã OTP không đúng hoặc đã hết hạn.')
-        setIsLoading(false)
-        return
-      }
-
-      setServerSuccess('Xác thực OTP thành công. Vui lòng đặt mật khẩu mới.')
+      setServerSuccess(data?.message || 'Xác thực OTP thành công. Vui lòng đặt mật khẩu mới.')
       setStep(3)
     } catch (err: any) {
-      setServerError(err.message || 'Lỗi hệ thống khi xác thực OTP.')
+      setServerError(err.message || 'Mã OTP không đúng hoặc đã hết hạn.')
     } finally {
       setIsLoading(false)
     }
@@ -216,24 +194,17 @@ export default function ForgotPasswordForm() {
     setIsLoading(true)
 
     try {
-      const res = await apiFetch('/auth/reset-password', {
+      const data = await apiFetch('/auth/reset-password', {
         method: 'POST',
         body: JSON.stringify({ email, otp: combinedOtp, newPassword })
       })
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        setServerError(data.error || 'Không thể đặt lại mật khẩu. Vui lòng thử lại.')
-        setIsLoading(false)
-        return
-      }
-
-      setServerSuccess('Đặt lại mật khẩu thành công! Đang chuyển đến trang đăng nhập...')
+      setServerSuccess(data?.message || 'Đặt lại mật khẩu thành công! Đang chuyển đến trang đăng nhập...')
       setTimeout(() => {
         router.push('/login')
       }, 1500)
     } catch (err: any) {
-      setServerError(err.message || 'Lỗi hệ thống khi đổi mật khẩu.')
+      setServerError(err.message || 'Không thể đặt lại mật khẩu. Vui lòng thử lại.')
       setIsLoading(false)
     }
   }

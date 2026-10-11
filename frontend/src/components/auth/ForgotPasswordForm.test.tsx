@@ -39,8 +39,7 @@ describe('ForgotPasswordForm Component', () => {
 
   it('submits Step 1 and advances to Step 2 upon success', async () => {
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ message: 'Mã OTP đã được gửi đến email của bạn.' }),
+      message: 'Mã OTP đã được gửi đến email của bạn.',
     } as any)
 
     render(<ForgotPasswordForm />)
@@ -60,8 +59,7 @@ describe('ForgotPasswordForm Component', () => {
   it('completes the 3-step recovery flow end-to-end', async () => {
     // 1. Step 1 API mock
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ message: 'Mã OTP đã được gửi đến email của bạn.' }),
+      message: 'Mã OTP đã được gửi đến email của bạn.',
     } as any)
 
     render(<ForgotPasswordForm />)
@@ -74,8 +72,7 @@ describe('ForgotPasswordForm Component', () => {
 
     // 2. Step 2 OTP verification
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ message: 'OTP hợp lệ' }),
+      message: 'OTP hợp lệ',
     } as any)
 
     const digitInputs = screen.getAllByRole('textbox')
@@ -98,8 +95,7 @@ describe('ForgotPasswordForm Component', () => {
 
     // 3. Step 3 Set new password
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ message: 'Đổi mật khẩu thành công' }),
+      message: 'Đổi mật khẩu thành công',
     } as any)
 
     fireEvent.change(screen.getByLabelText(/^Mật khẩu mới$/i), { target: { value: 'newsecret123' } })
@@ -117,8 +113,7 @@ describe('ForgotPasswordForm Component', () => {
 
   it('allows going back to previous step', async () => {
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ message: 'OTP sent' }),
+      message: 'OTP sent',
     } as any)
 
     render(<ForgotPasswordForm />)
