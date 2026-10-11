@@ -178,3 +178,26 @@ func TestDualTelegramLinkingAndLogin(t *testing.T) {
 		assert.NotNil(t, updated.TelegramID) // Slot 1 still remains
 	})
 }
+
+func TestTelegramLoginDeprecated(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	authHandler := handlers.NewAuthHandler(nil)
+	r := gin.New()
+	r.POST("/api/v1/auth/telegram", authHandler.TelegramLogin)
+
+	reqBody := map[string]interface{}{
+		"id": 123456,
+	}
+	bodyBytes, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/auth/telegram", bytes.NewBuffer(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	var resp map[string]string
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Contains(t, resp["error"], "Đăng nhập bằng Telegram không còn được hỗ trợ")
+}
+
