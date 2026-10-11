@@ -103,4 +103,55 @@ describe('lectureJsonParser', () => {
     expect(result[0].methods[0].methodContent).toBe('Lý thuyết đơn thức')
     expect(result[0].methods[0].exercise?.content).toContain('Ví dụ 1')
   })
+
+  it('handles empty method object {} and null formulas gracefully', () => {
+    const sample = JSON.stringify([
+      {
+        mathType: 'Dạng 1',
+        methods: [
+          {},
+          {
+            Solution: 'PP2',
+            exams: [
+              {
+                problem: 'Đề bài',
+                steps: [
+                  { step: 1, title: 'B1', content: 'Nội dung', formula: 'null' },
+                  { step: 2, title: 'B2', content: 'Nội dung', formula: '' }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ])
+
+    const result = parseLectureJson(sample)
+    expect(result).toHaveLength(1)
+    expect(result[0].methods).toHaveLength(2)
+    expect(result[0].methods[0].methodContent).toBe('')
+    expect(result[0].methods[0].exercise).toBeNull()
+    expect(result[0].methods[1].exercise?.content).not.toContain('$$null$$')
+    expect(result[0].methods[1].exercise?.content).toContain('B1')
+  })
+
+  it('parses the real production vidu.json file with 6 Dang Toan', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs')
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path')
+    const filePath = path.resolve(process.cwd(), '../vidu.json')
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, 'utf-8')
+      const result = parseLectureJson(content)
+      expect(result).toHaveLength(6)
+      expect(result[0].dangToanName).toBe('Dạng 1. Nhận biết đơn thức')
+      expect(result[0].methods[0].exercise?.content).toContain('Ví dụ 1')
+      expect(result[0].methods[0].exercise?.content).toContain('Ví dụ 2')
+      expect(result[5].dangToanName).toBe('Dạng 6. Cộng, trừ các đơn thức đồng dạng')
+      expect(result[5].methods[0].exercise?.content).toContain('Ví dụ 8')
+      expect(result[5].methods[0].exercise?.content).toContain('Ví dụ 11')
+    }
+  })
 })
+

@@ -11,12 +11,16 @@ export interface RawExamItem {
   problem?: string;
   conclusion?: string;
   tips?: string;
+  problemImage?: string;
+  solutionImage?: string;
   steps?: RawExamStep[];
 }
 
 export interface RawMethodItem {
   methodName?: string;
   Solution?: string;
+  problemImage?: string;
+  solutionImage?: string;
   exams?: RawExamItem[];
 }
 
@@ -33,6 +37,10 @@ export function buildExerciseHtmlFromExams(exams: RawExamItem[]): string {
 
   const examBlocks = exams.map((exam) => {
     let blockHtml = ''
+
+    if (exam.problemImage) {
+      blockHtml += `<div class="mb-4"><img src="${exam.problemImage}" alt="Đề bài" class="max-w-full rounded border border-slate-200" /></div>`
+    }
 
     if (exam.problem) {
       blockHtml += `<div class="bg-slate-50 p-5 rounded-lg border border-slate-200 mb-6">
@@ -106,8 +114,14 @@ export function buildExerciseHtmlFromExams(exams: RawExamItem[]): string {
           if (item.content) {
             blockHtml += `<p class="text-slate-600 mt-1 mb-0">${item.content}</p>`
           }
-          if (item.formula) {
-            const formattedFormula = item.formula.includes('$') ? item.formula : `$$${item.formula}$$`
+          if (
+            item.formula &&
+            typeof item.formula === 'string' &&
+            item.formula.trim() !== '' &&
+            item.formula.trim().toLowerCase() !== 'null'
+          ) {
+            const trimmed = item.formula.trim()
+            const formattedFormula = trimmed.includes('$') ? trimmed : `$$${trimmed}$$`
             blockHtml += `<p class="mt-3 text-blue-600 font-bold m-0">${formattedFormula}</p>`
           }
         } else if (item.type === 'conclusion') {
@@ -124,10 +138,17 @@ export function buildExerciseHtmlFromExams(exams: RawExamItem[]): string {
       blockHtml += `</div>`
     }
 
+    if (exam.solutionImage) {
+      blockHtml += `<div class="mt-4"><img src="${exam.solutionImage}" alt="Lời giải" class="max-w-full rounded border border-slate-200" /></div>`
+    }
+
     return blockHtml
   })
 
-  return `<div class="exercise-content bg-white p-4">${examBlocks.join(
+  const validBlocks = examBlocks.filter((b) => b && b.trim() !== '')
+  if (validBlocks.length === 0) return ''
+
+  return `<div class="exercise-content bg-white p-4">${validBlocks.join(
     '<div class="my-8 border-t border-dashed border-slate-200"></div>'
   )}</div>`
 }
@@ -155,18 +176,32 @@ export function parseLectureJson(jsonString: string): DangToanItem[] {
     let methodsList = []
     const rawMethods = item.method || item.methods
     if (Array.isArray(rawMethods) && rawMethods.length > 0) {
-      methodsList = rawMethods.map((m, mIdx) => {
-        const methodId = Math.random().toString(36).substr(2, 9)
-        const exerciseContent = buildExerciseHtmlFromExams(m.exams || [])
-        return {
-          id: methodId,
-          methodName: m.methodName || '',
-          methodContent: m.Solution || '',
-          exercise: exerciseContent ? { content: exerciseContent } : null,
-          problemImage: null,
-          solutionImage: null
-        }
-      })
+      methodsList = rawMethods
+        .filter((m) => m && typeof m === 'object')
+        .map((m, mIdx) => {
+          const methodId = Math.random().toString(36).substr(2, 9)
+          const exerciseContent = buildExerciseHtmlFromExams(m.exams || [])
+          return {
+            id: methodId,
+            methodName: m.methodName || '',
+            methodContent: m.Solution || '',
+            exercise: exerciseContent ? { content: exerciseContent } : null,
+            problemImage: null,
+            solutionImage: null
+          }
+        })
+      if (methodsList.length === 0) {
+        methodsList = [
+          {
+            id: Math.random().toString(36).substr(2, 9),
+            methodName: '',
+            methodContent: '',
+            exercise: null,
+            problemImage: null,
+            solutionImage: null
+          }
+        ]
+      }
     } else {
       const methodId = Math.random().toString(36).substr(2, 9)
       const exerciseContent = buildExerciseHtmlFromExams(item.exams || [])
