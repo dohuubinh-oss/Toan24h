@@ -83,4 +83,24 @@ describe('lectureJsonParser', () => {
     expect(result[0].methods[1].methodContent).toBe('Lý thuyết PP B')
     expect(result[0].methods[1].exercise?.content).toContain('Ví dụ PP B')
   })
+
+  it('parses math types with method key (singular)', () => {
+    const sample = JSON.stringify([
+      {
+        mathType: 'Dạng 1. Đơn thức',
+        method: [
+          {
+            Solution: 'Lý thuyết đơn thức',
+            exams: [{ problem: 'Ví dụ 1' }]
+          }
+        ]
+      }
+    ])
+
+    const result = parseLectureJson(sample)
+    expect(result).toHaveLength(1)
+    expect(result[0].methods).toHaveLength(1)
+    expect(result[0].methods[0].methodContent).toBe('Lý thuyết đơn thức')
+    expect(result[0].methods[0].exercise?.content).toContain('Ví dụ 1')
+  })
 })

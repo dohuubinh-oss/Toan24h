@@ -24,6 +24,7 @@ export interface RawMathTypeItem {
   mathType: string;
   Solution?: string;
   exams?: RawExamItem[];
+  method?: RawMethodItem[];
   methods?: RawMethodItem[];
 }
 
@@ -152,8 +153,9 @@ export function parseLectureJson(jsonString: string): DangToanItem[] {
     const dangToanId = Math.random().toString(36).substr(2, 9)
 
     let methodsList = []
-    if (Array.isArray(item.methods) && item.methods.length > 0) {
-      methodsList = item.methods.map((m, mIdx) => {
+    const rawMethods = item.method || item.methods
+    if (Array.isArray(rawMethods) && rawMethods.length > 0) {
+      methodsList = rawMethods.map((m, mIdx) => {
         const methodId = Math.random().toString(36).substr(2, 9)
         const exerciseContent = buildExerciseHtmlFromExams(m.exams || [])
         return {
