@@ -14,8 +14,39 @@ import (
 	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/models"
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"gorm.io/gorm"
 )
+
+func isStaffRequester(c *gin.Context) bool {
+	tokenString := ""
+	authHeader := c.GetHeader("Authorization")
+	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+		tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+	}
+	if tokenString == "" {
+		cookieToken, _ := c.Cookie("accessToken")
+		tokenString = cookieToken
+	}
+	if tokenString != "" {
+		claims, err := utils.ValidateToken(tokenString)
+		if err == nil && (claims.Role == "admin" || claims.Role == "teacher") {
+			return true
+		}
+	}
+	return false
+}
+
+func sanitizeQuestionForPublic(q *models.Question) {
+	q.CorrectAnswer = ""
+	q.SolutionGuide = ""
+	q.QuickSolveTips = ""
+	for i := range q.SubQuestions {
+		q.SubQuestions[i].CorrectAnswer = ""
+		q.SubQuestions[i].SolutionGuide = ""
+		q.SubQuestions[i].QuickSolveTips = ""
+	}
+}
 
 // APIResponse là định dạng gói tin trả về chuẩn
 type APIResponse struct {
@@ -199,7 +230,15 @@ func GetQuestions(c *gin.Context) {
 	var total int64
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if page < 1 {
+		page = 1
+	}
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if limit < 1 {
+		limit = 10
+	} else if limit > 100 {
+		limit = 100
+	}
 	
 	idsParam := c.Query("ids")
 	var ids []string
@@ -277,7 +316,6 @@ func GetQuestions(c *gin.Context) {
 
 			combinedQuery := fmt.Sprintf("(%s) OR id IN (SELECT parent_id FROM questions WHERE parent_id IS NOT NULL AND (%s))", parentWhere, childWhere)
 			combinedArgs := append(parentArgs, childArgs...)
-			fmt.Println("SQL WHERE:", combinedQuery, combinedArgs)
 			query = query.Where(combinedQuery, combinedArgs...)
 		}
 	}
@@ -292,6 +330,12 @@ func GetQuestions(c *gin.Context) {
 	if err := query.Preload("SubQuestions").Order("created_at desc, id desc").Limit(limit).Offset(offset).Find(&questions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: err.Error()})
 		return
+	}
+
+	if !isStaffRequester(c) {
+		for i := range questions {
+			sanitizeQuestionForPublic(&questions[i])
+		}
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
@@ -315,6 +359,10 @@ func GetQuestionByID(c *gin.Context) {
 	}).First(&q, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, APIResponse{Status: "error", Error: "Question not found"})
 		return
+	}
+
+	if !isStaffRequester(c) {
+		sanitizeQuestionForPublic(&q)
 	}
 
 	c.JSON(http.StatusOK, APIResponse{Status: "success", Data: q})

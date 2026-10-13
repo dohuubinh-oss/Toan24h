@@ -32,7 +32,8 @@ type ExerciseRequest struct {
 type MethodRequest struct {
 	ID            string           `json:"id"`
 	MethodName    string           `json:"methodName,omitempty"`
-	MethodContent string           `json:"methodContent"`
+	MethodContent string           `json:"methodContent,omitempty"`
+	Solution      string           `json:"solution,omitempty"`
 	Exercise      *ExerciseRequest `json:"exercise"`
 	ProblemImage  string           `json:"problemImage"`
 	SolutionImage string           `json:"solutionImage"`
@@ -40,7 +41,8 @@ type MethodRequest struct {
 
 type DangToanRequest struct {
 	ID           string          `json:"id"`
-	DangToanName string          `json:"dangToanName"`
+	DangToanName string          `json:"dangToanName,omitempty"`
+	MathType     string          `json:"mathType,omitempty"`
 	Methods      []MethodRequest `json:"methods"`
 }
 
@@ -121,6 +123,12 @@ func processLectureImagesAndSerialize(grade string, basicConcept string, example
 
 	// Process Examples (DangToanList)
 	for i := range examples {
+		if examples[i].DangToanName == "" && examples[i].MathType != "" {
+			examples[i].DangToanName = examples[i].MathType
+		} else if examples[i].MathType == "" && examples[i].DangToanName != "" {
+			examples[i].MathType = examples[i].DangToanName
+		}
+
 		for j := range examples[i].Methods {
 			if examples[i].Methods[j].ProblemImage != "" {
 				examples[i].Methods[j].ProblemImage = processLectureImageUrl(examples[i].Methods[j].ProblemImage)
@@ -132,6 +140,17 @@ func processLectureImagesAndSerialize(grade string, basicConcept string, example
 			if examples[i].Methods[j].MethodContent != "" {
 				examples[i].Methods[j].MethodContent = processHtmlImages(examples[i].Methods[j].MethodContent)
 			}
+			if examples[i].Methods[j].Solution != "" {
+				examples[i].Methods[j].Solution = processHtmlImages(examples[i].Methods[j].Solution)
+			}
+
+			// Synchronize Solution and MethodContent
+			if examples[i].Methods[j].MethodContent == "" && examples[i].Methods[j].Solution != "" {
+				examples[i].Methods[j].MethodContent = examples[i].Methods[j].Solution
+			} else if examples[i].Methods[j].Solution == "" && examples[i].Methods[j].MethodContent != "" {
+				examples[i].Methods[j].Solution = examples[i].Methods[j].MethodContent
+			}
+
 			// Process images inside Exercise
 			if examples[i].Methods[j].Exercise != nil {
 				ex := examples[i].Methods[j].Exercise

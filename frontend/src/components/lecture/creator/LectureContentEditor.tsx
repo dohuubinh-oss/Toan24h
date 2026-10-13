@@ -13,8 +13,8 @@ const LECTURE_JSON_HINT = `[
     "mathType": "Dạng 1. Nhận biết đơn thức",
     "methods": [
       {
-        "Solution": "Đơn thức là biểu thức đại số...",
-        "exams": [
+        "solution": "Đơn thức là biểu thức đại số...",
+        "problems": [
           {
             "problem": "Ví dụ 1...",
             "steps": [
@@ -47,9 +47,9 @@ export default function LectureContentEditor() {
       ...dangToanList, 
       { 
         id: Math.random().toString(36).substr(2, 9), 
-        dangToanName: '', 
+        mathType: '', 
         methods: [
-          { id: Math.random().toString(36).substr(2, 9), methodName: '', methodContent: '', exercise: null, problemImage: null, solutionImage: null }
+          { id: Math.random().toString(36).substr(2, 9), methodName: '', solution: '', exercise: null, problemImage: null, solutionImage: null }
         ] 
       }
     ])

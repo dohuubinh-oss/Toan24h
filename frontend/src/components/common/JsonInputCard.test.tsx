@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import JsonInputCard from './JsonInputCard'
 
@@ -51,5 +51,34 @@ describe('JsonInputCard', () => {
     fireEvent.click(screen.getByRole('button', { name: /Xử lý JSON/i }))
 
     expect(screen.getByText('Cú pháp JSON không hợp lệ')).toBeInTheDocument()
+  })
+
+  it('formats unformatted JSON with 2-space indentation when clicking format button', () => {
+    render(<JsonInputCard onProcess={vi.fn()} initialValue='{"a":1,"b":[2,3]}' />)
+
+    const formatBtn = screen.getByRole('button', { name: /định dạng/i })
+    fireEvent.click(formatBtn)
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(textarea.value).toBe(JSON.stringify({ a: 1, b: [2, 3] }, null, 2))
+  })
+
+  it('shows error when clicking format button on invalid JSON', () => {
+    render(<JsonInputCard onProcess={vi.fn()} initialValue='{ invalid json }' />)
+
+    const formatBtn = screen.getByRole('button', { name: /định dạng/i })
+    fireEvent.click(formatBtn)
+
+    expect(screen.getByText(/JSON không hợp lệ/i)).toBeInTheDocument()
+  })
+
+  it('updates textarea when initialValue prop changes', () => {
+    const { rerender } = render(<JsonInputCard onProcess={vi.fn()} initialValue='[{"id":1}]' />)
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(textarea.value).toBe('[{"id":1}]')
+
+    rerender(<JsonInputCard onProcess={vi.fn()} initialValue='[{"id":2}]' />)
+    expect(textarea.value).toBe('[{"id":2}]')
   })
 })

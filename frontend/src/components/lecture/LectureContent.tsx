@@ -52,9 +52,9 @@ export function LectureExamples({ examples = [] }: LectureExamplesProps) {
   if (!examples || !Array.isArray(examples) || examples.length === 0) return null;
 
   const validExamples = examples.filter(dt => {
-    const hasName = Boolean(dt.dangToanName?.trim())
+    const hasName = Boolean((dt.mathType || (dt as any).dangToanName)?.trim())
     const hasMethods = Array.isArray(dt.methods) && dt.methods.some(m => 
-      Boolean(m.methodName?.trim() || m.methodContent?.trim() || m.exercise?.content?.trim())
+      Boolean(m.methodName?.trim() || (m.solution || (m as any).methodContent)?.trim() || m.exercise?.content?.trim())
     )
     return hasName || hasMethods
   })
@@ -81,7 +81,7 @@ export function LectureExamples({ examples = [] }: LectureExamplesProps) {
                   <div className="relative overflow-hidden bg-primary/10 px-6 py-3 rounded-xl flex w-full items-center gap-2">
                     <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-primary"></div>
                     <span className="font-bold text-primary text-base">Dạng {i + 1}:</span>
-                    <span className="font-bold text-slate-800 text-base">{dt.dangToanName || `Dạng ${i + 1}`}</span>
+                    <span className="font-bold text-slate-800 text-base">{dt.mathType || (dt as any).dangToanName || `Dạng ${i + 1}`}</span>
                   </div>
 
                   {Array.isArray(dt.methods) && dt.methods.map((method, j) => (
@@ -91,10 +91,10 @@ export function LectureExamples({ examples = [] }: LectureExamplesProps) {
                           <Lightbulb size={20} className="text-primary" />
                           <h4 className="font-bold text-slate-800">{method.methodName || `Phương pháp ${j + 1}`}</h4>
                         </div>
-                        {method.methodContent && (
+                        {(method.solution || (method as any).methodContent) && (
                            <MathText 
                              className="prose max-w-none text-sm text-slate-600"
-                             content={method.methodContent}
+                             content={method.solution || (method as any).methodContent}
                            />
                         )}
                       </div>

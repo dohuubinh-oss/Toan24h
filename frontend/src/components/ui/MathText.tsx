@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import 'katex/dist/katex.min.css';
 import { InlineMath, BlockMath } from 'react-katex';
 import katex from 'katex';
+import DOMPurify from 'isomorphic-dompurify';
 
 
 
@@ -46,10 +47,11 @@ export default function MathText({ content, className = '' }: MathTextProps) {
   }, [content, hasHtml]);
 
   if (hasHtml) {
+    const cleanHtml = DOMPurify.sanitize(renderedHtml);
     return (
       <div 
         className={`latex-font ${className}`}
-        dangerouslySetInnerHTML={{ __html: renderedHtml }}
+        dangerouslySetInnerHTML={{ __html: cleanHtml }}
       />
     );
   }

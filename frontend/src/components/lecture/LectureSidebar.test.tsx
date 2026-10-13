@@ -3,10 +3,9 @@ import { describe, it, expect } from 'vitest'
 import LectureSidebar from './LectureSidebar'
 
 describe('LectureSidebar', () => {
-  it('renders action buttons', () => {
+  it('renders promo button', () => {
     render(<LectureSidebar />)
-    expect(screen.getByText('Tải tài liệu PDF')).toBeDefined()
-    expect(screen.getByText('Lưu bài viết')).toBeDefined()
+    expect(screen.getByText('Đăng ký ngay')).toBeDefined()
   })
 
   it('renders related lessons section', () => {

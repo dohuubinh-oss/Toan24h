@@ -1,7 +1,13 @@
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import LectureBasicSettings from './LectureBasicSettings'
 import { LectureCreatorProvider } from './LectureCreatorContext'
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}))
 
 describe('LectureBasicSettings', () => {
   it('renders settings title', () => {

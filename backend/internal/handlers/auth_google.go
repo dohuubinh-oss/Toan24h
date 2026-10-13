@@ -79,8 +79,13 @@ func defaultVerifyGoogleIDToken(credential string) (*GoogleClaims, error) {
 	}
 
 	expectedAud := os.Getenv("GOOGLE_CLIENT_ID")
-	if expectedAud != "" && aud != expectedAud {
-		return nil, errors.New("google client id mismatch")
+	if os.Getenv("GIN_MODE") == "release" || expectedAud != "" {
+		if expectedAud == "" {
+			return nil, errors.New("GOOGLE_CLIENT_ID is not configured")
+		}
+		if aud != expectedAud {
+			return nil, errors.New("google client id mismatch")
+		}
 	}
 
 	return &GoogleClaims{

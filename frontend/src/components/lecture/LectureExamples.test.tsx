@@ -48,4 +48,25 @@ describe('LectureExamples', () => {
     expect(screen.getByText('Dạng 1. Đơn thức')).toBeInTheDocument()
     expect(screen.getByText('Phương pháp rút gọn')).toBeInTheDocument()
   })
+
+  it('renders correctly when examples contains new mathType and solution format', () => {
+    const newExamples = [
+      {
+        id: '1',
+        mathType: 'Dạng 1. Nhận biết đa thức',
+        methods: [
+          {
+            id: 'm1',
+            methodName: 'Phương pháp phân tích',
+            solution: '<p>Đa thức là tổng của đơn thức</p>',
+            exercise: { content: '<p>Ví dụ 1</p>' }
+          }
+        ]
+      }
+    ]
+    render(<LectureExamples examples={newExamples as any} />)
+    expect(screen.getByText('Dạng 1. Nhận biết đa thức')).toBeInTheDocument()
+    expect(screen.getByText('Phương pháp phân tích')).toBeInTheDocument()
+    expect(screen.getByText('Đa thức là tổng của đơn thức')).toBeInTheDocument()
+  })
 })

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"regexp"
 	"time"
@@ -135,13 +136,17 @@ func (h *WebhookHandler) HandlePayOSWebhook(c *gin.Context) {
 }
 
 func (h *WebhookHandler) HandleSePayWebhook(c *gin.Context) {
-	// Verify SePay Webhook Authorization Token if configured
+	// Verify SePay Webhook Authorization Token
 	expectedToken := os.Getenv("SEPAY_WEBHOOK_TOKEN")
-	if expectedToken != "" {
+	if os.Getenv("GIN_MODE") == "release" || expectedToken != "" {
+		if expectedToken == "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "SEPAY_WEBHOOK_TOKEN is not configured"})
+			return
+		}
 		authHeader := c.GetHeader("Authorization")
 		secretHeader := c.GetHeader("X-SePay-Secret")
 		if authHeader != "Bearer "+expectedToken && secretHeader != expectedToken {
-			c.JSON(401, gin.H{"error": "Unauthorized webhook request"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized webhook request"})
 			return
 		}
 	}

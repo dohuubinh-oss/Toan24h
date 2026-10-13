@@ -112,8 +112,8 @@ function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem,
               <SharedEditorCard
                 title="Nội dung phương pháp"
                 icon={<></>}
-                content={method.methodContent || ''}
-                onContentChange={(html) => onChange({ ...method, methodContent: html })}
+                content={method.solution || ''}
+                onContentChange={(html) => onChange({ ...method, solution: html })}
                 placeholder="VD: Đơn thức là biểu thức..."
               />
             </div>
@@ -158,7 +158,7 @@ export default function DangToanCard({
         {
           id: Math.random().toString(36).substr(2, 9),
           methodName: '',
-          methodContent: '',
+          solution: '',
           exercise: null,
           problemImage: null,
           solutionImage: null
@@ -201,8 +201,8 @@ export default function DangToanCard({
           <input
             type="text"
             placeholder="VD: Nhận biết đơn thức..."
-            value={dangToan.dangToanName}
-            onChange={(e) => onChange({ ...dangToan, dangToanName: e.target.value })}
+            value={dangToan.mathType}
+            onChange={(e) => onChange({ ...dangToan, mathType: e.target.value })}
             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-primary/50 transition-colors"
           />
         </div>

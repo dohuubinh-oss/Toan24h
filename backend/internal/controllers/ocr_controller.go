@@ -23,6 +23,12 @@ func (ctrl *OCRController) ExtractText(c *gin.Context) {
 	}
 	defer file.Close()
 
+	// Limit file size to 10MB to prevent DoS RAM exhaustion
+	if header.Size > 10*1024*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File ảnh vượt quá dung lượng tối đa 10MB"})
+		return
+	}
+
 	// Read file bytes
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {

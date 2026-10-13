@@ -1,5 +1,6 @@
 import React from 'react'
 import { RefreshCw, CheckCircle2, Eye, Flag, FileText, BookOpen } from 'lucide-react'
+import DOMPurify from 'isomorphic-dompurify'
 import { Question } from '../../types/question'
 
 interface QuestionCardProps {
@@ -19,7 +20,7 @@ export default function QuestionCard({ question, index }: QuestionCardProps) {
             <span className="text-xs font-semibold text-primary uppercase tracking-wider">{question.topic} • {question.difficulty_level}</span>
             <div 
               className="mt-2 text-slate-800 leading-relaxed latex-font"
-              dangerouslySetInnerHTML={{ __html: question.content }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(question.content) }}
             />
           </div>
         </div>
@@ -37,7 +38,7 @@ export default function QuestionCard({ question, index }: QuestionCardProps) {
             return (
               <div key={idx} className={`flex items-center gap-3 p-3 bg-white border ${isCorrect ? 'border-2 border-primary' : 'border-slate-200'} rounded-lg cursor-pointer hover:border-primary transition-colors min-h-[48px]`}>
                 <span className={`w-6 h-6 flex items-center justify-center rounded-full border ${isCorrect ? 'bg-primary text-white border-primary' : 'border-slate-300'} text-xs font-bold`}>{letter}</span>
-                <div className="latex-font flex-grow" dangerouslySetInnerHTML={{ __html: opt }} />
+                <div className="latex-font flex-grow" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(opt) }} />
                 {isCorrect && <CheckCircle2 className="text-primary w-5 h-5 ml-auto" />}
               </div>
             )

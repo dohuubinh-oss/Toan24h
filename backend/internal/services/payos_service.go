@@ -116,8 +116,8 @@ func (s *PayOSService) GenerateWebhookDataSignature(data PayOSWebhookData) strin
 
 func (s *PayOSService) VerifyWebhookSignature(data PayOSWebhookData, signature string) bool {
 	if s.ChecksumKey == "" {
-		// Mock mode or empty checksum key
-		return true
+		// Fail closed: Never accept unverified webhooks if checksum key is missing
+		return false
 	}
 	expectedSignature := s.GenerateWebhookDataSignature(data)
 	return hmac.Equal([]byte(expectedSignature), []byte(signature))

@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "security:scan": "./scripts/security-scan-diff.sh"
+  },
   "devDependencies": {
     "@google/design.md": "^0.1.1"
   }

@@ -17,7 +17,7 @@ export interface ExampleExercise {
 export interface MethodItem {
   id: string;
   methodName: string;
-  methodContent: string;
+  solution: string;
   exercise: ExampleExercise | null;
   problemImage: string | null;
   solutionImage: string | null;
@@ -25,7 +25,7 @@ export interface MethodItem {
 
 export interface DangToanItem {
   id: string;
-  dangToanName: string;
+  mathType: string;
   methods: MethodItem[];
 }
 
@@ -67,9 +67,9 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
   const [dangToanList, setDangToanList] = useState<DangToanItem[]>([
     { 
       id: '1', 
-      dangToanName: '', 
+      mathType: '', 
       methods: [
-        { id: '1-1', methodName: '', methodContent: '', exercise: null, problemImage: null, solutionImage: null }
+        { id: '1-1', methodName: '', solution: '', exercise: null, problemImage: null, solutionImage: null }
       ] 
     }
   ])
@@ -93,23 +93,37 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
           setCategory(data.category || '')
           setBasicConcept(data.basicConcept || '')
 
-          let parsedExamples: DangToanItem[] = []
+          let rawExamples: any[] = []
           if (typeof data.examples === 'string') {
             try {
-              parsedExamples = JSON.parse(data.examples)
-            } catch (e) {
-              parsedExamples = []
+              rawExamples = JSON.parse(data.examples)
+            } catch {
+              rawExamples = []
             }
           } else if (Array.isArray(data.examples)) {
-            parsedExamples = data.examples
+            rawExamples = data.examples
           }
 
-          if (parsedExamples && parsedExamples.length > 0) {
-            setDangToanList(parsedExamples)
+          if (rawExamples && rawExamples.length > 0) {
+            const normalizedExamples: DangToanItem[] = rawExamples.map((dt: any, idx: number) => ({
+              id: dt.id || `dt-${idx + 1}`,
+              mathType: dt.mathType || dt.dangToanName || '',
+              methods: Array.isArray(dt.methods)
+                ? dt.methods.map((m: any, mIdx: number) => ({
+                    id: m.id || `m-${mIdx + 1}`,
+                    methodName: m.methodName || '',
+                    solution: m.solution || m.Solution || m.methodContent || '',
+                    exercise: m.exercise || null,
+                    problemImage: m.problemImage || null,
+                    solutionImage: m.solutionImage || null
+                  }))
+                : []
+            }))
+            setDangToanList(normalizedExamples)
           }
 
           // Auto-detect if this is a standalone practice card
-          if ((!data.basicConcept || data.basicConcept.trim() === '') && (!parsedExamples || parsedExamples.length === 0)) {
+          if ((!data.basicConcept || data.basicConcept.trim() === '') && (!rawExamples || rawExamples.length === 0)) {
             setContentType('practice')
           } else {
             setContentType('lecture')
@@ -158,7 +172,7 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
         const isMethodNonEmpty = (m: MethodItem) => {
           return Boolean(
             m.methodName?.trim() ||
-            m.methodContent?.trim() ||
+            m.solution?.trim() ||
             (m.exercise && m.exercise.content?.trim()) ||
             m.problemImage ||
             m.solutionImage
@@ -166,7 +180,7 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
         }
 
         const nonEmptyDangToan = dangToanList.filter(dt => {
-          const hasName = Boolean(dt.dangToanName?.trim())
+          const hasName = Boolean(dt.mathType?.trim())
           const hasAnyMethod = dt.methods?.some(isMethodNonEmpty)
           return hasName || hasAnyMethod
         })
@@ -174,12 +188,14 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
         processedDangToanList = await Promise.all(
           nonEmptyDangToan.map(async (dt) => ({
             id: dt.id,
-            dangToanName: dt.dangToanName || '',
+            mathType: dt.mathType || '',
+            dangToanName: dt.mathType || '',
             methods: await Promise.all(
               (dt.methods || []).map(async (m) => ({
                 id: m.id,
                 methodName: m.methodName || '',
-                methodContent: m.methodContent || '',
+                solution: m.solution || '',
+                methodContent: m.solution || '',
                 exercise: m.exercise && m.exercise.content?.trim() ? { content: m.exercise.content } : null,
                 problemImage: await uploadObjectUrlIfNeeded(m.problemImage),
                 solutionImage: await uploadObjectUrlIfNeeded(m.solutionImage)
@@ -233,9 +249,9 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
     setBasicConcept('')
     setDangToanList([{ 
       id: Math.random().toString(36).substr(2, 9), 
-      dangToanName: '', 
+      mathType: '', 
       methods: [
-        { id: Math.random().toString(36).substr(2, 9), methodName: '', methodContent: '', exercise: null, problemImage: null, solutionImage: null }
+        { id: Math.random().toString(36).substr(2, 9), methodName: '', solution: '', exercise: null, problemImage: null, solutionImage: null }
       ] 
     }])
   }

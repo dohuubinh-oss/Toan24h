@@ -101,8 +101,13 @@ func (h *AuthHandler) LinkTelegram(c *gin.Context) {
 		return
 	}
 
-	// Verify Telegram signature if hash is present
-	if req.Hash != "" {
+	// Verify Telegram signature
+	if req.Hash == "" {
+		if os.Getenv("GIN_MODE") == "release" || os.Getenv("TELEGRAM_BOT_TOKEN") != "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Chữ ký xác thực Telegram là bắt buộc"})
+			return
+		}
+	} else {
 		dataMap := map[string]string{
 			"id":         fmt.Sprintf("%d", tgID),
 			"first_name": req.FirstName,
@@ -324,6 +329,17 @@ func (h *AuthHandler) CheckTelegramQRStatus(c *gin.Context) {
 
 // CompleteTelegramQRSession completes the login when triggered via mobile deep link / bot or simulated auth
 func (h *AuthHandler) CompleteTelegramQRSession(c *gin.Context) {
+	secretToken := os.Getenv("TELEGRAM_BOT_SECRET_TOKEN")
+	authHeader := c.GetHeader("X-Telegram-Bot-Secret")
+
+	// In release mode or if secretToken is configured, enforce secret token validation
+	if os.Getenv("GIN_MODE") == "release" || secretToken != "" {
+		if secretToken == "" || authHeader != secretToken {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized telegram QR completion request"})
+			return
+		}
+	}
+
 	var req struct {
 		SessionID string `json:"sessionId" binding:"required"`
 		ID        int64  `json:"id"`
