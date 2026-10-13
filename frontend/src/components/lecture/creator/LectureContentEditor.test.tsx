@@ -51,4 +51,28 @@ describe('LectureContentEditor', () => {
 
     expect(screen.getByDisplayValue('Dạng 1. Đơn thức thử nghiệm')).toBeInTheDocument()
   })
+
+  it('allows removing all DangToan cards and shows empty state notice', () => {
+    render(
+      <LectureCreatorProvider>
+        <LectureContentEditor />
+      </LectureCreatorProvider>
+    )
+
+    // Initially 1 Dạng Toán card exists
+    expect(screen.getByText(/Dạng Toán 1/i)).toBeInTheDocument()
+
+    // Click delete button on the card
+    const removeBtn = screen.getByTitle('Xóa Dạng Toán')
+    fireEvent.click(removeBtn)
+
+    // DangToan 1 is gone, empty state notice is shown
+    expect(screen.queryByText(/Dạng Toán 1/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Chưa có bài tập mẫu nào \(không bắt buộc\)/i)).toBeInTheDocument()
+
+    // Can add a new one
+    const addBtn = screen.getByRole('button', { name: /Thêm Dạng Toán Mới/i })
+    fireEvent.click(addBtn)
+    expect(screen.getByText(/Dạng Toán 1/i)).toBeInTheDocument()
+  })
 })

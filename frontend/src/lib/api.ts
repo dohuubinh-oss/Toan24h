@@ -392,10 +392,22 @@ export async function createExam(payload: any): Promise<any> {
   return response
 }
 
-export async function updateExam(id: string, payload: any): Promise<any> {
+export async function checkOrphanQuestions(examId: string, questionIds: string[]): Promise<any[]> {
+  const response = await apiFetch(`/exams/${examId}/check-orphans`, {
+    method: 'POST',
+    body: JSON.stringify({ questionIds }),
+  })
+  return response?.orphanQuestions || []
+}
+
+export async function updateExam(id: string, payload: any, deleteOrphanQuestionIds?: string[]): Promise<any> {
+  const bodyPayload = deleteOrphanQuestionIds && deleteOrphanQuestionIds.length > 0
+    ? { ...payload, deleteOrphanQuestionIds }
+    : payload
+
   const response = await apiFetch(`/exams/${id}`, {
     method: 'PUT',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(bodyPayload),
   })
   return response
 }

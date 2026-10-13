@@ -143,28 +143,6 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
       return
     }
 
-    // If lecture mode, check dangToanList
-    if (contentType === 'lecture') {
-      for (let i = 0; i < dangToanList.length; i++) {
-        const dt = dangToanList[i]
-        if (!dt.dangToanName.trim()) {
-          toast.error(`Dạng toán ${i + 1} chưa có tên`)
-          return
-        }
-        for (let j = 0; j < dt.methods.length; j++) {
-          const m = dt.methods[j]
-
-          if (!m.exercise) {
-            toast.error(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có nội dung bài tập (JSON)`)
-            return
-          }
-          if (!m.exercise.content.trim()) {
-            toast.error(`Dạng toán ${i + 1} - Phương pháp ${j + 1} chưa có đề bài / nội dung`)
-            return
-          }
-        }
-      }
-    }
 
     setIsSubmitting(true)
 
@@ -176,16 +154,33 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
 
       if (contentType === 'lecture') {
         processedBasicConcept = basicConcept
+
+        const isMethodNonEmpty = (m: MethodItem) => {
+          return Boolean(
+            m.methodName?.trim() ||
+            m.methodContent?.trim() ||
+            (m.exercise && m.exercise.content?.trim()) ||
+            m.problemImage ||
+            m.solutionImage
+          )
+        }
+
+        const nonEmptyDangToan = dangToanList.filter(dt => {
+          const hasName = Boolean(dt.dangToanName?.trim())
+          const hasAnyMethod = dt.methods?.some(isMethodNonEmpty)
+          return hasName || hasAnyMethod
+        })
+
         processedDangToanList = await Promise.all(
-          dangToanList.map(async (dt) => ({
+          nonEmptyDangToan.map(async (dt) => ({
             id: dt.id,
-            dangToanName: dt.dangToanName,
+            dangToanName: dt.dangToanName || '',
             methods: await Promise.all(
-              dt.methods.map(async (m) => ({
+              (dt.methods || []).map(async (m) => ({
                 id: m.id,
-                methodName: m.methodName,
-                methodContent: m.methodContent,
-                exercise: m.exercise!,
+                methodName: m.methodName || '',
+                methodContent: m.methodContent || '',
+                exercise: m.exercise && m.exercise.content?.trim() ? { content: m.exercise.content } : null,
                 problemImage: await uploadObjectUrlIfNeeded(m.problemImage),
                 solutionImage: await uploadObjectUrlIfNeeded(m.solutionImage)
               }))
@@ -246,10 +241,7 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
   }
 
   const removeDangToan = (id: string) => {
-    setDangToanList(prev => {
-      if (prev.length <= 1) return prev
-      return prev.filter(dt => dt.id !== id)
-    })
+    setDangToanList(prev => prev.filter(dt => dt.id !== id))
   }
 
   return (

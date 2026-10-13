@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import ExamHeader from '@/components/exams/ExamHeader'
 import ExamQuestionList from '@/components/exams/ExamQuestionList'
 import ExamConfigSidebar from '@/components/exams/ExamConfigSidebar'
+import ConfirmDeleteOrphanModal, { OrphanQuestion } from '@/components/exams/ConfirmDeleteOrphanModal'
 import { Grid, UploadCloud } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Exam } from '@/types/exam'
@@ -37,6 +38,9 @@ function CreateExamPageContent() {
 
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSaving, setIsSaving] = useState(false)
+  const [initialQuestionIds, setInitialQuestionIds] = useState<string[]>([])
+  const [orphanQuestions, setOrphanQuestions] = useState<OrphanQuestion[]>([])
+  const [showOrphanModal, setShowOrphanModal] = useState(false)
 
   const examId = searchParams.get('id');
 
@@ -56,6 +60,10 @@ function CreateExamPageContent() {
               type: existingExam.type || '',
               lectureId: existingExam.lectureId || undefined
             }));
+
+            if (existingExam.questionIds) {
+              setInitialQuestionIds(existingExam.questionIds);
+            }
 
             // If URL has qids (e.g. after question swap), use URL qids, else use exam's questionIds
             const ids = qidsParam ? qidsParam.split(',').filter(Boolean) : (existingExam.questionIds || []);
@@ -133,6 +141,26 @@ function CreateExamPageContent() {
     router.push(`/dashboard/questions?${params.toString()}`);
   }, [exam.questions, examId, router]);
 
+  const executeSave = async (payload: any, deleteOrphanIds?: string[]) => {
+    setIsSaving(true);
+    try {
+      if (examId) {
+        const { updateExam } = await import('@/lib/api');
+        await updateExam(examId, payload, deleteOrphanIds);
+        toast.success('Cập nhật đề thi thành công!');
+      } else {
+        await apiFetch('/exams', { method: 'POST', body: JSON.stringify(payload) });
+        toast.success('Tạo đề thi mới thành công!');
+      }
+      router.push('/dashboard/exams');
+    } catch (err) {
+      console.error('Lưu đề thi thất bại:', err);
+      toast.error('Lưu đề thi thất bại. Vui lòng thử lại.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     const newErrors = validateExamConfig(exam);
     if (Object.keys(newErrors).length > 0) {
@@ -161,24 +189,72 @@ function CreateExamPageContent() {
       lectureId: exam.lectureId,
     };
 
-    setIsSaving(true);
-    try {
-      if (examId) {
-        const { updateExam } = await import('@/lib/api');
-        await updateExam(examId, payload);
-        toast.success('Cập nhật đề thi thành công!');
-      } else {
-        await apiFetch('/exams', { method: 'POST', body: JSON.stringify(payload) });
-        toast.success('Tạo đề thi mới thành công!');
+    // If editing an existing exam, check for removed questions that may be orphans
+    if (examId && initialQuestionIds.length > 0) {
+      const currentSet = new Set(questionIds);
+      const removedQuestionIds = initialQuestionIds.filter(id => !currentSet.has(id));
+
+      if (removedQuestionIds.length > 0) {
+        setIsSaving(true);
+        try {
+          const { checkOrphanQuestions } = await import('@/lib/api');
+          const orphans = await checkOrphanQuestions(examId, removedQuestionIds);
+          if (orphans && orphans.length > 0) {
+            setOrphanQuestions(orphans);
+            setShowOrphanModal(true);
+            setIsSaving(false);
+            return;
+          }
+        } catch (err) {
+          console.error('Lỗi kiểm tra câu hỏi mồ côi:', err);
+        } finally {
+          setIsSaving(false);
+        }
       }
-      router.push('/dashboard/exams');
-    } catch (err) {
-      console.error('Lưu đề thi thất bại:', err);
-      toast.error('Lưu đề thi thất bại. Vui lòng thử lại.');
-    } finally {
-      setIsSaving(false);
     }
-  }
+
+    await executeSave(payload);
+  };
+
+  const handleConfirmDeleteOrphans = async (selectedIds: string[]) => {
+    setShowOrphanModal(false);
+    const { diffScore } = calculateExamDifficulty(exam.questions);
+    const questionIds = exam.questions.map(q => q.id).filter(Boolean);
+    const payload = {
+      title: exam.title,
+      examCode: exam.examCode,
+      cate: exam.cate,
+      type: exam.type,
+      grade: exam.grade,
+      duration: exam.duration,
+      diffScore: diffScore,
+      questionIds: questionIds,
+      lectureId: exam.lectureId,
+    };
+    await executeSave(payload, selectedIds);
+  };
+
+  const handleKeepOrphans = async () => {
+    setShowOrphanModal(false);
+    const { diffScore } = calculateExamDifficulty(exam.questions);
+    const questionIds = exam.questions.map(q => q.id).filter(Boolean);
+    const payload = {
+      title: exam.title,
+      examCode: exam.examCode,
+      cate: exam.cate,
+      type: exam.type,
+      grade: exam.grade,
+      duration: exam.duration,
+      diffScore: diffScore,
+      questionIds: questionIds,
+      lectureId: exam.lectureId,
+    };
+    await executeSave(payload);
+  };
+
+  const handleCancelOrphans = () => {
+    setShowOrphanModal(false);
+  };
 
   return (
     <div className="bg-slate-50 text-slate-900 min-h-screen pb-20 lg:pb-0 font-body">
@@ -225,6 +301,15 @@ function CreateExamPageContent() {
           Lưu đề thi
         </Button>
       </div>
+
+      <ConfirmDeleteOrphanModal
+        isOpen={showOrphanModal}
+        orphanQuestions={orphanQuestions}
+        onConfirmDelete={handleConfirmDeleteOrphans}
+        onKeepInBank={handleKeepOrphans}
+        onClose={handleCancelOrphans}
+        isSubmitting={isSaving}
+      />
     </div>
   )
 }

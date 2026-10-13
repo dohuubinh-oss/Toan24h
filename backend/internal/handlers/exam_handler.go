@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 )
@@ -23,6 +25,57 @@ func CreateExam(c *gin.Context) {
 	c.JSON(http.StatusCreated, exam)
 }
 
+type UpdateExamPayload struct {
+	models.Exam
+	DeleteOrphanQuestionIDs []string `json:"deleteOrphanQuestionIds"`
+}
+
+type CheckOrphansPayload struct {
+	QuestionIDs []string `json:"questionIds" binding:"required"`
+}
+
+type OrphanQuestionInfo struct {
+	ID       string `json:"id"`
+	BookName string `json:"bookName"`
+	Content  string `json:"content"`
+}
+
+func CheckOrphanQuestions(c *gin.Context) {
+	examID := c.Param("id")
+	var payload CheckOrphansPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	orphans := make([]OrphanQuestionInfo, 0)
+	for _, qID := range payload.QuestionIDs {
+		if qID == "" {
+			continue
+		}
+		var otherCount int64
+		if err := config.DB.Model(&models.Exam{}).
+			Where("id != ? AND ? = ANY(question_ids)", examID, qID).
+			Count(&otherCount).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check exams: " + err.Error()})
+			return
+		}
+
+		if otherCount == 0 {
+			var q models.Question
+			if err := config.DB.Select("id, book_name, content").Where("id = ?", qID).First(&q).Error; err == nil {
+				orphans = append(orphans, OrphanQuestionInfo{
+					ID:       q.ID.String(),
+					BookName: q.BookName,
+					Content:  q.Content,
+				})
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"orphanQuestions": orphans})
+}
+
 func UpdateExam(c *gin.Context) {
 	id := c.Param("id")
 
@@ -32,7 +85,7 @@ func UpdateExam(c *gin.Context) {
 		return
 	}
 
-	var payload models.Exam
+	var payload UpdateExamPayload
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -48,7 +101,37 @@ func UpdateExam(c *gin.Context) {
 	existingExam.QuestionIDs = payload.QuestionIDs
 	existingExam.LectureID = payload.LectureID
 
-	if err := config.DB.Save(&existingExam).Error; err != nil {
+	err := config.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&existingExam).Error; err != nil {
+			return err
+		}
+
+		if len(payload.DeleteOrphanQuestionIDs) > 0 {
+			for _, qID := range payload.DeleteOrphanQuestionIDs {
+				if qID == "" {
+					continue
+				}
+				// Verify question is not in other exams
+				var otherCount int64
+				if err := tx.Model(&models.Exam{}).
+					Where("id != ? AND ? = ANY(question_ids)", id, qID).
+					Count(&otherCount).Error; err != nil {
+					return err
+				}
+
+				if otherCount == 0 {
+					// Soft delete question and any subquestions
+					if err := tx.Delete(&models.Question{}, "id = ?", qID).Error; err != nil {
+						return err
+					}
+					_ = tx.Delete(&models.Question{}, "parent_id = ?", qID)
+				}
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update exam: " + err.Error()})
 		return
 	}

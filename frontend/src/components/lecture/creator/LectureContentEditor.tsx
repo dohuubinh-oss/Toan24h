@@ -79,13 +79,21 @@ export default function LectureContentEditor() {
           disabled={contentType === 'practice'}
         />
 
+        {dangToanList.length === 0 && (
+          <div className="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+            <p className="text-sm font-medium text-slate-500">
+              Chưa có bài tập mẫu nào (không bắt buộc). Bạn có thể bấm nút bên dưới để thêm Dạng toán.
+            </p>
+          </div>
+        )}
+
         {dangToanList.map((dt, index) => (
           <DangToanCard
             key={dt.id}
             dangToan={dt}
             index={index}
             onChange={(updatedDt) => updateDangToan(dt.id, updatedDt)}
-            onRemove={dangToanList.length > 1 ? () => removeDangToan(dt.id) : undefined}
+            onRemove={() => removeDangToan(dt.id)}
           />
         ))}
 

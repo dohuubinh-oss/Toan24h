@@ -49,7 +49,17 @@ export function LectureConcept({ basicConcept }: LectureConceptProps) {
 }
 
 export function LectureExamples({ examples = [] }: LectureExamplesProps) {
-  if (examples.length === 0) return null;
+  if (!examples || !Array.isArray(examples) || examples.length === 0) return null;
+
+  const validExamples = examples.filter(dt => {
+    const hasName = Boolean(dt.dangToanName?.trim())
+    const hasMethods = Array.isArray(dt.methods) && dt.methods.some(m => 
+      Boolean(m.methodName?.trim() || m.methodContent?.trim() || m.exercise?.content?.trim())
+    )
+    return hasName || hasMethods
+  })
+
+  if (validExamples.length === 0) return null;
 
   return (
     <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col mb-6">
@@ -66,15 +76,15 @@ export function LectureExamples({ examples = [] }: LectureExamplesProps) {
         <div className="px-6 pb-6 pt-2 flex-grow">
           <div className="flex flex-col h-full">
             <div className="flex-grow space-y-8">
-              {examples.map((dt, i) => (
+              {validExamples.map((dt, i) => (
                 <div key={dt.id} className="space-y-8">
                   <div className="relative overflow-hidden bg-primary/10 px-6 py-3 rounded-xl flex w-full items-center gap-2">
                     <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-primary"></div>
                     <span className="font-bold text-primary text-base">Dạng {i + 1}:</span>
-                    <span className="font-bold text-slate-800 text-base">{dt.dangToanName}</span>
+                    <span className="font-bold text-slate-800 text-base">{dt.dangToanName || `Dạng ${i + 1}`}</span>
                   </div>
 
-                  {dt.methods.map((method, j) => (
+                  {Array.isArray(dt.methods) && dt.methods.map((method, j) => (
                     <div key={method.id} className="space-y-6 mt-6 first:mt-4">
                       <div className="space-y-3 mb-6">
                         <div className="flex items-center gap-2">
