@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
@@ -64,8 +63,8 @@ func parseTelegramID(v interface{}) int64 {
 
 // LinkTelegram links a Telegram account to an existing user (Slot 1 or Slot 2)
 func (h *AuthHandler) LinkTelegram(c *gin.Context) {
-	userIDStr, exists := c.Get("userID")
-	if !exists {
+	currentUID, err := utils.GetUserIDString(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
@@ -130,15 +129,6 @@ func (h *AuthHandler) LinkTelegram(c *gin.Context) {
 		}
 	}
 
-	var currentUID string
-	switch id := userIDStr.(type) {
-	case uuid.UUID:
-		currentUID = id.String()
-	case string:
-		currentUID = id
-	default:
-		currentUID = fmt.Sprintf("%v", id)
-	}
 
 	// Check if Telegram ID is already linked to another user across either slot 1 or slot 2
 	var existing models.User
@@ -187,8 +177,8 @@ type UnlinkTelegramRequest struct {
 
 // UnlinkTelegram removes a linked Telegram account from slot 1 or slot 2
 func (h *AuthHandler) UnlinkTelegram(c *gin.Context) {
-	userIDStr, exists := c.Get("userID")
-	if !exists {
+	currentUID, err := utils.GetUserIDString(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
@@ -197,16 +187,6 @@ func (h *AuthHandler) UnlinkTelegram(c *gin.Context) {
 	_ = c.ShouldBindJSON(&req)
 	if req.Slot != 2 {
 		req.Slot = 1
-	}
-
-	var currentUID string
-	switch id := userIDStr.(type) {
-	case uuid.UUID:
-		currentUID = id.String()
-	case string:
-		currentUID = id
-	default:
-		currentUID = fmt.Sprintf("%v", id)
 	}
 
 	updates := map[string]interface{}{}

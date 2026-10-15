@@ -94,20 +94,20 @@ export const MathExtension = Node.create({
       {
         tag: 'math-inline',
         getAttrs: (node: any) => ({
-          latex: node.getAttribute('data-latex') || ''
+          latex: node.getAttribute('data-latex') || node.getAttribute('latex') || ''
         })
       },
       {
         tag: 'span[data-type="math"]',
         getAttrs: (node: any) => ({
-          latex: node.getAttribute('data-latex') || ''
+          latex: node.getAttribute('data-latex') || node.getAttribute('latex') || ''
         })
       }
     ]
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['math-inline', mergeAttributes(HTMLAttributes), `$${HTMLAttributes.latex}$`]
+    return ['math-inline', mergeAttributes(HTMLAttributes, { 'data-latex': HTMLAttributes.latex }), `$${HTMLAttributes.latex}$`]
   },
 
   addNodeView() {
@@ -119,16 +119,17 @@ export const MathExtension = Node.create({
       nodeInputRule({
         find: /\$([^$]+)\$$/,
         type: this.type,
-        getAttributes: match => {
-          return { latex: match[1] }
-        }
+        getAttributes: match => ({ latex: match[1] })
+      }),
+      nodeInputRule({
+        find: /\\\(([^)]+)\\\)$/,
+        type: this.type,
+        getAttributes: match => ({ latex: match[1] })
       }),
       nodeInputRule({
         find: /\$\$$/,
         type: this.type,
-        getAttributes: () => {
-          return { latex: '' }
-        }
+        getAttributes: () => ({ latex: '' })
       })
     ]
   },
@@ -138,16 +139,22 @@ export const MathExtension = Node.create({
       nodePasteRule({
         find: /(?:\s|^)\$([^$]+)\$/g,
         type: this.type,
-        getAttributes: match => {
-          return { latex: match[1] }
-        }
+        getAttributes: match => ({ latex: match[1] })
+      }),
+      nodePasteRule({
+        find: /\\\(([\s\S]+?)\\\)/g,
+        type: this.type,
+        getAttributes: match => ({ latex: match[1] })
+      }),
+      nodePasteRule({
+        find: /\\\[([\s\S]+?)\\\]/g,
+        type: this.type,
+        getAttributes: match => ({ latex: match[1] })
       }),
       nodePasteRule({
         find: /\$\$([^$]*)\$\$/g,
         type: this.type,
-        getAttributes: match => {
-          return { latex: match[1] }
-        }
+        getAttributes: match => ({ latex: match[1] })
       })
     ]
   }

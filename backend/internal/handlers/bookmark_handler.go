@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"gorm.io/gorm"
 )
 
@@ -25,14 +26,9 @@ func (h *BookmarkHandler) ToggleLectureBookmark(c *gin.Context) {
 		return
 	}
 
-	userIDRaw, exists := c.Get("userID")
-	if !exists {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-	userID, ok := userIDRaw.(uuid.UUID)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID in context"})
 		return
 	}
 
@@ -66,14 +62,9 @@ func (h *BookmarkHandler) ToggleLectureBookmark(c *gin.Context) {
 }
 
 func (h *BookmarkHandler) GetBookmarkedLectures(c *gin.Context) {
-	userIDRaw, exists := c.Get("userID")
-	if !exists {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-	userID, ok := userIDRaw.(uuid.UUID)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID in context"})
 		return
 	}
 

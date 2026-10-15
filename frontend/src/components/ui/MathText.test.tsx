@@ -40,4 +40,22 @@ describe('MathText', () => {
     const katexElement = container.querySelector('.katex');
     expect(katexElement).toBeInTheDocument();
   });
+
+  it('renders \\( \\) and \\[ \\] delimiters correctly', () => {
+    const { container } = render(<MathText content={'\\(x^2 + 1\\) and \\(\\frac{1}{2}\\)'} />);
+    const katexElements = container.querySelectorAll('.katex');
+    expect(katexElements.length).toBe(2);
+  });
+
+  it('renders unwrapped LaTeX inside HTML tags correctly', () => {
+    const { container } = render(<MathText content="<p>-\\dfrac{1}{5} x^4 y^5</p>" />);
+    const katexElement = container.querySelector('.katex');
+    expect(katexElement).toBeInTheDocument();
+  });
+
+  it('renders math-inline tag with latex attribute correctly', () => {
+    const { container } = render(<MathText content='<p><math-inline latex="-\dfrac{3}{4} x^3 y + 7x">$-\dfrac{3}{4} x^3 y + 7x$</math-inline></p>' />);
+    const katexElement = container.querySelector('.katex');
+    expect(katexElement).toBeInTheDocument();
+  });
 });

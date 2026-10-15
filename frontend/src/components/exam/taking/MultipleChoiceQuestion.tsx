@@ -14,7 +14,7 @@ export interface MultipleChoiceOption {
 
 interface MultipleChoiceQuestionProps {
   resultId?: string
-  questionId: number
+  questionId: string | number
   index: number
   topic?: string
   content: string

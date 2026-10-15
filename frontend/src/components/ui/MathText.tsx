@@ -22,7 +22,8 @@ export default function MathText({ content, className = '' }: MathTextProps) {
     let processed = content
       .replace(/<math-inline[^>]*data-latex="([^"]*)"[^>]*>[\s\S]*?<\/math-inline>/gi, '$$$1$$')
       .replace(/<math-inline[^>]*latex="([^"]*)"[^>]*>[\s\S]*?<\/math-inline>/gi, '$$$1$$')
-      .replace(/<span[^>]*data-type="math"[^>]*data-latex="([^"]*)"[^>]*>[\s\S]*?<\/span>/gi, '$$$1$$');
+      .replace(/<span[^>]*data-type="math"[^>]*data-latex="([^"]*)"[^>]*>[\s\S]*?<\/span>/gi, '$$$1$$')
+      .replace(/<span[^>]*data-type="math"[^>]*latex="([^"]*)"[^>]*>[\s\S]*?<\/span>/gi, '$$$1$$');
 
     // Replace relative /uploads/ image sources with absolute backend URL for reliable rendering
     const apiBase = typeof window !== 'undefined'
@@ -35,7 +36,7 @@ export default function MathText({ content, className = '' }: MathTextProps) {
     });
 
     // Thay thế các công thức $$...$$, \[...\], $...$, \(...\) bằng chuỗi HTML của KaTeX
-    return processed.replace(/\$\$([\s\S]*?)\$\$|\\\[([\s\S]*?)\\\]|\$([^$]+)\$|\\\(([\s\S]*?)\\\)/g, (match, b1, b2, i1, i2) => {
+    processed = processed.replace(/\$\$([\s\S]*?)\$\$|\\\[([\s\S]*?)\\\]|\$([^$]+)\$|\\\(([\s\S]*?)\\\)/g, (match, b1, b2, i1, i2) => {
       const math = b1 || b2 || i1 || i2;
       const isBlock = !!(b1 || b2);
       try {
@@ -44,6 +45,18 @@ export default function MathText({ content, className = '' }: MathTextProps) {
         return match;
       }
     });
+
+    // Also convert any unwrapped LaTeX commands remaining inside HTML text (e.g. <p>\frac{1}{2}</p>)
+    processed = processed.replace(/>([^<]*?\\(?:dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|in|subset|cup|cap|widehat|degree)[^<]*?)</g, (match, textContent) => {
+      try {
+        const rendered = katex.renderToString(textContent.trim(), { throwOnError: false, displayMode: false });
+        return `>${rendered}<`;
+      } catch {
+        return match;
+      }
+    });
+
+    return processed;
   }, [content, hasHtml]);
 
   if (hasHtml) {

@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"gorm.io/gorm"
 )
 
@@ -132,14 +133,14 @@ func (h *UserHandler) RechargeUser(c *gin.Context) {
 
 // GetProfile trả về thông tin cá nhân của user đang đăng nhập
 func (h *UserHandler) GetProfile(c *gin.Context) {
-	userIDStr, exists := c.Get("userID")
-	if !exists {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
 	var user models.User
-	if err := h.db.Where("id = ?", userIDStr).First(&user).Error; err != nil {
+	if err := h.db.Where("id = ?", userID).First(&user).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
@@ -167,8 +168,8 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 
 // UploadAvatar xử lý tải ảnh đại diện của người dùng và cập nhật vào profile
 func (h *UserHandler) UploadAvatar(c *gin.Context) {
-	userIDStr, exists := c.Get("userID")
-	if !exists {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
@@ -210,7 +211,7 @@ func (h *UserHandler) UploadAvatar(c *gin.Context) {
 
 	if h.db != nil {
 		var user models.User
-		if err := h.db.Where("id = ?", userIDStr).First(&user).Error; err == nil {
+		if err := h.db.Where("id = ?", userID).First(&user).Error; err == nil {
 			user.TelegramAvt = &avatarURL
 			h.db.Save(&user)
 		}

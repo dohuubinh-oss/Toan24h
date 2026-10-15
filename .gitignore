@@ -16,6 +16,7 @@ bin/
 *.dll
 *.so
 *.dylib
+*.db
 backend/backend
 backend/server
 backend/api

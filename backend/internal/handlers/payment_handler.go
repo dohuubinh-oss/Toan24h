@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/services"
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"gorm.io/gorm"
 )
 
@@ -35,8 +36,8 @@ type CreatePaymentRequest struct {
 }
 
 func (h *PaymentHandler) CreatePayment(c *gin.Context) {
-	userID, exists := c.Get("userID")
-	if !exists {
+	userUUID, err := utils.GetUserID(c)
+	if err != nil {
 		c.JSON(401, gin.H{"error": "Unauthorized"})
 		return
 	}
@@ -67,21 +68,7 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 		return
 	}
 
-	var userUUID uuid.UUID
-	switch v := userID.(type) {
-	case uuid.UUID:
-		userUUID = v
-	case string:
-		var err error
-		userUUID, err = uuid.Parse(v)
-		if err != nil {
-			c.JSON(400, gin.H{"error": "Invalid User ID"})
-			return
-		}
-	default:
-		c.JSON(400, gin.H{"error": "Invalid User ID"})
-		return
-	}
+
 
 	// Generate integer orderCode (milliseconds timestamp, guaranteed to fit in int53)
 	orderCode := time.Now().UnixMilli()
@@ -150,18 +137,10 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 }
 
 func (h *PaymentHandler) GetMyTransactions(c *gin.Context) {
-	userID, exists := c.Get("userID")
-	if !exists {
+	userUUID, err := utils.GetUserID(c)
+	if err != nil {
 		c.JSON(401, gin.H{"error": "Unauthorized"})
 		return
-	}
-
-	var userUUID uuid.UUID
-	switch v := userID.(type) {
-	case uuid.UUID:
-		userUUID = v
-	case string:
-		userUUID, _ = uuid.Parse(v)
 	}
 
 	var transactions []models.Transaction

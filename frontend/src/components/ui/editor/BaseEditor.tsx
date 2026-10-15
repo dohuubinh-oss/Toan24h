@@ -57,38 +57,54 @@ export const preprocessMath = (html: string) => {
   if (!html) return '';
   let processed = html;
   const placeholders: string[] = [];
+
+  const addPlaceholder = (str: string) => {
+    placeholders.push(str);
+    return `__MATH_PLACEHOLDER_${placeholders.length - 1}__`;
+  };
   
-  // Protect existing math nodes so we don't double-wrap them
-  processed = processed.replace(/<(span|math-inline)[^>]*data-type="math"[^>]*>.*?<\/\1>/g, (match) => {
-    placeholders.push(match);
-    return `__MATH_PLACEHOLDER_${placeholders.length - 1}__`;
-  });
-  processed = processed.replace(/<math-inline[^>]*>.*?<\/math-inline>/g, (match) => {
-    placeholders.push(match);
-    return `__MATH_PLACEHOLDER_${placeholders.length - 1}__`;
-  });
+  // 1. Protect existing math nodes (including those with latex or data-latex attributes)
+  processed = processed.replace(/<(span|math-inline)[^>]*data-type="math"[^>]*>[\s\S]*?<\/\1>/gi, addPlaceholder);
+  processed = processed.replace(/<math-inline[^>]*>[\s\S]*?<\/math-inline>/gi, addPlaceholder);
 
-  // Avoid matching across HTML block tags
   const blockTags = 'p|div|h[1-6]|ul|ol|li|br|table|tr|td|th|tbody|thead|math-inline';
-  const inlineRegex = new RegExp(`\\$((?:(?!\\$|<\\/?(?:${blockTags})(?:>|\\s|$))[\\s\\S])+?)\\$`, 'gi');
-  const blockRegex = new RegExp(`\\$\\$((?:(?!\\$\\$|<\\/?(?:${blockTags})(?:>|\\s|$))[\\s\\S])+?)\\$\\$`, 'gi');
 
-  // Replace $$...$$
-  processed = processed.replace(blockRegex, (match, p1) => {
+  // 2. Replace $$...$$ and \[...\]
+  processed = processed.replace(new RegExp(`\\$\\$((?:(?!\\$\\$|<\\/?(?:${blockTags})(?:>|\\s|$))[\\s\\S])+?)\\$\\$`, 'gi'), (match, p1) => {
     const escaped = p1.replace(/"/g, '&quot;');
-    return `<math-inline data-latex="${escaped}">${match}</math-inline>`;
+    return addPlaceholder(`<math-inline data-latex="${escaped}">$$${p1}$$</math-inline>`);
   });
-
-  // Replace $...$
-  processed = processed.replace(inlineRegex, (match, p1) => {
+  processed = processed.replace(new RegExp(`\\\\\\[((?:(?!\\\\\\]|<\\/?(?:${blockTags})(?:>|\\s|$))[\\s\\S])+?)\\\\\\]`, 'gi'), (match, p1) => {
     const escaped = p1.replace(/"/g, '&quot;');
-    return `<math-inline data-latex="${escaped}">${match}</math-inline>`;
+    return addPlaceholder(`<math-inline data-latex="${escaped}">$$${p1}$$</math-inline>`);
   });
 
-  // Restore placeholders
-  placeholders.forEach((placeholder, i) => {
-    processed = processed.replace(`__MATH_PLACEHOLDER_${i}__`, placeholder);
+  // 3. Replace $...$ and \(...\)
+  processed = processed.replace(new RegExp(`\\$((?:(?!\\$|<\\/?(?:${blockTags})(?:>|\\s|$))[\\s\\S])+?)\\$`, 'gi'), (match, p1) => {
+    const escaped = p1.replace(/"/g, '&quot;');
+    return addPlaceholder(`<math-inline data-latex="${escaped}">$${p1}$</math-inline>`);
   });
+  processed = processed.replace(new RegExp(`\\\\\\(((?:(?!\\\\\\)|<\\/?(?:${blockTags})(?:>|\\s|$))[\\s\\S])+?)\\\\\\)`, 'gi'), (match, p1) => {
+    const escaped = p1.replace(/"/g, '&quot;');
+    return addPlaceholder(`<math-inline data-latex="${escaped}">$${p1}$</math-inline>`);
+  });
+
+  // 4. Convert remaining unwrapped latex expressions (e.g. \frac{1}{2}, -\dfrac{1}{5} x^4 y^5, 2\sqrt{x})
+  const latexRegex = /\\(dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|in|subset|cup|cap|widehat|degree)/;
+  if (latexRegex.test(processed)) {
+    processed = processed.replace(/([^<>]*?\\(?:dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|in|subset|cup|cap|widehat|degree)[^<>]*)/g, (match) => {
+      if (match.includes('__MATH_PLACEHOLDER_')) return match;
+      const trimmed = match.trim();
+      if (!trimmed) return match;
+      const escaped = trimmed.replace(/"/g, '&quot;');
+      return addPlaceholder(`<math-inline data-latex="${escaped}">$${trimmed}$</math-inline>`);
+    });
+  }
+
+  // 5. Restore placeholders in reverse order
+  for (let i = placeholders.length - 1; i >= 0; i--) {
+    processed = processed.replace(`__MATH_PLACEHOLDER_${i}__`, placeholders[i]);
+  }
 
   return processed;
 };

@@ -13,7 +13,10 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/services"
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
+
+var htmlTagRegex = regexp.MustCompile(`<[^>]*>`)
 
 type SubmitExamRequest struct {
 	Answers []struct {
@@ -40,15 +43,8 @@ func SubmitExam(c *gin.Context) {
 	}
 
 	var studentID *uuid.UUID
-	if val, exists := c.Get("userID"); exists {
-		if id, ok := val.(uuid.UUID); ok {
-			studentID = &id
-		} else if idStr, ok := val.(string); ok {
-			parsedID, err := uuid.Parse(idStr)
-			if err == nil {
-				studentID = &parsedID
-			}
-		}
+	if uid, err := utils.GetUserID(c); err == nil {
+		studentID = &uid
 	}
 
 	answersMap := make(map[string]models.QuestionAnswer)
@@ -227,9 +223,8 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 				})
 			}
 		} else {
-			re := regexp.MustCompile(`<[^>]*>`)
-			cleanStudentAns := strings.TrimSpace(re.ReplaceAllString(ans.StudentAnswer, ""))
-			cleanCorrectAns := strings.TrimSpace(re.ReplaceAllString(question.CorrectAnswer, ""))
+			cleanStudentAns := strings.TrimSpace(htmlTagRegex.ReplaceAllString(ans.StudentAnswer, ""))
+			cleanCorrectAns := strings.TrimSpace(htmlTagRegex.ReplaceAllString(question.CorrectAnswer, ""))
 
 			if cleanStudentAns == cleanCorrectAns && cleanCorrectAns != "" {
 				ans.IsCorrect = true
@@ -343,7 +338,6 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 
 		if user.TelegramID != nil {
 			notifier := services.NewTelegramNotifier()
-			resultURL := fmt.Sprintf("%s/exam/%s/result", config.Env.FrontendURL, submission.ID.String())
 			msg := fmt.Sprintf("✅ <b>Chấm điểm hoàn tất</b>\nBài thi của bạn đã được AI chấm xong.\nTổng điểm: %.2f\n\n🔗 Xem lời giải chi tiết: %s", submission.TotalScore, resultURL)
 			go notifier.SendMessage(*user.TelegramID, msg)
 		}
@@ -351,19 +345,9 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 }
 
 func GetMyExamResults(c *gin.Context) {
-	userIDVal, exists := c.Get("userID")
-	if !exists {
+	userID, err := utils.GetUserIDString(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	var userID string
-	if id, ok := userIDVal.(uuid.UUID); ok {
-		userID = id.String()
-	} else if idStr, ok := userIDVal.(string); ok {
-		userID = idStr
-	} else {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID type"})
 		return
 	}
 

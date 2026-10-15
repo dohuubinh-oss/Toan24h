@@ -77,16 +77,23 @@ function QuestionEditorSection({
 
   // Handler when option content changes
   const handleOptionContentChange = (val: string, optLetter: string, optIdx: number) => {
+    // If user pasted or typed with leading "A. ", "A) ", etc., clean it up to prevent duplicate prefixes
+    let cleanVal = val;
+    const prefixRegex = new RegExp(`^<p>\\s*${optLetter}\\s*[.:)]\\s*`, 'i');
+    if (prefixRegex.test(cleanVal)) {
+      cleanVal = cleanVal.replace(prefixRegex, '<p>');
+    }
+
     const currentOptValue = currentQuestion?.options?.[optIdx] || '';
     const wasSelected = isOptionSelected(optLetter, currentOptValue, optIdx);
 
     const newOptions = [...(currentQuestion?.options || ['', '', '', ''])];
-    newOptions[optIdx] = val;
+    newOptions[optIdx] = cleanVal;
     updateQuestion('options', newOptions);
 
     // If this option was selected as the correct answer, keep correct_answer in sync
     if (wasSelected) {
-      updateQuestion('correct_answer', val.trim() !== '' ? val : optLetter);
+      updateQuestion('correct_answer', cleanVal.trim() !== '' ? cleanVal : optLetter);
     }
   };
 
@@ -175,7 +182,8 @@ function QuestionEditorSection({
                     <RichTextEditor
                       inline={true}
                       hideToolbar={true}
-                      placeholder={`Nhập đáp án ${opt}...`}
+                      showMathButton={true}
+                      placeholder={`Nhập đáp án ${opt}... (hoặc bấm ∑ chèn công thức)`}
                       content={currentOptValue}
                       onChange={(val) => handleOptionContentChange(val, opt, idx)}
                     />
@@ -188,8 +196,10 @@ function QuestionEditorSection({
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
             <label className="text-xs font-bold text-slate-600 block mb-2">Đáp án / Lời giải mẫu tự luận</label>
             <RichTextEditor
-              hideToolbar={true}
-              inline={true}
+              hideToolbar={false}
+              smallToolbar={true}
+              minHeight="120px"
+              placeholder="Nhập đáp án hoặc lời giải mẫu tự luận..."
               content={currentQuestion?.correct_answer || ''}
               onChange={(val) => updateQuestion('correct_answer', val)}
             />

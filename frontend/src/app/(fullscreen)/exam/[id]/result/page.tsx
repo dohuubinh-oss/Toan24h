@@ -494,7 +494,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               currentQuestion.type_question === 'single' && currentQuestion.type === 'Trắc nghiệm' ? (
                 <MultipleChoiceQuestion 
                   resultId={id}
-                  questionId={currentQuestion.id as any}
+                  questionId={currentQuestion.id}
                   index={currentQuestionIndex}
                   topic={currentQuestion.topic || ""}
                   content={currentQuestion.content}
@@ -520,22 +520,22 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               ) : (
                 <EssayQuestion 
                   resultId={id}
-                  questionId={currentQuestion.id as any}
+                  questionId={currentQuestion.id}
                   index={currentQuestionIndex}
                   content={currentQuestion.content}
                   sharedContext={currentQuestion.content}
                   solution_guide={currentQuestion.solution_guide}
                   subQuestions={currentQuestion.subQuestions?.map((sq: any) => ({
-                    id: sq.id as any,
+                    id: sq.id,
                     type: sq.type === 'Trắc nghiệm' ? 'mc' : 'essay',
                     content: sq.content,
                     options: sq.options,
                     solution_guide: sq.solution_guide,
                     correctAnswer: sq.correctAnswer
                   })) || []}
-                  answers={mappedData.answers as any}
-                  explanations={mappedData.explanations as any}
-                  aiFeedbacks={mappedData.aiFeedbacks as any}
+                  answers={mappedData.answers}
+                  explanations={mappedData.explanations}
+                  aiFeedbacks={mappedData.aiFeedbacks}
                   readonly={true}
                   isHintOpen={isAiHintOpen}
                   isFlagged={!!flaggedQuestions[currentQuestion.id]}

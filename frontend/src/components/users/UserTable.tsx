@@ -23,6 +23,7 @@ interface UserTableProps {
 }
 
 export default function UserTable({ users, onSoftDelete }: UserTableProps) {
+  const [now] = React.useState(() => Date.now())
   const handleDelete = (id: string, name: string) => {
     if (window.confirm(`Hành động này sẽ khóa tài khoản của người dùng. Bạn có chắc chắn muốn khóa người dùng ${name}?`)) {
       onSoftDelete(id, name);
@@ -73,8 +74,7 @@ export default function UserTable({ users, onSoftDelete }: UserTableProps) {
           <tbody className="divide-y divide-slate-100">
             {users.map((user) => {
               const statusInfo = getStatusDisplay(user.status);
-              const isExpired = user.expiresAt && new Date(user.expiresAt).getTime() < Date.now();
-
+              const isExpired = Boolean(user.expiresAt && new Date(user.expiresAt).getTime() < now);
               return (
               <tr key={user.id} className="hover:bg-slate-50 transition-colors group relative border-l-2 border-transparent hover:border-primary">
                 <td className="px-6 py-4">

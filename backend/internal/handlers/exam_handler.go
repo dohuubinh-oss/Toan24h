@@ -124,7 +124,9 @@ func UpdateExam(c *gin.Context) {
 					if err := tx.Delete(&models.Question{}, "id = ?", qID).Error; err != nil {
 						return err
 					}
-					_ = tx.Delete(&models.Question{}, "parent_id = ?", qID)
+					if err := tx.Delete(&models.Question{}, "parent_id = ?", qID).Error; err != nil {
+						return err
+					}
 				}
 			}
 		}

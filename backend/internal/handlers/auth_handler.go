@@ -3,8 +3,6 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -15,60 +13,15 @@ import (
 )
 
 func formatExpiresAt(t *time.Time) string {
-	if t == nil {
-		return ""
-	}
-	return t.Format(time.RFC3339)
+	return utils.FormatExpiresAt(t)
 }
 
 func setAuthCookies(c *gin.Context, accessToken, refreshToken, role, grade, expiresAt string) {
-	domain := ""
-	secure := false
-	host := c.Request.Host
-	origin := c.GetHeader("Origin")
-
-	if strings.Contains(host, "toan6789.vn") || strings.Contains(origin, "toan6789.vn") {
-		domain = ".toan6789.vn"
-		secure = true
-	} else if os.Getenv("GIN_MODE") == "release" && !strings.Contains(host, "localhost") && !strings.Contains(host, "127.0.0.1") {
-		secure = true
-	}
-
-	c.SetCookie("accessToken", accessToken, 24*60*60, "/", domain, secure, true)
-	if refreshToken != "" {
-		c.SetCookie("refreshToken", refreshToken, 7*24*60*60, "/", domain, secure, true)
-	}
-	c.SetCookie("userRole", role, 24*60*60, "/", domain, secure, false)
-	c.SetCookie("userGrade", grade, 24*60*60, "/", domain, secure, false)
-	c.SetCookie("userExpiresAt", expiresAt, 24*60*60, "/", domain, secure, false)
+	utils.SetAuthCookies(c, accessToken, refreshToken, role, grade, expiresAt)
 }
 
 func clearAuthCookies(c *gin.Context) {
-	domain := ""
-	secure := false
-	host := c.Request.Host
-	origin := c.GetHeader("Origin")
-
-	if strings.Contains(host, "toan6789.vn") || strings.Contains(origin, "toan6789.vn") {
-		domain = ".toan6789.vn"
-		secure = true
-	} else if os.Getenv("GIN_MODE") == "release" && !strings.Contains(host, "localhost") && !strings.Contains(host, "127.0.0.1") {
-		secure = true
-	}
-
-	c.SetCookie("accessToken", "", -1, "/", domain, secure, true)
-	c.SetCookie("refreshToken", "", -1, "/", domain, secure, true)
-	c.SetCookie("userRole", "", -1, "/", domain, secure, false)
-	c.SetCookie("userGrade", "", -1, "/", domain, secure, false)
-	c.SetCookie("userExpiresAt", "", -1, "/", domain, secure, false)
-
-	if domain != "" {
-		c.SetCookie("accessToken", "", -1, "/", "", false, true)
-		c.SetCookie("refreshToken", "", -1, "/", "", false, true)
-		c.SetCookie("userRole", "", -1, "/", "", false, false)
-		c.SetCookie("userGrade", "", -1, "/", "", false, false)
-		c.SetCookie("userExpiresAt", "", -1, "/", "", false, false)
-	}
+	utils.ClearAuthCookies(c)
 }
 
 type AuthHandler struct {
@@ -145,20 +98,24 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := h.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
+	if err := h.db.Where("LOWER(TRIM(email)) = LOWER(TRIM(?))", req.Email).First(&user).Error; err != nil {
+		fmt.Printf("[AUTH_LOGIN] Email not found: '%s'\n", req.Email)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
 	if user.Status == "locked" {
+		fmt.Printf("[AUTH_LOGIN] Account locked: '%s'\n", req.Email)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Account is locked"})
 		return
 	}
 
 	if err := utils.CheckPasswordHash(req.Password, user.PasswordHash); err != nil {
+		fmt.Printf("[AUTH_LOGIN] Password mismatch for email: '%s', provided password length: %d\n", req.Email, len(req.Password))
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
+	fmt.Printf("[AUTH_LOGIN] Login SUCCESS for user: %s (role: %s)\n", user.Email, user.Role)
 
 	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role, user.Grade)
 	if err != nil {
@@ -229,8 +186,8 @@ type UpdateGradeRequest struct {
 }
 
 func (h *AuthHandler) UpdateGrade(c *gin.Context) {
-	userIDStr, exists := c.Get("userID")
-	if !exists {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
@@ -242,7 +199,7 @@ func (h *AuthHandler) UpdateGrade(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := h.db.Where("id = ?", userIDStr).First(&user).Error; err != nil {
+	if err := h.db.Where("id = ?", userID).First(&user).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
@@ -291,8 +248,8 @@ type DeductPointsRequest struct {
 }
 
 func (h *AuthHandler) DeductPoints(c *gin.Context) {
-	userIDStr, exists := c.Get("userID")
-	if !exists {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
@@ -304,7 +261,7 @@ func (h *AuthHandler) DeductPoints(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := h.db.Where("id = ?", userIDStr).First(&user).Error; err != nil {
+	if err := h.db.Where("id = ?", userID).First(&user).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
@@ -449,8 +406,8 @@ type ChangePasswordRequest struct {
 }
 
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
-	userIDStr, exists := c.Get("userID")
-	if !exists {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
@@ -462,7 +419,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := h.db.Where("id = ?", userIDStr).First(&user).Error; err != nil {
+	if err := h.db.Where("id = ?", userID).First(&user).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy người dùng"})
 		return
 	}

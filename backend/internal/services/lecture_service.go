@@ -15,6 +15,8 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/repository"
 )
 
+var tempImgRegex = regexp.MustCompile(`src="/uploads/temp/([^"]+)"`)
+
 // DTOs for the request
 type StepRequest struct {
 	StepOrder int    `json:"step"` // from frontend `step`
@@ -109,9 +111,8 @@ func processLectureImagesAndSerialize(grade string, basicConcept string, example
 	}
 
 	processHtmlImages := func(htmlContent string) string {
-		re := regexp.MustCompile(`src="/uploads/temp/([^"]+)"`)
-		return re.ReplaceAllStringFunc(htmlContent, func(match string) string {
-			parts := re.FindStringSubmatch(match)
+		return tempImgRegex.ReplaceAllStringFunc(htmlContent, func(match string) string {
+			parts := tempImgRegex.FindStringSubmatch(match)
 			if len(parts) > 1 {
 				originalUrl := "/uploads/temp/" + parts[1]
 				newUrl := processLectureImageUrl(originalUrl)

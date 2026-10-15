@@ -78,6 +78,13 @@ export default function VoiceMathAssistantModal({
     }
   }, [isOpen])
 
+  const handleInsert = () => {
+    if (conversion.latex) {
+      onInsert(conversion.latex, conversion.isMath)
+      onClose()
+    }
+  }
+
   // Handle ESC and Enter keydown
   useEffect(() => {
     if (!isOpen) return
@@ -93,7 +100,7 @@ export default function VoiceMathAssistantModal({
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, conversion.latex])
+  }, [isOpen, conversion.latex, onClose])
 
   const toggleListening = () => {
     if (!recognitionRef.current) return
@@ -108,13 +115,6 @@ export default function VoiceMathAssistantModal({
       } catch (e) {
         console.error(e)
       }
-    }
-  }
-
-  const handleInsert = () => {
-    if (conversion.latex) {
-      onInsert(conversion.latex, conversion.isMath)
-      onClose()
     }
   }
 

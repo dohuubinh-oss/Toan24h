@@ -435,7 +435,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
 
         {currentQuestion.type_question === 'single' && currentQuestion.type === 'Trắc nghiệm' ? (
           <MultipleChoiceQuestion 
-            questionId={currentQuestion.id as any}
+            questionId={currentQuestion.id}
             index={currentQuestionIndex}
             topic={currentQuestion.topic || ""}
             content={currentQuestion.content}
@@ -452,23 +452,23 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           />
         ) : (
           <EssayQuestion 
-            questionId={currentQuestion.id as any}
+            questionId={currentQuestion.id}
             index={currentQuestionIndex}
             content={currentQuestion.content}
             sharedContext={currentQuestion.content}
             subQuestions={currentQuestion.subQuestions?.map(sq => ({
-              id: sq.id as any,
+              id: sq.id,
               type: sq.type === 'Trắc nghiệm' ? 'mc' : 'essay',
               content: sq.content,
               options: sq.options ? sq.options.map((opt, i) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt })) : undefined
-            })) as any || []}
+            })) || []}
             answers={answers}
             explanations={explanations}
             isHintOpen={isAiHintOpen}
-            activeHintQuestionId={activeHintQuestionId as any}
+            activeHintQuestionId={activeHintQuestionId}
             isFlagged={!!flaggedQuestions[currentQuestion.id]}
-            onAnswerChange={(id, val, explanation) => handleAnswerSelect(id as any, val, explanation)}
-            onToggleHint={(subId) => toggleAiHint(subId as any)}
+            onAnswerChange={(id, val, explanation) => handleAnswerSelect(String(id), val, explanation)}
+            onToggleHint={(subId) => toggleAiHint(subId ? String(subId) : undefined)}
             onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
             examType={exam.cate}
             lectureUrl={lectureUrl}
@@ -484,7 +484,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         />
 
         <QuestionMapSidebar 
-          questions={mapQuestions as any}
+          questions={mapQuestions}
           onSelectQuestion={(id) => {
             const idx = questions.findIndex(q => q.id === id)
             if (idx !== -1) {

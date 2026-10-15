@@ -8,7 +8,7 @@ import { recognizeHandwriting, submitAppeal, reportQuestion } from '@/lib/api'
 import MobileQrUploadModal from './MobileQrUploadModal'
 
 export interface SubQuestion {
-  id: number
+  id: string | number
   type: 'mc' | 'essay'
   content: React.ReactNode
   options?: { id: string, text: string }[]
@@ -18,21 +18,21 @@ export interface SubQuestion {
 
 interface EssayQuestionProps {
   resultId?: string
-  questionId: number
+  questionId: string | number
   index: number
   content?: string
   sharedContext?: React.ReactNode
   solution_guide?: string
   subQuestions?: SubQuestion[]
-  answers: Record<number, string>
-  explanations?: Record<number, string>
+  answers: Record<string | number, string>
+  explanations?: Record<string | number, string>
   isHintOpen: boolean
-  activeHintQuestionId?: number
+  activeHintQuestionId?: string | number
   isFlagged: boolean
   examType?: string
   readonly?: boolean
   lectureUrl?: string
-  aiFeedbacks?: Record<number, { 
+  aiFeedbacks?: Record<string | number, { 
     detailId?: string, 
     isCorrect: boolean, 
     aiExplanation: string, 
@@ -48,8 +48,8 @@ interface EssayQuestionProps {
     aiReasoningRemark?: string,
     reasoningScore?: number
   }>
-  onAnswerChange?: (id: number, answer: string, explanation?: string) => void
-  onToggleHint?: (id?: number) => void
+  onAnswerChange?: (id: string | number, answer: string, explanation?: string) => void
+  onToggleHint?: (id?: string | number) => void
   onToggleFlag?: () => void
 }
 

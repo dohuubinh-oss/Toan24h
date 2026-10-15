@@ -18,6 +18,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var tempImgRegex = regexp.MustCompile(`src="/uploads/temp/([^"]+)"`)
+
 func isStaffRequester(c *gin.Context) bool {
 	tokenString := ""
 	authHeader := c.GetHeader("Authorization")
@@ -121,9 +123,8 @@ func processHtmlImages(htmlContent string, grade int) string {
 	if htmlContent == "" {
 		return htmlContent
 	}
-	re := regexp.MustCompile(`src="/uploads/temp/([^"]+)"`)
-	updatedContent := re.ReplaceAllStringFunc(htmlContent, func(match string) string {
-		parts := re.FindStringSubmatch(match)
+	updatedContent := tempImgRegex.ReplaceAllStringFunc(htmlContent, func(match string) string {
+		parts := tempImgRegex.FindStringSubmatch(match)
 		if len(parts) > 1 {
 			originalUrl := "/uploads/temp/" + parts[1]
 			newUrl := processImageUrl(originalUrl, grade)
@@ -461,12 +462,7 @@ func ReportQuestion(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("userID")
-	var uid string
-	if exists {
-		uid = userID.(uuid.UUID).String()
-	}
-
+	uid, _ := utils.GetUserIDString(c)
 	formattedMessage := fmt.Sprintf("[%s] %s", uid, req.Message)
 
 	// Update flags

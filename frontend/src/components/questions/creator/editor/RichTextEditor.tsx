@@ -1,6 +1,7 @@
 import React from 'react'
 import { EditorContent } from '@tiptap/react'
 import { BaseEditor, MenuBar } from '@/components/ui/editor/BaseEditor'
+import { Sigma } from 'lucide-react'
 
 interface RichTextEditorProps {
   content: string
@@ -14,6 +15,7 @@ interface RichTextEditorProps {
   smallToolbar?: boolean
   readOnly?: boolean
   rightCustomAction?: React.ReactNode
+  showMathButton?: boolean
 }
 
 export default function RichTextEditor({
@@ -27,7 +29,8 @@ export default function RichTextEditor({
   mathOnlyToolbar = false,
   smallToolbar = false,
   readOnly = false,
-  rightCustomAction
+  rightCustomAction,
+  showMathButton = false
 }: RichTextEditorProps) {
 
   const editorClass = `flex-grow focus:outline-none text-sm leading-relaxed max-w-none [&_p]:mb-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-1 [&_strong]:font-bold [&_em]:italic [&_s]:line-through [&_li>p]:mb-0 outline-none ${inline ? 'p-0' : 'p-3'} ${inline ? '' : `min-h-[${minHeight}]`}`
@@ -50,7 +53,23 @@ export default function RichTextEditor({
               rightCustomAction={rightCustomAction} 
             />
           )}
-          <EditorContent editor={editor} className={`flex-grow flex flex-col overflow-y-auto bg-transparent`} />
+          <div className="flex items-center w-full">
+            <EditorContent editor={editor} className="flex-grow flex flex-col overflow-y-auto bg-transparent" />
+            {showMathButton && !readOnly && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (editor) {
+                    editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()
+                  }
+                }}
+                className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0 mr-1 cursor-pointer"
+                title="Chèn / Nhập công thức Toán (MathLive)"
+              >
+                <Sigma className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       )}
     </BaseEditor>

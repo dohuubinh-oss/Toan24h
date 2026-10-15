@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/modeptrai/exam-model-backend/internal/services"
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -29,10 +30,8 @@ func (ctrl *LectureController) CreateLecture(c *gin.Context) {
 
 	// If AuthorID is not provided, default to authenticated user ID
 	if req.AuthorID == nil || *req.AuthorID == "" {
-		if userIDVal, exists := c.Get("userID"); exists {
-			if uidStr, ok := userIDVal.(string); ok && uidStr != "" {
-				req.AuthorID = &uidStr
-			}
+		if uidStr, err := utils.GetUserIDString(c); err == nil && uidStr != "" {
+			req.AuthorID = &uidStr
 		}
 	}
 
