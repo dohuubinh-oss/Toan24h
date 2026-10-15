@@ -14,4 +14,12 @@ describe('StudentLeaderboard Component', () => {
     expect(screen.getByText(/Minh Anh/i)).toBeInTheDocument()
     expect(screen.getAllByText(/Bạn/i)[0]).toBeInTheDocument()
   })
+
+  it('renders avatar initials using first letter of the last word (Vietnamese naming)', () => {
+    render(<StudentLeaderboard leaderboard={mockStudentDashboardData.leaderboard} currentUser={mockStudentDashboardData.currentUserRank} />)
+    // "Minh Anh" -> 'A', "Hà Phương" -> 'P', "Bạn (Nam)" -> 'N'
+    expect(screen.getByText('A')).toBeInTheDocument()
+    expect(screen.getByText('P')).toBeInTheDocument()
+    expect(screen.getByText('N')).toBeInTheDocument()
+  })
 })

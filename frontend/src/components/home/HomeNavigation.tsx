@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Bell, User, ChevronDown, LogOut, Settings } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { apiFetch } from '@/lib/api'
+import { getAvatarInitial } from '@/lib/utils'
 import Logo from '@/components/common/Logo'
 
 interface HomeNavigationProps {
@@ -213,7 +214,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
               <div className="relative group pl-4 border-l border-slate-200">
                 <div className="flex items-center gap-3 cursor-pointer">
                   <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold uppercase">
-                    {userName ? userName.charAt(0) : <User size={20} />}
+                    {userName ? getAvatarInitial(userName) : <User size={20} />}
                   </div>
                   <div className="hidden md:block">
                     <p className="text-sm font-bold text-slate-800 group-hover:text-primary transition-colors">{userName}</p>

@@ -25,6 +25,7 @@ import {
 import TelegramLoginWidget from '@/components/auth/TelegramLoginWidget'
 import { apiFetch, uploadUserAvatar } from '@/lib/api'
 import { logout } from '@/lib/authApi'
+import { getAvatarInitial } from '@/lib/utils'
 import toast, { Toaster } from 'react-hot-toast'
 
 interface UserProfile {
@@ -341,7 +342,7 @@ export default function ProfilePage() {
               />
             ) : (
               <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-black uppercase shrink-0 shadow-md shadow-blue-500/20">
-                {user.fullName ? user.fullName.charAt(0) : <User size={40} />}
+                {user.fullName ? getAvatarInitial(user.fullName) : <User size={40} />}
               </div>
             )}
 

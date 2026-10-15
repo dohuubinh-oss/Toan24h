@@ -4,6 +4,7 @@ import React from 'react'
 import { LockKeyhole, Users, Calendar } from 'lucide-react'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
+import { getAvatarInitial } from '@/lib/utils'
 
 export type User = {
   id: string;
@@ -83,8 +84,8 @@ export default function UserTable({ users, onSoftDelete }: UserTableProps) {
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img alt="Avatar" className="w-9 h-9 rounded-full bg-slate-100 object-cover border border-slate-200" src={user.avatar} />
                     ) : (
-                      <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
-                        <Users className="w-4 h-4 text-slate-400" />
+                      <div className="w-9 h-9 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                        {getAvatarInitial(user.name)}
                       </div>
                     )}
                     <div>

@@ -9,6 +9,7 @@ import StudentDailyChallenge from '@/components/student/StudentDailyChallenge'
 import { StudentDashboardData, LeaderboardUser } from '@/types/student'
 import { mockStudentDashboardData } from '@/data/mockStudentData'
 import { getWeeklyLeaderboard } from '@/lib/api'
+import { getAvatarInitial } from '@/lib/utils'
 
 export default async function StudentDashboardPage() {
   const cookieStore = await cookies()
@@ -50,7 +51,7 @@ export default async function StudentDashboardPage() {
         dashboardData.user = {
           ...dashboardData.user,
           name: cur.name || userNameCookie || dashboardData.user.name,
-          initial: cur.name ? cur.name.charAt(0).toUpperCase() : 'H',
+          initial: getAvatarInitial(cur.name || userNameCookie || dashboardData.user.name, 'H'),
           level: level,
           xp: `${cur.weeklyXp || 0}`,
           streak: cur.currentStreak || 0,

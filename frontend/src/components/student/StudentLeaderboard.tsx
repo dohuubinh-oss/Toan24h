@@ -1,6 +1,7 @@
 import React from 'react'
 import { Trophy, Award, Medal } from 'lucide-react'
 import { LeaderboardUser } from '@/types/student'
+import { getAvatarInitial } from '@/lib/utils'
 
 interface Props {
   leaderboard: LeaderboardUser[]
@@ -39,7 +40,7 @@ export default function StudentLeaderboard({ leaderboard, currentUser }: Props) 
             <div key={user.id} className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${rankBg}`}>
               {rankBadge}
               <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
-                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                {getAvatarInitial(user.name)}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-sm text-slate-800 truncate">{user.name}</p>
@@ -54,7 +55,7 @@ export default function StudentLeaderboard({ leaderboard, currentUser }: Props) 
           <span className="font-bold text-primary w-5 text-center">{currentUser.rank}</span>
           <div className="relative shrink-0">
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm border-2 border-white shadow-sm">
-              {currentUser.name.charAt(currentUser.name.indexOf('(') + 1) || currentUser.name.charAt(0)}
+              {getAvatarInitial(currentUser.name)}
             </div>
             {currentUser.isPro && <Award className="absolute -top-1 -right-1 text-amber-500 fill-amber-500" size={14} />}
           </div>

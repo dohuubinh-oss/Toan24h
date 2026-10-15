@@ -54,4 +54,12 @@ describe('UserTable', () => {
     fireEvent.click(lockButtons[0])
     expect(handleSoftDelete).toHaveBeenCalledWith('1', 'Nguyen Van A')
   })
+
+  it('renders initial of last word when user avatar is not provided', () => {
+    render(<UserTable users={mockUsers} onSoftDelete={vi.fn()} />)
+    // Nguyen Van A -> 'A'
+    expect(screen.getByText('A')).toBeInTheDocument()
+    // Tran Thi B -> 'B'
+    expect(screen.getByText('B')).toBeInTheDocument()
+  })
 })
