@@ -97,12 +97,12 @@ export default function TelegramLoginWidget({
     ? slot === 2
       ? 'Liên kết Telegram (Phụ huynh)'
       : 'Liên kết Telegram (Học sinh)'
-    : 'Đăng nhập với Telegram'
+    : 'Liên kết Telegram nhận thông báo'
   const defaultModalTitle = linkUserId
     ? slot === 2
       ? 'Liên kết Telegram Phụ huynh'
       : 'Liên kết Telegram Học sinh'
-    : 'Đăng nhập với Telegram'
+    : 'Liên kết Telegram nhận thông báo'
 
   return (
     <div className="flex flex-col items-center w-full gap-3 my-1">
@@ -116,7 +116,7 @@ export default function TelegramLoginWidget({
         <span>{buttonText || defaultBtnText}</span>
       </button>
 
-      {/* Modal QR & Mobile Login */}
+      {/* Modal QR & Linking */}
       {showQrModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative border border-slate-100">
@@ -138,10 +138,10 @@ export default function TelegramLoginWidget({
               <div className="py-8 text-center space-y-3">
                 <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto animate-bounce" />
                 <h4 className="text-lg font-bold text-slate-800">
-                  {linkUserId ? 'Liên kết thành công!' : 'Đăng nhập thành công!'}
+                  Liên kết thành công!
                 </h4>
                 <p className="text-sm text-slate-500">
-                  {linkUserId ? 'Thông tin Telegram đã được cập nhật.' : 'Đang tự động chuyển hướng vào hệ thống...'}
+                  Thông tin Telegram đã được cập nhật để nhận thông báo.
                 </p>
               </div>
             ) : (
@@ -170,9 +170,9 @@ export default function TelegramLoginWidget({
                 {/* Instructions */}
                 <div className="bg-sky-50/70 border border-sky-100 rounded-xl p-3.5 text-xs text-sky-900 space-y-1.5">
                   <p className="font-bold text-sky-950">📌 Các bước thực hiện:</p>
-                  <p>1. Dùng <strong>Camera điện thoại</strong> hoặc <strong>App Zalo</strong> quét mã QR trên.</p>
+                  <p>1. Dùng <strong>Camera điện thoại</strong> hoặc <strong>App Telegram</strong> quét mã QR trên.</p>
                   <p>2. Trên ứng dụng Telegram, nhấn nút <strong>Bắt đầu (Start)</strong>.</p>
-                  <p>3. Màn hình máy tính sẽ <strong>tự động đăng nhập</strong> ngay lập tức!</p>
+                  <p>3. Tài khoản Telegram sẽ được <strong>liên kết tự động</strong> để nhận thông báo!</p>
                 </div>
 
                 <div className="flex items-center justify-center gap-2 text-xs text-slate-400 pt-1">

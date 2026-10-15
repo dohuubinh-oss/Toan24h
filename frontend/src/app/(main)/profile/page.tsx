@@ -590,7 +590,7 @@ export default function ProfilePage() {
                   </div>
 
                   <p className="text-xs text-slate-500 my-3 leading-relaxed">
-                    Nhận thông báo bài học mới, hỏi đáp AI và đăng nhập nhanh không cần mật khẩu.
+                    Nhận thông báo bài học mới, kết quả thi và cảnh báo bảo mật.
                   </p>
 
                   {user.telegramId && (
