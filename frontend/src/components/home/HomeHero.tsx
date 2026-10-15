@@ -1,8 +1,94 @@
-import React from 'react'
+'use client'
+
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { ArrowRight, Flame, Bell, TrendingUp, Clock, FileText, Users } from 'lucide-react'
 
+interface GradeExamInfo {
+  grade: number
+  badge: string
+  title: string
+  duration: string
+  questionCount: string
+  submissions: string
+  avgScore: string
+  examUrl: string
+}
+
+const GRADE_EXAMS: Record<number, GradeExamInfo> = {
+  6: {
+    grade: 6,
+    badge: 'Toán 6 • Khảo sát định kỳ',
+    title: 'Đề kiểm tra chất lượng giữa kì II - Toán 6',
+    duration: '60 phút',
+    questionCount: '30 câu',
+    submissions: '980+ lượt thi',
+    avgScore: '8.1 / 10',
+    examUrl: '/exams/lop/6',
+  },
+  7: {
+    grade: 7,
+    badge: 'Toán 7 • Khảo sát định kỳ',
+    title: 'Đề kiểm tra định kỳ học kỳ II - Toán 7',
+    duration: '60 phút',
+    questionCount: '35 câu',
+    submissions: '1.150+ lượt thi',
+    avgScore: '7.9 / 10',
+    examUrl: '/exams/lop/7',
+  },
+  8: {
+    grade: 8,
+    badge: 'Toán 8 • Nâng cao điểm số',
+    title: 'Đề thi thử học kỳ & phân loại kiến thức - Toán 8',
+    duration: '90 phút',
+    questionCount: '35 câu',
+    submissions: '1.280+ lượt thi',
+    avgScore: '7.8 / 10',
+    examUrl: '/exams/lop/8',
+  },
+  9: {
+    grade: 9,
+    badge: 'Thi thử vào 10 • Toán 9',
+    title: 'Đề thi thử Tuyển sinh vào Lớp 10 (Chuẩn cấu trúc mới)',
+    duration: '90 phút',
+    questionCount: '40 câu',
+    submissions: '1.420+ lượt thi',
+    avgScore: '7.6 / 10',
+    examUrl: '/exams/lop/9',
+  },
+}
+
 export default function HomeHero() {
+  const [selectedGrade, setSelectedGrade] = useState<number>(9)
+  const [studentName, setStudentName] = useState<string>('Minh')
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr)
+          if (user.fullName) {
+            const parts = user.fullName.trim().split(/\s+/)
+            const firstName = parts[parts.length - 1]
+            if (firstName) setStudentName(firstName)
+          }
+          if (user.grade) {
+            const g = parseInt(user.grade, 10)
+            if (g >= 6 && g <= 9) {
+              setSelectedGrade(g)
+            }
+          }
+        } catch (e) {
+          // ignore error
+        }
+      }
+    }
+  }, [])
+
+  const currentExam = GRADE_EXAMS[selectedGrade] || GRADE_EXAMS[9]
+
   return (
     <section className="relative pt-12 pb-24 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
@@ -56,8 +142,8 @@ export default function HomeHero() {
           <div className="relative bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-[0_10px_30px_-10px_rgba(37,99,235,0.12)] border border-slate-100">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className="text-xl font-bold text-slate-900">Chào Minh! 👋</h3>
-                <p className="text-sm text-slate-500">Tiếp tục giải đề Toán 9</p>
+                <h3 className="text-xl font-bold text-slate-900">Chào {studentName}! 👋</h3>
+                <p className="text-sm text-slate-500">Tiếp tục giải đề Toán {selectedGrade}</p>
               </div>
               <div className="flex gap-4">
                 <div className="flex items-center gap-1 bg-orange-100 px-3 py-1 rounded-full text-orange-600 font-bold">
@@ -70,7 +156,7 @@ export default function HomeHero() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
                 <p className="text-xs font-bold text-primary uppercase mb-1">Tiến độ tuần</p>
                 <p className="text-2xl font-bold text-slate-900">85%</p>
@@ -91,44 +177,68 @@ export default function HomeHero() {
             <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-2xl pointer-events-none"></div>
 
+              {/* Grade selector tabs */}
+              <div className="flex items-center gap-1.5 p-1 bg-white/10 rounded-xl mb-4">
+                {[6, 7, 8, 9].map((gradeNum) => (
+                  <button
+                    key={gradeNum}
+                    type="button"
+                    onClick={() => setSelectedGrade(gradeNum)}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
+                      selectedGrade === gradeNum
+                        ? 'bg-primary text-white shadow-md'
+                        : 'text-slate-300 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    Lớp {gradeNum}
+                  </button>
+                ))}
+              </div>
+
               <div className="flex items-center justify-between gap-2 mb-3">
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-400/30">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Thi thử vào 10 • Toán 9
+                  {currentExam.badge}
                 </div>
                 <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
-                  <Users className="w-3.5 h-3.5 text-blue-400" /> 1.420+ lượt thi
+                  <Users className="w-3.5 h-3.5 text-blue-400" /> {currentExam.submissions}
                 </span>
               </div>
 
               <h4 className="text-base font-bold text-white mb-2 leading-snug">
-                Đề thi thử Tuyển sinh vào Lớp 10 (Chuẩn cấu trúc mới)
+                {currentExam.title}
               </h4>
 
               <div className="grid grid-cols-2 gap-2 mb-4 text-xs text-slate-300">
                 <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5">
                   <Clock className="w-3.5 h-3.5 text-primary" />
-                  <span>Thời gian: <strong>90 phút</strong></span>
+                  <span>Thời gian: <strong>{currentExam.duration}</strong></span>
                 </div>
                 <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5">
                   <FileText className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Quy mô: <strong>40 câu</strong></span>
+                  <span>Quy mô: <strong>{currentExam.questionCount}</strong></span>
                 </div>
               </div>
 
               <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs">
                 <div className="flex items-center gap-2">
-                  <button className="px-4 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-lg shadow-primary/25 transition-all">
+                  <Link
+                    href={currentExam.examUrl}
+                    className="px-4 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-lg shadow-primary/25 transition-all"
+                  >
                     <span>Vào thi ngay</span>
                     <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                  <button className="px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-300 font-semibold rounded-xl border border-white/10 transition-colors">
+                  </Link>
+                  <Link
+                    href={currentExam.examUrl}
+                    className="px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-300 font-semibold rounded-xl border border-white/10 transition-colors"
+                  >
                     Cấu trúc đề
-                  </button>
+                  </Link>
                 </div>
                 <div className="text-right hidden sm:block">
                   <p className="text-[10px] text-slate-400">Điểm TB</p>
-                  <p className="text-xs font-bold text-amber-400">7.6 / 10</p>
+                  <p className="text-xs font-bold text-amber-400">{currentExam.avgScore}</p>
                 </div>
               </div>
             </div>
