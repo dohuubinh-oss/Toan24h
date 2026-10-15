@@ -8,7 +8,7 @@ export default function HomeHero() {
       <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
         <div className="relative z-10">
           <h1 className="text-6xl lg:text-7xl font-bold leading-tight mb-6 text-slate-900">
-            Học Toán không còn khó với <span className="text-primary italic">trợ lý AI</span>
+            Luyện Toán thông minh, tự tin bứt phá <span className="text-primary italic">điểm 9+</span>
           </h1>
           <p className="text-xl text-slate-600 mb-10 leading-relaxed max-w-lg">
             Chương trình chuẩn Bộ Giáo dục từ lớp 6-9. Cá nhân hóa lộ trình học tập, giúp bạn tiến bộ vượt bậc chỉ sau 30 ngày.
