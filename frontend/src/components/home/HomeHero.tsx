@@ -1,6 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
-import { ArrowRight, Flame, Bell, Sparkles, TrendingUp } from 'lucide-react'
+import { ArrowRight, Flame, Bell, TrendingUp, Clock, FileText, Users } from 'lucide-react'
 
 export default function HomeHero() {
   return (
@@ -8,7 +8,7 @@ export default function HomeHero() {
       <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
         <div className="relative z-10">
           <h1 className="text-6xl lg:text-7xl font-bold leading-tight mb-6 text-slate-900">
-            Luyện Toán thông minh, tự tin bứt phá <span className="text-primary italic">điểm 9+</span>
+            Luyện Toán thông minh, bứt phá <span className="text-primary italic">điểm 9+</span>
           </h1>
           <p className="text-xl text-slate-600 mb-10 leading-relaxed max-w-lg">
             Chương trình chuẩn Bộ Giáo dục từ lớp 6-9. Cá nhân hóa lộ trình học tập, giúp bạn tiến bộ vượt bậc chỉ sau 30 ngày.
@@ -57,7 +57,7 @@ export default function HomeHero() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h3 className="text-xl font-bold text-slate-900">Chào Minh! 👋</h3>
-                <p className="text-sm text-slate-500">Tiếp tục giải đề Toán 12</p>
+                <p className="text-sm text-slate-500">Tiếp tục giải đề Toán 9</p>
               </div>
               <div className="flex gap-4">
                 <div className="flex items-center gap-1 bg-orange-100 px-3 py-1 rounded-full text-orange-600 font-bold">
@@ -88,20 +88,47 @@ export default function HomeHero() {
               </div>
             </div>
 
-            <div className="bg-slate-900 rounded-2xl p-4 text-white">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
+            <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-2xl pointer-events-none"></div>
+
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-400/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Thi thử vào 10 • Toán 9
                 </div>
-                <span className="text-sm font-bold">Trợ lý Toan6789 AI</span>
+                <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5 text-blue-400" /> 1.420+ lượt thi
+                </span>
               </div>
-              <div className="space-y-3">
-                <div className="bg-white/10 rounded-xl p-3 text-xs leading-relaxed">
-                  "Chào bạn! Tôi thấy bạn đang gặp khó ở phần **Hệ thức Vi-ét & Phương trình bậc 2**. Bạn có muốn tôi hướng dẫn mẹo tính nhẩm nghiệm nhanh không?"
+
+              <h4 className="text-base font-bold text-white mb-2 leading-snug">
+                Đề thi thử Tuyển sinh vào Lớp 10 (Chuẩn cấu trúc mới)
+              </h4>
+
+              <div className="grid grid-cols-2 gap-2 mb-4 text-xs text-slate-300">
+                <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5">
+                  <Clock className="w-3.5 h-3.5 text-primary" />
+                  <span>Thời gian: <strong>90 phút</strong></span>
                 </div>
-                <div className="flex gap-2">
-                  <div className="px-3 py-2 bg-primary text-xs font-bold rounded-lg cursor-pointer hover:bg-primary/90 transition-colors">Giải ngay</div>
-                  <div className="px-3 py-2 bg-white/5 text-xs font-bold rounded-lg cursor-pointer hover:bg-white/10 transition-colors">Để sau</div>
+                <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5">
+                  <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Quy mô: <strong>40 câu</strong></span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs">
+                <div className="flex items-center gap-2">
+                  <button className="px-4 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-lg shadow-primary/25 transition-all">
+                    <span>Vào thi ngay</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button className="px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-300 font-semibold rounded-xl border border-white/10 transition-colors">
+                    Cấu trúc đề
+                  </button>
+                </div>
+                <div className="text-right hidden sm:block">
+                  <p className="text-[10px] text-slate-400">Điểm TB</p>
+                  <p className="text-xs font-bold text-amber-400">7.6 / 10</p>
                 </div>
               </div>
             </div>
