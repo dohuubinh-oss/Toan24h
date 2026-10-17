@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
+	"os"
 
+	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/handlers"
 	"github.com/modeptrai/exam-model-backend/internal/models"
@@ -19,6 +21,11 @@ func main() {
 	// 1. Load config
 	if err := config.LoadConfig(); err != nil {
 		log.Fatalf("Config error: %v", err)
+	}
+
+	// Đồng bộ chế độ Gin từ file .env / environment (debug / release / test)
+	if ginMode := os.Getenv("GIN_MODE"); ginMode != "" {
+		gin.SetMode(ginMode)
 	}
 
 	// 2. Connect Database (Fail Fast if error)

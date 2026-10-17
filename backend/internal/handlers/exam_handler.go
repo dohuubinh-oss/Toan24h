@@ -8,6 +8,7 @@ import (
 
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/models"
+	"github.com/modeptrai/exam-model-backend/internal/services"
 )
 
 func CreateExam(c *gin.Context) {
@@ -170,11 +171,93 @@ func GetExamByID(c *gin.Context) {
 func DeleteExam(c *gin.Context) {
 	id := c.Param("id")
 
-	// Hard delete the exam
-	if err := config.DB.Unscoped().Where("id = ?", id).Delete(&models.Exam{}).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete exam"})
+	var exam models.Exam
+	if err := config.DB.Where("id = ?", id).First(&exam).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Exam not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Exam deleted successfully"})
+	// 1. Identify orphan questions (questions only belonging to this exam)
+	var orphanQuestionIDs []string
+	for _, qID := range exam.QuestionIDs {
+		if qID == "" {
+			continue
+		}
+		var otherCount int64
+		if err := config.DB.Model(&models.Exam{}).
+			Where("id != ? AND ? = ANY(question_ids)", id, qID).
+			Count(&otherCount).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check other exams: " + err.Error()})
+			return
+		}
+		if otherCount == 0 {
+			orphanQuestionIDs = append(orphanQuestionIDs, qID)
+		}
+	}
+
+	// 2. Also find any sub-questions whose parent_id is in orphanQuestionIDs
+	var allOrphanIDs []string
+	if len(orphanQuestionIDs) > 0 {
+		var subQuestions []models.Question
+		_ = config.DB.Where("parent_id IN (?)", orphanQuestionIDs).Find(&subQuestions).Error
+		allOrphanIDs = append(allOrphanIDs, orphanQuestionIDs...)
+		for _, sq := range subQuestions {
+			allOrphanIDs = append(allOrphanIDs, sq.ID.String())
+		}
+	}
+
+	// 3. Extract candidate image URLs from orphan questions before deleting them
+	var candidateImageURLs []string
+	if len(allOrphanIDs) > 0 {
+		var orphanQuestions []models.Question
+		if err := config.DB.Where("id IN (?)", allOrphanIDs).Find(&orphanQuestions).Error; err == nil {
+			for _, q := range orphanQuestions {
+				extracted := services.ExtractQuestionImageURLs(
+					q.Content, q.Options, q.SolutionGuide, q.Hint,
+					q.QuickSolveTips, q.GeneralMethod, q.Mistakes,
+				)
+				candidateImageURLs = append(candidateImageURLs, extracted...)
+			}
+		}
+	}
+
+	// 4. Execute cascading DB deletions in a Transaction
+	err := config.DB.Transaction(func(tx *gorm.DB) error {
+		// Hard delete all submissions of this exam
+		if err := tx.Unscoped().Where("exam_id = ?", exam.ID).Delete(&models.Submission{}).Error; err != nil {
+			return err
+		}
+
+		// Hard delete orphan questions (including sub-questions)
+		if len(allOrphanIDs) > 0 {
+			if err := tx.Unscoped().Where("id IN (?)", allOrphanIDs).Delete(&models.Question{}).Error; err != nil {
+				return err
+			}
+		}
+
+		// Hard delete the exam itself
+		if err := tx.Unscoped().Where("id = ?", exam.ID).Delete(&models.Exam{}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete exam: " + err.Error()})
+		return
+	}
+
+	// 5. Clean up physical images on disk after successful DB transaction
+	if len(candidateImageURLs) > 0 {
+		unusedImages := services.FilterUnusedQuestionImages(config.DB, candidateImageURLs, allOrphanIDs)
+		services.DeletePhysicalImages(unusedImages)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":               "Exam deleted successfully",
+		"deletedSubmissions":    true,
+		"deletedQuestionsCount": len(allOrphanIDs),
+	})
 }
+

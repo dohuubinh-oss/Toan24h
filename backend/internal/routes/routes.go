@@ -14,6 +14,9 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
+	// Thiết lập danh sách Proxy đáng tin cậy (ngăn IP spoofing qua X-Forwarded-For)
+	_ = r.SetTrustedProxies([]string{"127.0.0.1", "::1"})
+
 	// Cấu hình CORS an toàn
 	r.Use(func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
