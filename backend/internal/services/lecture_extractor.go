@@ -9,6 +9,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -100,12 +101,24 @@ func ExtractLectureFromImages(files [][]byte, mimeTypes []string) (string, error
 		return "", fmt.Errorf("GEMINI_API_KEY is not configured")
 	}
 
-	model := os.Getenv("GEMINI_MODEL")
-	if model == "" {
-		model = "gemini-3.8-flash"
+	primaryModel := os.Getenv("GEMINI_MODEL")
+	if primaryModel == "" {
+		primaryModel = "gemini-3.5-flash-lite"
 	}
 
-	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
+	candidateModels := []string{primaryModel}
+	for _, m := range []string{"gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.6-flash"} {
+		found := false
+		for _, exist := range candidateModels {
+			if exist == m {
+				found = true
+				break
+			}
+		}
+		if !found {
+			candidateModels = append(candidateModels, m)
+		}
+	}
 
 	prompt := `Bạn là chuyên gia sư phạm và số hóa bài giảng Toán học Việt Nam.
 Hãy đọc các trang ảnh tài liệu bài giảng/sách tham khảo đính kèm (theo thứ tự từ trang đầu đến trang cuối) và bóc tách TOÀN BỘ các Dạng toán, Phương pháp giải và Bài tập ví dụ mẫu thành định dạng JSON chuẩn.
@@ -179,25 +192,31 @@ Yêu cầu nghiêm ngặt về nội dung và định dạng văn bản:
 	var sourceImages []image.Image
 
 	for i, fileBytes := range files {
-		mime := "image/jpeg"
-		if i < len(mimeTypes) && mimeTypes[i] != "" {
-			mime = mimeTypes[i]
-		}
-
-		b64 := base64.StdEncoding.EncodeToString(fileBytes)
-		parts = append(parts, map[string]interface{}{
-			"inlineData": map[string]string{
-				"mimeType": mime,
-				"data":     b64,
-			},
-		})
-
+		// Keep original high-resolution image for accurate diagram cropping
 		img, _, err := image.Decode(bytes.NewReader(fileBytes))
 		if err == nil {
 			sourceImages = append(sourceImages, img)
 		} else {
 			sourceImages = append(sourceImages, nil)
 		}
+
+		// Compress and scale down to max 1600px for AI vision to avoid network timeout and excessive payload
+		compBytes, compMime, err := utils.CompressAndResizeImage(fileBytes, 1600)
+		if err != nil {
+			compBytes = fileBytes
+			compMime = "image/jpeg"
+			if i < len(mimeTypes) && mimeTypes[i] != "" {
+				compMime = mimeTypes[i]
+			}
+		}
+
+		b64 := base64.StdEncoding.EncodeToString(compBytes)
+		parts = append(parts, map[string]interface{}{
+			"inlineData": map[string]string{
+				"mimeType": compMime,
+				"data":     b64,
+			},
+		})
 	}
 
 	requestBody := map[string]interface{}{
@@ -216,46 +235,70 @@ Yêu cầu nghiêm ngặt về nội dung và định dạng văn bản:
 	}
 
 	client := &http.Client{Timeout: 90 * time.Second}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
-	if err != nil {
-		return "", fmt.Errorf("failed to create Gemini HTTP request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
+	var rawText string
+	var lastErr error
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("gemini API call failed: %w", err)
-	}
-	defer resp.Body.Close()
+	for _, currentModel := range candidateModels {
+		apiUrl := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", currentModel, apiKey)
+		req, err := http.NewRequest("POST", apiUrl, bytes.NewBuffer(jsonBytes))
+		if err != nil {
+			lastErr = fmt.Errorf("failed to create Gemini request for %s: %w", currentModel, err)
+			continue
+		}
+		req.Header.Set("Content-Type", "application/json")
 
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read Gemini API response: %w", err)
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("[AI Lecture Extractor] Model %s failed: %v. Trying next model...", currentModel, err)
+			lastErr = fmt.Errorf("gemini API call failed for %s: %w", currentModel, err)
+			continue
+		}
+
+		bodyBytes, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			log.Printf("[AI Lecture Extractor] Failed to read response from %s: %v. Trying next model...", currentModel, err)
+			lastErr = fmt.Errorf("failed to read response from %s: %w", currentModel, err)
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			log.Printf("[AI Lecture Extractor] Model %s returned status %d (%s). Trying next model...", currentModel, resp.StatusCode, string(bodyBytes))
+			lastErr = fmt.Errorf("gemini API error for %s (status %d): %s", currentModel, resp.StatusCode, string(bodyBytes))
+			continue
+		}
+
+		var geminiResp struct {
+			Candidates []struct {
+				Content struct {
+					Parts []struct {
+						Text string `json:"text"`
+					} `json:"parts"`
+				} `json:"content"`
+			} `json:"candidates"`
+		}
+
+		if err := json.Unmarshal(bodyBytes, &geminiResp); err != nil {
+			log.Printf("[AI Lecture Extractor] Failed to unmarshal response from %s: %v. Trying next model...", currentModel, err)
+			lastErr = fmt.Errorf("failed to unmarshal response from %s: %w", currentModel, err)
+			continue
+		}
+
+		if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
+			log.Printf("[AI Lecture Extractor] Empty candidates from %s. Trying next model...", currentModel)
+			lastErr = fmt.Errorf("empty response from %s", currentModel)
+			continue
+		}
+
+		rawText = geminiResp.Candidates[0].Content.Parts[0].Text
+		log.Printf("[AI Lecture Extractor] Successfully extracted lecture using model: %s", currentModel)
+		lastErr = nil
+		break
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("gemini API error (status %d): %s", resp.StatusCode, string(bodyBytes))
+	if rawText == "" && lastErr != nil {
+		return "", lastErr
 	}
-
-	var geminiResp struct {
-		Candidates []struct {
-			Content struct {
-				Parts []struct {
-					Text string `json:"text"`
-				} `json:"parts"`
-			} `json:"content"`
-		} `json:"candidates"`
-	}
-
-	if err := json.Unmarshal(bodyBytes, &geminiResp); err != nil {
-		return "", fmt.Errorf("failed to unmarshal Gemini response: %w", err)
-	}
-
-	if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
-		return "", fmt.Errorf("gemini returned empty response")
-	}
-
-	rawText := geminiResp.Candidates[0].Content.Parts[0].Text
 
 	// Crop diagrams and inject into output
 	return ParseAndProcessExtractedLecture(rawText, sourceImages, "./uploads/temp")

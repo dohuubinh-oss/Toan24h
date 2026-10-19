@@ -1,15 +1,54 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"image/draw"
 	"image/jpeg"
+	_ "image/png"
 	"os"
 	"path/filepath"
 
 	"github.com/google/uuid"
+	xdraw "golang.org/x/image/draw"
 )
+
+// CompressAndResizeImage scales down an image if its dimensions exceed maxDim and encodes it to JPEG
+func CompressAndResizeImage(fileBytes []byte, maxDim int) ([]byte, string, error) {
+	img, _, err := image.Decode(bytes.NewReader(fileBytes))
+	if err != nil {
+		return nil, "", err
+	}
+
+	bounds := img.Bounds()
+	width := bounds.Dx()
+	height := bounds.Dy()
+
+	if width > maxDim || height > maxDim {
+		ratio := float64(width) / float64(height)
+		var newWidth, newHeight int
+		if width > height {
+			newWidth = maxDim
+			newHeight = int(float64(maxDim) / ratio)
+		} else {
+			newHeight = maxDim
+			newWidth = int(float64(maxDim) * ratio)
+		}
+
+		dst := image.NewRGBA(image.Rect(0, 0, newWidth, newHeight))
+		xdraw.BiLinear.Scale(dst, dst.Bounds(), img, bounds, draw.Over, nil)
+		img = dst
+	}
+
+	buf := new(bytes.Buffer)
+	err = jpeg.Encode(buf, img, &jpeg.Options{Quality: 85})
+	if err != nil {
+		return nil, "", err
+	}
+
+	return buf.Bytes(), "image/jpeg", nil
+}
 
 // CropDiagram extracts a sub-region defined by box = [ymin, xmin, ymax, xmax]
 // Coordinates can be normalized 0-1000 or 0.0-1.0.

@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"bytes"
 	"image"
 	"image/color"
 	"image/draw"
+	"image/jpeg"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,3 +48,23 @@ func TestCropDiagram_NormalizedZeroToOne(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, strings.HasPrefix(webUrl, "/uploads/temp/"))
 }
+
+func TestCompressAndResizeImage(t *testing.T) {
+	// Create a 2000x1000 RGBA image
+	src := image.NewRGBA(image.Rect(0, 0, 2000, 1000))
+	buf := new(bytes.Buffer)
+	err := jpeg.Encode(buf, src, &jpeg.Options{Quality: 90})
+	assert.NoError(t, err)
+
+	compressedBytes, mimeType, err := CompressAndResizeImage(buf.Bytes(), 1000)
+	assert.NoError(t, err)
+	assert.Equal(t, "image/jpeg", mimeType)
+	assert.NotEmpty(t, compressedBytes)
+
+	// Decode back to verify dimensions
+	decoded, _, err := image.Decode(bytes.NewReader(compressedBytes))
+	assert.NoError(t, err)
+	assert.Equal(t, 1000, decoded.Bounds().Dx())
+	assert.Equal(t, 500, decoded.Bounds().Dy())
+}
+

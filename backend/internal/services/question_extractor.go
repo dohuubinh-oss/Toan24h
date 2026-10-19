@@ -9,6 +9,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -94,12 +95,24 @@ func ExtractQuestionsFromImages(files [][]byte, mimeTypes []string) ([]Extracted
 		return nil, fmt.Errorf("GEMINI_API_KEY is not configured")
 	}
 
-	model := os.Getenv("GEMINI_MODEL")
-	if model == "" {
-		model = "gemini-3.8-flash"
+	primaryModel := os.Getenv("GEMINI_MODEL")
+	if primaryModel == "" {
+		primaryModel = "gemini-3.5-flash-lite"
 	}
 
-	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
+	candidateModels := []string{primaryModel}
+	for _, m := range []string{"gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.6-flash"} {
+		found := false
+		for _, exist := range candidateModels {
+			if exist == m {
+				found = true
+				break
+			}
+		}
+		if !found {
+			candidateModels = append(candidateModels, m)
+		}
+	}
 
 	prompt := `Bạn là chuyên gia biên tập và số hóa đề thi Toán học Việt Nam.
 Hãy đọc các trang ảnh đề thi đính kèm (theo thứ tự từ trang đầu đến trang cuối) và bóc tách TOÀN BỘ các câu hỏi có trong tài liệu thành định dạng JSON chuẩn.
@@ -129,7 +142,7 @@ Yêu cầu nghiêm ngặt:
 			mime = mimeTypes[i]
 		}
 
-		// Decode image in Go for subsequent cropping if diagrams exist
+		// Decode original image in Go for subsequent cropping if diagrams exist
 		img, _, err := image.Decode(bytes.NewReader(fileBytes))
 		if err != nil {
 			fmt.Printf("Warning: failed to decode image %d: %v\n", i, err)
@@ -138,10 +151,17 @@ Yêu cầu nghiêm ngặt:
 			decodedImages = append(decodedImages, img)
 		}
 
-		b64 := base64.StdEncoding.EncodeToString(fileBytes)
+		// Compress and resize image to max 1600px for API vision payload
+		compBytes, compMime, err := utils.CompressAndResizeImage(fileBytes, 1600)
+		if err != nil {
+			compBytes = fileBytes
+			compMime = mime
+		}
+
+		b64 := base64.StdEncoding.EncodeToString(compBytes)
 		parts = append(parts, map[string]interface{}{
 			"inlineData": map[string]interface{}{
-				"mimeType": mime,
+				"mimeType": compMime,
 				"data":     b64,
 			},
 		})
@@ -165,52 +185,68 @@ Yêu cầu nghiêm ngặt:
 	}
 
 	client := &http.Client{Timeout: 90 * time.Second}
+	var rawJSON string
+	var lastErr error
 
-	result, err := utils.AIBreaker.Execute(func() (interface{}, error) {
-		return utils.ExecuteWithRetry(2, 2*time.Second, func() (interface{}, error) {
-			req, err := http.NewRequest("POST", url, bytes.NewReader(bodyBytes))
-			if err != nil {
-				return nil, err
-			}
-			req.Header.Set("Content-Type", "application/json")
+	for _, currentModel := range candidateModels {
+		apiUrl := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", currentModel, apiKey)
+		req, err := http.NewRequest("POST", apiUrl, bytes.NewReader(bodyBytes))
+		if err != nil {
+			lastErr = fmt.Errorf("failed to create request for %s: %w", currentModel, err)
+			continue
+		}
+		req.Header.Set("Content-Type", "application/json")
 
-			resp, err := client.Do(req)
-			if err != nil {
-				return nil, fmt.Errorf("failed to call Gemini Vision API: %w", err)
-			}
-			defer resp.Body.Close()
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("[AI Question Extractor] Model %s failed: %v. Trying next model...", currentModel, err)
+			lastErr = fmt.Errorf("failed to call Gemini Vision API (%s): %w", currentModel, err)
+			continue
+		}
 
-			if resp.StatusCode != http.StatusOK {
-				respBody, _ := io.ReadAll(resp.Body)
-				return nil, fmt.Errorf("Gemini API error: status %d, response: %s", resp.StatusCode, string(respBody))
-			}
+		respBody, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			log.Printf("[AI Question Extractor] Failed to read response from %s: %v. Trying next model...", currentModel, err)
+			lastErr = fmt.Errorf("failed to read response (%s): %w", currentModel, err)
+			continue
+		}
 
-			var response struct {
-				Candidates []struct {
-					Content struct {
-						Parts []struct {
-							Text string `json:"text"`
-						} `json:"parts"`
-					} `json:"content"`
-				} `json:"candidates"`
-			}
+		if resp.StatusCode != http.StatusOK {
+			log.Printf("[AI Question Extractor] Model %s returned status %d. Trying next model...", currentModel, resp.StatusCode)
+			lastErr = fmt.Errorf("gemini API error (%s status %d): %s", currentModel, resp.StatusCode, string(respBody))
+			continue
+		}
 
-			if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-				return nil, fmt.Errorf("failed to decode Gemini API response: %w", err)
-			}
+		var response struct {
+			Candidates []struct {
+				Content struct {
+					Parts []struct {
+						Text string `json:"text"`
+					} `json:"parts"`
+				} `json:"content"`
+			} `json:"candidates"`
+		}
 
-			if len(response.Candidates) > 0 && len(response.Candidates[0].Content.Parts) > 0 {
-				return response.Candidates[0].Content.Parts[0].Text, nil
-			}
+		if err := json.Unmarshal(respBody, &response); err != nil {
+			log.Printf("[AI Question Extractor] Failed to decode response from %s: %v. Trying next model...", currentModel, err)
+			lastErr = fmt.Errorf("failed to decode Gemini API response (%s): %w", currentModel, err)
+			continue
+		}
 
-			return nil, fmt.Errorf("empty response from Gemini Vision")
-		})
-	})
+		if len(response.Candidates) > 0 && len(response.Candidates[0].Content.Parts) > 0 {
+			rawJSON = response.Candidates[0].Content.Parts[0].Text
+			log.Printf("[AI Question Extractor] Successfully extracted questions using model: %s", currentModel)
+			lastErr = nil
+			break
+		}
 
-	if err != nil {
-		return nil, err
+		lastErr = fmt.Errorf("empty response from Gemini Vision (%s)", currentModel)
 	}
 
-	rawJSON := result.(string)
+	if rawJSON == "" && lastErr != nil {
+		return nil, lastErr
+	}
+
 	return ParseAndProcessExtractedBlocks(rawJSON, decodedImages, "./uploads/temp")
 }

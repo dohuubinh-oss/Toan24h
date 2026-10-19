@@ -31,7 +31,7 @@ func ExtractTextFromImageWithGemini(fileBytes []byte, mimeType string) (*OCRResu
 
 	model := os.Getenv("GEMINI_MODEL")
 	if model == "" {
-		model = "gemini-3.8-flash"
+		model = "gemini-3.5-flash-lite"
 	}
 	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
 
@@ -42,7 +42,7 @@ Yêu cầu:
 2. Các công thức toán học phải được viết bằng cú pháp LaTeX chuẩn. Ví dụ phân số là \frac{a}{b}, căn bậc hai là \sqrt{a}, số mũ là x^2. Đặt công thức toán học trong cặp dấu $...$ nếu là trong dòng, hoặc $$...$$ nếu là đoạn riêng.
 3. CHỈ trả về nội dung nhận dạng được, tuyệt đối KHÔNG thêm bất kỳ văn bản giải thích, chào hỏi hay bình luận nào khác. Nếu không nhận dạng được gì, hãy trả về chuỗi rỗng.`
 
-	compressedBytes, compressedMimeType, err := compressAndResizeImage(fileBytes, 1024)
+	compressedBytes, compressedMimeType, err := utils.CompressAndResizeImage(fileBytes, 1024)
 	if err != nil {
 		// Fallback to original if compression fails
 		compressedBytes = fileBytes
