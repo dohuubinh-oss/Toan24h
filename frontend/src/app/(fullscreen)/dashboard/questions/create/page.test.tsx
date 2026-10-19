@@ -4,7 +4,11 @@ import CreateQuestionPage from './page'
 
 // Mocking children components
 vi.mock('@/components/questions/creator/JsonInputSection', () => ({
-  default: () => <div data-testid="json-input">JsonInputSection</div>
+  default: ({ onAiExtract }: any) => (
+    <div data-testid="json-input">
+      <button onClick={onAiExtract}>Tải ảnh câu hỏi</button>
+    </div>
+  )
 }))
 vi.mock('@/components/questions/creator/QuestionEditorSection', () => ({
   default: () => <div data-testid="question-editor">QuestionEditorSection</div>
@@ -29,9 +33,10 @@ describe('CreateQuestionPage', () => {
     expect(screen.getByText('Thêm câu hỏi thông minh')).toBeInTheDocument()
   })
 
-  it('renders action buttons', () => {
+  it('renders action buttons in header without duplicate AI button', () => {
     render(<CreateQuestionPage />)
     expect(screen.getByRole('button', { name: /Lưu vào ngân hàng/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Bóc tách đề bằng AI/i })).not.toBeInTheDocument()
   })
 
   it('renders all sections', () => {
@@ -39,5 +44,11 @@ describe('CreateQuestionPage', () => {
     expect(screen.getByTestId('json-input')).toBeInTheDocument()
     expect(screen.getByTestId('question-editor')).toBeInTheDocument()
     expect(screen.getByTestId('question-settings')).toBeInTheDocument()
+  })
+
+  it('renders AI extraction trigger in JsonInputSection', () => {
+    render(<CreateQuestionPage />)
+    const aiBtn = screen.getByRole('button', { name: /Tải ảnh câu hỏi/i })
+    expect(aiBtn).toBeInTheDocument()
   })
 })

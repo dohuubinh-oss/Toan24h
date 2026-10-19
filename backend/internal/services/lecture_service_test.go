@@ -73,6 +73,7 @@ func TestCreateLectureService(t *testing.T) {
 			Grade:        "10",
 			Category:     "Math",
 			BasicConcept: "Concept",
+			GgLink:       "https://drive.google.com/test-lecture-drive",
 			Examples: []DangToanRequest{
 				{
 					DangToanName: "Dang 1",
@@ -90,9 +91,18 @@ func TestCreateLectureService(t *testing.T) {
 			},
 		}
 
+		var savedLecture *models.Lecture
+		mockRepo.SaveFunc = func(ctx context.Context, lecture *models.Lecture) error {
+			savedLecture = lecture
+			return nil
+		}
+
 		err := service.CreateLecture(context.Background(), payload)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
+		}
+		if savedLecture == nil || savedLecture.GgLink != "https://drive.google.com/test-lecture-drive" {
+			t.Errorf("Expected GgLink to be saved, got %+v", savedLecture)
 		}
 	})
 
@@ -209,10 +219,21 @@ func TestUpdateLectureService(t *testing.T) {
 			Grade:        "10",
 			Category:     "Algebra",
 			BasicConcept: "New Concept",
+			GgLink:       "https://drive.google.com/updated-lecture-drive",
 		}
+
+		var updatedLecture *models.Lecture
+		mockRepo.SaveFunc = func(ctx context.Context, lecture *models.Lecture) error {
+			updatedLecture = lecture
+			return nil
+		}
+
 		err := service.UpdateLecture(context.Background(), "123", payload)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
+		}
+		if updatedLecture == nil || updatedLecture.GgLink != "https://drive.google.com/updated-lecture-drive" {
+			t.Errorf("Expected updated GgLink, got %+v", updatedLecture)
 		}
 	})
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Settings2, X, PlusCircle, Wand2, ChevronDown } from 'lucide-react'
+import { Settings2, X, PlusCircle, Wand2, ChevronDown, ExternalLink } from 'lucide-react'
 import { Question } from '../../../types/question'
 import { Label } from '../../ui/Label'
 import { Input } from '../../ui/Input'
@@ -86,14 +86,44 @@ export default function QuestionSettingsSidebar({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs ml-1 mb-1">Tên Sách</Label>
-            <Input
-              type="text"
-              placeholder="VD: SGK Toán 9 Tập 1..."
-              className="bg-slate-50 text-sm placeholder:text-slate-400 font-medium"
-              value={currentQuestion?.book_name || ''}
-              onChange={(e) => updateQuestion('book_name', e.target.value)}
-            />
+            <div className="flex items-center justify-between ml-1 mb-1">
+              <Label className="text-xs">Link Drive</Label>
+              {currentQuestion?.gg_drive && (currentQuestion.gg_drive.startsWith('http://') || currentQuestion.gg_drive.startsWith('https://')) && (
+                <a
+                  href={currentQuestion.gg_drive}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Mở tài liệu trên Google Drive"
+                  className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold hover:underline"
+                >
+                  <span>Mở Drive</span>
+                  <ExternalLink size={12} />
+                </a>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                type="text"
+                placeholder="VD: https://drive.google.com/..."
+                className="bg-slate-50 text-sm placeholder:text-slate-400 font-medium flex-1"
+                value={currentQuestion?.gg_drive || currentQuestion?.book_name || ''}
+                onChange={(e) => {
+                  updateQuestion('gg_drive', e.target.value)
+                  updateQuestion('book_name', e.target.value)
+                }}
+              />
+              {currentQuestion?.gg_drive && (currentQuestion.gg_drive.startsWith('http://') || currentQuestion.gg_drive.startsWith('https://')) && (
+                <a
+                  href={currentQuestion.gg_drive}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Mở tài liệu trên Google Drive"
+                  className="h-12 w-12 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-xs active:scale-95"
+                >
+                  <ExternalLink size={18} />
+                </a>
+              )}
+            </div>
           </div>
 
           <div className="space-y-1.5">

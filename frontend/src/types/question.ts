@@ -1,5 +1,6 @@
 export interface Question {
   id?: string;
+  gg_drive?: string;
   book_name?: string;
   cate?: 'exam' | 'practice';
   type_question: 'group' | 'single';

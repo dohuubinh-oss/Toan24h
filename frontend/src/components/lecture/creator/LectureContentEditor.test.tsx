@@ -75,4 +75,18 @@ describe('LectureContentEditor', () => {
     fireEvent.click(addBtn)
     expect(screen.getByText(/Dạng Toán 1/i)).toBeInTheDocument()
   })
+
+  it('renders AI extract button in JsonInputCard and opens modal on click', () => {
+    render(
+      <LectureCreatorProvider>
+        <LectureContentEditor />
+      </LectureCreatorProvider>
+    )
+
+    const aiBtn = screen.getByRole('button', { name: /Tải ảnh Dạng toán\/ Ví dụ mẫu/i })
+    expect(aiBtn).toBeInTheDocument()
+
+    fireEvent.click(aiBtn)
+    expect(screen.getByText(/Bóc tách Dạng toán & Bài tập mẫu bằng AI/i)).toBeInTheDocument()
+  })
 })

@@ -186,6 +186,7 @@ func SetupRouter() *gin.Engine {
 		{
 			// Questions admin
 			staff.POST("/questions/bulk", handlers.BulkCreateQuestions)
+			staff.POST("/questions/extract-ai", handlers.ExtractAIQuestions)
 			staff.PUT("/questions/:id", handlers.UpdateQuestion)
 			staff.DELETE("/questions/:id", handlers.DeleteQuestion)
 
@@ -197,6 +198,7 @@ func SetupRouter() *gin.Engine {
 
 			// Lectures admin
 			staff.POST("/lectures", lectureController.CreateLecture)
+			staff.POST("/lectures/extract-ai", handlers.ExtractAILecture)
 			staff.PUT("/lectures/:id", lectureController.UpdateLecture)
 			staff.DELETE("/lectures/:id", lectureController.DeleteLecture)
 

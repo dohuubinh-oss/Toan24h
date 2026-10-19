@@ -26,9 +26,29 @@ describe('LectureBasicSettings', () => {
       </LectureCreatorProvider>
     )
     expect(screen.getByPlaceholderText('Nhập tên bài giảng...')).toBeDefined()
+    expect(screen.getByPlaceholderText('VD: https://drive.google.com/...')).toBeDefined()
     expect(screen.getByText('Khối lớp')).toBeDefined()
     // By default grade is not selected, so category is not rendered!
     expect(screen.queryByText('Danh mục')).toBeNull()
+  })
+
+  it('updates gg_link and displays external link when a valid URL is entered', async () => {
+    const { fireEvent } = await import('@testing-library/react')
+    render(
+      <LectureCreatorProvider>
+        <LectureBasicSettings />
+      </LectureCreatorProvider>
+    )
+
+    const driveInput = screen.getByPlaceholderText('VD: https://drive.google.com/...')
+    expect(driveInput).toBeDefined()
+    expect(screen.queryByText('Mở Drive')).toBeNull()
+
+    fireEvent.change(driveInput, { target: { value: 'https://drive.google.com/file/d/test1234' } })
+
+    expect(screen.getByText('Mở Drive')).toBeDefined()
+    const openDriveLink = screen.getByText('Mở Drive').closest('a')
+    expect(openDriveLink?.getAttribute('href')).toBe('https://drive.google.com/file/d/test1234')
   })
 })
 

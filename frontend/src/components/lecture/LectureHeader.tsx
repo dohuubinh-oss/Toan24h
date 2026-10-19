@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { ChevronRight, Calendar, Bookmark, Tags, PenTool, Edit3 } from 'lucide-react'
+import { ChevronRight, Calendar, Bookmark, Tags, PenTool, Edit3, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { toggleBookmark as toggleBookmarkApi, getBookmarkedLectures } from '@/lib/bookmarkApi'
 import { toast } from '@/components/ui/ToastProvider'
@@ -20,9 +20,10 @@ interface LectureHeaderProps {
   createdAt: string;
   id?: string;
   author?: LectureAuthor;
+  gg_link?: string;
 }
 
-export default function LectureHeader({ initialBookmarked = false, title, grade, category, createdAt, id, author }: LectureHeaderProps) {
+export default function LectureHeader({ initialBookmarked = false, title, grade, category, createdAt, id, author, gg_link }: LectureHeaderProps) {
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -129,6 +130,18 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
                 <Edit3 size={18} />
                 Sửa bài giảng
               </Link>
+            )}
+            {gg_link && (gg_link.startsWith('http://') || gg_link.startsWith('https://')) && (
+              <a
+                href={gg_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Mở tài liệu Google Drive"
+                className="flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] font-bold rounded-lg transition-all border text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200 shadow-sm"
+              >
+                <ExternalLink size={18} />
+                <span>Mở Drive</span>
+              </a>
             )}
             <button 
               onClick={toggleBookmark}

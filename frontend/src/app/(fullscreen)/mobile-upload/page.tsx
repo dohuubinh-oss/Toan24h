@@ -172,10 +172,10 @@ function MobileUploadContent() {
                 </div>
                 <div>
                   <span className="text-sm font-bold text-slate-800 block">
-                    Bấm vào đây để mở Máy ảnh
+                    Bấm vào đây để mở Máy ảnh chụp bài làm
                   </span>
                   <span className="text-xs text-slate-500 mt-1 block">
-                    hoặc chọn ảnh có sẵn từ Thư viện
+                    Chụp trực tiếp lời giải viết tay (không dùng ảnh thư viện)
                   </span>
                 </div>
               </label>

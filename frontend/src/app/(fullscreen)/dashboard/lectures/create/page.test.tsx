@@ -2,6 +2,11 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import CreateLecturePage from './page'
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}))
+
 // Mock TipTap editor since we already tested the inner components
 vi.mock('@/components/lecture/creator/LectureContentEditor', () => ({
   default: () => <div data-testid="mock-editor">Mock Editor</div>

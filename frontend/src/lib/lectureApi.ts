@@ -39,6 +39,7 @@ export interface BackendLecture {
   basicConcept: string;
   practiceIds: string; // JSON string array
   examples: string; // JSON string array of DangToanItem
+  gg_link?: string;
   authorId?: string;
   author?: BackendLectureAuthor;
   createdAt: string;

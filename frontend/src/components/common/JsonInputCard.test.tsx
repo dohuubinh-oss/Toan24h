@@ -81,4 +81,15 @@ describe('JsonInputCard', () => {
     rerender(<JsonInputCard onProcess={vi.fn()} initialValue='[{"id":2}]' />)
     expect(textarea.value).toBe('[{"id":2}]')
   })
+
+  it('renders and triggers onAiExtract button when prop is provided', () => {
+    const handleAiExtract = vi.fn()
+    render(<JsonInputCard onProcess={vi.fn()} onAiExtract={handleAiExtract} />)
+
+    const aiBtn = screen.getByRole('button', { name: /Tải ảnh câu hỏi/i })
+    expect(aiBtn).toBeInTheDocument()
+
+    fireEvent.click(aiBtn)
+    expect(handleAiExtract).toHaveBeenCalledTimes(1)
+  })
 })

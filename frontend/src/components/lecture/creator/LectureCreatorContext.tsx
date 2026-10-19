@@ -41,11 +41,13 @@ interface LectureCreatorState {
   category: string;
   basicConcept: string;
   dangToanList: DangToanItem[];
+  ggLink: string;
   setTitle: (val: string) => void;
   setGrade: (val: string) => void;
   setCategory: (val: string) => void;
   setBasicConcept: (val: string) => void;
   setDangToanList: (val: DangToanItem[] | ((prev: DangToanItem[]) => DangToanItem[])) => void;
+  setGgLink: (val: string) => void;
   validateAndSubmit: () => void;
   resetForm: () => void;
   removeDangToan: (id: string) => void;
@@ -64,6 +66,7 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
   const [grade, setGrade] = useState('')
   const [category, setCategory] = useState('')
   const [basicConcept, setBasicConcept] = useState('')
+  const [ggLink, setGgLink] = useState('')
   const [dangToanList, setDangToanList] = useState<DangToanItem[]>([
     { 
       id: '1', 
@@ -92,6 +95,7 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
           setGrade(data.grade || '')
           setCategory(data.category || '')
           setBasicConcept(data.basicConcept || '')
+          setGgLink(data.gg_link || '')
 
           let rawExamples: any[] = []
           if (typeof data.examples === 'string') {
@@ -210,7 +214,8 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
         grade,
         category,
         basicConcept: processedBasicConcept,
-        examples: processedDangToanList
+        examples: processedDangToanList,
+        gg_link: ggLink.trim()
       }
 
       if (editId) {
@@ -247,6 +252,7 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
     setGrade('')
     setCategory('')
     setBasicConcept('')
+    setGgLink('')
     setDangToanList([{ 
       id: Math.random().toString(36).substr(2, 9), 
       mathType: '', 
@@ -269,11 +275,13 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
       category,
       basicConcept,
       dangToanList,
+      ggLink,
       setTitle,
       setGrade,
       setCategory,
       setBasicConcept,
       setDangToanList,
+      setGgLink,
       validateAndSubmit,
       resetForm,
       removeDangToan,

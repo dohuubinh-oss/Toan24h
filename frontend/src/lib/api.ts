@@ -160,22 +160,17 @@ export async function uploadObjectUrlIfNeeded(url: string | null): Promise<strin
   }
 }
 
-export async function recognizeHandwriting(file: File): Promise<string> {
+export async function recognizeHandwriting(file: File | Blob): Promise<string> {
   const formData = new FormData();
-  formData.append('file', file);
+  const filename = file instanceof File ? file.name : 'solution.jpg';
+  formData.append('file', file, filename);
 
   const res = await apiFetch('/ocr', {
     method: 'POST',
     body: formData,
   });
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Failed to recognize handwriting');
-  }
-
-  const data = await res.json();
-  return data.text || '';
+  return res?.text || '';
 }
 
 export async function getQuestions(page: number = 1, limit: number = 20, filters?: { ids?: string[], grade?: string, topic?: string, type?: string, difficulty?: string, q?: string, cate?: string }): Promise<{data: Question[], total: number, totalPages?: number}> {

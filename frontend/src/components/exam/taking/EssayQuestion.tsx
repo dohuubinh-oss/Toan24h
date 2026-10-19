@@ -6,6 +6,7 @@ import RichTextEditor from '@/components/questions/creator/editor/RichTextEditor
 import { useToast } from '@/components/ui/ToastProvider'
 import { recognizeHandwriting, submitAppeal, reportQuestion } from '@/lib/api'
 import MobileQrUploadModal from './MobileQrUploadModal'
+import InAppCameraModal from './InAppCameraModal'
 
 export interface SubQuestion {
   id: string | number
@@ -202,12 +203,29 @@ function EditorItem({
   }
 
   const [isQrModalOpen, setIsQrModalOpen] = React.useState(false)
+  const [isInAppCameraOpen, setIsInAppCameraOpen] = React.useState(false)
   const [qrSessionId, setQrSessionId] = React.useState('')
+
+  const isMobileDevice = () => {
+    if (typeof window === 'undefined') return false
+    return (
+      window.matchMedia('(pointer: coarse)').matches ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    )
+  }
 
   const handleOpenQrModal = () => {
     const newSession = 'sess_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now()
     setQrSessionId(newSession)
     setIsQrModalOpen(true)
+  }
+
+  const handleCameraClick = () => {
+    if (isMobileDevice()) {
+      setIsInAppCameraOpen(true)
+    } else {
+      handleOpenQrModal()
+    }
   }
 
   const handleQrUploadSuccess = (ocrText: string) => {
@@ -303,9 +321,9 @@ function EditorItem({
               rightCustomAction={
                 <button
                   type="button"
-                  onClick={handleOpenQrModal}
+                  onClick={handleCameraClick}
                   className="flex items-center gap-1.5 px-2.5 py-1 bg-primary text-white hover:bg-primary/90 rounded-lg font-bold text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
-                  title="Quét mã QR chụp ảnh bài làm bằng điện thoại"
+                  title="Chụp ảnh bài làm viết tay"
                 >
                   <Camera className="w-3.5 h-3.5" />
                   <span>Chụp bài thi</span>
@@ -321,6 +339,17 @@ function EditorItem({
         isOpen={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
         sessionId={qrSessionId}
+        onUploadSuccess={handleQrUploadSuccess}
+        onSwitchToInAppCamera={() => {
+          setIsQrModalOpen(false)
+          setIsInAppCameraOpen(true)
+        }}
+      />
+
+      {/* Modal Chụp trực tiếp bằng In-App Camera WebRTC */}
+      <InAppCameraModal
+        isOpen={isInAppCameraOpen}
+        onClose={() => setIsInAppCameraOpen(false)}
         onUploadSuccess={handleQrUploadSuccess}
       />
 

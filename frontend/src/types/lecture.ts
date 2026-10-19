@@ -9,6 +9,7 @@ export interface Lecture {
   thumbnailUrl?: string;
   isPracticeCard?: boolean;
   practiceIds?: string;
+  gg_link?: string;
 }
 
 export interface PaginatedLectures {

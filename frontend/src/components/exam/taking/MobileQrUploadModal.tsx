@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { X, Smartphone, Loader2, CheckCircle2, QrCode } from 'lucide-react'
+import { X, Smartphone, Loader2, CheckCircle2, QrCode, Camera } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useToast } from '@/components/ui/ToastProvider'
 
@@ -11,13 +11,15 @@ interface MobileQrUploadModalProps {
   onClose: () => void
   onUploadSuccess: (text: string) => void
   sessionId: string
+  onSwitchToInAppCamera?: () => void
 }
 
 export default function MobileQrUploadModal({
   isOpen,
   onClose,
   onUploadSuccess,
-  sessionId
+  sessionId,
+  onSwitchToInAppCamera
 }: MobileQrUploadModalProps) {
   const [origin, setOrigin] = useState('')
   const [isSyncing, setIsSyncing] = useState(false)
@@ -104,6 +106,17 @@ export default function MobileQrUploadModal({
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           )}
         </div>
+
+        {onSwitchToInAppCamera && (
+          <button
+            type="button"
+            onClick={onSwitchToInAppCamera}
+            className="mt-3 text-xs text-primary hover:text-primary/80 font-semibold flex items-center gap-1.5 cursor-pointer py-1 px-3 rounded-lg hover:bg-primary/5 transition-colors"
+          >
+            <Camera size={14} />
+            <span>Hoặc mở Camera trực tiếp trên thiết bị này</span>
+          </button>
+        )}
 
         {/* Status indicator */}
         <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-slate-500 bg-slate-100 px-4 py-2.5 rounded-full w-full">

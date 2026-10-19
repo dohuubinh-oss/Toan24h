@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Code2, Settings2, Sparkles } from 'lucide-react'
+import { Code2, Settings2, Sparkles, Upload } from 'lucide-react'
 
 export interface JsonInputCardProps {
   title?: string;
@@ -9,6 +9,8 @@ export interface JsonInputCardProps {
   onProcess: (jsonString: string) => void;
   disabled?: boolean;
   initialValue?: string;
+  onAiExtract?: () => void;
+  aiButtonText?: string;
 }
 
 export default function JsonInputCard({
@@ -18,7 +20,9 @@ export default function JsonInputCard({
   buttonText = 'Xử lý JSON',
   onProcess,
   disabled = false,
-  initialValue = ''
+  initialValue = '',
+  onAiExtract,
+  aiButtonText
 }: JsonInputCardProps) {
   const [jsonInput, setJsonInput] = useState(initialValue)
   const [error, setError] = useState<string | null>(null)
@@ -69,11 +73,24 @@ export default function JsonInputCard({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {onAiExtract && (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={onAiExtract}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 hover:text-indigo-900 border border-indigo-200/80 rounded-lg transition-colors cursor-pointer shadow-2xs"
+              title="Tải ảnh để AI tự động bóc tách"
+            >
+              <Upload className="w-3.5 h-3.5 text-indigo-600" />
+              <span>{aiButtonText || 'Tải ảnh câu hỏi'}</span>
+            </button>
+          )}
+
           <button
             type="button"
             disabled={disabled || !jsonInput.trim()}
             onClick={handleFormat}
-            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             title="Tự động căn chỉnh và thụt lề JSON"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />

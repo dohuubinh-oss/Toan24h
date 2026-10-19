@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useState } from 'react'
 import { Plus } from 'lucide-react'
 import LectureMediaCard from './LectureMediaCard'
 import { useLectureCreator } from './LectureCreatorContext'
@@ -7,6 +7,7 @@ import DangToanCard from './DangToanCard'
 import { toast } from '@/components/ui/ToastProvider'
 import { parseLectureJson } from './utils/lectureJsonParser'
 import JsonInputCard from '@/components/common/JsonInputCard'
+import AiLectureExtractModal from './AiLectureExtractModal'
 
 const LECTURE_JSON_HINT = `[
   {
@@ -35,11 +36,20 @@ export default function LectureContentEditor() {
     setDangToanList,
     removeDangToan 
   } = useLectureCreator()
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false)
+  const [extractedJson, setExtractedJson] = useState('')
 
   const handleProcessJson = (jsonString: string) => {
     const parsedList = parseLectureJson(jsonString)
     setDangToanList(parsedList)
     toast.success(`Đã nhập thành công ${parsedList.length} dạng toán!`)
+  }
+
+  const handleAiExtracted = (jsonString: string) => {
+    setExtractedJson(jsonString)
+    const parsedList = parseLectureJson(jsonString)
+    setDangToanList(parsedList)
+    toast.success(`Đã bóc tách thành công ${parsedList.length} dạng toán từ ảnh bài giảng!`)
   }
 
   const addDangToan = () => {
@@ -76,6 +86,9 @@ export default function LectureContentEditor() {
           placeholder={LECTURE_JSON_HINT}
           buttonText="Xử lý JSON"
           onProcess={handleProcessJson}
+          onAiExtract={() => setIsAiModalOpen(true)}
+          aiButtonText="Tải ảnh Dạng toán/ Ví dụ mẫu"
+          initialValue={extractedJson}
           disabled={contentType === 'practice'}
         />
 
@@ -108,6 +121,13 @@ export default function LectureContentEditor() {
           </button>
         </div>
       </div>
+
+      {/* AI Lecture Extract Modal */}
+      <AiLectureExtractModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        onExtracted={handleAiExtracted}
+      />
     </div>
   )
 }

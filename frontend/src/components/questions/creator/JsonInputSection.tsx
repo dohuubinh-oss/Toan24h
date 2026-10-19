@@ -4,6 +4,7 @@ import JsonInputCard from '@/components/common/JsonInputCard'
 
 interface JsonInputSectionProps {
   onProcessJson?: (blocks: QuestionBlock[]) => void;
+  onAiExtract?: () => void;
   currentGlobalIndex?: number;
   totalQuestions?: number;
   currentQuestion?: Question | null;
@@ -36,7 +37,8 @@ const QUESTION_JSON_HINT = `[{
 }]`;
 
 export default function JsonInputSection({
-  onProcessJson = () => {}
+  onProcessJson = () => {},
+  onAiExtract
 }: JsonInputSectionProps) {
   const handleProcess = (jsonInput: string) => {
     const parsed = JSON.parse(jsonInput) as QuestionBlock[];
@@ -158,6 +160,7 @@ export default function JsonInputSection({
         placeholder={QUESTION_JSON_HINT}
         buttonText="Xử lý JSON"
         onProcess={handleProcess}
+        onAiExtract={onAiExtract}
       />
     </section>
   )

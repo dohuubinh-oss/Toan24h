@@ -14,6 +14,7 @@ type Lecture struct {
 	Category     string         `gorm:"type:varchar(100);not null" json:"category"`
 	BasicConcept string         `gorm:"type:text" json:"basicConcept"`
 	Examples     string         `gorm:"type:jsonb;default:'[]'" json:"examples"`
+	GgLink       string         `gorm:"type:text;column:gg_link" json:"gg_link"`
 	AuthorID     *uuid.UUID     `gorm:"type:uuid;index" json:"authorId,omitempty"`
 	Author       *User          `gorm:"foreignKey:AuthorID" json:"author,omitempty"`
 	CreatedAt    time.Time      `json:"createdAt"`

@@ -76,6 +76,7 @@ export default async function GradeLecturePage({
         createdAt={lecture.createdAt}
         id={lecture.id}
         author={lecture.author}
+        gg_link={lecture.gg_link}
       />
 
       {/* Card Giải thích khái niệm chiếm 100% chiều rộng */}

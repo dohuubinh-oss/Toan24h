@@ -54,6 +54,7 @@ type CreateLectureRequest struct {
 	Category     string            `json:"category"`
 	BasicConcept string            `json:"basicConcept"`
 	Examples     []DangToanRequest `json:"examples"`
+	GgLink       string            `json:"gg_link"`
 	AuthorID     *string           `json:"authorId,omitempty"`
 }
 
@@ -206,6 +207,7 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		Category:     req.Category,
 		BasicConcept: processedConcept,
 		Examples:     examplesStr,
+		GgLink:       req.GgLink,
 		AuthorID:     authorUUID,
 	}
 
@@ -243,6 +245,7 @@ func (s *lectureService) UpdateLecture(ctx context.Context, id string, req Creat
 	lecture.Category = req.Category
 	lecture.BasicConcept = processedConcept
 	lecture.Examples = examplesStr
+	lecture.GgLink = req.GgLink
 	if req.AuthorID != nil && *req.AuthorID != "" {
 		if uid, err := uuid.Parse(*req.AuthorID); err == nil {
 			lecture.AuthorID = &uid

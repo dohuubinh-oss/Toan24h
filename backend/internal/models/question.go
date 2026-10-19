@@ -13,7 +13,8 @@ type Question struct {
 	ParentID        *uuid.UUID     `gorm:"type:uuid;index" json:"parentId,omitempty"` // Dùng cho 'group' (Câu hỏi con tham chiếu câu hỏi cha)
 	SubQuestions    []Question     `gorm:"foreignKey:ParentID" json:"subQuestions,omitempty"` // Dùng cho 'group' để tự động nạp các câu con
 
-	BookName        string         `gorm:"type:varchar(255)" json:"bookName"` // Tiêu đề câu hỏi, VD: Bài 1, Câu 1
+	GgDrive         string         `gorm:"type:text;column:gg_drive" json:"gg_drive"` // Link Google Drive gốc
+	BookName        string         `gorm:"-" json:"bookName,omitempty"`               // Backward compatibility
 	Cate            string         `gorm:"type:varchar(50);not null;default:'exam';index" json:"cate"` // 'exam' or 'practice'
 	TypeQuestion    string         `gorm:"type:varchar(20);not null" json:"typeQuestion"` // 'group', 'single'
 	Content         string         `gorm:"type:text;not null" json:"content"`
@@ -47,8 +48,15 @@ func (q *Question) BeforeCreate(tx *gorm.DB) (err error) {
 	if q.ID == uuid.Nil {
 		q.ID = uuid.New()
 	}
+	if q.GgDrive == "" && q.BookName != "" {
+		q.GgDrive = q.BookName
+	}
+	return
+}
+
+func (q *Question) AfterFind(tx *gorm.DB) (err error) {
 	if q.BookName == "" {
-		q.BookName = q.ID.String()
+		q.BookName = q.GgDrive
 	}
 	return
 }

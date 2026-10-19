@@ -1,16 +1,16 @@
 'use client'
 
 import React, { useState, useCallback, useRef } from 'react'
-import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2, Save } from 'lucide-react'
+import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2, Save, Sparkles, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import JsonInputSection from '@/components/questions/creator/JsonInputSection'
 import QuestionEditorSection from '@/components/questions/creator/QuestionEditorSection'
 import QuestionSettingsSidebar from '@/components/questions/creator/QuestionSettingsSidebar'
+import AiQuestionExtractModal from '@/components/questions/creator/AiQuestionExtractModal'
 import { Button } from '@/components/ui/Button'
 import { QuestionBlock, Question } from '@/types/question'
 import { apiFetch } from '@/lib/api'
-import { Loader2 } from 'lucide-react'
 import { getQuestion, updateQuestion as apiUpdateQuestion } from '@/lib/api'
 import { Suspense, useEffect } from 'react'
 import { toast } from '@/components/ui/ToastProvider'
@@ -28,6 +28,7 @@ function CreateQuestionContent() {
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isSaving, setIsSaving] = useState(false)
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const editorRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -76,6 +77,16 @@ function CreateQuestionContent() {
     setCurrentBlockIndex(0);
     setCurrentQuestionIndex(0);
     scrollToEditor();
+  }, []);
+
+  const handleAiExtracted = useCallback((blocks: QuestionBlock[]) => {
+    setQuestionBlocks(blocks);
+    setCurrentBlockIndex(0);
+    setCurrentQuestionIndex(0);
+    scrollToEditor();
+
+    const totalCount = blocks.reduce((acc, b) => acc + (b.questions?.length || 0), 0);
+    toast.success(`Đã bóc tách thành công ${totalCount} câu hỏi từ ảnh đề thi!`);
   }, []);
 
   const handleNext = useCallback(() => {
@@ -158,12 +169,13 @@ function CreateQuestionContent() {
       
       const newBlocks = [...prev];
       
-      if (field === 'book_name') {
-        // Đồng bộ Tên Sách cho TẤT CẢ các câu hỏi trong tất cả các block
+      if (field === 'gg_drive' || field === 'book_name') {
+        // Đồng bộ Link Drive cho TẤT CẢ các câu hỏi trong tất cả các block
         return newBlocks.map(block => ({
           ...block,
           questions: block.questions.map(q => ({
             ...q,
+            gg_drive: value,
             book_name: value
           }))
         }));
@@ -316,6 +328,7 @@ function CreateQuestionContent() {
           <div className="lg:col-span-8 space-y-6">
             <JsonInputSection 
               onProcessJson={handleProcessJson}
+              onAiExtract={() => setIsAiModalOpen(true)}
               currentGlobalIndex={currentBlockIndex + 1}
               totalQuestions={totalBlocks}
               currentQuestion={currentQuestion}
@@ -404,6 +417,13 @@ function CreateQuestionContent() {
           </button>
         </div>
       )}
+
+      {/* AI Extraction Modal */}
+      <AiQuestionExtractModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        onExtracted={handleAiExtracted}
+      />
     </div>
   )
 }

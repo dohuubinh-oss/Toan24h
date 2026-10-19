@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { Settings2, ChevronDown, BookOpen, PenTool } from 'lucide-react'
+import { Settings2, ChevronDown, BookOpen, PenTool, ExternalLink } from 'lucide-react'
 import { Card, CardHeader, CardContent } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
@@ -8,7 +8,7 @@ import { useLectureCreator } from './LectureCreatorContext'
 import { TOPIC_MAPPING, GRADES } from '@/constants/topics'
 
 export default function LectureBasicSettings() {
-  const { contentType, setContentType, title, setTitle, grade, setGrade, category, setCategory } = useLectureCreator()
+  const { contentType, setContentType, title, setTitle, grade, setGrade, category, setCategory, ggLink, setGgLink } = useLectureCreator()
 
   return (
     <>
@@ -59,6 +59,44 @@ export default function LectureBasicSettings() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between ml-1 mb-1">
+              <Label className="text-xs">Link Drive</Label>
+              {ggLink && (ggLink.startsWith('http://') || ggLink.startsWith('https://')) && (
+                <a
+                  href={ggLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Mở tài liệu trên Google Drive"
+                  className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold hover:underline"
+                >
+                  <span>Mở Drive</span>
+                  <ExternalLink size={12} />
+                </a>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                type="text"
+                placeholder="VD: https://drive.google.com/..."
+                className="bg-slate-50 text-sm placeholder:text-slate-400 font-medium flex-1"
+                value={ggLink}
+                onChange={(e) => setGgLink(e.target.value)}
+              />
+              {ggLink && (ggLink.startsWith('http://') || ggLink.startsWith('https://')) && (
+                <a
+                  href={ggLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Mở tài liệu trên Google Drive"
+                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-xs active:scale-95"
+                >
+                  <ExternalLink size={18} />
+                </a>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">

@@ -59,6 +59,7 @@ type APIResponse struct {
 
 // QuestionDetail DTO cho từng câu hỏi con
 type QuestionDetail struct {
+	GgDrive         string   `json:"gg_drive"`
 	BookName        string   `json:"book_name"`
 	Cate            string   `json:"cate"`
 	Content         string   `json:"content"`
@@ -180,9 +181,15 @@ func BulkCreateQuestions(c *gin.Context) {
 				cate = "exam"
 			}
 
+			driveVal := detail.GgDrive
+			if driveVal == "" {
+				driveVal = detail.BookName
+			}
+
 			childQ := models.Question{
 				ParentID:        parentID,
-				BookName:        detail.BookName,
+				GgDrive:         driveVal,
+				BookName:        driveVal,
 				Cate:            cate,
 				TypeQuestion:    "single",
 				Content:         processHtmlImages(detail.Content, detail.Grade),

@@ -64,10 +64,10 @@ func CheckOrphanQuestions(c *gin.Context) {
 
 		if otherCount == 0 {
 			var q models.Question
-			if err := config.DB.Select("id, book_name, content").Where("id = ?", qID).First(&q).Error; err == nil {
+			if err := config.DB.Select("id, gg_drive, content").Where("id = ?", qID).First(&q).Error; err == nil {
 				orphans = append(orphans, OrphanQuestionInfo{
 					ID:       q.ID.String(),
-					BookName: q.BookName,
+					BookName: q.GgDrive,
 					Content:  q.Content,
 				})
 			}

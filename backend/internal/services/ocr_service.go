@@ -29,7 +29,11 @@ func ExtractTextFromImageWithGemini(fileBytes []byte, mimeType string) (*OCRResu
 		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
 	}
 
-	url := "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey
+	model := os.Getenv("GEMINI_MODEL")
+	if model == "" {
+		model = "gemini-3.8-flash"
+	}
+	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
 
 	prompt := `Bạn là một chuyên gia nhận dạng chữ viết tay và toán học.
 Hãy nhận dạng văn bản và công thức toán học trong bức ảnh này.

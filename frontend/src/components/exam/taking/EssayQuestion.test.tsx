@@ -1,7 +1,17 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import React from 'react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import EssayQuestion from './EssayQuestion'
+import { ToastProvider } from '@/components/ui/ToastProvider'
+
+// Top-level mocks
+vi.mock('@/lib/api', () => ({
+  recognizeHandwriting: vi.fn().mockResolvedValue('OCR_TEXT_RESULT'),
+  uploadTempImage: vi.fn().mockResolvedValue('http://mock-url.com/img.png'),
+  submitAppeal: vi.fn(),
+  reportQuestion: vi.fn()
+}))
 
 // Mock getClientRects for jsdom (used by ProseMirror)
 Element.prototype.getClientRects = vi.fn(() => [] as unknown as DOMRectList)
@@ -19,11 +29,36 @@ if (typeof document !== 'undefined') {
 }
 
 describe('EssayQuestion Component', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    Object.defineProperty(global.navigator, 'mediaDevices', {
+      writable: true,
+      value: {
+        getUserMedia: vi.fn().mockResolvedValue({
+          getTracks: vi.fn().mockReturnValue([{ stop: vi.fn() }])
+        })
+      }
+    })
+
+    global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url')
+    global.URL.revokeObjectURL = vi.fn()
+    HTMLMediaElement.prototype.play = vi.fn().mockResolvedValue(undefined)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  const renderWithToast = (ui: React.ReactElement) => {
+    return render(<ToastProvider>{ui}</ToastProvider>)
+  }
+
   it('renders single question content and handles input', async () => {
     const handleAnswerChange = vi.fn()
     const user = userEvent.setup()
-    
-    render(
+
+    renderWithToast(
       <EssayQuestion
         questionId={42}
         index={41}
@@ -36,24 +71,24 @@ describe('EssayQuestion Component', () => {
         onToggleHint={vi.fn()}
       />
     )
-    
+
     expect(screen.getByText('Câu hỏi 42')).toBeInTheDocument()
     expect(screen.getByText('Tính độ dài cạnh huyền BC')).toBeInTheDocument()
-    
+
     const input = document.querySelector('.ProseMirror') as HTMLElement
     expect(input).toBeInTheDocument()
-    
+
     await user.type(input, '10')
     input.blur()
-    
+
     expect(handleAnswerChange).toHaveBeenCalled()
   })
 
   it('renders group question content and handles input', async () => {
     const handleAnswerChange = vi.fn()
     const user = userEvent.setup()
-    
-    render(
+
+    renderWithToast(
       <EssayQuestion
         questionId={10}
         index={9}
@@ -70,47 +105,53 @@ describe('EssayQuestion Component', () => {
         onToggleHint={vi.fn()}
       />
     )
-    
+
     expect(screen.getByText('Câu hỏi 10')).toBeInTheDocument()
     expect(screen.getByText('Cho tam giác ABC vuông tại A')).toBeInTheDocument()
     expect(screen.getByText('Tính độ dài cạnh huyền BC')).toBeInTheDocument()
     expect(screen.getByText('Tính diện tích tam giác ABC')).toBeInTheDocument()
-    
-    expect(screen.getByText('Lời giải Ý 1')).toBeInTheDocument()
-    expect(screen.getByText('Lời giải Ý 2')).toBeInTheDocument()
+
+    expect(screen.getByText('Lời giải câu 10a')).toBeInTheDocument()
+    expect(screen.getByText('Lời giải câu 10b')).toBeInTheDocument()
 
     const inputs = document.querySelectorAll('.ProseMirror')
     expect(inputs).toHaveLength(2)
-    
+
     await user.type(inputs[1] as HTMLElement, '24cm2')
     ;(inputs[1] as HTMLElement).blur()
     expect(handleAnswerChange).toHaveBeenCalled()
   })
 
-  it('renders MC group questions and handles answer selection and OCR', async () => {
-    // Mock the recognizeHandwriting function
-    vi.mock('@/lib/api', () => ({
-      recognizeHandwriting: vi.fn().mockResolvedValue('OCR_TEXT_RESULT'),
-      uploadTempImage: vi.fn().mockResolvedValue('http://mock-url.com/img.png')
+  it('renders MC group questions and opens QR modal on desktop', async () => {
+    // Default matchMedia returns matches: false (desktop)
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
     }))
 
     const handleAnswerChange = vi.fn()
     const user = userEvent.setup()
-    
-    render(
+
+    renderWithToast(
       <EssayQuestion
         questionId={20}
         index={19}
         sharedContext="Cho hàm số y = x^3"
         subQuestions={[
-          { 
-            id: 21, 
-            type: 'mc', 
-            content: 'Đạo hàm là:', 
+          {
+            id: 21,
+            type: 'mc',
+            content: 'Đạo hàm là:',
             options: [
               { id: 'A', text: '3x^2' },
               { id: 'B', text: '2x^2' }
-            ] 
+            ]
           }
         ]}
         answers={{}}
@@ -122,8 +163,8 @@ describe('EssayQuestion Component', () => {
         onToggleHint={vi.fn()}
       />
     )
-    
-    // Left pane should have buttons for options A and B
+
+    // Option A and B render
     const optionA = screen.getByText('A')
     const optionB = screen.getByText('B')
     expect(optionA).toBeInTheDocument()
@@ -131,16 +172,49 @@ describe('EssayQuestion Component', () => {
 
     // Click option A
     await user.click(optionA)
-    // First argument is subquestion ID (21), second is answer ('A'), third is explanation (empty string)
     expect(handleAnswerChange).toHaveBeenCalledWith(21, 'A', '')
 
-    // Check right pane for OCR button
-    const ocrButton = screen.getByText('Tải ảnh lời giải bài làm tay').closest('button')
-    expect(ocrButton).toBeInTheDocument()
+    // Check camera button
+    const cameraButton = screen.getByRole('button', { name: /Chụp bài thi/i })
+    expect(cameraButton).toBeInTheDocument()
 
-    // Verify it handles OCR (simulated by clicking a file input that will be inside the wrapper)
-    // The actual component will use a hidden input type=file, which we can find by its type
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
-    expect(fileInput).toBeInTheDocument()
+    // Clicking camera on desktop opens Mobile QR upload modal
+    fireEvent.click(cameraButton)
+    expect(screen.getByText(/Chụp bài làm bằng điện thoại/i)).toBeInTheDocument()
+  })
+
+  it('opens InAppCameraModal when clicking camera on mobile device', async () => {
+    // Simulate mobile touch device
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes('pointer: coarse'),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    }))
+
+    renderWithToast(
+      <EssayQuestion
+        questionId={30}
+        index={29}
+        content="Bài tập hình học"
+        answers={{}}
+        isHintOpen={false}
+        isFlagged={false}
+        onAnswerChange={vi.fn()}
+        onToggleFlag={vi.fn()}
+        onToggleHint={vi.fn()}
+      />
+    )
+
+    const cameraButton = screen.getByRole('button', { name: /Chụp bài thi/i })
+    fireEvent.click(cameraButton)
+
+    // Should open In-App WebRTC Camera modal directly, not QR modal!
+    expect(screen.getByText(/Chụp ảnh bài làm trực tiếp/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Chụp bài làm bằng điện thoại/i)).not.toBeInTheDocument()
   })
 })
