@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseLectureJson, buildExerciseHtmlFromProblems, cleanCitations } from './lectureJsonParser'
+import { parseLectureJson, buildExerciseHtmlFromProblems, cleanCitations, formatTextToHtml } from './lectureJsonParser'
 
 describe('lectureJsonParser', () => {
   it('throws error for invalid JSON string', () => {
@@ -148,5 +148,51 @@ describe('lectureJsonParser', () => {
     expect(result[0].methods[0].exercise).toBeNull()
     expect(result[0].methods[1].exercise?.content).not.toContain('$$null$$')
     expect(result[0].methods[1].exercise?.content).toContain('B1')
+  })
+
+  it('formats bullet lists, numbered lists, and paragraphs with formatTextToHtml', () => {
+    // Bullet lists
+    const bullets = '- Ý 1: Điều kiện\n- Ý 2: Biến đổi'
+    expect(formatTextToHtml(bullets)).toBe('<ul><li>Ý 1: Điều kiện</li><li>Ý 2: Biến đổi</li></ul>')
+
+    // Numbered lists
+    const numbered = '1. Bước 1\n2. Bước 2'
+    expect(formatTextToHtml(numbered)).toBe('<ol><li>Bước 1</li><li>Bước 2</li></ol>')
+
+    // Paragraphs with line breaks
+    const multiParagraph = 'Đoạn 1 dòng 1\nĐoạn 1 dòng 2\n\nĐoạn 2'
+    expect(formatTextToHtml(multiParagraph)).toBe('<p>Đoạn 1 dòng 1<br/>Đoạn 1 dòng 2</p><p>Đoạn 2</p>')
+
+    // Single line text without breaks
+    expect(formatTextToHtml('Đoạn văn ngắn')).toBe('Đoạn văn ngắn')
+  })
+
+  it('formats method solution and step content with line breaks in parseLectureJson', () => {
+    const sample = JSON.stringify([
+      {
+        mathType: 'Dạng 1. Phương trình',
+        solution: '- Bước 1: Tìm ĐKXĐ\n- Bước 2: Biến đổi',
+        problems: [
+          {
+            problem: 'Giải phương trình:\na) $x^2 = 4$\nb) $x + 1 = 0$',
+            steps: [
+              {
+                step: 1,
+                title: 'Bước 1',
+                content: 'Xét 2 trường hợp:\n- TH1: $x = 2$\n- TH2: $x = -2$',
+                formula: 'x = \\pm 2'
+              }
+            ],
+            conclusion: 'Kết luận:\nNghiệm là 2 và -2'
+          }
+        ]
+      }
+    ])
+
+    const result = parseLectureJson(sample)
+    expect(result[0].methods[0].solution).toBe('<ul><li>Bước 1: Tìm ĐKXĐ</li><li>Bước 2: Biến đổi</li></ul>')
+    const exerciseHtml = result[0].methods[0].exercise?.content || ''
+    expect(exerciseHtml).toContain('<br/>') // problem has line breaks
+    expect(exerciseHtml).toContain('<ul><li>TH1: $x = 2$</li><li>TH2: $x = -2$</li></ul>') // step content has bullets
   })
 })

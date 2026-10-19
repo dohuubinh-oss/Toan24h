@@ -110,34 +110,53 @@ func ExtractLectureFromImages(files [][]byte, mimeTypes []string) (string, error
 	prompt := `Bạn là chuyên gia sư phạm và số hóa bài giảng Toán học Việt Nam.
 Hãy đọc các trang ảnh tài liệu bài giảng/sách tham khảo đính kèm (theo thứ tự từ trang đầu đến trang cuối) và bóc tách TOÀN BỘ các Dạng toán, Phương pháp giải và Bài tập ví dụ mẫu thành định dạng JSON chuẩn.
 
-Yêu cầu nghiêm ngặt:
-1. Tất cả công thức toán học phải được định dạng bằng cú pháp LaTeX chuẩn: trong dòng dùng $...$, hiển thị riêng dùng $$...$$.
+Yêu cầu nghiêm ngặt về nội dung và định dạng văn bản:
+1. Tất cả công thức toán học phải được định dạng bằng cú pháp LaTeX chuẩn: trong dòng dùng $...$, công thức quan trọng hiển thị riêng dòng dùng $$\n...\n$$.
 2. Với Bảng biến thiên, Bảng xét dấu hoặc Bảng số liệu: HÃY chuyển đổi trực tiếp thành bảng HTML (thẻ <table>, <tr>, <td>) hoặc bảng Markdown, KHÔNG cắt thành ảnh.
-3. Nếu Bài tập ví dụ mẫu trong tài liệu CHƯA CÓ LỜI GIẢI hoặc lời giải vắn tắt: Bạn hãy TỰ ĐỘNG GIẢI CHI TIẾT TỪNG BƯỚC một cách sư phạm vào mảng "steps" (ví dụ: Bước 1, Bước 2...), có "formula" (nếu có), diễn giải "content" và đưa ra "conclusion" kết luận rõ ràng.
-4. Với Hình vẽ hình học và Đồ thị hàm số trên hệ trục Oxy:
+3. Quy tắc trình bày và ngắt dòng trong trường "solution" (Phương pháp giải):
+   - TUYỆT ĐỐI KHÔNG viết thành một khối văn bản dính liền nhau.
+   - Mỗi định lý, quy tắc hoặc bước phương pháp phải được ngắt đoạn bằng 2 dấu xuống dòng (\n\n).
+   - Sử dụng dấu gạch đầu dòng ("- ") hoặc đánh số ("1. ", "2. ") cho từng ý rõ ràng.
+   - Các công thức toán cốt lõi phải được đặt trên một dòng riêng biệt.
+4. Quy tắc trình bày trong trường "problem" (Đề bài ví dụ mẫu):
+   - Tách biệt câu dẫn đề bài và các ý con (a, b, c...): mỗi ý con bắt buộc phải xuống dòng riêng biệt (\n hoặc \n\n).
+5. Quy tắc trình bày trong mảng "steps" (Các bước giải chi tiết của ví dụ mẫu):
+   - Nếu Bài tập ví dụ mẫu trong tài liệu CHƯA CÓ LỜI GIẢI hoặc lời giải vắn tắt: Bạn hãy TỰ ĐỘNG GIẢI CHI TIẾT TỪNG BƯỚC một cách sư phạm.
+   - "title": Tiêu đề ngắn gọn của bước (ví dụ: "Bước 1: Tìm tập xác định", "Bước 2: Giải phương trình").
+   - "content": Diễn giải sư phạm, súc tích. Nếu có nhiều ý nhỏ trong 1 bước, ngắt dòng (\n) hoặc dùng gạch đầu dòng ("- ").
+   - "formula": Chứa phép biến đổi hoặc công thức toán trọng tâm của bước (dạng LaTeX).
+   - "conclusion": Kết luận rõ ràng đáp số / kết quả bài toán.
+   - "tips": Gợi ý, lưu ý hoặc mẹo giải nhanh (nếu có).
+6. Với Hình vẽ hình học và Đồ thị hàm số trên hệ trục Oxy:
    - Điền một mã định danh vào vị trí tương ứng trong đề bài hoặc lời giải, ví dụ: [DIAGRAM_0_1] (trong đó 0 là chỉ số trang ảnh 0-indexed, 1 là thứ tự hình).
    - Khai báo thông tin vào mảng "diagrams" với tọa độ chuẩn hóa box_2d [ymin, xmin, ymax, xmax] (thang đo 0-1000).
-5. Định dạng JSON bắt buộc phải là một mảng [] các Dạng toán theo cấu trúc:
+7. Cấu trúc JSON bắt buộc phải là một mảng [] các Dạng toán theo cấu trúc:
 [
   {
     "mathType": "Dạng 1. Tên dạng toán",
     "methods": [
       {
         "methodName": "Phương pháp giải",
-        "solution": "Nội dung phương pháp giải lý thuyết...",
+        "solution": "- Bước 1: Điều kiện xác định...\n\n- Bước 2: Biến đổi phương trình:\n$$\nx^2 - 4x + 3 = 0\n$$\n\n- Bước 3: Kết luận nghiệm.",
         "problems": [
           {
-            "problem": "Nội dung ví dụ mẫu 1...",
+            "problem": "Giải các phương trình sau:\na) $x^2 - 4 = 0$\nb) $2x + 1 = 5$",
             "steps": [
               {
                 "step": 1,
-                "title": "Bước 1",
-                "content": "Nội dung diễn giải bước 1...",
-                "formula": "x = 1"
+                "title": "Bước 1: Tìm điều kiện",
+                "content": "Phương trình xác định với mọi $x \\in \\mathbb{R}$.",
+                "formula": "x \\in \\mathbb{R}"
+              },
+              {
+                "step": 2,
+                "title": "Bước 2: Phân tích thành nhân tử",
+                "content": "Áp dụng hằng đẳng thức hiệu hai bình phương:\n- Ta có: $x^2 - 2^2 = (x - 2)(x + 2) = 0$",
+                "formula": "(x - 2)(x + 2) = 0"
               }
             ],
-            "conclusion": "Kết luận...",
-            "tips": "Gợi ý / mẹo (nếu có)"
+            "conclusion": "Vậy tập nghiệm của phương trình là $S = \\{-2; 2\\}$.",
+            "tips": "Nhớ kiểm tra lại điều kiện nghiệm trước khi kết luận."
           }
         ]
       }
@@ -151,7 +170,7 @@ Yêu cầu nghiêm ngặt:
     ]
   }
 ]
-6. CHỈ trả về duy nhất chuỗi JSON hợp lệ, tuyệt đối KHÔNG kèm markdown fences (như ` + "```" + `json) hay bất kỳ văn bản giải thích nào ngoài JSON.`
+8. CHỈ trả về duy nhất chuỗi JSON hợp lệ, tuyệt đối KHÔNG kèm markdown fences (như ` + "```" + `json) hay bất kỳ văn bản giải thích nào ngoài JSON.`
 
 	parts := []map[string]interface{}{
 		{"text": prompt},

@@ -48,6 +48,74 @@ export function cleanCitations(text?: string | null): string {
   return text.replace(/\[cite:\s*[^\]]+\]/gi, '').trim()
 }
 
+export function formatTextToHtml(text?: string | null): string {
+  if (!text) return ''
+  const trimmed = cleanCitations(text).trim()
+  if (!trimmed) return ''
+
+  // If text already contains block HTML tags (<p>, <div>, <ul>, <ol>, <table>, <h1-6>), return as is
+  if (/<(p|div|ul|ol|table|h[1-6]|blockquote)[\s>]/i.test(trimmed)) {
+    return trimmed
+  }
+
+  // If it's a simple single-line string without newlines or bullets, keep as-is
+  if (!trimmed.includes('\n') && !/^[-*•]\s+/.test(trimmed)) {
+    return trimmed
+  }
+
+  // Split by double newline or multiple newlines to get paragraphs/blocks
+  const paragraphs = trimmed.split(/\n\s*\n/)
+
+  const htmlBlocks = paragraphs.map((block) => {
+    const rawLines = block.split('\n').map((l) => l.trim()).filter(Boolean)
+    if (rawLines.length === 0) return ''
+
+    const subBlocks: string[] = []
+    let currentBulletList: string[] = []
+    let currentNumberedList: string[] = []
+    let currentTextLines: string[] = []
+
+    const flushLists = () => {
+      if (currentTextLines.length > 0) {
+        subBlocks.push(`<p>${currentTextLines.join('<br/>')}</p>`)
+        currentTextLines = []
+      }
+      if (currentBulletList.length > 0) {
+        subBlocks.push(`<ul>${currentBulletList.map((l) => `<li>${l}</li>`).join('')}</ul>`)
+        currentBulletList = []
+      }
+      if (currentNumberedList.length > 0) {
+        subBlocks.push(`<ol>${currentNumberedList.map((l) => `<li>${l}</li>`).join('')}</ol>`)
+        currentNumberedList = []
+      }
+    }
+
+    for (const line of rawLines) {
+      if (/^[-*•]\s+/.test(line)) {
+        if (currentTextLines.length > 0 || currentNumberedList.length > 0) {
+          flushLists()
+        }
+        currentBulletList.push(line.replace(/^[-*•]\s+/, ''))
+      } else if (/^\d+[\.\)]\s+/.test(line)) {
+        if (currentTextLines.length > 0 || currentBulletList.length > 0) {
+          flushLists()
+        }
+        currentNumberedList.push(line.replace(/^\d+[\.\)]\s+/, ''))
+      } else {
+        if (currentBulletList.length > 0 || currentNumberedList.length > 0) {
+          flushLists()
+        }
+        currentTextLines.push(line)
+      }
+    }
+    flushLists()
+
+    return subBlocks.join('')
+  })
+
+  return htmlBlocks.filter(Boolean).join('')
+}
+
 export function buildExerciseHtmlFromProblems(problems: RawProblemItem[]): string {
   if (!problems || problems.length === 0) return ''
 
@@ -60,8 +128,9 @@ export function buildExerciseHtmlFromProblems(problems: RawProblemItem[]): strin
 
     const cleanProblem = cleanCitations(item.problem)
     if (cleanProblem) {
+      const formattedProblem = formatTextToHtml(cleanProblem)
       blockHtml += `<div class="bg-slate-50 p-5 rounded-lg border border-slate-200 mb-6">
-        <p class="italic text-slate-700 m-0">${cleanProblem}</p>
+        <div class="italic text-slate-700 m-0">${formattedProblem.startsWith('<') ? formattedProblem : `<p class="m-0">${formattedProblem}</p>`}</div>
       </div>`
     }
 
@@ -131,7 +200,12 @@ export function buildExerciseHtmlFromProblems(problems: RawProblemItem[]): strin
             blockHtml += `<h4 class="font-bold text-slate-900 m-0">${timelineItem.title}</h4>`
           }
           if (timelineItem.content) {
-            blockHtml += `<p class="text-slate-600 mt-1 mb-0">${timelineItem.content}</p>`
+            const formattedContent = formatTextToHtml(timelineItem.content)
+            if (formattedContent.startsWith('<')) {
+              blockHtml += `<div class="text-slate-600 mt-1 mb-0">${formattedContent}</div>`
+            } else {
+              blockHtml += `<p class="text-slate-600 mt-1 mb-0">${formattedContent}</p>`
+            }
           }
           if (
             timelineItem.formula &&
@@ -144,11 +218,13 @@ export function buildExerciseHtmlFromProblems(problems: RawProblemItem[]): strin
             blockHtml += `<p class="mt-3 text-blue-600 font-bold m-0">${formattedFormula}</p>`
           }
         } else if (timelineItem.type === 'conclusion') {
+          const formattedContent = formatTextToHtml(timelineItem.content)
           blockHtml += `<h4 class="font-bold text-slate-900 m-0">Kết luận</h4>
-            <p class="text-slate-600 mt-1 mb-0">${timelineItem.content}</p>`
+            <div class="text-slate-600 mt-1 mb-0">${formattedContent.startsWith('<') ? formattedContent : `<p class="m-0">${formattedContent}</p>`}</div>`
         } else if (timelineItem.type === 'tips') {
+          const formattedContent = formatTextToHtml(timelineItem.content)
           blockHtml += `<h4 class="font-bold text-slate-900 m-0">Gợi ý</h4>
-            <p class="text-slate-600 mt-1 mb-0">${timelineItem.content}</p>`
+            <div class="text-slate-600 mt-1 mb-0">${formattedContent.startsWith('<') ? formattedContent : `<p class="m-0">${formattedContent}</p>`}</div>`
         }
 
         blockHtml += `</div></div>`
@@ -206,7 +282,7 @@ export function parseLectureJson(jsonString: string): DangToanItem[] {
         .map((m) => {
           const methodId = Math.random().toString(36).substr(2, 9)
           const solRaw = m.solution || m.Solution || m.methodContent || ''
-          const sol = cleanCitations(solRaw)
+          const sol = formatTextToHtml(cleanCitations(solRaw))
           const rawProblems = Array.isArray(m.problems)
             ? m.problems
             : Array.isArray(m.exams)
@@ -240,7 +316,7 @@ export function parseLectureJson(jsonString: string): DangToanItem[] {
     } else {
       const methodId = Math.random().toString(36).substr(2, 9)
       const solRaw = typeof item.solution === 'string' ? item.solution : (item.Solution || '')
-      const sol = cleanCitations(solRaw)
+      const sol = formatTextToHtml(cleanCitations(solRaw))
       const rawProblems = Array.isArray(item.problems)
         ? item.problems
         : Array.isArray(item.exams)
