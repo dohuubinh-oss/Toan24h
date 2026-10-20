@@ -39,7 +39,8 @@ Thumbs.db
 .gemini/
 
 # Docs and Examples
-docs/
+docs/*
+!docs/superpowers/
 fileExample/
 fileExamples/
 
