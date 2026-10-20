@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -166,7 +167,7 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	})
 }
 
-// UploadAvatar xử lý tải ảnh đại diện của người dùng và cập nhật vào profile
+// UploadAvatar xử lý tải ảnh đại diện của người dùng, tự động nén về 400x400 và dọn dẹp ảnh cũ
 func (h *UserHandler) UploadAvatar(c *gin.Context) {
 	userID, err := utils.GetUserID(c)
 	if err != nil {
@@ -180,38 +181,59 @@ func (h *UserHandler) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	// Max 5MB
-	if file.Size > 5*1024*1024 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "File size exceeds 5MB limit"})
+	// 1. Kiểm tra định dạng nhị phân và dung lượng qua Magic Bytes
+	if err := utils.ValidateImageHeader(file, utils.AvatarImageValidationOptions); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file format: " + err.Error()})
 		return
 	}
 
-	// Validate format
-	ext := strings.ToLower(filepath.Ext(file.Filename))
-	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file format, only jpg, jpeg, png, webp allowed"})
+	// 2. Đọc dữ liệu file ảnh vào bộ nhớ
+	srcFile, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to open uploaded file"})
+		return
+	}
+	fileBytes, err := io.ReadAll(srcFile)
+	srcFile.Close()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read uploaded file"})
 		return
 	}
 
-	// Create directory if not exists
+	// 3. Tự động resize ảnh về max 400x400 và nén JPEG 85% để tối ưu kích thước, đồng thời xóa bỏ EXIF nhạy cảm
+	compBytes, _, err := utils.CompressAndResizeImage(fileBytes, 400)
+	if err != nil {
+		compBytes = fileBytes
+	}
+
+	// 4. Tạo thư mục nếu chưa tồn tại
 	avatarDir := "./uploads/avatars"
 	if err := os.MkdirAll(avatarDir, os.ModePerm); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create avatars directory"})
 		return
 	}
 
-	newFileName := uuid.New().String() + ext
+	newFileName := uuid.New().String() + ".jpg"
 	dst := filepath.Join(avatarDir, newFileName)
-	if err := c.SaveUploadedFile(file, dst); err != nil {
+	if err := os.WriteFile(dst, compBytes, 0644); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save avatar file"})
 		return
 	}
 
 	avatarURL := fmt.Sprintf("/uploads/avatars/%s", newFileName)
 
+	// 5. Cập nhật database và dọn dẹp file avatar cũ trên đĩa cứng
 	if h.db != nil {
 		var user models.User
 		if err := h.db.Where("id = ?", userID).First(&user).Error; err == nil {
+			if user.TelegramAvt != nil && strings.HasPrefix(*user.TelegramAvt, "/uploads/avatars/") {
+				oldRel := strings.TrimPrefix(*user.TelegramAvt, "/uploads/")
+				oldRelClean := filepath.Clean(oldRel)
+				if !strings.HasPrefix(oldRelClean, "..") {
+					oldFullPath := filepath.Join(".", "uploads", oldRelClean)
+					_ = os.Remove(oldFullPath)
+				}
+			}
 			user.TelegramAvt = &avatarURL
 			h.db.Save(&user)
 		}

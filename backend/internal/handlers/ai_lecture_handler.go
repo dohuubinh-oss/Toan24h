@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/services"
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
 // ExtractAILecture handles multi-image lecture extraction using Gemini Vision
@@ -52,6 +53,12 @@ func ExtractAILecture(c *gin.Context) {
 		f.Close()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi khi đọc dữ liệu ảnh: " + err.Error()})
+			return
+		}
+
+		// Kiểm tra Magic Bytes nhị phân để ngăn chặn tập tin giả mạo/độc hại
+		if err := utils.ValidateImageBytes(bytes, utils.DefaultImageValidationOptions); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Ảnh không hợp lệ (" + fileHeader.Filename + "): " + err.Error()})
 			return
 		}
 

@@ -90,7 +90,7 @@ func TestValidateImageHeader(t *testing.T) {
 		assert.NotNil(t, fh)
 		err := ValidateImageHeader(fh, opts)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid file extension")
+		assert.Contains(t, err.Error(), "invalid file format")
 	})
 
 	t.Run("Mismatched extension and content", func(t *testing.T) {

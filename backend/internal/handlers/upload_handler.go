@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
 // UploadTempImage xử lý upload ảnh vào thư mục tạm thời
@@ -19,18 +20,13 @@ func UploadTempImage(c *gin.Context) {
 		return
 	}
 
-	// Kiểm tra dung lượng (Max 5MB)
-	if file.Size > 5*1024*1024 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "File size exceeds 5MB limit"})
+	// Kiểm tra dung lượng, định dạng và chữ ký nhị phân (Magic Bytes)
+	if err := utils.ValidateImageHeader(file, utils.DefaultImageValidationOptions); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Kiểm tra định dạng (Chỉ cho phép jpg, jpeg, png, webp)
 	ext := strings.ToLower(filepath.Ext(file.Filename))
-	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file format, only jpg, jpeg, png, webp allowed"})
-		return
-	}
 
 	// Tạo tên file an toàn với UUID
 	newFileName := uuid.New().String() + ext

@@ -88,7 +88,7 @@ func ValidateImageHeader(header *multipart.FileHeader, opts ImageValidationOptio
 	// 1. Kiểm tra phần mở rộng
 	ext := strings.ToLower(filepath.Ext(header.Filename))
 	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" {
-		return fmt.Errorf("invalid file extension %s: only .jpg, .jpeg, .png, .webp allowed", ext)
+		return fmt.Errorf("invalid file format: extension %s not allowed, only .jpg, .jpeg, .png, .webp", ext)
 	}
 
 	// 2. Mở file và đọc 512 byte đầu tiên để kiểm tra Magic Bytes thực tế
