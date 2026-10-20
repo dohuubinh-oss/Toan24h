@@ -77,3 +77,87 @@ func TestParseAndProcessExtractedBlocks_WithoutDiagrams(t *testing.T) {
 	assert.Len(t, blocks, 1)
 	assert.Equal(t, "Giải phương trình $x^2 - 4 = 0$", blocks[0].Questions[0].Content)
 }
+
+func TestNormalizeQuestionTopic(t *testing.T) {
+	// Grade 9
+	assert.Equal(t, "Định lý Viète và ứng dụng", NormalizeQuestionTopic(9, "Định lý Viète và ứng dụng"))
+	assert.Equal(t, "Định lý Viète và ứng dụng", NormalizeQuestionTopic(9, "Định lý Vi-ét"))
+	assert.Equal(t, "Hàm số y = ax^2 (a khác 0)", NormalizeQuestionTopic(9, "Hàm số y=ax^2"))
+	assert.Equal(t, "Góc với đường tròn (Góc nội tiếp, góc ở tâm)", NormalizeQuestionTopic(9, "Góc nội tiếp"))
+	assert.Equal(t, "Hình nón", NormalizeQuestionTopic(9, "Hình nón"))
+
+	// Grade 8
+	assert.Equal(t, "Hằng đẳng thức đáng nhớ", NormalizeQuestionTopic(8, "Hằng đẳng thức"))
+	assert.Equal(t, "Định lý Thalès thuận và đảo", NormalizeQuestionTopic(8, "Định lý Ta-lét"))
+	assert.Equal(t, "Đường trung bình của tam giác", NormalizeQuestionTopic(8, "Đường trung bình"))
+
+	// Grade 7
+	assert.Equal(t, "Tập hợp số hữu tỉ", NormalizeQuestionTopic(7, "Số hữu tỉ"))
+	assert.Equal(t, "Tam giác cân và định lý Pythagoras", NormalizeQuestionTopic(7, "Định lý Pitago"))
+	assert.Equal(t, "Làm quen với xác suất của biến cố ngẫu nhiên", NormalizeQuestionTopic(7, "Xác suất biến cố"))
+
+	// Grade 6
+	assert.Equal(t, "Tập hợp số tự nhiên", NormalizeQuestionTopic(6, "Số tự nhiên"))
+	assert.Equal(t, "Hình có trục đối xứng", NormalizeQuestionTopic(6, "Trục đối xứng"))
+	assert.Equal(t, "Trung điểm của đoạn thẳng", NormalizeQuestionTopic(6, "Trung điểm"))
+
+	// Grade 5
+	assert.Equal(t, "Phân số thập phân và hỗn số", NormalizeQuestionTopic(5, "Phân số thập phân"))
+	assert.Equal(t, "Toán chuyển động đều", NormalizeQuestionTopic(5, "Toán chuyển động"))
+	assert.Equal(t, "Chu vi và diện tích hình tròn", NormalizeQuestionTopic(5, "Hình tròn"))
+
+	// Fallback when empty or unknown
+	assert.Equal(t, "Phương trình bậc nhất hai ẩn", NormalizeQuestionTopic(9, ""))
+	assert.Equal(t, "Đơn thức và đa thức nhiều biến", NormalizeQuestionTopic(8, "Không rõ chủ đề"))
+}
+
+func TestParseAndProcessExtractedBlocks_FullFields(t *testing.T) {
+	tempDir := "./uploads/temp"
+	rawJSON := `[
+		{
+			"shared_content": "",
+			"is_group": false,
+			"questions": [
+				{
+					"content": "Tìm nghiệm phương trình $x^2 - 5x + 6 = 0$",
+					"type": "Trắc nghiệm",
+					"grade": 9,
+					"topic": "Định lý Vi-ét",
+					"difficulty_level": "Thông hiểu",
+					"difficulty_point": 5.0,
+					"point": 0.5,
+					"options": ["A. $x = 2; x = 3$", "B) $x = 1; x = 6$", "C. $x = -2; x = -3$", "D. Vô nghiệm"],
+					"correct_answer": "A. $x = 2; x = 3$",
+					"solution_guide": "Áp dụng định lý Viète: $S = 5, P = 6 \\Rightarrow x = 2, x = 3$.",
+					"hint": "Phân tích đa thức thành nhân tử hoặc dùng Viète.",
+					"quick_solve_tips": "Bấm phím Mode 5 3 trên máy tính Casio 580.",
+					"general_method": "Phương trình $ax^2 + bx + c = 0$ có nghiệm thoả $x_1+x_2=-b/a, x_1x_2=c/a$.",
+					"mistakes": "Nhầm dấu giữa tổng và tích nghiệm.",
+					"tags": ["Phương trình bậc hai", "Định lý Viète"]
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+
+	q := blocks[0].Questions[0]
+	assert.Equal(t, 9, q.Grade)
+	assert.Equal(t, "Định lý Viète và ứng dụng", q.Topic)
+	assert.Equal(t, "Trắc nghiệm", q.Type)
+	assert.Equal(t, "$x = 2; x = 3$", q.Options[0])
+	assert.Equal(t, "$x = 1; x = 6$", q.Options[1])
+	assert.Equal(t, "$x = 2; x = 3$", q.CorrectAnswer)
+	assert.Equal(t, "Thông hiểu", q.DifficultyLevel)
+	assert.Equal(t, float32(5.0), q.DifficultyPoint)
+	assert.Equal(t, float32(0.5), q.Point)
+	assert.NotEmpty(t, q.SolutionGuide)
+	assert.NotEmpty(t, q.Hint)
+	assert.NotEmpty(t, q.QuickSolveTips)
+	assert.NotEmpty(t, q.GeneralMethod)
+	assert.NotEmpty(t, q.Mistakes)
+	assert.Equal(t, 2, len(q.Tags))
+}
+

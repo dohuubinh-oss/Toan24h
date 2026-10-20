@@ -110,8 +110,70 @@ describe('AiQuestionExtractModal Component', () => {
           method: 'POST',
         })
       )
-      expect(onExtractedMock).toHaveBeenCalledWith(mockBlocks)
+      expect(onExtractedMock).toHaveBeenCalledWith([
+        {
+          shared_content: '',
+          is_group: false,
+          questions: [
+            expect.objectContaining({
+              content: 'Câu 1: Giải phương trình $x^2 - 4 = 0$',
+              type: 'Trắc nghiệm',
+              options: ['x = 2', 'x = -2', 'x = ±2', 'Vô nghiệm'],
+              correct_answer: 'C. x = ±2',
+              grade: 9,
+              difficulty_level: 'Thông hiểu',
+            }),
+          ],
+        },
+      ])
       expect(onCloseMock).toHaveBeenCalled()
+    })
+  })
+
+  it('allows selecting target grade and includes it in extraction form data', async () => {
+    vi.mocked(api.apiFetch).mockResolvedValueOnce({
+      status: 'success',
+      data: [
+        {
+          shared_content: '',
+          is_group: false,
+          questions: [
+            {
+              content: 'Phương trình bậc nhất',
+              type: 'Tự luận',
+              grade: 8,
+              topic: 'Cách giải phương trình bậc nhất một ẩn',
+            },
+          ],
+        },
+      ],
+    })
+
+    const onExtractedMock = vi.fn()
+    renderComponent({
+      onExtracted: onExtractedMock,
+      defaultGrade: '8',
+    })
+
+    const gradeSelect = screen.getByLabelText(/Khối lớp mục tiêu/i) as HTMLSelectElement
+    expect(gradeSelect.value).toBe('8')
+
+    // Change grade to 7
+    fireEvent.change(gradeSelect, { target: { value: '7' } })
+    expect(gradeSelect.value).toBe('7')
+
+    const file = new File(['content'], 'test.jpg', { type: 'image/jpeg' })
+    const fileInput = screen.getByLabelText(/Chọn ảnh đề thi/i)
+    fireEvent.change(fileInput, { target: { files: [file] } })
+
+    const submitBtn = screen.getByRole('button', { name: /Bắt đầu bóc tách/i })
+    fireEvent.click(submitBtn)
+
+    await waitFor(() => {
+      expect(api.apiFetch).toHaveBeenCalledTimes(1)
+      const callArgs = vi.mocked(api.apiFetch).mock.calls[0]
+      const formData = callArgs[1]?.body as FormData
+      expect(formData.get('grade')).toBe('7')
     })
   })
 

@@ -423,6 +423,7 @@ function CreateQuestionContent() {
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
         onExtracted={handleAiExtracted}
+        defaultGrade={currentQuestion?.grade || (questionBlocks[0]?.questions[0]?.grade)}
       />
     </div>
   )

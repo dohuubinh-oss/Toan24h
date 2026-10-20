@@ -20,6 +20,7 @@ export interface AiQuestionExtractModalProps {
   isOpen: boolean
   onClose: () => void
   onExtracted: (blocks: QuestionBlock[]) => void
+  defaultGrade?: number | string | null
 }
 
 interface ImageFileItem {
@@ -32,8 +33,12 @@ export default function AiQuestionExtractModal({
   isOpen,
   onClose,
   onExtracted,
+  defaultGrade,
 }: AiQuestionExtractModalProps) {
   const [images, setImages] = useState<ImageFileItem[]>([])
+  const [selectedGrade, setSelectedGrade] = useState<string>(
+    defaultGrade ? defaultGrade.toString() : ''
+  )
   const [isExtracting, setIsExtracting] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -42,7 +47,11 @@ export default function AiQuestionExtractModal({
 
   // Reset state when modal opens or closes
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      if (defaultGrade) {
+        setSelectedGrade(defaultGrade.toString())
+      }
+    } else {
       // Clean up object URLs to avoid memory leaks
       images.forEach((item) => URL.revokeObjectURL(item.previewUrl))
       setImages([])
@@ -50,7 +59,7 @@ export default function AiQuestionExtractModal({
       setStatusMessage('')
       setErrorMessage(null)
     }
-  }, [isOpen])
+  }, [isOpen, defaultGrade])
 
   if (!isOpen) return null
 
@@ -140,6 +149,9 @@ export default function AiQuestionExtractModal({
       images.forEach((item) => {
         formData.append('files', item.file)
       })
+      if (selectedGrade) {
+        formData.append('grade', selectedGrade)
+      }
 
       setStatusMessage('Gemini AI đang bóc tách câu hỏi, công thức LaTeX & cắt hình học...')
 
@@ -157,7 +169,29 @@ export default function AiQuestionExtractModal({
         throw new Error('Dữ liệu trả về từ AI không đúng cấu trúc danh sách câu hỏi')
       }
 
-      onExtracted(extractedBlocks)
+      // Hậu xử lý phương án và các trường cần thiết
+      const sanitizedBlocks: QuestionBlock[] = extractedBlocks.map((block) => ({
+        ...block,
+        questions: (block.questions || []).map((q) => {
+          const cleanedOptions = (q.options || []).map((opt) =>
+            opt.replace(/^(?:<p>\s*)?[A-Da-d][.)]\s*/i, (match) =>
+              match.startsWith('<p>') ? '<p>' : ''
+            )
+          )
+
+          return {
+            ...q,
+            grade: q.grade || (selectedGrade ? (selectedGrade === 'chuyen_cap' ? 'chuyen_cap' : parseInt(selectedGrade, 10)) : 9),
+            options: cleanedOptions,
+            difficulty_level: q.difficulty_level || 'Thông hiểu',
+            difficulty_point: q.difficulty_point || 5.0,
+            point: q.point || (q.type === 'Trắc nghiệm' ? 0.5 : 1.0),
+            tags: q.tags && q.tags.length > 0 ? q.tags : (q.topic ? [q.topic] : []),
+          }
+        }),
+      }))
+
+      onExtracted(sanitizedBlocks)
       onClose()
     } catch (err: any) {
       console.error('Lỗi khi bóc tách bằng AI:', err)
@@ -209,6 +243,38 @@ export default function AiQuestionExtractModal({
               <span>{errorMessage}</span>
             </div>
           )}
+
+          {/* Target Grade Selection */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="ai-extract-grade"
+                className="text-xs font-bold text-slate-700 uppercase tracking-wider"
+              >
+                Khối lớp mục tiêu
+              </label>
+              <span className="text-[11px] text-slate-400">
+                AI sẽ tự động gán chủ đề chuẩn theo khối lớp này
+              </span>
+            </div>
+            <div className="relative">
+              <select
+                id="ai-extract-grade"
+                aria-label="Khối lớp mục tiêu"
+                value={selectedGrade}
+                onChange={(e) => setSelectedGrade(e.target.value)}
+                disabled={isExtracting}
+                className="w-full appearance-none px-3.5 h-11 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
+              >
+                <option value="">Tự động nhận diện theo đề thi</option>
+                <option value="5">Lớp 5</option>
+                <option value="6">Lớp 6</option>
+                <option value="7">Lớp 7</option>
+                <option value="8">Lớp 8</option>
+                <option value="9">Lớp 9</option>
+              </select>
+            </div>
+          </div>
 
           {/* Upload Dropzone */}
           <div className="space-y-2">

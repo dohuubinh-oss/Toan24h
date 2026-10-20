@@ -65,7 +65,14 @@ func ExtractAIQuestions(c *gin.Context) {
 		mimeTypes = append(mimeTypes, mime)
 	}
 
-	blocks, err := services.ExtractQuestionsFromImages(fileBytesList, mimeTypes)
+	targetGrade := ""
+	if gradeVals, ok := form.Value["grade"]; ok && len(gradeVals) > 0 {
+		targetGrade = gradeVals[0]
+	} else {
+		targetGrade = c.PostForm("grade")
+	}
+
+	blocks, err := services.ExtractQuestionsFromImages(fileBytesList, mimeTypes, targetGrade)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Bóc tách câu hỏi thất bại: " + err.Error()})
 		return
