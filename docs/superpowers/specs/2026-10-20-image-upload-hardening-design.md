@@ -64,10 +64,22 @@ func ValidateImageBytes(data []byte, opts ImageValidationOptions) error
 func ValidateImageHeader(header *multipart.FileHeader, opts ImageValidationOptions) error
 ```
 
-### 3.2. Rate Limiting Cho Mobile Upload (`mobile_upload_controller.go`)
-- Tạo bộ đếm trượt (Sliding Window / Rate Limiter) theo Session ID và IP:
-  - Tối đa 5 lần gửi ảnh / phút / session.
-  - Ngăn chặn kẻ xấu gửi liên tục các file 10MB gây quá tải RAM và cạn kiệt API Gemini.
+### 3.2. Nâng Cấp Toàn Diện Cổng Upload Mobile Qua QR (`mobile_upload_controller.go` & `mobile-upload/page.tsx`)
+- **Nén ảnh trực tiếp trên trình duyệt điện thoại (Client-side Canvas Compression)**:
+  - Trước khi upload, Canvas trên mobile tự động resize ảnh xuống cạnh dài tối đa 1920px, chất lượng JPEG 85%.
+  - Giảm dung lượng ảnh từ 8-12MB xuống còn ~300KB - 500KB (giảm 95% thời gian upload và chống timeout).
+- **Hỗ trợ chụp nhiều trang liên tiếp (Multi-Page Hand-written Capture)**:
+  - Cho phép học sinh chụp Trang 1, Trang 2, Trang 3... trên cùng một phiên làm việc trước khi ấn "Hoàn tất nộp bài".
+  - Backend ghép nối kết quả nhận dạng theo đúng số thứ tự trang.
+- **Tự động xoay ảnh theo cờ EXIF Orientation**:
+  - Đảm bảo ảnh chụp bị nghiêng/lật ngang khi để trên bàn học được tự động dựng thẳng trước khi chuyển cho Gemini OCR.
+- **Bảo mật phiên QR (Session Security & Anti-Hijacking)**:
+  - Session ID có thời hạn sống (TTL) 10 phút. Hết 10 phút, mã QR trên máy tính tự động báo hết hạn và tạo phiên mới.
+  - Sau khi điện thoại nộp thành công, session bị hủy ngay lập tức để chống gửi đè.
+- **Rate Limiting**:
+  - Tối đa 5 lần gửi ảnh / phút / session / IP để chống spam và bảo vệ quota Gemini API.
+- **Đối chiếu ảnh gốc trên máy tính**:
+  - Trả về cả text OCR và link ảnh tạm để học sinh có thể click xem lại bản nháp viết tay nếu cần.
 
 ### 3.3. Tối Ưu Avatar (`user_handler.go`)
 - Khi người dùng tải ảnh lên:
