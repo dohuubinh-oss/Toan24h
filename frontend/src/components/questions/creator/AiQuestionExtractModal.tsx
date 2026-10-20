@@ -15,11 +15,12 @@ import { Button } from '@/components/ui/Button'
 import { QuestionBlock } from '@/types/question'
 import { apiFetch } from '@/lib/api'
 import { toast } from '@/components/ui/ToastProvider'
+import { formatTextToHtml, formatQuestionContent, formatSolutionGuide } from './utils/questionTextFormatter'
 
 export interface AiQuestionExtractModalProps {
   isOpen: boolean
   onClose: () => void
-  onExtracted: (blocks: QuestionBlock[]) => void
+  onExtracted: (blocks: QuestionBlock[], rawJson?: string) => void
   defaultGrade?: number | string | null
 }
 
@@ -169,9 +170,10 @@ export default function AiQuestionExtractModal({
         throw new Error('Dữ liệu trả về từ AI không đúng cấu trúc danh sách câu hỏi')
       }
 
-      // Hậu xử lý phương án và các trường cần thiết
+      // Hậu xử lý phương án, HTML formatting và các trường cần thiết
       const sanitizedBlocks: QuestionBlock[] = extractedBlocks.map((block) => ({
         ...block,
+        shared_content: block.shared_content ? formatTextToHtml(block.shared_content) : '',
         questions: (block.questions || []).map((q) => {
           const cleanedOptions = (q.options || []).map((opt) =>
             opt.replace(/^(?:<p>\s*)?[A-Da-d][.)]\s*/i, (match) =>
@@ -181,6 +183,8 @@ export default function AiQuestionExtractModal({
 
           return {
             ...q,
+            content: formatQuestionContent(q.content),
+            solution_guide: formatSolutionGuide(q.solution_guide),
             grade: q.grade || (selectedGrade ? (selectedGrade === 'chuyen_cap' ? 'chuyen_cap' : parseInt(selectedGrade, 10)) : 9),
             options: cleanedOptions,
             difficulty_level: q.difficulty_level || 'Thông hiểu',
@@ -191,7 +195,8 @@ export default function AiQuestionExtractModal({
         }),
       }))
 
-      onExtracted(sanitizedBlocks)
+      const rawJsonString = JSON.stringify(sanitizedBlocks, null, 2)
+      onExtracted(sanitizedBlocks, rawJsonString)
       onClose()
     } catch (err: any) {
       console.error('Lỗi khi bóc tách bằng AI:', err)
@@ -422,7 +427,7 @@ export default function AiQuestionExtractModal({
             ) : (
               <>
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                Bắt đầu bóc tách
+                Bóc tách câu hỏi
               </>
             )}
           </Button>

@@ -99,7 +99,7 @@ describe('AiQuestionExtractModal Component', () => {
     fireEvent.change(fileInput, { target: { files: [file] } })
 
     // Click submit
-    const submitBtn = screen.getByRole('button', { name: /Bắt đầu bóc tách/i })
+    const submitBtn = screen.getByRole('button', { name: /Bóc tách câu hỏi/i })
     fireEvent.click(submitBtn)
 
     await waitFor(() => {
@@ -110,22 +110,25 @@ describe('AiQuestionExtractModal Component', () => {
           method: 'POST',
         })
       )
-      expect(onExtractedMock).toHaveBeenCalledWith([
-        {
-          shared_content: '',
-          is_group: false,
-          questions: [
-            expect.objectContaining({
-              content: 'Câu 1: Giải phương trình $x^2 - 4 = 0$',
-              type: 'Trắc nghiệm',
-              options: ['x = 2', 'x = -2', 'x = ±2', 'Vô nghiệm'],
-              correct_answer: 'C. x = ±2',
-              grade: 9,
-              difficulty_level: 'Thông hiểu',
-            }),
-          ],
-        },
-      ])
+      expect(onExtractedMock).toHaveBeenCalledWith(
+        [
+          {
+            shared_content: '',
+            is_group: false,
+            questions: [
+              expect.objectContaining({
+                content: '<p>Câu 1: Giải phương trình $x^2 - 4 = 0$</p>',
+                type: 'Trắc nghiệm',
+                options: ['x = 2', 'x = -2', 'x = ±2', 'Vô nghiệm'],
+                correct_answer: 'C. x = ±2',
+                grade: 9,
+                difficulty_level: 'Thông hiểu',
+              }),
+            ],
+          },
+        ],
+        expect.any(String)
+      )
       expect(onCloseMock).toHaveBeenCalled()
     })
   })
@@ -166,7 +169,7 @@ describe('AiQuestionExtractModal Component', () => {
     const fileInput = screen.getByLabelText(/Chọn ảnh đề thi/i)
     fireEvent.change(fileInput, { target: { files: [file] } })
 
-    const submitBtn = screen.getByRole('button', { name: /Bắt đầu bóc tách/i })
+    const submitBtn = screen.getByRole('button', { name: /Bóc tách câu hỏi/i })
     fireEvent.click(submitBtn)
 
     await waitFor(() => {
@@ -180,7 +183,7 @@ describe('AiQuestionExtractModal Component', () => {
   it('shows error if submitted without selecting images', async () => {
     renderComponent()
 
-    const submitBtn = screen.getByRole('button', { name: /Bắt đầu bóc tách/i })
+    const submitBtn = screen.getByRole('button', { name: /Bóc tách câu hỏi/i })
     fireEvent.click(submitBtn)
 
     expect(screen.getByText(/Vui lòng chọn ít nhất 1 ảnh đề thi/i)).toBeInTheDocument()
