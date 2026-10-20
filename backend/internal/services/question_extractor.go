@@ -266,11 +266,7 @@ func detectGradeFromTopic(rawTopic string, fallback ...int) int {
 
 // ParseAndProcessExtractedBlocks processes raw JSON from Gemini and crops any diagrams
 func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, tempDir string, fallbackGrade ...int) ([]ExtractedQuestionBlock, error) {
-	cleanJson := strings.TrimSpace(rawJson)
-	cleanJson = strings.TrimPrefix(cleanJson, "```json")
-	cleanJson = strings.TrimPrefix(cleanJson, "```")
-	cleanJson = strings.TrimSuffix(cleanJson, "```")
-	cleanJson = strings.TrimSpace(cleanJson)
+	cleanJson := utils.SanitizeJSON(rawJson)
 
 	var blocks []ExtractedQuestionBlock
 	if err := json.Unmarshal([]byte(cleanJson), &blocks); err != nil {
@@ -501,7 +497,9 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
 18. Cấu trúc JSON trả về:
     - Nếu là câu đơn: "is_group": false, "shared_content": "", "questions": [ {...} ]
     - Nếu là câu hỏi chùm (chung một đoạn dẫn đề bài cho nhiều câu con): "is_group": true, "shared_content": "Đoạn đề dẫn chung...", "questions": [ {...}, {...} ]
-    - CHỈ trả về duy nhất chuỗi JSON hợp lệ (mảng các block), tuyệt đối KHÔNG kèm lời chào hay giải thích nào khác ngoài JSON.`, gradeHint)
+    - CHỈ trả về duy nhất chuỗi JSON hợp lệ (mảng các block), tuyệt đối KHÔNG kèm lời chào hay giải thích nào khác ngoài JSON.
+19. QUY TẮC ĐẶC BIỆT VỀ DẤU GẠCH CHÉO NGƯỢC (\) TRONG JSON:
+    - Trong chuỗi JSON, mọi dấu gạch chéo ngược (\) của công thức LaTeX (ví dụ: \frac, \sqrt, \quad, \pm, \left, \right) PHẢI ĐƯỢC ESCAPE thành hai dấu gạch chéo ngược (ví dụ: "\\frac", "\\sqrt", "\\quad", "\\pm").`, gradeHint)
 
 	parts := []map[string]interface{}{
 		{"text": prompt},

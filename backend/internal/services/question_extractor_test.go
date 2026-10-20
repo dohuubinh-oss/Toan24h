@@ -203,3 +203,45 @@ func TestNormalizeQuestionAnswer_OptionMapping(t *testing.T) {
 	assert.Equal(t, "$x = \\sqrt{2}$", q2.CorrectAnswer)
 }
 
+func TestParseAndProcessExtractedBlocks_UnescapedLaTeX(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	// In backtick raw string literals, `\q`, `\s`, `\p` are raw single backslashes followed by letters.
+	// This simulates exactly what Gemini returns over the wire.
+	rawJSON := `[
+		{
+			"shared_content": "Cho tam giác $ABC$ vuông tại $A$ với đường cao $AH$.",
+			"is_group": false,
+			"questions": [
+				{
+					"type_question": "single",
+					"content": "Tính $x \quad y$ biết $x = \sqrt{3} + \pm 1$",
+					"type": "Trắc nghiệm",
+					"options": [
+						"$\frac{1}{2} \quad x$",
+						"$\sqrt{2}$",
+						"$\pm 3$",
+						"$0$"
+					],
+					"correct_answer": "$\frac{1}{2} \quad x$",
+					"solution_guide": "Ta có: $\text{với } x > 0$ thì $x \neq 0$."
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 8)
+	assert.NoError(t, err, "Should successfully parse JSON even with unescaped LaTeX backslashes like \\q, \\s, \\p")
+	assert.Len(t, blocks, 1)
+	assert.Len(t, blocks[0].Questions, 1)
+
+	q := blocks[0].Questions[0]
+	assert.Contains(t, q.Content, `\quad`)
+	assert.Contains(t, q.Content, `\sqrt`)
+	assert.Contains(t, q.Options[0], `\frac`)
+	assert.Contains(t, q.SolutionGuide, `\text`)
+	assert.Contains(t, q.SolutionGuide, `\neq`)
+}
+
+

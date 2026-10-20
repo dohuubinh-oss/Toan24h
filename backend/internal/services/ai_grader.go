@@ -224,13 +224,7 @@ BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Tr�
 			}
 
 			if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
-				text := res.Candidates[0].Content.Parts[0].Text
-				text = strings.TrimSpace(text)
-				if startIdx := strings.Index(text, "{"); startIdx != -1 {
-					if endIdx := strings.LastIndex(text, "}"); endIdx != -1 && endIdx > startIdx {
-						text = text[startIdx : endIdx+1]
-					}
-				}
+				text := utils.SanitizeJSON(res.Candidates[0].Content.Parts[0].Text)
 				var response EssayBatchResponse
 				if err := json.Unmarshal([]byte(text), &response); err == nil {
 					return &response, nil
@@ -447,13 +441,7 @@ BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Tr�
 			}
 
 			if len(res.Candidates) > 0 && len(res.Candidates[0].Content.Parts) > 0 {
-				text := res.Candidates[0].Content.Parts[0].Text
-				text = strings.TrimSpace(text)
-				if startIdx := strings.Index(text, "{"); startIdx != -1 {
-					if endIdx := strings.LastIndex(text, "}"); endIdx != -1 && endIdx > startIdx {
-						text = text[startIdx : endIdx+1]
-					}
-				}
+				text := utils.SanitizeJSON(res.Candidates[0].Content.Parts[0].Text)
 				var response ReasoningBatchResponse
 				if err := json.Unmarshal([]byte(text), &response); err == nil {
 					return &response, nil

@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/modeptrai/exam-model-backend/internal/utils"
@@ -135,11 +134,7 @@ Yêu cầu:
 		return nil, err
 	}
 	rawText := result.(string)
-
-	jsonStr := rawText
-	jsonStr = strings.TrimPrefix(jsonStr, "```json")
-	jsonStr = strings.TrimSuffix(jsonStr, "```")
-	jsonStr = strings.TrimSpace(jsonStr)
+	jsonStr := utils.SanitizeJSON(rawText)
 
 	var ocrResult OCRResult
 	if err := json.Unmarshal([]byte(jsonStr), &ocrResult); err != nil {

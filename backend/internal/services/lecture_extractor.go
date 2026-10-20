@@ -32,11 +32,7 @@ type ExtractedMathTypeBlock struct {
 
 // ParseAndProcessExtractedLecture processes raw JSON from Gemini and crops any diagrams into tempDir
 func ParseAndProcessExtractedLecture(rawJson string, sourceImages []image.Image, tempDir string) (string, error) {
-	cleanJson := strings.TrimSpace(rawJson)
-	cleanJson = strings.TrimPrefix(cleanJson, "```json")
-	cleanJson = strings.TrimPrefix(cleanJson, "```")
-	cleanJson = strings.TrimSuffix(cleanJson, "```")
-	cleanJson = strings.TrimSpace(cleanJson)
+	cleanJson := utils.SanitizeJSON(rawJson)
 
 	if tempDir == "" {
 		tempDir = "./uploads/temp"
