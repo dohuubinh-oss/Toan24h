@@ -14,7 +14,7 @@ export interface Question {
   tags: string[];
   options: string[];
   correct_answer?: string;
-  solution_guide?: string;
+  solution_guide?: any;
   hint?: string;
   mistakes?: string;
   quick_solve_tips?: string;
@@ -23,7 +23,9 @@ export interface Question {
 }
 
 export interface QuestionBlock {
-  shared_content: string;
+  shared_content: string | null;
+  type_question?: 'group' | 'single';
   is_group?: boolean;
+  point?: number | null;
   questions: Question[];
 }

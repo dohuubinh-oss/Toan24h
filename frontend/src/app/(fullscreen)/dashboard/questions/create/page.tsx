@@ -267,11 +267,12 @@ function CreateQuestionContent() {
         const payload = questionBlocks.map(block => ({
           shared_content: block.shared_content,
           is_group: block.is_group === true,
+          point: block.point || (block.is_group ? block.questions.length : 1),
           questions: block.questions.map(q => ({
             ...q,
             grade: typeof q.grade === 'string' ? parseInt(q.grade) : (q.grade || 0),
             difficulty_point: q.difficulty_point || 0,
-            point: q.point || 0,
+            point: q.point || 1,
           }))
         }));
 

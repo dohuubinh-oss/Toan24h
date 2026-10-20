@@ -89,10 +89,10 @@ export const preprocessMath = (html: string) => {
     return addPlaceholder(`<math-inline data-latex="${escaped}">$${p1}$</math-inline>`);
   });
 
-  // 4. Convert remaining unwrapped latex expressions (e.g. \frac{1}{2}, -\dfrac{1}{5} x^4 y^5, 2\sqrt{x})
-  const latexRegex = /\\(dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|in|subset|cup|cap|widehat|degree)/;
+  // 4. Convert remaining unwrapped latex expressions (e.g. \frac{1}{2}, -\dfrac{1}{5} x^4 y^5, 2\sqrt{x}, x = \pm 2)
+  const latexRegex = /\\(dfrac|frac|cfrac|sqrt|int|iint|iiint|oint|sum|prod|coprod|lim|alpha|beta|gamma|delta|epsilon|varepsilon|zeta|eta|theta|vartheta|iota|kappa|lambda|mu|nu|xi|pi|varpi|rho|sigma|tau|upsilon|phi|varphi|chi|psi|omega|Delta|Gamma|Theta|Lambda|Xi|Pi|Sigma|Phi|Psi|Omega|infty|matrix|pmatrix|bmatrix|vmatrix|cases|begin|end|vec|overline|underline|widehat|widetilde|dot|ddot|cdot|cdots|ldots|ddots|vdots|pm|mp|times|div|leq|geq|le|ge|neq|ne|approx|sim|cong|equiv|in|notin|subset|supset|subseteq|supseteq|cup|cap|emptyset|forall|exists|degree|angle|perp|parallel|left|right|to|leftarrow|rightarrow|Leftarrow|Rightarrow|Leftrightarrow|iff|implies|partial|nabla|log|ln|sin|cos|tan|cot|arcsin|arccos|arctan|text|mathrm|mathbf|mathbb|mathcal)\b/;
   if (latexRegex.test(processed)) {
-    processed = processed.replace(/([^<>]*?\\(?:dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|in|subset|cup|cap|widehat|degree)[^<>]*)/g, (match) => {
+    processed = processed.replace(/([^<>]*?\\(?:dfrac|frac|cfrac|sqrt|int|iint|iiint|oint|sum|prod|coprod|lim|alpha|beta|gamma|delta|epsilon|varepsilon|zeta|eta|theta|vartheta|iota|kappa|lambda|mu|nu|xi|pi|varpi|rho|sigma|tau|upsilon|phi|varphi|chi|psi|omega|Delta|Gamma|Theta|Lambda|Xi|Pi|Sigma|Phi|Psi|Omega|infty|matrix|pmatrix|bmatrix|vmatrix|cases|begin|end|vec|overline|underline|widehat|widetilde|dot|ddot|cdot|cdots|ldots|ddots|vdots|pm|mp|times|div|leq|geq|le|ge|neq|ne|approx|sim|cong|equiv|in|notin|subset|supset|subseteq|supseteq|cup|cap|emptyset|forall|exists|degree|angle|perp|parallel|left|right|to|leftarrow|rightarrow|Leftarrow|Rightarrow|Leftrightarrow|iff|implies|partial|nabla|log|ln|sin|cos|tan|cot|arcsin|arccos|arctan|text|mathrm|mathbf|mathbb|mathcal)\b[^<>]*)/g, (match) => {
       if (match.includes('__MATH_PLACEHOLDER_')) return match;
       const trimmed = match.trim();
       if (!trimmed) return match;

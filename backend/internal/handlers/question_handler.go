@@ -62,6 +62,7 @@ type QuestionDetail struct {
 	GgDrive         string   `json:"gg_drive"`
 	BookName        string   `json:"book_name"`
 	Cate            string   `json:"cate"`
+	TypeQuestion    string   `json:"type_question"`
 	Content         string   `json:"content"`
 	Type            string   `json:"type"`
 	Grade           int      `json:"grade"`
@@ -72,7 +73,7 @@ type QuestionDetail struct {
 	Tags            []string `json:"tags"`
 	Options         []string `json:"options"`
 	CorrectAnswer   string   `json:"correct_answer"`
-	SolutionGuide   string   `json:"solution_guide"`
+	SolutionGuide   any      `json:"solution_guide"`
 	Hint            string   `json:"hint"`
 	QuickSolveTips  string   `json:"quick_solve_tips"`
 	GeneralMethod   string   `json:"general_method"`
@@ -81,8 +82,10 @@ type QuestionDetail struct {
 
 // QuestionGroup DTO cho nhóm câu hỏi
 type QuestionGroup struct {
-	SharedContent string           `json:"shared_content"`
+	SharedContent *string          `json:"shared_content"`
+	TypeQuestion  string           `json:"type_question"`
 	IsGroup       bool             `json:"is_group"`
+	Point         float32          `json:"point"`
 	Questions     []QuestionDetail `json:"questions"`
 }
 
@@ -136,6 +139,24 @@ func processHtmlImages(htmlContent string, grade int) string {
 	return updatedContent
 }
 
+func stringifySolutionGuide(sg any) string {
+	if sg == nil {
+		return ""
+	}
+	switch v := sg.(type) {
+	case string:
+		return v
+	case []byte:
+		return string(v)
+	default:
+		b, err := json.Marshal(v)
+		if err != nil {
+			return fmt.Sprintf("%v", v)
+		}
+		return string(b)
+	}
+}
+
 // BulkCreateQuestions xử lý tạo hàng loạt câu hỏi (bao gồm câu đơn và câu chùm)
 func BulkCreateQuestions(c *gin.Context) {
 	var payload []QuestionGroup
@@ -155,10 +176,21 @@ func BulkCreateQuestions(c *gin.Context) {
 	for _, group := range payload {
 		var parentID *uuid.UUID
 
-		if group.IsGroup || group.SharedContent != "" {
+		sharedText := ""
+		if group.SharedContent != nil {
+			sharedText = *group.SharedContent
+		}
+
+		isGroup := group.IsGroup || strings.EqualFold(group.TypeQuestion, "group") || sharedText != ""
+		if isGroup {
+			groupPoint := float32(len(group.Questions))
+			if group.Point > 0 {
+				groupPoint = group.Point
+			}
 			parentQ := models.Question{
 				TypeQuestion: "group",
-				Content:      processHtmlImages(group.SharedContent, group.Questions[0].Grade), // Dùng grade của câu hỏi đầu tiên
+				Content:      processHtmlImages(sharedText, group.Questions[0].Grade), // Dùng grade của câu hỏi đầu tiên
+				Point:        groupPoint,
 				Tags:         "[]",
 				Options:      "[]",
 			}
@@ -202,7 +234,7 @@ func BulkCreateQuestions(c *gin.Context) {
 				Tags:            string(tagsBytes),
 				Options:         string(optionsBytes),
 				CorrectAnswer:   processHtmlImages(detail.CorrectAnswer, detail.Grade),
-				SolutionGuide:   processHtmlImages(detail.SolutionGuide, detail.Grade),
+				SolutionGuide:   processHtmlImages(stringifySolutionGuide(detail.SolutionGuide), detail.Grade),
 				Hint:            processHtmlImages(detail.Hint, detail.Grade),
 				QuickSolveTips:  processHtmlImages(detail.QuickSolveTips, detail.Grade),
 				GeneralMethod:   processHtmlImages(detail.GeneralMethod, detail.Grade),

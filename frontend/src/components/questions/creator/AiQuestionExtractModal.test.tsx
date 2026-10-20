@@ -113,16 +113,17 @@ describe('AiQuestionExtractModal Component', () => {
       expect(onExtractedMock).toHaveBeenCalledWith(
         [
           {
-            shared_content: '',
-            is_group: false,
+            shared_content: null,
+            type_question: 'single',
             questions: [
               expect.objectContaining({
-                content: '<p>Câu 1: Giải phương trình $x^2 - 4 = 0$</p>',
+                content: 'Câu 1: Giải phương trình $x^2 - 4 = 0$',
                 type: 'Trắc nghiệm',
                 options: ['x = 2', 'x = -2', 'x = ±2', 'Vô nghiệm'],
                 correct_answer: 'C. x = ±2',
                 grade: 9,
                 difficulty_level: 'Thông hiểu',
+                point: 1,
               }),
             ],
           },

@@ -14,6 +14,8 @@ interface QuestionEditorSectionProps {
 
 import SharedEditorCard from './editor/SharedEditorCard'
 import RichTextEditor from './editor/RichTextEditor'
+import MathText from '../../ui/MathText'
+import { formatSolutionGuide } from './utils/questionTextFormatter'
 
 function QuestionEditorSection({
   currentBlock = null,
@@ -194,15 +196,30 @@ function QuestionEditorSection({
           </div>
         ) : (
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-            <label className="text-xs font-bold text-slate-600 block mb-2">Đáp án / Lời giải mẫu tự luận</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold text-slate-600">Đáp án / Lời giải mẫu tự luận</label>
+              <span className="text-[11px] text-slate-400 font-medium">Hỗ trợ công thức KaTeX ($...$ hoặc bấm ∑)</span>
+            </div>
             <RichTextEditor
               hideToolbar={false}
               smallToolbar={true}
+              showMathButton={true}
               minHeight="120px"
-              placeholder="Nhập đáp án hoặc lời giải mẫu tự luận..."
+              placeholder="Nhập đáp án hoặc lời giải mẫu tự luận (VD: $x = \pm 2$ hoặc $x = 2; x = 3$)..."
               content={currentQuestion?.correct_answer || ''}
               onChange={(val) => updateQuestion('correct_answer', val)}
             />
+            {currentQuestion?.correct_answer && (
+              <div className="mt-3 p-3.5 bg-white rounded-xl border border-emerald-200/80 shadow-xs">
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 uppercase tracking-wider mb-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Xem trước công thức đáp án (KaTeX):</span>
+                </div>
+                <div className="text-base font-semibold text-slate-800 bg-emerald-50/40 p-3 rounded-lg border border-emerald-100 overflow-x-auto">
+                  <MathText content={currentQuestion.correct_answer} />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -211,7 +228,7 @@ function QuestionEditorSection({
       <SharedEditorCard
         title="Lời giải chi tiết"
         icon={<FileText className="text-primary w-5 h-5" />}
-        content={currentQuestion?.solution_guide || ''}
+        content={typeof currentQuestion?.solution_guide === 'object' ? formatSolutionGuide(currentQuestion?.solution_guide) : (currentQuestion?.solution_guide || '')}
         onContentChange={(val) => updateQuestion('solution_guide', val)}
         placeholder="Nhập lời giải chi tiết..."
       />

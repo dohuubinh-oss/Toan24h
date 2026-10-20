@@ -80,4 +80,17 @@ describe('QuestionEditorSection Component', () => {
     const radioC = screen.getByRole('radio', { name: 'C.' }) as HTMLInputElement
     expect(radioC.checked).toBe(true)
   })
+
+  it('renders essay answer editor and KaTeX preview when question type is Tự luận', () => {
+    const mockQuestion = {
+      type: 'Tự luận',
+      options: [],
+      correct_answer: '$x = \\pm 2$'
+    } as any
+
+    render(<QuestionEditorSection currentQuestion={mockQuestion} />)
+    
+    expect(screen.getByText('Đáp án / Lời giải mẫu tự luận')).toBeInTheDocument()
+    expect(screen.getByText('Xem trước công thức đáp án (KaTeX):')).toBeInTheDocument()
+  })
 })

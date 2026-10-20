@@ -25,30 +25,56 @@ type DiagramInfo struct {
 	Placeholder string    `json:"placeholder"`
 }
 
+type FlexibleInt int
+
+func (fi *FlexibleInt) UnmarshalJSON(data []byte) error {
+	str := strings.Trim(string(data), `"`)
+	if str == "null" || str == "" {
+		*fi = 0
+		return nil
+	}
+	if val, err := strconv.ParseFloat(str, 64); err == nil {
+		*fi = FlexibleInt(int(val + 0.5))
+		return nil
+	}
+	return nil
+}
+
+func (fi FlexibleInt) MarshalJSON() ([]byte, error) {
+	return json.Marshal(int(fi))
+}
+
 type ExtractedQuestionItem struct {
-	TypeQuestion    string   `json:"type_question"`
-	Content         string   `json:"content"`
-	Type            string   `json:"type"`
-	Grade           int      `json:"grade,omitempty"`
-	Topic           string   `json:"topic,omitempty"`
-	DifficultyLevel string   `json:"difficulty_level,omitempty"`
-	DifficultyPoint float32  `json:"difficulty_point,omitempty"`
-	Point           float32  `json:"point,omitempty"`
-	Tags            []string `json:"tags,omitempty"`
-	Options         []string `json:"options,omitempty"`
-	CorrectAnswer   string   `json:"correct_answer,omitempty"`
-	SolutionGuide   string   `json:"solution_guide,omitempty"`
-	Hint            string   `json:"hint,omitempty"`
-	QuickSolveTips  string   `json:"quick_solve_tips,omitempty"`
-	GeneralMethod   string   `json:"general_method,omitempty"`
-	Mistakes        string   `json:"mistakes,omitempty"`
+	Content         string      `json:"content"`
+	Type            string      `json:"type"`
+	Grade           int         `json:"grade"`
+	Topic           string      `json:"topic"`
+	DifficultyLevel string      `json:"difficulty_level"`
+	DifficultyPoint float32     `json:"difficulty_point"`
+	Point           FlexibleInt `json:"point"`
+	Tags            []string    `json:"tags"`
+	Options         []string    `json:"options"`
+	CorrectAnswer   string      `json:"correct_answer"`
+	SolutionGuide   any         `json:"solution_guide"`
+	Hint            string      `json:"hint"`
+	QuickSolveTips  string      `json:"quick_solve_tips"`
+	GeneralMethod   string      `json:"general_method"`
+	Mistakes        string      `json:"mistakes"`
 }
 
 type ExtractedQuestionBlock struct {
-	SharedContent string                  `json:"shared_content,omitempty"`
-	IsGroup       bool                    `json:"is_group"`
+	SharedContent *string                 `json:"shared_content"`
+	TypeQuestion  string                  `json:"type_question"`
 	Questions     []ExtractedQuestionItem `json:"questions"`
-	Diagrams      []DiagramInfo           `json:"diagrams,omitempty"`
+}
+
+type rawGeminiBlock struct {
+	SharedContent *string                 `json:"shared_content"`
+	TypeQuestion  string                  `json:"type_question"`
+	IsGroup       bool                    `json:"is_group"`
+	Point         *FlexibleInt            `json:"point"`
+	Questions     []ExtractedQuestionItem `json:"questions"`
+	Diagrams      []DiagramInfo           `json:"diagrams"`
 }
 
 // GradeAllowedTopics chứa danh sách các chuyên đề chuẩn hóa theo từng khối lớp từ Lớp 5 đến Lớp 9.
@@ -268,8 +294,8 @@ func detectGradeFromTopic(rawTopic string, fallback ...int) int {
 func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, tempDir string, fallbackGrade ...int) ([]ExtractedQuestionBlock, error) {
 	cleanJson := utils.SanitizeJSON(rawJson)
 
-	var blocks []ExtractedQuestionBlock
-	if err := json.Unmarshal([]byte(cleanJson), &blocks); err != nil {
+	var rawBlocks []rawGeminiBlock
+	if err := json.Unmarshal([]byte(cleanJson), &rawBlocks); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON from Gemini response: %w", err)
 	}
 
@@ -277,12 +303,24 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 		tempDir = "./uploads/temp"
 	}
 
-	for bIdx := range blocks {
-		block := &blocks[bIdx]
+	blocks := make([]ExtractedQuestionBlock, len(rawBlocks))
+
+	for bIdx := range rawBlocks {
+		rb := &rawBlocks[bIdx]
+
+		isGroup := rb.IsGroup || strings.EqualFold(rb.TypeQuestion, "group") || len(rb.Questions) > 1 || (rb.SharedContent != nil && strings.TrimSpace(*rb.SharedContent) != "")
+		tq := "single"
+		var sharedContent *string = nil
+		if isGroup {
+			tq = "group"
+			if rb.SharedContent != nil && strings.TrimSpace(*rb.SharedContent) != "" {
+				sharedContent = rb.SharedContent
+			}
+		}
 
 		// Hậu xử lý từng câu hỏi trong block
-		for qIdx := range block.Questions {
-			q := &block.Questions[qIdx]
+		for qIdx := range rb.Questions {
+			q := &rb.Questions[qIdx]
 
 			// Xác định khối lớp
 			if q.Grade == 0 && len(fallbackGrade) > 0 && fallbackGrade[0] > 0 {
@@ -373,27 +411,34 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 				}
 			}
 
-			// Chuẩn hóa Point
-			if q.Point == 0 {
-				if q.Type == "Trắc nghiệm" {
-					q.Point = 0.5
-				} else {
-					q.Point = 1.0
-				}
-			}
-
-			// Chuẩn hóa TypeQuestion
-			if q.TypeQuestion == "" {
-				q.TypeQuestion = "single"
+			// Chuẩn hóa Point: nếu không gửi kèm bảng điểm thì mỗi câu đơn 1 điểm, mỗi câu con 1 điểm
+			if q.Point <= 0 {
+				q.Point = 1
 			}
 
 			// Chuẩn hóa Tags: nếu chưa có, thêm ít nhất 1 tag chính là Topic
-			if len(q.Tags) == 0 && q.Topic != "" {
-				q.Tags = []string{q.Topic}
+			if len(q.Tags) == 0 {
+				if q.Topic != "" {
+					q.Tags = []string{q.Topic}
+				} else {
+					q.Tags = []string{}
+				}
+			}
+
+			if q.Options == nil {
+				q.Options = []string{}
+			}
+
+			// Đảm bảo solution_guide không bị null
+			if q.SolutionGuide == nil {
+				q.SolutionGuide = map[string]interface{}{
+					"steps":      []interface{}{},
+					"conclusion": "",
+				}
 			}
 		}
 
-		for _, diag := range block.Diagrams {
+		for _, diag := range rb.Diagrams {
 			if diag.Placeholder == "" || len(diag.Box2D) < 4 {
 				continue
 			}
@@ -404,15 +449,42 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 				if err == nil && croppedUrl != "" {
 					imgTag := fmt.Sprintf(`<img src="%s" alt="Hình vẽ" class="max-w-md mx-auto my-3 rounded-xl border border-slate-200" />`, croppedUrl)
 
-					block.SharedContent = strings.ReplaceAll(block.SharedContent, diag.Placeholder, imgTag)
+					if sharedContent != nil {
+						updated := strings.ReplaceAll(*sharedContent, diag.Placeholder, imgTag)
+						sharedContent = &updated
+					}
 
-					for qIdx := range block.Questions {
-						q := &block.Questions[qIdx]
+					for qIdx := range rb.Questions {
+						q := &rb.Questions[qIdx]
 						q.Content = strings.ReplaceAll(q.Content, diag.Placeholder, imgTag)
-						q.SolutionGuide = strings.ReplaceAll(q.SolutionGuide, diag.Placeholder, imgTag)
+						if solStr, ok := q.SolutionGuide.(string); ok {
+							q.SolutionGuide = strings.ReplaceAll(solStr, diag.Placeholder, imgTag)
+						} else if solMap, ok := q.SolutionGuide.(map[string]interface{}); ok {
+							if conclusion, ok := solMap["conclusion"].(string); ok {
+								solMap["conclusion"] = strings.ReplaceAll(conclusion, diag.Placeholder, imgTag)
+							}
+							if steps, ok := solMap["steps"].([]interface{}); ok {
+								for _, stepItem := range steps {
+									if stepMap, ok := stepItem.(map[string]interface{}); ok {
+										if content, ok := stepMap["content"].(string); ok {
+											stepMap["content"] = strings.ReplaceAll(content, diag.Placeholder, imgTag)
+										}
+										if formula, ok := stepMap["formula"].(string); ok {
+											stepMap["formula"] = strings.ReplaceAll(formula, diag.Placeholder, imgTag)
+										}
+									}
+								}
+							}
+						}
 					}
 				}
 			}
+		}
+
+		blocks[bIdx] = ExtractedQuestionBlock{
+			SharedContent: sharedContent,
+			TypeQuestion:  tq,
+			Questions:     rb.Questions,
 		}
 	}
 
@@ -468,37 +540,76 @@ HỆ THỐNG CHỦ ĐỀ CHUẨN THEO TỪNG KHỐI LỚP (BẮT BUỘC CHỌN 1
 - Lớp 5: Phân số thập phân và hỗn số, Số thập phân và các phép toán, Diện tích hình tam giác, hình thang, Chu vi và diện tích hình tròn, Hình hộp chữ nhật, hình lập phương, Hình trụ, hình cầu, Đo thể tích và chuyển đổi đơn vị, Toán chuyển động đều, Giải toán tỉ số phần trăm
 
 QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU HỎI:
-1. "content": Nội dung câu hỏi sạch sẽ, bỏ tiền tố số thứ tự (ví dụ: "Câu 1.", "Bài 2:"). Mọi biểu thức/ký hiệu toán học BẮT BUỘC phải viết bằng LaTeX chuẩn ($...$ hoặc $$...$$) để hiển thị đẹp bằng KaTeX.
-2. "type": "Trắc nghiệm" (nếu có các phương án lựa chọn) hoặc "Tự luận".
-3. "options":
-   - Nếu là "Trắc nghiệm": mảng đúng 4 chuỗi phương án [A, B, C, D]. ĐẶC BIỆT: Chỉ ghi nội dung của phương án, TUYỆT ĐỐI KHÔNG lặp lại tiền tố "A.", "B.", "C.", "D." ở đầu chuỗi (ví dụ: "$x = 2$", chứ KHÔNG PHẢI "A. $x = 2$"). Tất cả biểu thức toán học phải viết dạng LaTeX ($...$).
-   - Nếu là "Tự luận": mảng rỗng [].
-4. "correct_answer":
-   - BẮT BUỘC LUÔN PHẢI TRẢ VỀ GIÁ TRỊ, TUYỆT ĐỐI KHÔNG ĐƯỢC ĐỂ TRỐNG HOẶC NULL.
-   - NẾU tài liệu ảnh CÓ SẴN đáp án mẫu hoặc khoanh sẵn: trích xuất đáp án đúng đó.
-   - NẾU tài liệu ảnh KHÔNG CÓ đáp án mẫu: AI BẮT BUỘC PHẢI TỰ GIẢI TOÁN để tìm ra đáp án đúng chính xác tuyệt đối!
-   - Với Trắc nghiệm: BẮT BUỘC điền nội dung phương án đúng khớp chính xác với 1 trong 4 phương án trong "options" (ví dụ: "$x = 2$"). Biểu thức toán phải ở dạng LaTeX chuẩn ($...$).
-   - Với Tự luận: BẮT BUỘC điền kết quả / đáp số cuối cùng của bài toán dưới dạng LaTeX chuẩn ($...$, ví dụ: "$x = 3$").
-5. "solution_guide": Lời giải chi tiết từng bước. NẾU ảnh chưa có lời giải, AI PHẢI TỰ TRÌNH BÀY LỜI GIẢI ĐẦY ĐỦ, chặt chẽ, chuẩn sư phạm Việt Nam, có đầy đủ các bước biến đổi và lập luận toán học bằng LaTeX ($...$, $$...$$).
-6. "hint": Gợi ý định hướng tư duy ngắn gọn (1-2 câu), gợi mở phương pháp cho học sinh.
-7. "quick_solve_tips": Mẹo giải nhanh, cách bấm máy tính Casio, nhận xét loại trừ nhanh nếu có.
-8. "general_method": Phương pháp tổng quát, công thức, định lý cơ bản dùng để giải dạng toán này.
-9. "mistakes": Cảnh báo các sai lầm học sinh rất hay mắc (quên điều kiện, nhầm dấu, sai đơn vị...).
-10. "grade": Khối lớp số nguyên (5, 6, 7, 8 hoặc 9).
-11. "topic": BẮT BUỘC CHỌN 1 VÀ CHỈ 1 CHỦ ĐỀ TƯƠNG ỨNG KHỐI LỚP TỪ DANH SÁCH Ở TRÊN (tên chính xác 100%%).
-12. "difficulty_level": 1 trong 4 mức độ: "Nhận biết", "Thông hiểu", "Vận dụng", "Vận dụng cao".
-13. "difficulty_point": Điểm độ khó (0-10): Nhận biết = 2.5, Thông hiểu = 5.0, Vận dụng = 7.5, Vận dụng cao = 9.0.
-14. "point": Điểm số (Trắc nghiệm: 0.25 hoặc 0.5; Tự luận: 1.0 hoặc 2.0).
-15. "tags": Mảng 2-4 từ khóa chuyên môn (ví dụ: ["Phương trình bậc hai", "Định lý Viète"]).
-16. Bảng biến thiên, Bảng xét dấu hoặc Bảng số liệu: HÃY chuyển đổi trực tiếp thành bảng HTML (thẻ <table>, <tr>, <td>) hoặc bảng Markdown rõ ràng, KHÔNG cắt thành ảnh.
-17. Với Hình vẽ hình học (hình học phẳng, hình không gian) và Đồ thị hàm số trên hệ trục Oxy:
+1. "shared_content": Chuỗi nội dung dẫn chung (nếu là câu hỏi chùm) hoặc null (nếu là câu hỏi đơn lẻ).
+2. "type_question": string ('group' cho câu hỏi chùm | 'single' cho câu hỏi đơn).
+3. "content": Nội dung câu hỏi bằng LaTeX (Không bao gồm phương án lựa chọn A, B, C, D). Mọi biểu thức/ký hiệu toán học BẮT BUỘC phải viết bằng LaTeX chuẩn ($...$ hoặc $$...$$) để hiển thị đẹp bằng KaTeX.
+4. "type": string (Chỉ chọn một trong hai: 'Trắc nghiệm' hoặc 'Tự luận').
+5. "grade": int (Chỉ chọn một trong các số: 5, 6, 7, 8, 9).
+6. "topic": string (Tùy theo khối lớp và nội dung câu hỏi, chọn 1 và chỉ 1 chủ đề tương ứng lớp và phù hợp nhất trong danh mục chủ đề ở trên).
+7. "difficulty_level": string (Chỉ chọn một trong: 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao').
+8. "difficulty_point": float (Từ 0.0 đến 10.0: Nhận biết = 2.5, Thông hiểu = 5.0, Vận dụng = 7.5, Vận dụng cao = 9.0).
+9. "point": int, nếu không gửi kèm bảng điểm thì mỗi câu đơn 1 điểm, câu hỏi chùm bằng số câu con.
+10. "tags": Mảng các từ_khóa chuyên môn (ví dụ: ["Phương trình bậc hai", "Định lý Viète"]).
+11. "options": Mảng các phương án lựa chọn bằng LaTeX (CHỈ LẤY NỘI DUNG, loại bỏ hoàn toàn tiền tố nhãn A., B., C., D.), để trống [] nếu là tự luận. Với Trắc nghiệm: đúng 4 phương án [A, B, C, D] (ví dụ: "$x = 2$", chứ KHÔNG PHẢI "A. $x = 2$").
+12. "correct_answer": Đáp án đúng bằng LaTeX.
+    - BẮT BUỘC LUÔN PHẢI TRẢ VỀ GIÁ TRỊ, TUYỆT ĐỐI KHÔNG ĐƯỢC ĐỂ TRỐNG HOẶC NULL.
+    - NẾU tài liệu ảnh CÓ SẴN đáp án mẫu hoặc khoanh sẵn: trích xuất đáp án đúng đó.
+    - NẾU tài liệu ảnh KHÔNG CÓ đáp án mẫu: AI BẮT BUỘC PHẢI TỰ GIẢI TOÁN để tìm ra đáp án đúng chính xác tuyệt đối!
+    - Với Trắc nghiệm: BẮT BUỘC điền nội dung phương án đúng khớp chính xác với 1 trong 4 phương án trong "options" (ví dụ: "$x = 2$"). Biểu thức toán phải ở dạng LaTeX chuẩn ($...$).
+    - Với Tự luận: BẮT BUỘC điền kết quả / đáp số cuối cùng của bài toán dưới dạng LaTeX chuẩn ($...$, ví dụ: "$x = 3$").
+13. "solution_guide": Cấu trúc object chi tiết từng bước:
+    - "steps": Mảng các bước giải, mỗi bước có:
+      + "step": int (1, 2, 3...)
+      + "title": string (Tên bước thực hiện ngắn gọn)
+      + "content": string (Nội dung giải thích ngắn gọn bằng chữ, dùng ký hiệu • để đầu dòng khi liệt kê, tuyệt đối không dùng + hoặc -, không có ký tự xuống dòng, dùng <br> nếu muốn ngắt dòng)
+      + "formula": string (Biểu thức LaTeX của bước này nhưng không lặp lại Biểu thức đã có trên trường content hoặc null nếu không có)
+    - "conclusion": string (Nội dung kết luận/đáp số cuối cùng)
+14. "hint": Chỉ dẫn nhỏ, gợi nhớ công thức hoặc hướng tiếp cận bài toán.
+15. "quick_solve_tips": Mẹo hoặc phương pháp giải nhanh, cách bấm máy tính Casio.
+16. "general_method": Công thức tổng quát hóa cho dạng bài toán này.
+17. "mistakes": Các lỗi sai học sinh thường vấp phải.
+18. Bảng biến thiên, Bảng xét dấu hoặc Bảng số liệu: HÃY chuyển đổi trực tiếp thành bảng HTML (thẻ <table>, <tr>, <td>) hoặc bảng Markdown rõ ràng, KHÔNG cắt thành ảnh.
+19. Với Hình vẽ hình học (hình học phẳng, hình không gian) và Đồ thị hàm số trên hệ trục Oxy:
     - Điền mã định danh vào vị trí tương ứng trong đề bài hoặc lời giải, ví dụ: [DIAGRAM_0_1] (0 là chỉ số trang ảnh 0-indexed, 1 là thứ tự hình).
     - Khai báo thông tin vào mảng "diagrams" với tọa độ chuẩn hóa box_2d [ymin, xmin, ymax, xmax] (thang đo 0-1000).
-18. Cấu trúc JSON trả về:
-    - Nếu là câu đơn: "is_group": false, "shared_content": "", "questions": [ {...} ]
-    - Nếu là câu hỏi chùm (chung một đoạn dẫn đề bài cho nhiều câu con): "is_group": true, "shared_content": "Đoạn đề dẫn chung...", "questions": [ {...}, {...} ]
-    - CHỈ trả về duy nhất chuỗi JSON hợp lệ (mảng các block), tuyệt đối KHÔNG kèm lời chào hay giải thích nào khác ngoài JSON.
-19. QUY TẮC ĐẶC BIỆT VỀ DẤU GẠCH CHÉO NGƯỢC (\) TRONG JSON:
+20. CẤU TRÚC ĐẦU RA JSON MẪU (OUTPUT SCHEMA):
+[
+  {
+    "shared_content": "Chuỗi nội dung dẫn chung (nếu là câu hỏi chùm) hoặc null (nếu là câu hỏi đơn lẻ)",
+    "type_question": "string ('group' cho câu hỏi chùm | 'single' cho câu hỏi đơn)",
+    "questions": [
+      {
+        "content": "Nội dung câu hỏi bằng LaTeX (Không bao gồm phương án lựa chọn A, B, C, D)",
+        "type": "string (Chỉ chọn một trong hai: 'Trắc nghiệm' hoặc 'Tự luận')",
+        "grade": 9,
+        "topic": "Tên chủ đề từ danh mục ở trên",
+        "difficulty_level": "string (Chỉ chọn một trong: 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao')",
+        "difficulty_point": 5.0,
+        "point": 1,
+        "tags": ["mảng", "các", "từ_khóa"],
+        "options": ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
+        "correct_answer": "Đáp án đúng bằng LaTeX",
+        "solution_guide": {
+          "steps": [
+            {
+              "step": 1,
+              "title": "Tên bước thực hiện ngắn gọn",
+              "content": "Nội dung giải thích ngắn gọn bằng chữ (dùng ký hiệu • để đầu dòng khi liệt kê, tuyệt đối không dùng + hoặc -), không có ký tự xuống dòng, dùng <br> nếu muốn ngắt dòng",
+              "formula": "Biểu thức LaTeX của bước này nhưng không lặp lại Biểu thức đã có trên trường content hoặc null nếu không có"
+            }
+          ],
+          "conclusion": "Nội dung kết luận/đáp số cuối cùng"
+        },
+        "hint": "Chỉ dẫn nhỏ, gợi nhớ công thức hoặc hướng tiếp cận bài toán",
+        "quick_solve_tips": "Mẹo hoặc phương pháp giải nhanh",
+        "general_method": "Công thức tổng quát hóa cho dạng bài toán này",
+        "mistakes": "Các lỗi sai học sinh thường vấp phải"
+      }
+    ]
+  }
+]
+CHỈ trả về DUY NHẤT chuỗi JSON hợp lệ (mảng các block), tuyệt đối KHÔNG kèm lời chào hay giải thích nào khác ngoài JSON.
+21. QUY TẮC ĐẶC BIỆT VỀ DẤU GẠCH CHÉO NGƯỢC (\) TRONG JSON:
     - Trong chuỗi JSON, mọi dấu gạch chéo ngược (\) của công thức LaTeX (ví dụ: \frac, \sqrt, \quad, \pm, \left, \right) PHẢI ĐƯỢC ESCAPE thành hai dấu gạch chéo ngược (ví dụ: "\\frac", "\\sqrt", "\\quad", "\\pm").`, gradeHint)
 
 	parts := []map[string]interface{}{

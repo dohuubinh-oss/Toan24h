@@ -58,4 +58,28 @@ describe('MathText', () => {
     const katexElement = container.querySelector('.katex');
     expect(katexElement).toBeInTheDocument();
   });
+
+  it('renders unwrapped LaTeX like x = \\pm 2 as KaTeX without delimiters', () => {
+    const { container } = render(<MathText content="x = \pm 2" />);
+    const katexElement = container.querySelector('.katex');
+    expect(katexElement).toBeInTheDocument();
+  });
+
+  it('renders pure math equations like x = 2; x = 3 as KaTeX', () => {
+    const { container } = render(<MathText content="x = 2; x = 3" />);
+    const katexElement = container.querySelector('.katex');
+    expect(katexElement).toBeInTheDocument();
+  });
+
+  it('renders pure math equations like S = 6 as KaTeX', () => {
+    const { container } = render(<MathText content="S = 6" />);
+    const katexElement = container.querySelector('.katex');
+    expect(katexElement).toBeInTheDocument();
+  });
+
+  it('renders HTML paragraph with pure math equations as KaTeX', () => {
+    const { container } = render(<MathText content="<p>x = 2; x = 3</p>" />);
+    const katexElement = container.querySelector('.katex');
+    expect(katexElement).toBeInTheDocument();
+  });
 });

@@ -170,33 +170,49 @@ export default function AiQuestionExtractModal({
         throw new Error('Dữ liệu trả về từ AI không đúng cấu trúc danh sách câu hỏi')
       }
 
-      // Hậu xử lý phương án, HTML formatting và các trường cần thiết
-      const sanitizedBlocks: QuestionBlock[] = extractedBlocks.map((block) => ({
-        ...block,
-        shared_content: block.shared_content ? formatTextToHtml(block.shared_content) : '',
-        questions: (block.questions || []).map((q) => {
-          const cleanedOptions = (q.options || []).map((opt) =>
-            opt.replace(/^(?:<p>\s*)?[A-Da-d][.)]\s*/i, (match) =>
-              match.startsWith('<p>') ? '<p>' : ''
+      // Chuẩn hóa đúng 100% CẤU TRÚC ĐẦU RA JSON MẪU (OUTPUT SCHEMA) của người dùng:
+      // Block: shared_content, type_question, questions
+      // Question: content, type, grade, topic, difficulty_level, difficulty_point, point, tags, options, correct_answer, solution_guide, hint, quick_solve_tips, general_method, mistakes
+      const standardJsonBlocks = extractedBlocks.map((block) => {
+        const isGroup = block.type_question?.toLowerCase() === 'group' || 
+          (block.questions && block.questions.length > 1) || 
+          (block.shared_content !== null && block.shared_content !== undefined && block.shared_content.trim() !== '')
+
+        return {
+          shared_content: isGroup && block.shared_content ? block.shared_content : null,
+          type_question: (isGroup ? 'group' : 'single') as 'group' | 'single',
+          questions: (block.questions || []).map((q) => {
+            const cleanedOptions = (q.options || []).map((opt) =>
+              opt.replace(/^(?:<p>\s*)?[A-Da-d][.)]\s*/i, (match) =>
+                match.startsWith('<p>') ? '<p>' : ''
+              )
             )
-          )
 
-          return {
-            ...q,
-            content: formatQuestionContent(q.content),
-            solution_guide: formatSolutionGuide(q.solution_guide),
-            grade: q.grade || (selectedGrade ? (selectedGrade === 'chuyen_cap' ? 'chuyen_cap' : parseInt(selectedGrade, 10)) : 9),
-            options: cleanedOptions,
-            difficulty_level: q.difficulty_level || 'Thông hiểu',
-            difficulty_point: q.difficulty_point || 5.0,
-            point: q.point || (q.type === 'Trắc nghiệm' ? 0.5 : 1.0),
-            tags: q.tags && q.tags.length > 0 ? q.tags : (q.topic ? [q.topic] : []),
-          }
-        }),
-      }))
+            const qPoint = q.point !== undefined && q.point !== null && Number(q.point) > 0 ? Math.round(Number(q.point)) : 1
 
-      const rawJsonString = JSON.stringify(sanitizedBlocks, null, 2)
-      onExtracted(sanitizedBlocks, rawJsonString)
+            return {
+              content: q.content || '',
+              type: (q.type === 'Trắc nghiệm' ? 'Trắc nghiệm' : 'Tự luận') as 'Trắc nghiệm' | 'Tự luận',
+              grade: q.grade || (selectedGrade ? (selectedGrade === 'chuyen_cap' ? 'chuyen_cap' : parseInt(selectedGrade, 10)) : 9),
+              topic: q.topic || '',
+              difficulty_level: q.difficulty_level || 'Thông hiểu',
+              difficulty_point: q.difficulty_point !== undefined && q.difficulty_point !== null ? Number(q.difficulty_point) : 5.0,
+              point: qPoint,
+              tags: Array.isArray(q.tags) && q.tags.length > 0 ? q.tags : (q.topic ? [q.topic] : []),
+              options: q.type === 'Tự luận' ? [] : cleanedOptions,
+              correct_answer: q.correct_answer || '',
+              solution_guide: q.solution_guide || { steps: [], conclusion: '' },
+              hint: q.hint || '',
+              quick_solve_tips: q.quick_solve_tips || '',
+              general_method: q.general_method || '',
+              mistakes: q.mistakes || '',
+            }
+          }),
+        }
+      })
+
+      const rawJsonString = JSON.stringify(standardJsonBlocks, null, 2)
+      onExtracted(standardJsonBlocks as unknown as QuestionBlock[], rawJsonString)
       onClose()
     } catch (err: any) {
       console.error('Lỗi khi bóc tách bằng AI:', err)

@@ -49,15 +49,16 @@ func TestParseAndProcessExtractedBlocks(t *testing.T) {
 	assert.Len(t, blocks, 1)
 
 	// Verify placeholder was replaced by an <img> tag with /uploads/temp/ URL
-	assert.True(t, strings.Contains(blocks[0].SharedContent, `<img src="/uploads/temp/`))
-	assert.False(t, strings.Contains(blocks[0].SharedContent, `[DIAGRAM_0_1]`))
+	assert.NotNil(t, blocks[0].SharedContent)
+	assert.True(t, strings.Contains(*blocks[0].SharedContent, `<img src="/uploads/temp/`))
+	assert.False(t, strings.Contains(*blocks[0].SharedContent, `[DIAGRAM_0_1]`))
 }
 
 func TestParseAndProcessExtractedBlocks_WithoutDiagrams(t *testing.T) {
 	tempDir := "./uploads/temp"
 	rawJSON := `[
 		{
-			"shared_content": "",
+			"shared_content": null,
 			"is_group": false,
 			"questions": [
 				{
@@ -75,6 +76,8 @@ func TestParseAndProcessExtractedBlocks_WithoutDiagrams(t *testing.T) {
 	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir)
 	assert.NoError(t, err)
 	assert.Len(t, blocks, 1)
+	assert.Nil(t, blocks[0].SharedContent, "Single question block shared_content should be null")
+	assert.Equal(t, "single", blocks[0].TypeQuestion)
 	assert.Equal(t, "Giải phương trình $x^2 - 4 = 0$", blocks[0].Questions[0].Content)
 }
 
@@ -125,7 +128,7 @@ func TestParseAndProcessExtractedBlocks_FullFields(t *testing.T) {
 					"topic": "Định lý Vi-ét",
 					"difficulty_level": "Thông hiểu",
 					"difficulty_point": 5.0,
-					"point": 0.5,
+					"point": 1,
 					"options": ["A. $x = 2; x = 3$", "B) $x = 1; x = 6$", "C. $x = -2; x = -3$", "D. Vô nghiệm"],
 					"correct_answer": "A. $x = 2; x = 3$",
 					"solution_guide": "Áp dụng định lý Viète: $S = 5, P = 6 \\Rightarrow x = 2, x = 3$.",
@@ -152,7 +155,7 @@ func TestParseAndProcessExtractedBlocks_FullFields(t *testing.T) {
 	assert.Equal(t, "$x = 2; x = 3$", q.CorrectAnswer)
 	assert.Equal(t, "Thông hiểu", q.DifficultyLevel)
 	assert.Equal(t, float32(5.0), q.DifficultyPoint)
-	assert.Equal(t, float32(0.5), q.Point)
+	assert.Equal(t, FlexibleInt(1), q.Point)
 	assert.NotEmpty(t, q.SolutionGuide)
 	assert.NotEmpty(t, q.Hint)
 	assert.NotEmpty(t, q.QuickSolveTips)
@@ -243,5 +246,168 @@ func TestParseAndProcessExtractedBlocks_UnescapedLaTeX(t *testing.T) {
 	assert.Contains(t, q.SolutionGuide, `\text`)
 	assert.Contains(t, q.SolutionGuide, `\neq`)
 }
+
+func TestParseAndProcessExtractedBlocks_SpecificationRequirements(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	rawJSON := `[
+		{
+			"shared_content": null,
+			"is_group": false,
+			"questions": [
+				{
+					"type_question": "single",
+					"content": "Rút gọn biểu thức $A = \\sqrt{16} + \\sqrt{9}$",
+					"type": "Trắc nghiệm",
+					"grade": 9,
+					"topic": "Căn bậc hai số học và số thực",
+					"difficulty_level": "Nhận biết",
+					"difficulty_point": 2.5,
+					"point": 1,
+					"options": ["$7$", "$5$", "$1$", "$12$"],
+					"correct_answer": "$7$",
+					"solution_guide": "Ta có $\\sqrt{16} = 4$, $\\sqrt{9} = 3 \\Rightarrow A = 4 + 3 = 7$."
+				}
+			]
+		},
+		{
+			"shared_content": "Cho hình chóp tam giác đều $S.ABC$ có cạnh đáy bằng $a$.",
+			"is_group": true,
+			"questions": [
+				{
+					"content": "Tính diện tích đáy tam giác đều $ABC$",
+					"type": "Trắc nghiệm",
+					"grade": 8,
+					"topic": "Hình chóp tam giác đều",
+					"difficulty_level": "Thông hiểu",
+					"difficulty_point": 5.0,
+					"options": ["$\\frac{a^2\\sqrt{3}}{4}$", "$\\frac{a^2}{2}$", "$a^2\\sqrt{3}$", "$\\frac{a^2}{4}$"],
+					"correct_answer": "$\\frac{a^2\\sqrt{3}}{4}$",
+					"solution_guide": "Diện tích tam giác đều cạnh $a$ là $S = \\frac{a^2\\sqrt{3}}{4}$."
+				},
+				{
+					"content": "Tính thể tích khối chóp biết chiều cao $h = 2a$",
+					"type": "Tự luận",
+					"grade": 8,
+					"topic": "Hình chóp tam giác đều",
+					"difficulty_level": "Vận dụng",
+					"difficulty_point": 7.5,
+					"options": [],
+					"correct_answer": "$V = \\frac{a^3\\sqrt{3}}{6}$",
+					"solution_guide": "Thể tích $V = \\frac{1}{3} S_{day} h = \\frac{1}{3} \\frac{a^2\\sqrt{3}}{4} (2a) = \\frac{a^3\\sqrt{3}}{6}$."
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 2)
+
+	// Block 1: Single question
+	b1 := blocks[0]
+	assert.Equal(t, "single", b1.TypeQuestion)
+	assert.Nil(t, b1.SharedContent, "Single question shared_content must be null")
+	assert.Len(t, b1.Questions, 1)
+
+	q1 := b1.Questions[0]
+	assert.Equal(t, "Trắc nghiệm", q1.Type)
+	assert.Equal(t, 9, q1.Grade)
+	assert.Equal(t, "Nhận biết", q1.DifficultyLevel)
+	assert.Equal(t, float32(2.5), q1.DifficultyPoint)
+	assert.Equal(t, FlexibleInt(1), q1.Point)
+	assert.Equal(t, 4, len(q1.Options))
+	assert.Equal(t, "$7$", q1.CorrectAnswer)
+
+	// Block 2: Group question
+	b2 := blocks[1]
+	assert.Equal(t, "group", b2.TypeQuestion)
+	assert.NotNil(t, b2.SharedContent)
+	assert.Contains(t, *b2.SharedContent, "Cho hình chóp tam giác đều")
+	assert.Len(t, b2.Questions, 2)
+
+	q2_1 := b2.Questions[0]
+	assert.Equal(t, "Trắc nghiệm", q2_1.Type)
+	assert.Equal(t, 8, q2_1.Grade)
+	assert.Equal(t, "Thông hiểu", q2_1.DifficultyLevel)
+	assert.Equal(t, float32(5.0), q2_1.DifficultyPoint)
+	assert.Equal(t, FlexibleInt(1), q2_1.Point)
+	assert.Equal(t, 4, len(q2_1.Options))
+	assert.Equal(t, "$\\frac{a^2\\sqrt{3}}{4}$", q2_1.CorrectAnswer)
+
+	q2_2 := b2.Questions[1]
+	assert.Equal(t, "Tự luận", q2_2.Type)
+	assert.Equal(t, 8, q2_2.Grade)
+	assert.Equal(t, "Vận dụng", q2_2.DifficultyLevel)
+	assert.Equal(t, float32(7.5), q2_2.DifficultyPoint)
+	assert.Equal(t, FlexibleInt(1), q2_2.Point)
+	assert.Empty(t, q2_2.Options, "Essay options must be empty []")
+	assert.Equal(t, "$V = \\frac{a^3\\sqrt{3}}{6}$", q2_2.CorrectAnswer)
+}
+
+func TestParseAndProcessExtractedBlocks_StructuredSolutionGuideAndTypeQuestion(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	rawJSON := `[
+		{
+			"shared_content": null,
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Nội dung câu hỏi bằng LaTeX",
+					"type": "Trắc nghiệm",
+					"grade": 9,
+					"topic": "Định lý Viète và ứng dụng",
+					"difficulty_level": "Thông hiểu",
+					"difficulty_point": 5.0,
+					"point": 1,
+					"tags": ["Phương trình bậc hai", "Định lý Viète"],
+					"options": ["x = 2; x = 3", "x = 1; x = 6", "x = -2; x = -3", "Vô nghiệm"],
+					"correct_answer": "x = 2; x = 3",
+					"solution_guide": {
+						"steps": [
+							{
+								"step": 1,
+								"title": "Áp dụng định lý Viète",
+								"content": "Tính tổng và tích các nghiệm:",
+								"formula": "S = 5, P = 6"
+							}
+						],
+						"conclusion": "Vậy $x = 2; x = 3$."
+					},
+					"hint": "Gợi ý",
+					"quick_solve_tips": "Mẹo",
+					"general_method": "Công thức",
+					"mistakes": "Sai lầm"
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+	assert.Equal(t, "single", blocks[0].TypeQuestion)
+	assert.Nil(t, blocks[0].SharedContent)
+	assert.Len(t, blocks[0].Questions, 1)
+
+	q := blocks[0].Questions[0]
+	assert.Equal(t, "Trắc nghiệm", q.Type)
+	assert.Equal(t, 9, q.Grade)
+	assert.Equal(t, "Định lý Viète và ứng dụng", q.Topic)
+
+	solMap, ok := q.SolutionGuide.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, "Vậy $x = 2; x = 3$.", solMap["conclusion"])
+	steps, ok := solMap["steps"].([]interface{})
+	assert.True(t, ok)
+	assert.Len(t, steps, 1)
+	step1, ok := steps[0].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, "Áp dụng định lý Viète", step1["title"])
+}
+
 
 

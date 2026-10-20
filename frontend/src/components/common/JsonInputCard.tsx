@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Code2, Settings2, Sparkles, Upload } from 'lucide-react'
+import { Code2, Settings2, Sparkles, Upload, Copy, Check } from 'lucide-react'
 
 export interface JsonInputCardProps {
   title?: string;
@@ -11,6 +11,8 @@ export interface JsonInputCardProps {
   initialValue?: string;
   onAiExtract?: () => void;
   aiButtonText?: string;
+  copyPromptText?: string;
+  onCopyPrompt?: () => void;
 }
 
 export default function JsonInputCard({
@@ -22,10 +24,29 @@ export default function JsonInputCard({
   disabled = false,
   initialValue = '',
   onAiExtract,
-  aiButtonText
+  aiButtonText,
+  copyPromptText,
+  onCopyPrompt
 }: JsonInputCardProps) {
   const [jsonInput, setJsonInput] = useState(initialValue)
   const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopyPrompt = async () => {
+    if (onCopyPrompt) {
+      onCopyPrompt()
+      return
+    }
+    if (copyPromptText) {
+      try {
+        await navigator.clipboard.writeText(copyPromptText)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      } catch (err) {
+        console.error('Failed to copy prompt:', err)
+      }
+    }
+  }
 
   useEffect(() => {
     if (initialValue !== undefined) {
@@ -83,6 +104,19 @@ export default function JsonInputCard({
             >
               <Upload className="w-3.5 h-3.5 text-indigo-600" />
               <span>{aiButtonText || 'Tải ảnh câu hỏi'}</span>
+            </button>
+          )}
+
+          {(copyPromptText || onCopyPrompt) && (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={handleCopyPrompt}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors cursor-pointer shadow-2xs"
+              title="Sao chép prompt chuẩn để gửi cho AI (ChatGPT, Claude, Gemini...)"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-600" />}
+              <span>{copied ? 'Đã sao chép prompt' : 'Sao chép prompt'}</span>
             </button>
           )}
 
