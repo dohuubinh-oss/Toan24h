@@ -1,6 +1,11 @@
 import React from 'react'
 import { QuestionBlock, Question } from '../../../types/question'
 import JsonInputCard from '@/components/common/JsonInputCard'
+import {
+  formatTextToHtml,
+  formatQuestionContent,
+  formatSolutionGuide
+} from './utils/questionTextFormatter'
 
 interface JsonInputSectionProps {
   onProcessJson?: (blocks: QuestionBlock[]) => void;
@@ -10,6 +15,7 @@ interface JsonInputSectionProps {
   currentQuestion?: Question | null;
   onNext?: () => void;
   onPrev?: () => void;
+  initialValue?: string;
 }
 
 const QUESTION_JSON_HINT = `[{
@@ -38,7 +44,8 @@ const QUESTION_JSON_HINT = `[{
 
 export default function JsonInputSection({
   onProcessJson = () => {},
-  onAiExtract
+  onAiExtract,
+  initialValue = ''
 }: JsonInputSectionProps) {
   const handleProcess = (jsonInput: string) => {
     const parsed = JSON.parse(jsonInput) as QuestionBlock[];
@@ -48,100 +55,32 @@ export default function JsonInputSection({
     
     const processedBlocks = parsed.map(block => {
       const isGroup = block.questions.length > 1 || block.questions.some(q => q.type_question?.toString().toLowerCase() === 'group');
+      const formattedShared = block.shared_content ? formatTextToHtml(block.shared_content) : '';
+
       return {
         ...block,
+        shared_content: formattedShared,
         is_group: isGroup,
         questions: block.questions.map(q => {
           const processedQ = { ...q };
 
-          if (processedQ.solution_guide && typeof processedQ.solution_guide === 'object') {
-            const parsedGuide = processedQ.solution_guide as any;
-            let html = `<div class="exercise-content bg-transparent p-4">`
-            
-            if (parsedGuide.problem) {
-               html += `<div class="bg-slate-50 p-5 rounded-lg border border-slate-200 mb-8">
-                  <p class="italic text-slate-700 !m-0">${parsedGuide.problem}</p>
-                </div>`
-            }
+          // Chuẩn hóa và tự động xuống dòng/HTML cho nội dung câu hỏi
+          if (processedQ.content) {
+            processedQ.content = formatQuestionContent(processedQ.content);
+          }
 
-            const stepsData = parsedGuide.steps || parsedGuide.Steps;
-            const hasTimeline = (stepsData && Array.isArray(stepsData) && stepsData.length > 0) || parsedGuide.conclusion || parsedGuide.tips;
+          // Chuẩn hóa và tự động xuống dòng/HTML cho lời giải chi tiết
+          if (processedQ.solution_guide) {
+            processedQ.solution_guide = formatSolutionGuide(processedQ.solution_guide);
+          }
 
-            if (hasTimeline) {
-              html += `<div class="space-y-0">`
-              
-              let timelineItems: any[] = [];
-              if (stepsData && Array.isArray(stepsData)) {
-                  stepsData.forEach((step: any, idx: number) => {
-                      timelineItems.push({
-                          type: 'step',
-                          idx: step.step || idx + 1,
-                          title: step.title,
-                          content: step.content,
-                          formula: step.formula
-                      });
-                  });
-              }
-              if (parsedGuide.conclusion) {
-                  timelineItems.push({
-                      type: 'conclusion',
-                      content: parsedGuide.conclusion
-                  });
-              }
-              if (parsedGuide.tips) {
-                  timelineItems.push({
-                      type: 'tips',
-                      content: parsedGuide.tips
-                  });
-              }
-
-              timelineItems.forEach((item: any, i: number) => {
-                  const isLast = i === timelineItems.length - 1;
-                  
-                  html += `<div class="flex gap-4">
-                      <div class="flex-none flex flex-col items-center">`
-                      
-                  if (item.type === 'step') {
-                      html += `<p class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm !m-0">${item.idx}</p>`
-                  } else if (item.type === 'conclusion') {
-                      html += `<p class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm !m-0">✓</p>`
-                  } else if (item.type === 'tips') {
-                      html += `<p class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm !m-0">💡</p>`
-                  }
-
-                  if (!isLast) {
-                      html += `<div class="w-0.5 h-full bg-slate-200 my-1"></div>`
-                  }
-                  
-                  html += `</div>
-                      <div class="${isLast ? '' : 'pb-8'} flex-1 pt-1">`
-                      
-                  if (item.type === 'step') {
-                      if (item.title) {
-                          html += `<h4 class="font-bold text-slate-900 !m-0">${item.title}</h4>`
-                      }
-                      if (item.content) {
-                          html += `<p class="text-slate-600 mt-1 !mb-0">${item.content}</p>`
-                      }
-                      if (item.formula) {
-                          html += `<p class="mt-3 text-blue-600 font-bold !m-0">${item.formula.includes('$') ? item.formula : '$$' + item.formula + '$$'}</p>`
-                      }
-                  } else if (item.type === 'conclusion') {
-                      html += `<h4 class="font-bold text-slate-900 !m-0">Kết luận</h4>
-                               <p class="text-slate-600 mt-1 !mb-0">${item.content}</p>`
-                  } else if (item.type === 'tips') {
-                      html += `<h4 class="font-bold text-slate-900 !m-0">Gợi ý</h4>
-                               <p class="text-slate-600 mt-1 !mb-0">${item.content}</p>`
-                  }
-
-                  html += `</div></div>`
-              });
-
-              html += `</div>`
-            }
-
-            html += `</div>`
-            processedQ.solution_guide = html;
+          // Làm sạch tiền tố A., B., C., D. ở các phương án trắc nghiệm
+          if (processedQ.options && Array.isArray(processedQ.options)) {
+            processedQ.options = processedQ.options.map(opt =>
+              opt.replace(/^(?:<p>\s*)?[A-Da-d][.)]\s*/i, match =>
+                match.startsWith('<p>') ? '<p>' : ''
+              )
+            );
           }
 
           return processedQ;
@@ -161,6 +100,7 @@ export default function JsonInputSection({
         buttonText="Xử lý JSON"
         onProcess={handleProcess}
         onAiExtract={onAiExtract}
+        initialValue={initialValue}
       />
     </section>
   )
