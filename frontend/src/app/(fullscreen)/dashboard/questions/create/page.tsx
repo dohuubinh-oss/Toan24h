@@ -29,6 +29,7 @@ function CreateQuestionContent() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isSaving, setIsSaving] = useState(false)
   const [isAiModalOpen, setIsAiModalOpen] = useState(false)
+  const [extractedJson, setExtractedJson] = useState('')
   const [editId, setEditId] = useState<string | null>(null)
   const editorRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -79,7 +80,9 @@ function CreateQuestionContent() {
     scrollToEditor();
   }, []);
 
-  const handleAiExtracted = useCallback((blocks: QuestionBlock[]) => {
+  const handleAiExtracted = useCallback((blocks: QuestionBlock[], rawJson?: string) => {
+    const jsonStr = rawJson || JSON.stringify(blocks, null, 2);
+    setExtractedJson(jsonStr);
     setQuestionBlocks(blocks);
     setCurrentBlockIndex(0);
     setCurrentQuestionIndex(0);
@@ -334,6 +337,7 @@ function CreateQuestionContent() {
               currentQuestion={currentQuestion}
               onNext={handleNext}
               onPrev={handlePrev}
+              initialValue={extractedJson}
             />
             <div ref={editorRef} className="scroll-mt-24">
               <QuestionEditorSection 
