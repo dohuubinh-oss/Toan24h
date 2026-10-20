@@ -305,15 +305,35 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 				for oIdx := range q.Options {
 					q.Options[oIdx] = cleanOptionText(q.Options[oIdx])
 				}
-				// Nếu correct_answer có tiền tố A. $...$, làm sạch tiền tố để khớp với option
+
+				// Chuẩn hóa correct_answer: nếu là chữ cái 'A', 'B', 'C', 'D' thì map sang nội dung options tương ứng
 				trimmedAns := strings.TrimSpace(q.CorrectAnswer)
-				if len(trimmedAns) > 3 {
-					first := trimmedAns[0]
-					if (first >= 'A' && first <= 'D') || (first >= 'a' && first <= 'd') {
-						if trimmedAns[1] == '.' || trimmedAns[1] == ')' || trimmedAns[1] == ':' {
-							q.CorrectAnswer = cleanOptionText(trimmedAns)
+				if len(trimmedAns) == 1 {
+					first := strings.ToUpper(trimmedAns)[0]
+					if first >= 'A' && first <= 'D' {
+						idx := int(first - 'A')
+						if idx < len(q.Options) && q.Options[idx] != "" {
+							q.CorrectAnswer = q.Options[idx]
 						}
 					}
+				} else if len(trimmedAns) >= 2 {
+					first := strings.ToUpper(trimmedAns)[0]
+					if (first >= 'A' && first <= 'D') && (trimmedAns[1] == '.' || trimmedAns[1] == ')' || trimmedAns[1] == ':') {
+						cleaned := cleanOptionText(trimmedAns)
+						if cleaned != "" {
+							q.CorrectAnswer = cleaned
+						} else {
+							idx := int(first - 'A')
+							if idx < len(q.Options) && q.Options[idx] != "" {
+								q.CorrectAnswer = q.Options[idx]
+							}
+						}
+					}
+				}
+
+				// Fallback: Nếu correct_answer vẫn rỗng nhưng có options, gán phương án đầu tiên
+				if q.CorrectAnswer == "" && len(q.Options) > 0 {
+					q.CorrectAnswer = q.Options[0]
 				}
 			} else {
 				q.Type = "Tự luận"
@@ -452,17 +472,18 @@ HỆ THỐNG CHỦ ĐỀ CHUẨN THEO TỪNG KHỐI LỚP (BẮT BUỘC CHỌN 1
 - Lớp 5: Phân số thập phân và hỗn số, Số thập phân và các phép toán, Diện tích hình tam giác, hình thang, Chu vi và diện tích hình tròn, Hình hộp chữ nhật, hình lập phương, Hình trụ, hình cầu, Đo thể tích và chuyển đổi đơn vị, Toán chuyển động đều, Giải toán tỉ số phần trăm
 
 QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU HỎI:
-1. "content": Nội dung câu hỏi sạch sẽ, bỏ tiền tố số thứ tự (ví dụ: "Câu 1.", "Bài 2:"). Mọi biểu thức/ký hiệu toán phải viết bằng LaTeX chuẩn ($...$ hoặc $$...$$).
+1. "content": Nội dung câu hỏi sạch sẽ, bỏ tiền tố số thứ tự (ví dụ: "Câu 1.", "Bài 2:"). Mọi biểu thức/ký hiệu toán học BẮT BUỘC phải viết bằng LaTeX chuẩn ($...$ hoặc $$...$$) để hiển thị đẹp bằng KaTeX.
 2. "type": "Trắc nghiệm" (nếu có các phương án lựa chọn) hoặc "Tự luận".
 3. "options":
-   - Nếu là "Trắc nghiệm": mảng đúng 4 chuỗi phương án [A, B, C, D]. ĐẶC BIỆT: Chỉ ghi nội dung của phương án, TUYỆT ĐỐI KHÔNG lặp lại tiền tố "A.", "B.", "C.", "D." ở đầu chuỗi (ví dụ: "$x = 2$", chứ KHÔNG PHẢI "A. $x = 2$").
+   - Nếu là "Trắc nghiệm": mảng đúng 4 chuỗi phương án [A, B, C, D]. ĐẶC BIỆT: Chỉ ghi nội dung của phương án, TUYỆT ĐỐI KHÔNG lặp lại tiền tố "A.", "B.", "C.", "D." ở đầu chuỗi (ví dụ: "$x = 2$", chứ KHÔNG PHẢI "A. $x = 2$"). Tất cả biểu thức toán học phải viết dạng LaTeX ($...$).
    - Nếu là "Tự luận": mảng rỗng [].
 4. "correct_answer":
+   - BẮT BUỘC LUÔN PHẢI TRẢ VỀ GIÁ TRỊ, TUYỆT ĐỐI KHÔNG ĐƯỢC ĐỂ TRỐNG HOẶC NULL.
    - NẾU tài liệu ảnh CÓ SẴN đáp án mẫu hoặc khoanh sẵn: trích xuất đáp án đúng đó.
-   - NẾU tài liệu ảnh KHÔNG CÓ đáp án mẫu: AI BẮT BUỘC PHẢI TỰ GIẢI TOÁN một cách chính xác tuyệt đối để tìm ra đáp án đúng!
-   - Với Trắc nghiệm: Điền nội dung của phương án đúng (hoặc ký tự A/B/C/D).
-   - Với Tự luận: Điền kết quả/đáp số cuối cùng của bài toán (ví dụ: "$x = 3$").
-5. "solution_guide": Lời giải chi tiết từng bước. NẾU ảnh chưa có lời giải, AI PHẢI TỰ TRÌNH BÀY LỜI GIẢI ĐẦY ĐỦ, chặt chẽ, chuẩn sư phạm Việt Nam, có đầy đủ các bước biến đổi và lập luận toán học bằng LaTeX.
+   - NẾU tài liệu ảnh KHÔNG CÓ đáp án mẫu: AI BẮT BUỘC PHẢI TỰ GIẢI TOÁN để tìm ra đáp án đúng chính xác tuyệt đối!
+   - Với Trắc nghiệm: BẮT BUỘC điền nội dung phương án đúng khớp chính xác với 1 trong 4 phương án trong "options" (ví dụ: "$x = 2$"). Biểu thức toán phải ở dạng LaTeX chuẩn ($...$).
+   - Với Tự luận: BẮT BUỘC điền kết quả / đáp số cuối cùng của bài toán dưới dạng LaTeX chuẩn ($...$, ví dụ: "$x = 3$").
+5. "solution_guide": Lời giải chi tiết từng bước. NẾU ảnh chưa có lời giải, AI PHẢI TỰ TRÌNH BÀY LỜI GIẢI ĐẦY ĐỦ, chặt chẽ, chuẩn sư phạm Việt Nam, có đầy đủ các bước biến đổi và lập luận toán học bằng LaTeX ($...$, $$...$$).
 6. "hint": Gợi ý định hướng tư duy ngắn gọn (1-2 câu), gợi mở phương pháp cho học sinh.
 7. "quick_solve_tips": Mẹo giải nhanh, cách bấm máy tính Casio, nhận xét loại trừ nhanh nếu có.
 8. "general_method": Phương pháp tổng quát, công thức, định lý cơ bản dùng để giải dạng toán này.

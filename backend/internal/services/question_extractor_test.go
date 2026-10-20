@@ -161,3 +161,45 @@ func TestParseAndProcessExtractedBlocks_FullFields(t *testing.T) {
 	assert.Equal(t, 2, len(q.Tags))
 }
 
+func TestNormalizeQuestionAnswer_OptionMapping(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	rawJSON := `[
+		{
+			"shared_content": "",
+			"is_group": false,
+			"questions": [
+				{
+					"content": "Câu hỏi trắc nghiệm",
+					"type": "Trắc nghiệm",
+					"options": ["A. $x = 1$", "B. $x = 2$"],
+					"correct_answer": "B"
+				},
+				{
+					"content": "Câu hỏi tự luận",
+					"type": "Tự luận",
+					"options": [],
+					"correct_answer": "$x = \\sqrt{2}$"
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+	assert.Len(t, blocks[0].Questions, 2)
+
+	// Q1: Letter "B" should be mapped to the clean content of option B: "$x = 2$"
+	q1 := blocks[0].Questions[0]
+	assert.Equal(t, "$x = 1$", q1.Options[0])
+	assert.Equal(t, "$x = 2$", q1.Options[1])
+	assert.Equal(t, "$x = 2$", q1.CorrectAnswer)
+
+	// Q2: Essay question preserves LaTeX answer
+	q2 := blocks[0].Questions[1]
+	assert.Equal(t, "Tự luận", q2.Type)
+	assert.Equal(t, "$x = \\sqrt{2}$", q2.CorrectAnswer)
+}
+
