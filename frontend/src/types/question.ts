@@ -33,3 +33,18 @@ export interface QuestionBlock {
   point?: number | null;
   questions: Question[];
 }
+
+export interface SolutionStep {
+  step: number;
+  title: string;
+  content: string;
+  formula?: string | null;
+  point?: number | null;
+}
+
+export interface StructuredSolutionGuide {
+  problem?: string;
+  steps: SolutionStep[];
+  conclusion?: string;
+  tips?: string;
+}

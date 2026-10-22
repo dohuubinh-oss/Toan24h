@@ -110,6 +110,30 @@ describe('questionTextFormatter utility', () => {
       expect(result).toContain('$$x = \\pm 2$$')
       expect(result).toContain('Kết luận')
     })
+
+    it('renders step point badge when point is specified in step', () => {
+      const guideWithPoints = {
+        steps: [
+          { step: 1, title: 'Bước 1: Tìm x', content: 'Tính giá trị x', point: 0.5 },
+          { step: 2, title: 'Bước 2: Tìm y', content: 'Tính giá trị y', point: 1 }
+        ],
+        conclusion: 'Vậy đáp số là $(x, y)$'
+      }
+      const html = formatSolutionGuide(guideWithPoints)
+      expect(html).toContain('0.5 điểm')
+      expect(html).toContain('1 điểm')
+    })
+
+    it('does not render point badge when point is missing or zero', () => {
+      const guideWithoutPoints = {
+        steps: [
+          { step: 1, title: 'Bước 1', content: 'Nội dung', point: null },
+          { step: 2, title: 'Bước 2', content: 'Nội dung' }
+        ]
+      }
+      const html = formatSolutionGuide(guideWithoutPoints)
+      expect(html).not.toContain('điểm</span>')
+    })
   })
 
   describe('ensureMathDelimiters', () => {

@@ -177,24 +177,27 @@ export function formatSolutionGuide(guide: any): string {
     const hasTimeline = (stepsData && Array.isArray(stepsData) && stepsData.length > 0) || cleanConclusion || cleanTips
 
     if (hasTimeline) {
-      html += `<div class="space-y-0">`
-
       const timelineItems: Array<{
         type: 'step' | 'conclusion' | 'tips'
         idx?: number
         title?: string
         content?: string
         formula?: string | null
+        point?: number | null
       }> = []
 
       if (stepsData && Array.isArray(stepsData)) {
         stepsData.forEach((st: any, idx: number) => {
+          const rawPoint = st.point !== undefined && st.point !== null ? st.point : st.Point
+          const parsedPoint = rawPoint !== undefined && rawPoint !== null && !isNaN(Number(rawPoint)) ? Number(rawPoint) : null
+
           timelineItems.push({
             type: 'step',
             idx: st.step || idx + 1,
             title: cleanCitations(st.title),
             content: cleanCitations(st.content),
             formula: st.formula ? cleanCitations(st.formula) : null,
+            point: parsedPoint,
           })
         })
       }
@@ -235,8 +238,14 @@ export function formatSolutionGuide(guide: any): string {
           <div class="${isLast ? '' : 'pb-8'} flex-1 pt-1">`
 
         if (item.type === 'step') {
+          const pointBadge = (item.point !== null && item.point !== undefined && item.point > 0)
+            ? `<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">${item.point} điểm</span>`
+            : ''
+
           if (item.title) {
-            html += `<h4 class="font-bold text-slate-900 !m-0">${item.title}</h4>`
+            html += `<h4 class="font-bold text-slate-900 !m-0 flex items-center flex-wrap gap-1">${item.title}${pointBadge}</h4>`
+          } else if (pointBadge) {
+            html += `<div class="mb-1">${pointBadge}</div>`
           }
           if (item.content) {
             const formattedContent = formatTextToHtml(item.content)
