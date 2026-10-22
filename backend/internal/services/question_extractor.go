@@ -65,6 +65,19 @@ func (fi FlexibleInt) MarshalJSON() ([]byte, error) {
 	return json.Marshal(int(fi))
 }
 
+type SolutionGuideStep struct {
+	Step    int     `json:"step"`
+	Title   string  `json:"title"`
+	Content string  `json:"content"`
+	Formula string  `json:"formula,omitempty"`
+	Point   float32 `json:"point,omitempty"`
+}
+
+type StructuredSolutionGuide struct {
+	Steps      []SolutionGuideStep `json:"steps"`
+	Conclusion string              `json:"conclusion"`
+}
+
 type ExtractedQuestionItem struct {
 	Content         string      `json:"content"`
 	Type            string      `json:"type"`

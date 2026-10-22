@@ -32,22 +32,34 @@ type AppealInfo struct {
 	TeacherFeedback string       `json:"teacher_feedback"`
 }
 
+type StepGradeResult struct {
+	Step            int     `json:"step"`
+	Title           string  `json:"title"`
+	Score           float64 `json:"score"`
+	MaxScore        float64 `json:"max_score"`
+	IsCorrect       bool    `json:"is_correct"`
+	ErrorLocation   string  `json:"error_location,omitempty"`
+	DeductionReason string  `json:"deduction_reason,omitempty"`
+}
+
 type QuestionAnswer struct {
-	Type               string     `json:"type"`
-	StudentAnswer      string     `json:"student_answer"`
-	ImageURLs          []string   `json:"image_urls"`
-	Score              float64    `json:"score"`
-	MaxScore           float64    `json:"max_score,omitempty"`
-	ReasoningScore     float64    `json:"reasoning_score"`
-	IsCorrect          bool       `json:"is_correct"`
-	AIExplanation      string     `json:"ai_explanation"`
-	AIReasoningRemark  string     `json:"ai_reasoning_remark"`
-	ErrorLocation      string     `json:"error_location"`
-	DeductionReason    string     `json:"deduction_reason,omitempty"`
-	ComprehensionLevel string     `json:"comprehension_level,omitempty"`
-	IsRandomGuess      bool       `json:"is_random_guess,omitempty"`
-	Appeal             AppealInfo `json:"appeal"`
-	StudentExplanation string     `json:"student_explanation"`
+	Type                string            `json:"type"`
+	StudentAnswer       string            `json:"student_answer"`
+	ImageURLs           []string          `json:"image_urls"`
+	Score               float64           `json:"score"`
+	MaxScore            float64           `json:"max_score,omitempty"`
+	ReasoningScore      float64           `json:"reasoning_score"`
+	IsCorrect           bool              `json:"is_correct"`
+	AIExplanation       string            `json:"ai_explanation"`
+	AIReasoningRemark   string            `json:"ai_reasoning_remark"`
+	ErrorLocation       string            `json:"error_location"`
+	DeductionReason     string            `json:"deduction_reason,omitempty"`
+	ComprehensionLevel  string            `json:"comprehension_level,omitempty"`
+	IsRandomGuess       bool              `json:"is_random_guess,omitempty"`
+	Appeal              AppealInfo        `json:"appeal"`
+	StudentExplanation  string            `json:"student_explanation"`
+	StepResults         []StepGradeResult `json:"step_results,omitempty"`
+	IsAlternativeMethod bool              `json:"is_alternative_method,omitempty"`
 }
 
 type Submission struct {
