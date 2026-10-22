@@ -190,7 +190,9 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           appealStatus: ansData.appeal?.status || '',
           teacherFeedback: ansData.appeal?.teacher_feedback || '',
           aiReasoningRemark: ansData.ai_reasoning_remark,
-          reasoningScore: ansData.reasoning_score
+          reasoningScore: ansData.reasoning_score,
+          stepResults: ansData.step_results || ansData.stepResults,
+          isAlternativeMethod: ansData.is_alternative_method ?? ansData.isAlternativeMethod
         }
 
         return {
@@ -228,7 +230,9 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         appealStatus: ansData.appeal?.status || '',
         teacherFeedback: ansData.appeal?.teacher_feedback || '',
         aiReasoningRemark: ansData.ai_reasoning_remark,
-        reasoningScore: ansData.reasoning_score
+        reasoningScore: ansData.reasoning_score,
+        stepResults: ansData.step_results || ansData.stepResults,
+        isAlternativeMethod: ansData.is_alternative_method ?? ansData.isAlternativeMethod
       }
 
       const isMC = q.type !== 'Tự luận' && !isGroup
