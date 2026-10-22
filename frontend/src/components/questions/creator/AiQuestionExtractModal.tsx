@@ -175,14 +175,29 @@ export default function AiQuestionExtractModal({
       // Question: content, type, grade, topic, difficulty_level, difficulty_point, point, tags, options, correct_answer, solution_guide, hint, quick_solve_tips, general_method, mistakes
       const standardJsonBlocks = extractedBlocks.map((block) => {
         const hasShared = block.shared_content !== null && block.shared_content !== undefined && block.shared_content.trim() !== '';
-        const isGroup = block.type_question?.toLowerCase() === 'group' || 
-          (block.questions && block.questions.length > 1) || 
-          hasShared;
+        const questionsList = block.questions || [];
+        const isGroup = (block.type_question?.toLowerCase() === 'group' || hasShared) && questionsList.length > 1;
+
+        let finalShared = isGroup && hasShared ? block.shared_content : null;
+        let questions = [...questionsList];
+
+        // Nếu chỉ có 1 câu hỏi con nhưng có shared_content dẫn dắt (như Câu 9), tự động gộp vào nội dung câu hỏi
+        if (!isGroup && questions.length === 1 && hasShared) {
+          const sc = block.shared_content!.trim();
+          const qc = questions[0].content?.trim() || '';
+          if (!qc.includes(sc)) {
+            questions[0] = {
+              ...questions[0],
+              content: qc === '' ? sc : `${sc}\n${qc}`
+            };
+          }
+          finalShared = null;
+        }
 
         return {
-          shared_content: block.shared_content && block.shared_content.trim() !== '' ? block.shared_content : null,
+          shared_content: finalShared,
           type_question: (isGroup ? 'group' : 'single') as 'group' | 'single',
-          questions: (block.questions || []).map((q) => {
+          questions: questions.map((q) => {
             const cleanedOptions = (q.options || []).map((opt) => {
               const stripped = opt.replace(/^(?:<p>\s*)?[A-Da-d][.)]\s*/i, (match) =>
                 match.startsWith('<p>') ? '<p>' : ''

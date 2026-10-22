@@ -181,14 +181,15 @@ export default function JsonInputSection({
     }
     
     const processedBlocks = parsed.map(block => {
-      const isGroup = block.is_group === true || 
+      const hasShared = block.shared_content !== null && block.shared_content !== undefined && block.shared_content.trim() !== '';
+      const questionsList = block.questions || [];
+      const isGroup = (block.is_group === true || 
         block.type_question?.toLowerCase() === 'group' ||
-        (block.questions && block.questions.length > 1) || 
         block.questions?.some(q => q.type_question?.toString().toLowerCase() === 'group') ||
-        (block.shared_content !== null && block.shared_content !== undefined && block.shared_content.trim() !== '');
+        hasShared) && questionsList.length > 1;
 
-      const formattedShared = block.shared_content && block.shared_content.trim() !== '' ? formatTextToHtml(block.shared_content) : null;
-      const groupPoint = isGroup ? (block.point || block.questions?.length || 1) : (block.point || 1);
+      const formattedShared = hasShared ? formatTextToHtml(block.shared_content) : null;
+      const groupPoint = isGroup ? (block.point || questionsList.length || 1) : (block.point || 1);
 
       return {
         ...block,
@@ -196,7 +197,7 @@ export default function JsonInputSection({
         type_question: (isGroup ? 'group' : 'single') as 'group' | 'single',
         is_group: isGroup,
         point: groupPoint,
-        questions: (block.questions || []).map(q => {
+        questions: questionsList.map(q => {
           const processedQ = { ...q };
 
           // Chuẩn hóa type_question

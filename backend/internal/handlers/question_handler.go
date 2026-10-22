@@ -184,7 +184,7 @@ func BulkCreateQuestions(c *gin.Context) {
 			sharedText = *group.SharedContent
 		}
 
-		isGroup := group.IsGroup || strings.EqualFold(group.TypeQuestion, "group") || sharedText != ""
+		isGroup := (group.IsGroup || strings.EqualFold(group.TypeQuestion, "group")) && len(group.Questions) > 1
 		if isGroup {
 			groupPoint := float32(len(group.Questions))
 			if group.Point > 0 {
@@ -205,6 +205,15 @@ func BulkCreateQuestions(c *gin.Context) {
 			}
 			parentID = &parentQ.ID
 			createdCount++
+		} else if len(group.Questions) == 1 && sharedText != "" {
+			// Nếu chỉ có 1 câu hỏi con nhưng có sharedText dẫn dắt, tự động gộp vào nội dung câu hỏi
+			st := strings.TrimSpace(sharedText)
+			qc := strings.TrimSpace(group.Questions[0].Content)
+			if qc == "" {
+				group.Questions[0].Content = st
+			} else if !strings.Contains(qc, st) {
+				group.Questions[0].Content = st + "\n" + qc
+			}
 		}
 
 		for _, detail := range group.Questions {

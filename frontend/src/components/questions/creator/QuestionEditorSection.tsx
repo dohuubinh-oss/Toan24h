@@ -31,10 +31,10 @@ function QuestionEditorSection({
   };
 
   const isGroup = 
-    currentBlock?.is_group === true || 
+    (currentBlock?.is_group === true || 
     currentBlock?.type_question === 'group' || 
     currentQuestion?.type_question === 'group' ||
-    (!!currentBlock?.shared_content && currentBlock.shared_content.trim() !== '') ||
+    (!!currentBlock?.shared_content && currentBlock.shared_content.trim() !== '')) &&
     (currentBlock?.questions && currentBlock.questions.length > 1);
 
   // Helper to check if a multiple-choice option is selected as correct (accurate KaTeX / HTML matching for AI questions & shuffled answers)
