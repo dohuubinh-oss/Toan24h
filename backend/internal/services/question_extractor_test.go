@@ -24,10 +24,16 @@ func TestParseAndProcessExtractedBlocks(t *testing.T) {
 	rawJSON := `[
 		{
 			"shared_content": "Cho hình chóp S.ABC [DIAGRAM_0_1]",
-			"is_group": true,
+			"type_question": "group",
 			"questions": [
 				{
-					"type_question": "single",
+					"content": "Tính diện tích đáy tam giác ABC",
+					"type": "Tự luận",
+					"options": [],
+					"correct_answer": "$S = 10$",
+					"solution_guide": "Áp dụng công thức tính diện tích"
+				},
+				{
 					"content": "Tính thể tích khối chóp",
 					"type": "Trắc nghiệm",
 					"options": ["A. $V = \\frac{1}{3}Bh$", "B. $V = Bh$"],
@@ -53,6 +59,56 @@ func TestParseAndProcessExtractedBlocks(t *testing.T) {
 	assert.NotNil(t, blocks[0].SharedContent)
 	assert.True(t, strings.Contains(*blocks[0].SharedContent, `<img src="/uploads/temp/`))
 	assert.False(t, strings.Contains(*blocks[0].SharedContent, `[DIAGRAM_0_1]`))
+	assert.Equal(t, "group", blocks[0].TypeQuestion)
+	assert.Len(t, blocks[0].Questions, 2)
+}
+
+func TestParseAndProcessExtractedBlocks_SingleQuestionWithSharedContentConvertedToSingle(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	img := image.NewRGBA(image.Rect(0, 0, 300, 300))
+	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{0, 255, 0, 255}}, image.Point{}, draw.Src)
+	images := []image.Image{img}
+
+	// Simulating Question 9: Gemini splits narrative into shared_content, but there's only 1 question
+	rawJSON := `[
+		{
+			"shared_content": "Bạn An dự định cắt một miếng bìa có dạng tam giác vuông... (như hình vẽ) [DIAGRAM_0_0]",
+			"type_question": "group",
+			"questions": [
+				{
+					"content": "Đa thức biểu thị diện tích của miếng bìa sau khi được tăng kích cỡ là:",
+					"type": "Trắc nghiệm",
+					"options": ["$(6+x)(8+y)$", "$\\frac{(6-x)(8-y)}{2}$"],
+					"correct_answer": "$\\frac{(6+x)(8+y)}{2}$"
+				}
+			],
+			"diagrams": [
+				{
+					"image_index": 0,
+					"box_2d": [100, 100, 400, 400],
+					"placeholder": "[DIAGRAM_0_0]"
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, images, tempDir, 8)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+
+	// MUST be converted to single question, shared_content must be nil
+	assert.Equal(t, "single", blocks[0].TypeQuestion)
+	assert.Nil(t, blocks[0].SharedContent)
+	assert.Len(t, blocks[0].Questions, 1)
+
+	// The question content must contain the merged narrative and the question
+	qContent := blocks[0].Questions[0].Content
+	assert.Contains(t, qContent, "Bạn An dự định cắt một miếng bìa")
+	assert.Contains(t, qContent, "Đa thức biểu thị diện tích")
+	assert.Contains(t, qContent, `<img src="/uploads/temp/`)
+	assert.False(t, strings.Contains(qContent, `[DIAGRAM_0_0]`))
 }
 
 func TestParseAndProcessExtractedBlocks_WithoutDiagrams(t *testing.T) {

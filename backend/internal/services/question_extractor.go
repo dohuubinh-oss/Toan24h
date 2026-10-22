@@ -442,14 +442,29 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 	for bIdx := range rawBlocks {
 		rb := &rawBlocks[bIdx]
 
-		isGroup := (rb.IsGroup != nil && *rb.IsGroup) || strings.EqualFold(rb.TypeQuestion, "group") || len(rb.Questions) > 1 || (rb.SharedContent != nil && strings.TrimSpace(*rb.SharedContent) != "")
 		tq := "single"
 		var sharedContent *string = nil
-		if isGroup {
-			tq = "group"
-			if rb.SharedContent != nil && strings.TrimSpace(*rb.SharedContent) != "" {
-				sharedContent = rb.SharedContent
+
+		if len(rb.Questions) > 1 {
+			isGroup := (rb.IsGroup != nil && *rb.IsGroup) || strings.EqualFold(rb.TypeQuestion, "group") || (rb.SharedContent != nil && strings.TrimSpace(*rb.SharedContent) != "")
+			if isGroup {
+				tq = "group"
+				if rb.SharedContent != nil && strings.TrimSpace(*rb.SharedContent) != "" {
+					sharedContent = rb.SharedContent
+				}
 			}
+		} else if len(rb.Questions) == 1 && rb.SharedContent != nil && strings.TrimSpace(*rb.SharedContent) != "" {
+			// Nếu chỉ có 1 câu hỏi nhưng AI tách đoạn dẫn chuyện vào shared_content (như bài toán thực tế Câu 9),
+			// tự động gộp shared_content vào đầu content của câu hỏi đó và chuyển về câu đơn ('single').
+			sc := strings.TrimSpace(*rb.SharedContent)
+			qc := strings.TrimSpace(rb.Questions[0].Content)
+			if qc == "" {
+				rb.Questions[0].Content = sc
+			} else if !strings.Contains(qc, sc) {
+				rb.Questions[0].Content = sc + "\n" + qc
+			}
+			rb.SharedContent = nil
+			sharedContent = nil
 		}
 
 		// Hậu xử lý từng câu hỏi trong block
@@ -774,9 +789,14 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
    - QUY TẮC BẮT BUỘC PHÂN BIỆT CÂU HỎI ĐƠN VÀ CÂU HỎI CHÙM:
      + CÂU HỎI ĐƠN ('single'): Áp dụng cho các câu hỏi độc lập (như Câu 1, Câu 2, ..., Câu 15 trắc nghiệm trong đề thi).
        * BẮT BUỘC mỗi câu hỏi đơn phải là MỘT block riêng biệt trong mảng JSON: {"shared_content": null, "type_question": "single", "questions": [ { ... } ]}.
+       * ĐẶC BIỆT LƯU Ý VỚI CÂU HỎI CÓ ĐOẠN MỞ ĐẦU HOẶC BÀI TOÁN THỰC TẾ (ví dụ Câu 9: "Bạn An dự định cắt một miếng bìa... Đa thức biểu thị diện tích..."):
+         Dù câu hỏi có đoạn văn mô tả tình huống thực tế hay ngữ cảnh dài, NHƯNG NẾU NÓ CHỈ CÓ 1 YÊU CẦU DUY NHẤT (không chia thành các câu hỏi con a, b, c...), thì ĐÓ 100%% LÀ CÂU HỎI ĐƠN ('single')!
+         BẮT BUỘC đặt "shared_content": null, "type_question": "single", và đưa TOÀN BỘ đoạn văn mở đầu cùng câu hỏi vào trường "content".
+         TUYỆT ĐỐI KHÔNG TÁCH ĐOẠN MỞ ĐẦU VÀO "shared_content" ĐỂ BIẾN THÀNH 'group'! Block chỉ có 1 câu hỏi KHÔNG BAO GIỜ ĐƯỢC LÀ 'group'!
        * TUYỆT ĐỐI KHÔNG GOM NHIỀU CÂU HỎI ĐƠN VÀO CÙNG MỘT BLOCK! Nếu đề có 15 câu trắc nghiệm độc lập thì đầu ra JSON BẮT BUỘC là một mảng gồm 15 block riêng biệt.
        * Các tiêu đề phân phần của đề thi (như "I. PHẦN TRẮC NGHIỆM", "II. TỰ LUẬN", "Phần 1: 5.0 điểm") KHÔNG PHẢI là câu hỏi chùm, TUYỆT ĐỐI KHÔNG dùng tiêu đề phần để tạo block 'group'.
-     + CÂU HỎI CHÙM ('group'): CHỈ ĐƯỢC DÙNG khi các câu hỏi con CÙNG DÙNG CHUNG một đoạn văn bản ngữ cảnh, bảng biểu hoặc bài toán gốc được đặt trong "shared_content" (ví dụ: "Cho tam giác ABC... Hãy trả lời các câu sau: a) ..., b) ..."). Khi đó "shared_content" KHÔNG ĐƯỢC để null. Nếu không có nội dung dùng chung ("shared_content": null), TUYỆT ĐỐI KHÔNG được để "type_question": "group".
+     + CÂU HỎI CHÙM ('group'): BẮT BUỘC CHỈ ĐƯỢC DÙNG KHI CÓ TỪ 2 CÂU HỎI CON TRỞ LÊN (mảng "questions" có từ 2 phần tử trở lên, ví dụ: câu a và câu b, hoặc câu 1 và câu 2...) CÙNG DÙNG CHUNG một đoạn văn bản ngữ cảnh, bảng biểu hoặc bài toán gốc được đặt trong "shared_content" (ví dụ: "Cho tam giác ABC... Hãy trả lời các câu sau: a) ..., b) ..."). Khi đó "shared_content" KHÔNG ĐƯỢC để null.
+       * NẾU CHỈ CÓ 1 CÂU HỎI DUY NHẤT, TUYỆT ĐỐI KHÔNG ĐƯỢC ĐỂ "type_question": "group"!
 3. QUY TẮC BẮT BUỘC VỀ CÔNG THỨC TOÁN HỌC (TUYỆT ĐỐI KHÔNG CÓ TRƯỜNG NGOẠI LỆ):
    - BẮT BUỘC 100%% TẤT CẢ các công thức toán học, biểu thức, phương trình, hệ phương trình, ký hiệu, phân số, căn thức, biến số và đáp số toán học trong TOÀN BỘ file JSON (trong "content", từng phương án trong "options", "correct_answer", "formula", "conclusion", "hint", "short_answer") ĐỀU PHẢI ĐƯỢC BỌC TRONG CẶP DẤU $...$ (hoặc $$...$$).
    - KÝ HIỆU GÓC HÌNH HỌC: BẮT BUỘC dùng dấu mũ trên đỉnh chữ cái theo cú pháp LaTeX chuẩn: dùng \hat{A}, \hat{B}, \hat{C} cho góc 1 chữ cái hoặc \widehat{ABC}, \widehat{xOy} cho góc 3 chữ cái (ví dụ: \hat{A} = \hat{C}, \widehat{ABC} = 60^\circ). TUYỆT ĐỐI KHÔNG dùng \angle hoặc ký tự Unicode ∠.
@@ -826,6 +846,16 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
         }
       ]
       Trong đó box_2d là tọa độ hộp bao quanh hình vẽ chuẩn hóa [ymin, xmin, ymax, xmax] (thang đo 0-1000).
+    - QUY TẮC CẮT HỘP TOẠ ĐỘ box_2d CHÍNH XÁC (RẤT QUAN TRỌNG - TRÁNH CẮT THỪA / CẮT THIẾU):
+      + BẮT BUỘC CẮT TRỌN VẸN HÌNH VÀ TẤT CẢ CHỮ/SỐ/KÝ HIỆU MINH HOẠ CỦA HÌNH ĐÓ:
+        * Bao gồm toàn bộ nét vẽ của hình, tên các đỉnh (A, B, C, D...), ký hiệu góc vuông, số đo góc.
+        * BẮT BUỘC BAO GỒM TẤT CẢ CÁC ĐƯỜNG GIÓNG KÍCH THƯỚC, MŨI TÊN KÍCH THƯỚC VÀ CHỮ SỐ/KÝ HIỆU KÍCH THƯỚC Ở TẤT CẢ CÁC PHÍA (ví dụ các mũi tên đỏ và nhãn kích thước "6 (cm)", "8 (cm)", "x (cm)", "y (cm)").
+        * TỌA ĐỘ xmin (mép trái): PHẢI mở rộng đủ sang bên trái để BAO TRỌN 100%% tất cả các mũi tên gióng kích thước và các nhãn chữ/số ở bên trái hình (như "6 (cm)", "x (cm)"). TUYỆT ĐỐI KHÔNG ĐƯỢC đặt xmin sát vào cạnh hình làm cắt lẹm các chữ số và mũi tên bên trái!
+        * TỌA ĐỘ ymin (mép trên): PHẢI bao trọn đỉnh cao nhất cùng mũi tên hoặc nhãn kích thước ở mép trên cùng của hình.
+        * TỌA ĐỘ xmax (mép phải): PHẢI bao trọn đỉnh và mũi tên/nhãn xa nhất bên phải của hình.
+      + TUYỆT ĐỐI LOẠI TRỪ (KHÔNG ĐƯỢC ĐỂ DÍNH VÀO ẢNH CẮT):
+        * TUYỆT ĐỐI KHÔNG CHỨA VĂN BẢN ĐỀ BÀI: Tọa độ ymin phải nằm dưới dòng chữ cuối cùng của đề bài câu hỏi.
+        * TUYỆT ĐỐI KHÔNG CHỨA CÁC PHƯƠNG ÁN TRẮC NGHIỆM A, B, C, D (hoặc các khối đáp án nằm bên dưới hình vẽ): Các công thức toán học có tiền tố A, B, C, D bên dưới hình là các phương án lựa chọn, ĐÃ ĐƯỢC BÓC TÁCH VÀO "options", KHÔNG PHẢI là chú thích của hình vẽ. Tọa độ ymax BẮT BUỘC PHẢI DỪNG LẠI NGAY DƯỚI mũi tên hoặc nhãn số đo ở đáy hình (ví dụ ngay dưới "8 (cm)", "y (cm)"). TUYỆT ĐỐI KHÔNG ĐƯỢC kéo ymax xuống dính vào các phương án A, B, C, D!
     - TUYỆT ĐỐI KHÔNG tự chèn [DIAGRAM_X_Y] vào đề bài nếu không có tọa độ box_2d tương ứng trong "diagrams".
 21. CẤU TRÚC ĐẦU RA JSON MẪU (OUTPUT SCHEMA - TUYỆT ĐỐI KHÔNG CÓ TRƯỜNG "is_group"):
 [
@@ -899,6 +929,33 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
         "short_answer": "$BC = \\sqrt{6^2 + 8^2} = 10\\text{ cm}$",
         "general_method": "Áp dụng định lý Pythagoras $BC = \\sqrt{AB^2 + AC^2}$",
         "mistakes": "Quên khai căn bậc hai sau khi cộng bình phương"
+      },
+      {
+        "content": "Tính độ dài đường cao $AH$.",
+        "type": "Tự luận",
+        "grade": 9,
+        "topic": "Hệ thức giữa cạnh và góc",
+        "difficulty_level": "Thông hiểu",
+        "difficulty_point": 5.0,
+        "point": 1,
+        "tags": ["Hệ thức lượng", "Tam giác vuông"],
+        "options": [],
+        "correct_answer": "$AH = 4.8\\text{ cm}$",
+        "solution_guide": {
+          "steps": [
+            {
+              "step": 1,
+              "title": "Áp dụng hệ thức lượng",
+              "content": "Trong tam giác vuông $ABC$ có đường cao $AH$:",
+              "formula": "$AB \\cdot AC = BC \\cdot AH \\implies AH = \\frac{6 \\cdot 8}{10} = 4.8\\text{ cm}$"
+            }
+          ],
+          "conclusion": "Vậy $AH = 4.8\\text{ cm}$."
+        },
+        "hint": "Áp dụng hệ thức liên hệ giữa cạnh góc vuông, cạnh huyền và đường cao",
+        "short_answer": "$AH = \\frac{AB \\cdot AC}{BC} = 4.8\\text{ cm}$",
+        "general_method": "Sử dụng công thức $AH = \\frac{AB \\cdot AC}{BC}$",
+        "mistakes": "Tính nhầm cạnh huyền hoặc nhầm lẫn giữa các hệ thức lượng"
       }
     ]
   }
