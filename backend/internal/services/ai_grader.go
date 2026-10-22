@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
@@ -18,6 +19,7 @@ type EssayBatchQuestionItem struct {
 	QuestionID      string  `json:"questionId"`
 	QuestionContent string  `json:"questionContent"`
 	CorrectAnswer   string  `json:"correctAnswer"`
+	SolutionGuide   string  `json:"solutionGuide,omitempty"`
 	MaxScore        float64 `json:"maxScore"`
 	StudentAnswer   string  `json:"studentAnswer"`
 }
@@ -31,13 +33,15 @@ type EssayBatchInput struct {
 }
 
 type EssayQuestionResult struct {
-	QuestionID      string  `json:"questionId"`
-	Score           float64 `json:"score"`
-	MaxScore        float64 `json:"maxScore"`
-	IsCorrect       bool    `json:"isCorrect"`
-	Explanation     string  `json:"explanation"`
-	ErrorLocation   string  `json:"errorLocation"`
-	DeductionReason string  `json:"deductionReason"`
+	QuestionID          string                   `json:"questionId"`
+	Score               float64                  `json:"score"`
+	MaxScore            float64                  `json:"maxScore"`
+	IsCorrect           bool                     `json:"isCorrect"`
+	IsAlternativeMethod bool                     `json:"isAlternativeMethod"`
+	Explanation         string                   `json:"explanation"`
+	ErrorLocation       string                   `json:"errorLocation"`
+	DeductionReason     string                   `json:"deductionReason"`
+	StepResults         []models.StepGradeResult `json:"stepResults"`
 }
 
 type EssayBatchResponse struct {
@@ -119,12 +123,20 @@ Nhiệm vụ của bạn là chấm điểm danh sách bài làm TỰ LUẬN c�
 %s
 
 ---
-### ⚙️ QUY TẮC CHẤM TỰ LUẬN (GRADING LOGIC):
-1. Đối chiếu studentAnswer với correctAnswer theo từng bước biến đổi toán học.
-2. Điểm số (score) nằm trong khoảng từ 0.0 đến maxScore của câu hỏi đó (thăng số lẻ 0.25). Trả về chính xác trường "score" và trường "maxScore" (lấy từ dữ liệu maxScore đầu vào của từng câu).
-3. Bài làm đúng hoàn toàn => score = maxScore, isCorrect = true. Bài làm sai bước trung gian/dấu => Trừ điểm tương ứng. Bài bỏ trống hoặc làm nhảm => score = 0, isCorrect = false.
-4. NẾU HỌC SINH LÀM SAI (score < maxScore): BẮT BUỘC trích dẫn chính xác đoạn viết sai vào errorLocation và nêu lý do cụ thể tại deductionReason.
-5. Đưa ra overallEssayFeedback: Nhận xét tổng quan trình bày tự luận của học sinh (2-3 câu).
+### ⚙️ QUY TẮC CHẤM TỰ LUẬN THEO BƯỚC (STEP-BY-STEP GRADING LOGIC):
+1. ĐỐI CHIẾU THEO TỪNG BƯỚC (RUBRIC):
+   - Nếu câu hỏi có solutionGuide (dạng JSON các bước hoặc chuỗi văn bản): Đối chiếu từng bước biến đổi của học sinh với các bước giải mẫu.
+   - Nếu solutionGuide chưa có điểm từng bước hoặc là văn bản tự do: Hãy tự động phân rã thành các bước logic chuẩn và chia điểm tương ứng (bội số 0.25) sao cho tổng max_score các bước bằng maxScore của câu hỏi.
+2. CÔNG NHẬN CÁCH GIẢI KHÁC HỢP LỆ:
+   - Nếu học sinh giải bằng phương pháp toán học khác hoàn toàn so với đáp án mẫu nhưng các bước logic và kết quả đều đúng: Hãy công nhận cách làm này, đặt "isAlternativeMethod": true, tự lập ra các bước tương đương của cách giải mới và chấm điểm đầy đủ cho học sinh.
+3. QUY TẮC TÍNH ĐIỂM DỨT KHOÁT MỖI BƯỚC (ALL-OR-NOTHING):
+   - Bước làm đúng trọn vẹn => score = max_score, is_correct = true.
+   - Bước có bất kỳ lỗi sai nào (sai công thức, biến đổi sai, tính nhầm số, thiếu điều kiện...) => MẤT TRỌN ĐIỂM CỦA BƯỚC ĐÓ: score = 0, is_correct = false, trích dẫn chính xác đoạn viết sai vào error_location và nêu cụ thể lý do trừ điểm tại deduction_reason.
+4. TỔNG HỢP ĐIỂM SỐ:
+   - Điểm tổng của câu hỏi ("score") BẮT BUỘC bằng tổng điểm ("score") của các bước trong "stepResults" (thang điểm lẻ 0.25).
+   - isCorrect = true KHI VÀ CHỈ KHI score == maxScore.
+   - Bài bỏ trống hoặc làm nhảm => score = 0, isCorrect = false.
+5. Đưa ra explanation và overallEssayFeedback: Nhận xét tổng quan bài làm tự luận của học sinh (2-3 câu).
 
 ---
 ### 📤 ĐỊNH DẠNG ĐẦU RA (OUTPUT FORMAT - JSON ONLY):
@@ -142,9 +154,21 @@ BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Tr�
       "score": number,
       "maxScore": number,
       "isCorrect": boolean,
+      "isAlternativeMethod": boolean,
       "explanation": "string",
       "errorLocation": "string",
-      "deductionReason": "string"
+      "deductionReason": "string",
+      "stepResults": [
+        {
+          "step": 1,
+          "title": "string",
+          "score": number,
+          "max_score": number,
+          "is_correct": boolean,
+          "error_location": "string",
+          "deduction_reason": "string"
+        }
+      ]
     }
   ]
 }
@@ -175,13 +199,30 @@ BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Tr�
 						"items": map[string]interface{}{
 							"type": "OBJECT",
 							"properties": map[string]interface{}{
-								"questionId":      map[string]interface{}{"type": "STRING"},
-								"score":           map[string]interface{}{"type": "NUMBER"},
-								"maxScore":        map[string]interface{}{"type": "NUMBER"},
-								"isCorrect":       map[string]interface{}{"type": "BOOLEAN"},
-								"explanation":     map[string]interface{}{"type": "STRING"},
-								"errorLocation":   map[string]interface{}{"type": "STRING"},
-								"deductionReason": map[string]interface{}{"type": "STRING"},
+								"questionId":          map[string]interface{}{"type": "STRING"},
+								"score":               map[string]interface{}{"type": "NUMBER"},
+								"maxScore":            map[string]interface{}{"type": "NUMBER"},
+								"isCorrect":           map[string]interface{}{"type": "BOOLEAN"},
+								"isAlternativeMethod": map[string]interface{}{"type": "BOOLEAN"},
+								"explanation":         map[string]interface{}{"type": "STRING"},
+								"errorLocation":       map[string]interface{}{"type": "STRING"},
+								"deductionReason":     map[string]interface{}{"type": "STRING"},
+								"stepResults": map[string]interface{}{
+									"type": "ARRAY",
+									"items": map[string]interface{}{
+										"type": "OBJECT",
+										"properties": map[string]interface{}{
+											"step":             map[string]interface{}{"type": "INTEGER"},
+											"title":            map[string]interface{}{"type": "STRING"},
+											"score":            map[string]interface{}{"type": "NUMBER"},
+											"max_score":        map[string]interface{}{"type": "NUMBER"},
+											"is_correct":       map[string]interface{}{"type": "BOOLEAN"},
+											"error_location":   map[string]interface{}{"type": "STRING"},
+											"deduction_reason": map[string]interface{}{"type": "STRING"},
+										},
+										"required": []string{"step", "title", "score", "max_score", "is_correct"},
+									},
+								},
 							},
 							"required": []string{"questionId", "score", "maxScore", "explanation"},
 						},
