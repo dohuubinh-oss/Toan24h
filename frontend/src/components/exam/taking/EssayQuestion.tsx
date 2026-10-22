@@ -17,6 +17,35 @@ export interface SubQuestion {
   correctAnswer?: string
 }
 
+export interface StepGradeResult {
+  step: number
+  title: string
+  score: number
+  max_score: number
+  is_correct: boolean
+  error_location?: string
+  deduction_reason?: string
+}
+
+export interface AIFeedbackData {
+  detailId?: string
+  isCorrect: boolean
+  aiExplanation: string
+  errorLocation?: any
+  deductionReason?: string
+  comprehensionLevel?: string
+  isRandomGuess?: boolean
+  score: number
+  maxScore: number
+  isAppealed?: boolean
+  appealStatus?: string
+  teacherFeedback?: string
+  aiReasoningRemark?: string
+  reasoningScore?: number
+  stepResults?: StepGradeResult[]
+  isAlternativeMethod?: boolean
+}
+
 interface EssayQuestionProps {
   resultId?: string
   questionId: string | number
@@ -33,22 +62,7 @@ interface EssayQuestionProps {
   examType?: string
   readonly?: boolean
   lectureUrl?: string
-  aiFeedbacks?: Record<string | number, { 
-    detailId?: string, 
-    isCorrect: boolean, 
-    aiExplanation: string, 
-    errorLocation?: any,
-    deductionReason?: string,
-    comprehensionLevel?: string,
-    isRandomGuess?: boolean,
-    score: number, 
-    maxScore: number,
-    isAppealed?: boolean,
-    appealStatus?: string,
-    teacherFeedback?: string,
-    aiReasoningRemark?: string,
-    reasoningScore?: number
-  }>
+  aiFeedbacks?: Record<string | number, AIFeedbackData>
   onAnswerChange?: (id: string | number, answer: string, explanation?: string) => void
   onToggleHint?: (id?: string | number) => void
   onToggleFlag?: () => void
@@ -168,22 +182,7 @@ function EditorItem({
   isGroup: boolean,
   examType?: string,
   readonly?: boolean,
-  aiFeedback?: { 
-    detailId?: string, 
-    isCorrect: boolean, 
-    aiExplanation: string, 
-    errorLocation?: any,
-    deductionReason?: string,
-    comprehensionLevel?: string,
-    isRandomGuess?: boolean,
-    score: number, 
-    maxScore: number, 
-    isAppealed?: boolean, 
-    appealStatus?: string, 
-    teacherFeedback?: string, 
-    aiReasoningRemark?: string, 
-    reasoningScore?: number 
-  },
+  aiFeedback?: AIFeedbackData,
   onToggleHint?: (id: number) => void
   resultId?: string
 }) {
@@ -352,6 +351,77 @@ function EditorItem({
         onClose={() => setIsInAppCameraOpen(false)}
         onUploadSuccess={handleQrUploadSuccess}
       />
+
+      {/* Step-by-Step Rubric Breakdown (Chi tiết chấm điểm từng bước) */}
+      {readonly && aiFeedback?.stepResults && aiFeedback.stepResults.length > 0 && (
+        <div className="mt-4 bg-white border border-slate-200 rounded-xl p-5 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 flex-wrap gap-2">
+            <h4 className="flex items-center gap-2 text-slate-800 font-bold text-base">
+              <Sparkles className="w-5 h-5 text-indigo-600" />
+              Chi tiết chấm điểm từng bước (Rubric)
+            </h4>
+            {aiFeedback.isAlternativeMethod && (
+              <span className="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-xs font-semibold flex items-center gap-1 shadow-2xs">
+                ✨ Học sinh giải theo phương pháp tương đương hợp lệ
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            {aiFeedback.stepResults.map((step) => {
+              const isPass = step.is_correct || step.score > 0
+              return (
+                <div 
+                  key={step.step}
+                  className={`p-3.5 rounded-xl border transition-all ${
+                    isPass 
+                      ? 'bg-emerald-50/50 border-emerald-200/80' 
+                      : 'bg-rose-50/40 border-rose-200/80'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {isPass ? (
+                        <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                      )}
+                      <span className="font-bold text-slate-800 text-sm truncate">
+                        Bước {step.step}: {step.title}
+                      </span>
+                    </div>
+                    <span 
+                      className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                        isPass 
+                          ? 'bg-emerald-100 text-emerald-700' 
+                          : 'bg-rose-100 text-rose-700'
+                      }`}
+                    >
+                      {isPass ? `+${step.score}` : '0.0'} / {step.max_score} đ
+                    </span>
+                  </div>
+
+                  {!isPass && (
+                    <div className="mt-2.5 pt-2 border-t border-rose-100 text-xs text-slate-700 space-y-1">
+                      {step.error_location && (
+                        <div className="bg-white/80 p-2 rounded-lg border border-rose-200">
+                          <span className="font-bold text-rose-600">Vị trí sai: </span>
+                          <MathText content={step.error_location} className="inline" />
+                        </div>
+                      )}
+                      {step.deduction_reason && (
+                        <p className="text-rose-600 font-medium pl-1">
+                          ⚠️ {step.deduction_reason}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Model Solution Guide (Lời giải chi tiết đối chiếu) */}
       {readonly && (q.solution_guide || aiFeedback?.aiExplanation) && (

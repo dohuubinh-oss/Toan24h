@@ -217,4 +217,52 @@ describe('EssayQuestion Component', () => {
     expect(screen.getByText(/Chụp ảnh bài làm trực tiếp/i)).toBeInTheDocument()
     expect(screen.queryByText(/Chụp bài làm bằng điện thoại/i)).not.toBeInTheDocument()
   })
+
+  it('renders step results with score badges, titles, and error details in readonly mode', () => {
+    const aiFeedbacks = {
+      1: {
+        isCorrect: false,
+        score: 0.5,
+        maxScore: 1.0,
+        aiExplanation: 'Giải thích chung',
+        isAlternativeMethod: true,
+        stepResults: [
+          {
+            step: 1,
+            title: 'Tìm điều kiện xác định',
+            score: 0.5,
+            max_score: 0.5,
+            is_correct: true,
+          },
+          {
+            step: 2,
+            title: 'Biến đổi phương trình',
+            score: 0.0,
+            max_score: 0.5,
+            is_correct: false,
+            error_location: '2x = 6',
+            deduction_reason: 'Chuyển vế đổi dấu sai',
+          },
+        ],
+      },
+    }
+
+    renderWithToast(
+      <EssayQuestion
+        questionId={1}
+        index={0}
+        content="Giải phương trình"
+        answers={{ 1: 'x = 3' }}
+        isHintOpen={false}
+        isFlagged={false}
+        readonly={true}
+        aiFeedbacks={aiFeedbacks as any}
+      />
+    )
+
+    expect(screen.getByText(/Chi tiết chấm điểm từng bước/i)).toBeInTheDocument()
+    expect(screen.getByText(/Tìm điều kiện xác định/i)).toBeInTheDocument()
+    expect(screen.getByText(/Chuyển vế đổi dấu sai/i)).toBeInTheDocument()
+    expect(screen.getByText(/phương pháp tương đương hợp lệ/i)).toBeInTheDocument()
+  })
 })
