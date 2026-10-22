@@ -108,6 +108,39 @@ Hãy đọc đề thi và bóc tách TOÀN BỘ các câu hỏi thành định d
         "mistakes": "Các lỗi sai học sinh thường vấp phải"
       }
     ]
+  },
+  {
+    "shared_content": "Cho tam giác $ABC$ vuông tại $A$, đường cao $AH$. Biết $AB = 6\\\\text{ cm}$, $AC = 8\\\\text{ cm}$.",
+    "type_question": "group",
+    "questions": [
+      {
+        "content": "Tính độ dài cạnh huyền $BC$.",
+        "type": "Tự luận",
+        "grade": 9,
+        "topic": "Hệ thức giữa cạnh và góc",
+        "difficulty_level": "Nhận biết",
+        "difficulty_point": 2.5,
+        "point": 1,
+        "tags": ["Hệ thức lượng", "Tam giác vuông"],
+        "options": [],
+        "correct_answer": "$BC = 10\\\\text{ cm}$",
+        "solution_guide": {
+          "steps": [
+            {
+              "step": 1,
+              "title": "Áp dụng định lý Pythagoras",
+              "content": "Áp dụng định lý Pythagoras vào tam giác $ABC$ vuông tại $A$:",
+              "formula": "$BC^2 = AB^2 + AC^2 = 6^2 + 8^2 = 100 \\\\implies BC = 10\\\\text{ cm}$"
+            }
+          ],
+          "conclusion": "Vậy $BC = 10\\\\text{ cm}$."
+        },
+        "hint": "Sử dụng định lý Pythagoras trong tam giác vuông",
+        "short_answer": "$BC = \\\\sqrt{6^2 + 8^2} = 10\\\\text{ cm}$",
+        "general_method": "Áp dụng định lý Pythagoras $BC = \\\\sqrt{AB^2 + AC^2}$",
+        "mistakes": "Quên khai căn bậc hai sau khi cộng bình phương"
+      }
+    ]
   }
 ]
 
@@ -123,6 +156,12 @@ QUY TẮC BẮT BUỘC (TUYỆT ĐỐI KHÔNG CÓ TRƯỜNG HỢP NGOẠI LỆ):
 2. CÔNG THỨC TOÁN HỌC: BẮT BUỘC 100% tất cả các công thức toán học, biểu thức, phương trình, nghiệm, đáp số trong "content", "options", "correct_answer", "formula", "conclusion" ĐỀU PHẢI ĐƯỢC BỌC TRONG CẶP DẤU $...$ (hoặc $$...$$). Tuyệt đối KHÔNG viết trần trụi "x = 2; x = 3" mà PHẢI viết "$x = 2; x = 3$". KÝ HIỆU GÓC HÌNH HỌC: BẮT BUỘC dùng dấu mũ trên đỉnh chữ cái theo cú pháp LaTeX chuẩn: dùng \\hat{A}, \\hat{B}, \\hat{C} cho góc 1 chữ cái hoặc \\widehat{ABC}, \\widehat{xOy} cho góc 3 chữ cái (ví dụ: \\hat{A} = \\hat{C}, \\widehat{ABC} = 60^\\circ). TUYỆT ĐỐI KHÔNG dùng \\angle hoặc ký tự Unicode ∠.
 3. "shared_content": Chuỗi nội dung dẫn chung nếu là câu hỏi chùm hoặc null nếu là câu hỏi đơn lẻ.
 4. "type_question": 'group' cho câu hỏi chùm | 'single' cho câu hỏi đơn.
+   - QUY TẮC BẮT BUỘC PHÂN BIỆT CÂU ĐƠN VÀ CÂU CHÙM:
+     + CÂU HỎI ĐƠN ('single'): Áp dụng cho các câu hỏi độc lập (như Câu 1, Câu 2, ..., Câu 15 trắc nghiệm trong đề thi).
+       * BẮT BUỘC mỗi câu hỏi đơn phải là MỘT block riêng biệt trong mảng JSON: {"shared_content": null, "type_question": "single", "questions": [ { ... } ]}.
+       * TUYỆT ĐỐI KHÔNG GOM NHIỀU CÂU HỎI ĐƠN VÀO CÙNG MỘT BLOCK! Nếu đề có 15 câu trắc nghiệm độc lập thì đầu ra JSON BẮT BUỘC là một mảng gồm 15 block riêng biệt.
+       * Các tiêu đề phân phần của đề thi (như "I. PHẦN TRẮC NGHIỆM", "II. TỰ LUẬN", "Phần 1: 5.0 điểm") KHÔNG PHẢI là câu hỏi chùm, TUYỆT ĐỐI KHÔNG dùng tiêu đề phần để tạo block 'group'.
+     + CÂU HỎI CHÙM ('group'): CHỈ ĐƯỢC DÙNG khi các câu hỏi con CÙNG DÙNG CHUNG một đoạn văn bản ngữ cảnh, bảng biểu hoặc bài toán gốc được đặt trong "shared_content" (ví dụ: "Cho tam giác ABC... Hãy trả lời các câu sau: a) ..., b) ..."). Khi đó "shared_content" KHÔNG ĐƯỢC để null. Nếu không có nội dung dùng chung ("shared_content": null), TUYỆT ĐỐI KHÔNG được để "type_question": "group".
 5. "content": Nội dung câu hỏi sạch sẽ, bỏ tiền tố số thứ tự (ví dụ: 'Câu 1.', 'Bài 2:').
 6. "options": Mảng phương án LaTeX (CHỈ LẤY NỘI DUNG, loại bỏ hoàn toàn tiền tố nhãn A., B., C., D.), để trống [] nếu là tự luận.
 7. "correct_answer": Bắt buộc luôn có đáp án đúng bằng LaTeX bọc trong $...$ (tự giải nếu đề bài chưa có đáp án).
