@@ -75,10 +75,12 @@ func CropDiagram(src image.Image, box []float64, targetDir string) (string, erro
 	width := float64(bounds.Dx())
 	height := float64(bounds.Dy())
 
-	x0 := int(xmin * width)
-	y0 := int(ymin * height)
-	x1 := int(xmax * width)
-	y1 := int(ymax * height)
+	// Nới rộng mỗi phía 10px để tránh cắt lẹm viền, chữ hoặc chi tiết quanh hình vẽ
+	padding := 10
+	x0 := int(xmin*width) - padding
+	y0 := int(ymin*height) - padding
+	x1 := int(xmax*width) + padding
+	y1 := int(ymax*height) + padding
 
 	// Clamp to image dimensions
 	if x0 < bounds.Min.X {

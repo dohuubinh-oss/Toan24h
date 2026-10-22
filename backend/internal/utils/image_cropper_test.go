@@ -49,6 +49,29 @@ func TestCropDiagram_NormalizedZeroToOne(t *testing.T) {
 	assert.True(t, strings.HasPrefix(webUrl, "/uploads/temp/"))
 }
 
+func TestCropDiagram_10pxPadding(t *testing.T) {
+	// 400x400 image
+	src := image.NewRGBA(image.Rect(0, 0, 400, 400))
+	// Box in normalized 0.0-1.0: x from 0.25 to 0.50 (100 to 200), y from 0.25 to 0.50 (100 to 200)
+	// Base width = 100, Base height = 100
+	// With 10px padding on each side: width = 100 + 20 = 120, height = 100 + 20 = 120
+	box := []float64{0.25, 0.25, 0.50, 0.50}
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	webUrl, err := CropDiagram(src, box, tempDir)
+	assert.NoError(t, err)
+
+	filePath := filepath.Join(tempDir, filepath.Base(webUrl))
+	fileBytes, err := os.ReadFile(filePath)
+	assert.NoError(t, err)
+
+	decoded, _, err := image.Decode(bytes.NewReader(fileBytes))
+	assert.NoError(t, err)
+	assert.Equal(t, 120, decoded.Bounds().Dx())
+	assert.Equal(t, 120, decoded.Bounds().Dy())
+}
+
 func TestCompressAndResizeImage(t *testing.T) {
 	// Create a 2000x1000 RGBA image
 	src := image.NewRGBA(image.Rect(0, 0, 2000, 1000))
