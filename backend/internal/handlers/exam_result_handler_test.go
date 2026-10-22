@@ -109,3 +109,55 @@ func TestSubmitExam(t *testing.T) {
 	json.Unmarshal(w.Body.Bytes(), &res)
 	assert.Contains(t, []string{"graded", "pending"}, res["status"])
 }
+
+func TestSubmitExam_EmptyEssayQuestion(t *testing.T) {
+	r, db, cleanup := setupExamTestEnv(t)
+	defer cleanup()
+
+	qID := uuid.New()
+	question := models.Question{
+		ID:              qID,
+		Content:         "Giải bài toán",
+		Type:            "Tự luận",
+		DifficultyPoint: 1.0,
+		Tags:            "[]",
+		Options:         "[]",
+		SolutionGuide:   `{"steps":[{"step":1,"title":"Bước 1","point":1.0}]}`,
+	}
+	db.Create(&question)
+
+	examID := uuid.New()
+	exam := models.Exam{
+		ID:          examID,
+		Title:       "Test Essay Exam",
+		ExamCode:    "TEE123",
+		Type:        "practice",
+		Grade:       "9",
+		QuestionIDs: pq.StringArray{qID.String()},
+	}
+	db.Create(&exam)
+
+	payload := map[string]interface{}{
+		"answers": []map[string]interface{}{
+			{
+				"questionId":    qID.String(),
+				"studentAnswer": "",
+				"isEssay":       true,
+			},
+		},
+	}
+
+	body, _ := json.Marshal(payload)
+	req, _ := http.NewRequest("POST", "/api/v1/exams/"+examID.String()+"/submit", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var sub models.Submission
+	err := db.Where("exam_id = ?", examID).First(&sub).Error
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), sub.TotalScore)
+}

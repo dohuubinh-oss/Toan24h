@@ -218,6 +218,7 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 					QuestionID:      qID,
 					QuestionContent: question.Content,
 					CorrectAnswer:   question.CorrectAnswer,
+					SolutionGuide:   question.SolutionGuide,
 					MaxScore:        float64(question.DifficultyPoint),
 					StudentAnswer:   ans.StudentAnswer,
 				})
@@ -275,6 +276,8 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 				ans.AIExplanation = res.Explanation
 				ans.ErrorLocation = res.ErrorLocation
 				ans.DeductionReason = res.DeductionReason
+				ans.StepResults = res.StepResults
+				ans.IsAlternativeMethod = res.IsAlternativeMethod
 				totalScore += ans.Score
 				answersMap[res.QuestionID] = ans
 			}
