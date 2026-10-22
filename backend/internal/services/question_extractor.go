@@ -25,6 +25,25 @@ type DiagramInfo struct {
 	ImageIndex  int       `json:"image_index"`
 	Box2D       []float64 `json:"box_2d"` // [ymin, xmin, ymax, xmax]
 	Placeholder string    `json:"placeholder"`
+	ID          string    `json:"id,omitempty"`
+	Tag         string    `json:"tag,omitempty"`
+	Name        string    `json:"name,omitempty"`
+}
+
+func (d *DiagramInfo) GetPlaceholder() string {
+	if d.Placeholder != "" {
+		return d.Placeholder
+	}
+	if d.ID != "" {
+		return d.ID
+	}
+	if d.Tag != "" {
+		return d.Tag
+	}
+	if d.Name != "" {
+		return d.Name
+	}
+	return ""
 }
 
 type FlexibleInt int
@@ -65,6 +84,11 @@ type ExtractedQuestionItem struct {
 	Mistakes        string      `json:"mistakes"`
 }
 
+type rawGeminiQuestion struct {
+	ExtractedQuestionItem
+	Diagrams []DiagramInfo `json:"diagrams,omitempty"`
+}
+
 type ExtractedQuestionBlock struct {
 	SharedContent *string                 `json:"shared_content"`
 	TypeQuestion  string                  `json:"type_question"`
@@ -72,12 +96,12 @@ type ExtractedQuestionBlock struct {
 }
 
 type rawGeminiBlock struct {
-	SharedContent *string                 `json:"shared_content"`
-	TypeQuestion  string                  `json:"type_question"`
-	IsGroup       *bool                   `json:"is_group,omitempty"`
-	Point         *FlexibleInt            `json:"point,omitempty"`
-	Questions     []ExtractedQuestionItem `json:"questions"`
-	Diagrams      []DiagramInfo           `json:"diagrams,omitempty"`
+	SharedContent *string             `json:"shared_content"`
+	TypeQuestion  string              `json:"type_question"`
+	IsGroup       *bool               `json:"is_group,omitempty"`
+	Point         *FlexibleInt        `json:"point,omitempty"`
+	Questions     []rawGeminiQuestion `json:"questions"`
+	Diagrams      []DiagramInfo       `json:"diagrams,omitempty"`
 }
 
 var (
@@ -368,6 +392,25 @@ func detectGradeFromTopic(rawTopic string, fallback ...int) int {
 	return 9
 }
 
+// cleanAndAppendDiagram loại bỏ placeholder khỏi giữa câu văn và nối ảnh vào cuối nội dung
+func cleanAndAppendDiagram(text string, placeholder string, imgTag string) string {
+	cleaned := text
+	if placeholder != "" && strings.Contains(text, placeholder) {
+		cleaned = strings.ReplaceAll(text, placeholder, "")
+		// Dọn dẹp khoảng trắng thừa trước dấu câu (ví dụ: "600m [DIAGRAM_0_0]. Khoảng cách" -> "600m. Khoảng cách")
+		rxPunct := regexp.MustCompile(`[ \t]+([.,;?!])`)
+		cleaned = rxPunct.ReplaceAllString(cleaned, "$1")
+		// Thu gọn khoảng trắng liên tiếp
+		rxSpaces := regexp.MustCompile(`[ \t]{2,}`)
+		cleaned = rxSpaces.ReplaceAllString(cleaned, " ")
+	}
+	cleaned = strings.TrimSpace(cleaned)
+	if cleaned == "" {
+		return imgTag
+	}
+	return cleaned + "\n" + imgTag
+}
+
 // ParseAndProcessExtractedBlocks processes raw JSON from Gemini and crops any diagrams
 func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, tempDir string, fallbackGrade ...int) ([]ExtractedQuestionBlock, error) {
 	cleanJson := utils.SanitizeJSON(rawJson)
@@ -535,8 +578,38 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 			}
 		}
 
-		for _, diag := range rb.Diagrams {
-			if diag.Placeholder == "" || len(diag.Box2D) < 4 {
+		var allDiagrams []DiagramInfo
+		allDiagrams = append(allDiagrams, rb.Diagrams...)
+		for _, q := range rb.Questions {
+			allDiagrams = append(allDiagrams, q.Diagrams...)
+		}
+
+		rxDiagPlaceholder := regexp.MustCompile(`\[DIAGRAM_\d+_\d+\]`)
+
+		for _, diag := range allDiagrams {
+			placeholder := diag.GetPlaceholder()
+			if len(diag.Box2D) < 4 {
+				continue
+			}
+
+			// If placeholder is not explicitly set, auto-match from content
+			if placeholder == "" {
+				if sharedContent != nil {
+					if match := rxDiagPlaceholder.FindString(*sharedContent); match != "" {
+						placeholder = match
+					}
+				}
+				if placeholder == "" {
+					for _, q := range rb.Questions {
+						if match := rxDiagPlaceholder.FindString(q.Content); match != "" {
+							placeholder = match
+							break
+						}
+					}
+				}
+			}
+
+			if placeholder == "" {
 				continue
 			}
 
@@ -544,44 +617,77 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 				srcImg := sourceImages[diag.ImageIndex]
 				croppedUrl, err := utils.CropDiagram(srcImg, diag.Box2D, tempDir)
 				if err == nil && croppedUrl != "" {
-					imgTag := fmt.Sprintf(`<img src="%s" alt="Hình vẽ" class="max-w-md mx-auto my-3 rounded-xl border border-slate-200" />`, croppedUrl)
+					imgTag := fmt.Sprintf(`<img src="%s" alt="Hình vẽ" class="max-w-full md:max-w-[500px] w-auto h-auto mx-auto my-3 rounded-xl border border-slate-200 shadow-sm" />`, croppedUrl)
 
-					if sharedContent != nil {
-						updated := strings.ReplaceAll(*sharedContent, diag.Placeholder, imgTag)
+					applied := false
+					if sharedContent != nil && placeholder != "" && strings.Contains(*sharedContent, placeholder) {
+						updated := cleanAndAppendDiagram(*sharedContent, placeholder, imgTag)
 						sharedContent = &updated
+						applied = true
 					}
 
 					for qIdx := range rb.Questions {
 						q := &rb.Questions[qIdx]
-						q.Content = strings.ReplaceAll(q.Content, diag.Placeholder, imgTag)
-						if solStr, ok := q.SolutionGuide.(string); ok {
-							q.SolutionGuide = strings.ReplaceAll(solStr, diag.Placeholder, imgTag)
+						if placeholder != "" && strings.Contains(q.Content, placeholder) {
+							q.Content = cleanAndAppendDiagram(q.Content, placeholder, imgTag)
+							applied = true
+						}
+						if solStr, ok := q.SolutionGuide.(string); ok && placeholder != "" && strings.Contains(solStr, placeholder) {
+							q.SolutionGuide = cleanAndAppendDiagram(solStr, placeholder, imgTag)
+							applied = true
 						} else if solMap, ok := q.SolutionGuide.(map[string]interface{}); ok {
-							if conclusion, ok := solMap["conclusion"].(string); ok {
-								solMap["conclusion"] = strings.ReplaceAll(conclusion, diag.Placeholder, imgTag)
+							if conclusion, ok := solMap["conclusion"].(string); ok && placeholder != "" && strings.Contains(conclusion, placeholder) {
+								solMap["conclusion"] = cleanAndAppendDiagram(conclusion, placeholder, imgTag)
+								applied = true
 							}
 							if steps, ok := solMap["steps"].([]interface{}); ok {
 								for _, stepItem := range steps {
 									if stepMap, ok := stepItem.(map[string]interface{}); ok {
-										if content, ok := stepMap["content"].(string); ok {
-											stepMap["content"] = strings.ReplaceAll(content, diag.Placeholder, imgTag)
+										if content, ok := stepMap["content"].(string); ok && placeholder != "" && strings.Contains(content, placeholder) {
+											stepMap["content"] = cleanAndAppendDiagram(content, placeholder, imgTag)
+											applied = true
 										}
-										if formula, ok := stepMap["formula"].(string); ok {
-											stepMap["formula"] = strings.ReplaceAll(formula, diag.Placeholder, imgTag)
+										if formula, ok := stepMap["formula"].(string); ok && placeholder != "" && strings.Contains(formula, placeholder) {
+											stepMap["formula"] = cleanAndAppendDiagram(formula, placeholder, imgTag)
+											applied = true
 										}
 									}
 								}
 							}
 						}
 					}
+
+					// Fallback: nếu không tìm thấy placeholder trong nội dung nhưng câu hỏi thuộc dạng đơn lẻ
+					if !applied && len(rb.Questions) == 1 {
+						rb.Questions[0].Content = cleanAndAppendDiagram(rb.Questions[0].Content, "", imgTag)
+					}
 				}
 			}
+		}
+
+		// Dọn dẹp bất kỳ placeholder mồ côi nào còn sót lại (orphan cleanup)
+		rxOrphanDiagram := regexp.MustCompile(`\s*\[DIAGRAM_\d+_\d+\]\s*`)
+		if sharedContent != nil {
+			updated := strings.TrimSpace(rxOrphanDiagram.ReplaceAllString(*sharedContent, " "))
+			sharedContent = &updated
+		}
+		for qIdx := range rb.Questions {
+			q := &rb.Questions[qIdx]
+			q.Content = strings.TrimSpace(rxOrphanDiagram.ReplaceAllString(q.Content, " "))
+			if solStr, ok := q.SolutionGuide.(string); ok {
+				q.SolutionGuide = strings.TrimSpace(rxOrphanDiagram.ReplaceAllString(solStr, " "))
+			}
+		}
+
+		finalQuestions := make([]ExtractedQuestionItem, len(rb.Questions))
+		for qIdx := range rb.Questions {
+			finalQuestions[qIdx] = rb.Questions[qIdx].ExtractedQuestionItem
 		}
 
 		blocks[bIdx] = ExtractedQuestionBlock{
 			SharedContent: sharedContent,
 			TypeQuestion:  tq,
-			Questions:     rb.Questions,
+			Questions:     finalQuestions,
 		}
 	}
 
@@ -652,6 +758,12 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
 1. "shared_content": Chuỗi nội dung dẫn chung (nếu là câu hỏi chùm) hoặc null (nếu là câu hỏi đơn lẻ).
 2. "type_question": string ('group' cho câu hỏi chùm | 'single' cho câu hỏi đơn).
    TUYỆT ĐỐI KHÔNG TẠO TRƯỜNG "is_group" TRONG ĐẦU RA JSON. Cấu trúc mỗi block CHỈ gồm đúng 3 trường: "shared_content", "type_question", "questions".
+   - QUY TẮC BẮT BUỘC PHÂN BIỆT CÂU HỎI ĐƠN VÀ CÂU HỎI CHÙM:
+     + CÂU HỎI ĐƠN ('single'): Áp dụng cho các câu hỏi độc lập (như Câu 1, Câu 2, ..., Câu 15 trắc nghiệm trong đề thi).
+       * BẮT BUỘC mỗi câu hỏi đơn phải là MỘT block riêng biệt trong mảng JSON: {"shared_content": null, "type_question": "single", "questions": [ { ... } ]}.
+       * TUYỆT ĐỐI KHÔNG GOM NHIỀU CÂU HỎI ĐƠN VÀO CÙNG MỘT BLOCK! Nếu đề có 15 câu trắc nghiệm độc lập thì đầu ra JSON BẮT BUỘC là một mảng gồm 15 block riêng biệt.
+       * Các tiêu đề phân phần của đề thi (như "I. PHẦN TRẮC NGHIỆM", "II. TỰ LUẬN", "Phần 1: 5.0 điểm") KHÔNG PHẢI là câu hỏi chùm, TUYỆT ĐỐI KHÔNG dùng tiêu đề phần để tạo block 'group'.
+     + CÂU HỎI CHÙM ('group'): CHỈ ĐƯỢC DÙNG khi các câu hỏi con CÙNG DÙNG CHUNG một đoạn văn bản ngữ cảnh, bảng biểu hoặc bài toán gốc được đặt trong "shared_content" (ví dụ: "Cho tam giác ABC... Hãy trả lời các câu sau: a) ..., b) ..."). Khi đó "shared_content" KHÔNG ĐƯỢC để null. Nếu không có nội dung dùng chung ("shared_content": null), TUYỆT ĐỐI KHÔNG được để "type_question": "group".
 3. QUY TẮC BẮT BUỘC VỀ CÔNG THỨC TOÁN HỌC (TUYỆT ĐỐI KHÔNG CÓ TRƯỜNG NGOẠI LỆ):
    - BẮT BUỘC 100%% TẤT CẢ các công thức toán học, biểu thức, phương trình, hệ phương trình, ký hiệu, phân số, căn thức, biến số và đáp số toán học trong TOÀN BỘ file JSON (trong "content", từng phương án trong "options", "correct_answer", "formula", "conclusion", "hint", "short_answer") ĐỀU PHẢI ĐƯỢC BỌC TRONG CẶP DẤU $...$ (hoặc $$...$$).
    - KÝ HIỆU GÓC HÌNH HỌC: BẮT BUỘC dùng dấu mũ trên đỉnh chữ cái theo cú pháp LaTeX chuẩn: dùng \hat{A}, \hat{B}, \hat{C} cho góc 1 chữ cái hoặc \widehat{ABC}, \widehat{xOy} cho góc 3 chữ cái (ví dụ: \hat{A} = \hat{C}, \widehat{ABC} = 60^\circ). TUYỆT ĐỐI KHÔNG dùng \angle hoặc ký tự Unicode ∠.
@@ -690,46 +802,90 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
 18. "mistakes": Các lỗi sai học sinh thường vấp phải.
 19. Bảng biến thiên, Bảng xét dấu hoặc Bảng số liệu: HÃY chuyển đổi trực tiếp thành bảng HTML (thẻ <table>, <tr>, <td>) hoặc bảng Markdown rõ ràng, KHÔNG cắt thành ảnh.
 20. Với Hình vẽ hình học (hình học phẳng, hình không gian) và Đồ thị hàm số trên hệ trục Oxy:
-    - Điền mã định danh vào vị trí tương ứng trong đề bài hoặc lời giải, ví dụ: [DIAGRAM_0_1] (0 là chỉ số trang ảnh 0-indexed, 1 là thứ tự hình).
-    - Khai báo thông tin vào mảng "diagrams" với tọa độ chuẩn hóa box_2d [ymin, xmin, ymax, xmax] (thang đo 0-1000).
+    - BẮT BUỘC đặt placeholder dạng [DIAGRAM_0_0] (0 là chỉ số trang ảnh 0-indexed, 0 là số thứ tự hình) ở CUỐI CÙNG của "content" hoặc "shared_content" (sau khi đã hết toàn bộ câu hỏi và dấu câu), TUYỆT ĐỐI KHÔNG chèn vào giữa các câu văn hoặc giữa đề bài.
+    - KHI VÀ CHỈ KHI bạn xác định được tọa độ hình vẽ và khai báo vào mảng "diagrams".
+    - Mảng "diagrams" (đặt ở cấp block hoặc cấp question) BẮT BUỘC có cấu trúc:
+      "diagrams": [
+        {
+          "placeholder": "[DIAGRAM_0_0]",
+          "image_index": 0,
+          "box_2d": [ymin, xmin, ymax, xmax]
+        }
+      ]
+      Trong đó box_2d là tọa độ hộp bao quanh hình vẽ chuẩn hóa [ymin, xmin, ymax, xmax] (thang đo 0-1000).
+    - TUYỆT ĐỐI KHÔNG tự chèn [DIAGRAM_X_Y] vào đề bài nếu không có tọa độ box_2d tương ứng trong "diagrams".
 21. CẤU TRÚC ĐẦU RA JSON MẪU (OUTPUT SCHEMA - TUYỆT ĐỐI KHÔNG CÓ TRƯỜNG "is_group"):
 [
   {
-    "shared_content": "Chuỗi nội dung dẫn chung (nếu là câu hỏi chùm) hoặc null (nếu là câu hỏi đơn lẻ)",
-    "type_question": "string ('group' cho câu hỏi chùm | 'single' cho câu hỏi đơn)",
+    "shared_content": null,
+    "type_question": "single",
+    "diagrams": [
+      {
+        "placeholder": "[DIAGRAM_0_0]",
+        "image_index": 0,
+        "box_2d": [20, 600, 260, 920]
+      }
+    ],
     "questions": [
       {
-        "content": "Nội dung câu hỏi bằng LaTeX: Cho phương trình $x^2 - 5x + 6 = 0$...",
-        "type": "string (Chỉ chọn một trong hai: 'Trắc nghiệm' hoặc 'Tự luận')",
-        "grade": 9,
-        "topic": "Định lý Viète và ứng dụng",
-        "difficulty_level": "string (Chỉ chọn một trong: 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao')",
+        "content": "Nhà bạn An (vị trí A trên hình vẽ) cách nhà bạn Châu 600m và cách nhà bạn Bình 450m. Biết rằng 3 vị trí... Khoảng cách từ nhà Bình đến nhà Châu bằng:\n[DIAGRAM_0_0]",
+        "type": "Trắc nghiệm",
+        "grade": 8,
+        "topic": "Định lý Pythagore",
+        "difficulty_level": "Thông hiểu",
         "difficulty_point": 5.0,
         "point": 1,
-        "tags": ["Phương trình bậc hai", "Định lý Viète"],
-        "options": ["$x = 2; x = 3$", "$x = 1; x = 6$", "$x = -2; x = -3$", "Vô nghiệm"],
-        "correct_answer": "$x = 2; x = 3$",
+        "tags": ["Tam giác vuông", "Pythagore"],
+        "options": ["$725\\text{m}$", "$705\\text{m}$", "$750\\text{m}$", "$725$"],
+        "correct_answer": "$750\\text{m}$",
         "solution_guide": {
           "steps": [
             {
               "step": 1,
-              "title": "Áp dụng định lý Viète",
-              "content": "Tính tổng và tích các nghiệm của phương trình:",
-              "formula": "$S = x_1 + x_2 = 5, \\quad P = x_1 x_2 = 6$"
-            },
-            {
-              "step": 2,
-              "title": "Tìm nghiệm",
-              "content": "Các nghiệm của phương trình là:",
-              "formula": "$x_1 = 2, \\quad x_2 = 3$"
+              "title": "Áp dụng định lý Pythagore",
+              "content": "Áp dụng định lý Pythagore vào tam giác vuông:",
+              "formula": "$BC = \\sqrt{600^2 + 450^2} = 750\\text{m}$"
             }
           ],
-          "conclusion": "Vậy phương trình có hai nghiệm là $x = 2$ và $x = 3$."
+          "conclusion": "Vậy khoảng cách bằng $750\\text{m}$."
         },
-        "hint": "Chỉ dẫn nhỏ, gợi nhớ công thức hoặc hướng tiếp cận bài toán",
-        "short_answer": "Lời giải ngắn gọn, cô đọng nhất giúp học sinh nhìn vào là biết cách giải",
-        "general_method": "Công thức tổng quát hóa cho dạng bài toán này",
-        "mistakes": "Các lỗi sai học sinh thường vấp phải"
+        "hint": "Áp dụng định lý Pythagore cho tam giác vuông",
+        "short_answer": "$BC = \\sqrt{600^2 + 450^2} = 750\\text{m}$",
+        "general_method": "Sử dụng định lý Pythagore",
+        "mistakes": "Nhầm cạnh huyền với cạnh góc vuông"
+      }
+    ]
+  },
+  {
+    "shared_content": "Cho tam giác $ABC$ vuông tại $A$, đường cao $AH$. Biết $AB = 6\\text{ cm}$, $AC = 8\\text{ cm}$.",
+    "type_question": "group",
+    "questions": [
+      {
+        "content": "Tính độ dài cạnh huyền $BC$.",
+        "type": "Tự luận",
+        "grade": 9,
+        "topic": "Hệ thức giữa cạnh và góc",
+        "difficulty_level": "Nhận biết",
+        "difficulty_point": 2.5,
+        "point": 1,
+        "tags": ["Hệ thức lượng", "Tam giác vuông"],
+        "options": [],
+        "correct_answer": "$BC = 10\\text{ cm}$",
+        "solution_guide": {
+          "steps": [
+            {
+              "step": 1,
+              "title": "Áp dụng định lý Pythagoras",
+              "content": "Áp dụng định lý Pythagoras vào tam giác $ABC$ vuông tại $A$:",
+              "formula": "$BC^2 = AB^2 + AC^2 = 6^2 + 8^2 = 100 \\implies BC = 10\\text{ cm}$"
+            }
+          ],
+          "conclusion": "Vậy $BC = 10\\text{ cm}$."
+        },
+        "hint": "Sử dụng định lý Pythagoras trong tam giác vuông",
+        "short_answer": "$BC = \\sqrt{6^2 + 8^2} = 10\\text{ cm}$",
+        "general_method": "Áp dụng định lý Pythagoras $BC = \\sqrt{AB^2 + AC^2}$",
+        "mistakes": "Quên khai căn bậc hai sau khi cộng bình phương"
       }
     ]
   }

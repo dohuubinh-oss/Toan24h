@@ -102,7 +102,7 @@
   .ProseMirror img,
   .latex-font img,
   .prose img {
-    width: 100% !important;
+    width: auto !important;
     max-width: 100% !important;
     height: auto !important;
     max-height: none !important;
@@ -110,6 +110,14 @@
     display: block;
     margin: 1rem auto;
     border-radius: 0.75rem;
+  }
+
+  @media (min-width: 768px) {
+    .ProseMirror img,
+    .latex-font img,
+    .prose img {
+      max-width: 500px !important;
+    }
   }
 }
 

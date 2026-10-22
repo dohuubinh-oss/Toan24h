@@ -535,5 +535,163 @@ func TestParseAndProcessExtractedBlocks_ShortAnswer(t *testing.T) {
 	assert.Equal(t, "Bấm máy tính Casio 580", blocks2[0].Questions[0].QuickSolveTips)
 }
 
+func TestParseAndProcessExtractedBlocks_DiagramInQuestion(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	img := image.NewRGBA(image.Rect(0, 0, 300, 300))
+	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{255, 0, 0, 255}}, image.Point{}, draw.Src)
+	images := []image.Image{img}
+
+	rawJSON := `[
+		{
+			"shared_content": null,
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Nhà bạn An (vị trí A trên hình vẽ) ... [DIAGRAM_0_0]",
+					"type": "Trắc nghiệm",
+					"options": ["A. 725m", "B. 705m", "C. 750m", "D. 725"],
+					"correct_answer": "C. 750m",
+					"diagrams": [
+						{
+							"image_index": 0,
+							"box_2d": [30, 600, 260, 920],
+							"placeholder": "[DIAGRAM_0_0]"
+						}
+					]
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, images, tempDir, 8)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+	assert.Len(t, blocks[0].Questions, 1)
+
+	// Diagram inside question should be cropped and replaced with <img> tag
+	assert.True(t, strings.Contains(blocks[0].Questions[0].Content, `<img src="/uploads/temp/`))
+	assert.False(t, strings.Contains(blocks[0].Questions[0].Content, `[DIAGRAM_0_0]`))
+}
+
+func TestParseAndProcessExtractedBlocks_DiagramFlexibleID(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	img := image.NewRGBA(image.Rect(0, 0, 300, 300))
+	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{0, 0, 255, 255}}, image.Point{}, draw.Src)
+	images := []image.Image{img}
+
+	rawJSON := `[
+		{
+			"shared_content": null,
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Tứ giác ABCD trong hình vẽ [DIAGRAM_0_1] là hình gì?",
+					"type": "Trắc nghiệm",
+					"options": ["A. Hình vuông", "B. Hình thoi"],
+					"correct_answer": "B. Hình thoi"
+				}
+			],
+			"diagrams": [
+				{
+					"image_index": 0,
+					"box_2d": [470, 500, 670, 780],
+					"id": "[DIAGRAM_0_1]"
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, images, tempDir, 8)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+
+	// "id" field should be recognized as placeholder, cropped, and replaced AFTER the question content
+	content := blocks[0].Questions[0].Content
+	assert.True(t, strings.Contains(content, `<img src="/uploads/temp/`))
+	assert.True(t, strings.Contains(content, `md:max-w-[500px]`))
+	assert.False(t, strings.Contains(content, `[DIAGRAM_0_1]`))
+	// Verify image is placed after the text, not inserted in the middle of sentences
+	assert.True(t, strings.HasPrefix(content, "Tứ giác ABCD trong hình vẽ là hình gì?"))
+	assert.True(t, strings.HasSuffix(strings.TrimSpace(content), `/>`))
+}
+
+func TestParseAndProcessExtractedBlocks_DiagramAppendedAfterContent(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	img := image.NewRGBA(image.Rect(0, 0, 300, 300))
+	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{0, 255, 0, 255}}, image.Point{}, draw.Src)
+	images := []image.Image{img}
+
+	// Placeholder is inserted in the middle of a sentence with period
+	rawJSON := `[
+		{
+			"shared_content": null,
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Nhà bạn An cách nhà bạn Châu 600m [DIAGRAM_0_0]. Khoảng cách từ nhà Bình đến nhà Châu bằng bao nhiêu?",
+					"type": "Trắc nghiệm",
+					"options": ["A. 725m", "B. 750m"],
+					"correct_answer": "B. 750m",
+					"diagrams": [
+						{
+							"image_index": 0,
+							"box_2d": [10, 600, 250, 900],
+							"placeholder": "[DIAGRAM_0_0]"
+						}
+					]
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, images, tempDir, 8)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+
+	content := blocks[0].Questions[0].Content
+	// Sentence should be continuous without placeholder
+	assert.True(t, strings.HasPrefix(content, "Nhà bạn An cách nhà bạn Châu 600m. Khoảng cách từ nhà Bình đến nhà Châu bằng bao nhiêu?"))
+	// Image tag must be at the end, after the question
+	assert.True(t, strings.Contains(content, `<img src="/uploads/temp/`))
+	assert.True(t, strings.Contains(content, `md:max-w-[500px]`))
+	assert.True(t, strings.HasSuffix(strings.TrimSpace(content), `/>`))
+}
+
+func TestParseAndProcessExtractedBlocks_OrphanDiagramCleanedUp(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	// No diagrams provided or image is nil, but text contains orphan placeholder [DIAGRAM_0_0]
+	rawJSON := `[
+		{
+			"shared_content": null,
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Nhà bạn An (vị trí A trên hình vẽ) cách nhà bạn Châu 600m [DIAGRAM_0_0]. Khoảng cách bằng:",
+					"type": "Trắc nghiệm",
+					"options": ["A. 725m", "B. 750m"],
+					"correct_answer": "B. 750m"
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 8)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+
+	// Orphan placeholder [DIAGRAM_0_0] must NOT be left in the question content!
+	assert.False(t, strings.Contains(blocks[0].Questions[0].Content, `[DIAGRAM_0_0]`))
+	assert.True(t, strings.Contains(blocks[0].Questions[0].Content, `Khoảng cách bằng:`))
+}
+
+
 
 
