@@ -748,6 +748,45 @@ func TestParseAndProcessExtractedBlocks_OrphanDiagramCleanedUp(t *testing.T) {
 	assert.True(t, strings.Contains(blocks[0].Questions[0].Content, `Khoảng cách bằng:`))
 }
 
+func TestParseAndProcessExtractedBlocks_StepPoints(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
 
+	rawJSON := `[
+		{
+			"shared_content": null,
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Tính diện tích hình tròn có bán kính $R = 5\\text{ cm}$.",
+					"type": "Tự luận",
+					"point": 2,
+					"solution_guide": {
+						"steps": [
+							{ "step": 1, "title": "Công thức", "content": "Nêu công thức", "point": 0.5 },
+							{ "step": 2, "title": "Thay số", "content": "Thay $R=5$", "point": 1.5 }
+						],
+						"conclusion": "Vậy $S = 25\\pi$"
+					}
+				}
+			]
+		}
+	]`
 
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
 
+	q := blocks[0].Questions[0]
+	solMap, ok := q.SolutionGuide.(map[string]interface{})
+	assert.True(t, ok)
+	steps, ok := solMap["steps"].([]interface{})
+	assert.True(t, ok)
+	assert.Len(t, steps, 2)
+
+	step1 := steps[0].(map[string]interface{})
+	assert.Equal(t, 0.5, step1["point"])
+
+	step2 := steps[1].(map[string]interface{})
+	assert.Equal(t, 1.5, step2["point"])
+}

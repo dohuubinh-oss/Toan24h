@@ -643,7 +643,9 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 
 			if diag.ImageIndex >= 0 && diag.ImageIndex < len(sourceImages) && sourceImages[diag.ImageIndex] != nil {
 				srcImg := sourceImages[diag.ImageIndex]
+				log.Printf("[CROP DEBUG] ImageIndex=%d Bounds=%+v Box2D=%v", diag.ImageIndex, srcImg.Bounds(), diag.Box2D)
 				croppedUrl, err := utils.CropDiagram(srcImg, diag.Box2D, tempDir)
+				log.Printf("[CROP DEBUG] Result URL=%s Err=%v", croppedUrl, err)
 				if err == nil && croppedUrl != "" {
 					imgTag := fmt.Sprintf(`<img src="%s" alt="Hình vẽ" class="max-w-full md:max-w-[500px] w-auto h-auto mx-auto my-3 rounded-xl border border-slate-200 shadow-sm" />`, croppedUrl)
 
@@ -828,6 +830,7 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
       + "title": string (Tên bước thực hiện ngắn gọn)
       + "content": string (Nội dung giải thích ngắn gọn bằng chữ, dùng ký hiệu • để đầu dòng khi liệt kê, tuyệt đối không dùng + hoặc -, không có ký tự xuống dòng, dùng <br> nếu muốn ngắt dòng)
       + "formula": string (Biểu thức LaTeX của bước này bọc trong $...$, nhưng không lặp lại Biểu thức đã có trên trường content hoặc null nếu không có)
+      + "point": float (Thang điểm cho bước này. BẮT BUỘC tổng điểm các bước giải phải bằng điểm của câu hỏi "point", ví dụ câu 1 điểm thì bước 1 là 0.5, bước 2 là 0.5; câu 2 điểm thì bước 1 là 1.0, bước 2 là 1.0)
     - "conclusion": string (Nội dung kết luận/đáp số cuối cùng)
 15. "hint": Chỉ dẫn nhỏ, gợi nhớ công thức hoặc hướng tiếp cận bài toán.
 16. "short_answer": Lời giải ngắn gọn, cô đọng nhất giúp học sinh nhìn vào là biết ngay cách giải bài toán. Nếu đề bài/tài liệu gốc có sẵn đáp án mẫu hoặc lời giải vắn tắt thì trích xuất vào; nếu không có thì AI bắt buộc phải tự giải và sinh ra lời giải ngắn gọn, súc tích nhất.
@@ -850,12 +853,14 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
       + BẮT BUỘC CẮT TRỌN VẸN HÌNH VÀ TẤT CẢ CHỮ/SỐ/KÝ HIỆU MINH HOẠ CỦA HÌNH ĐÓ:
         * Bao gồm toàn bộ nét vẽ của hình, tên các đỉnh (A, B, C, D...), ký hiệu góc vuông, số đo góc.
         * BẮT BUỘC BAO GỒM TẤT CẢ CÁC ĐƯỜNG GIÓNG KÍCH THƯỚC, MŨI TÊN KÍCH THƯỚC VÀ CHỮ SỐ/KÝ HIỆU KÍCH THƯỚC Ở TẤT CẢ CÁC PHÍA (ví dụ các mũi tên đỏ và nhãn kích thước "6 (cm)", "8 (cm)", "x (cm)", "y (cm)").
-        * TỌA ĐỘ xmin (mép trái): PHẢI mở rộng đủ sang bên trái để BAO TRỌN 100%% tất cả các mũi tên gióng kích thước và các nhãn chữ/số ở bên trái hình (như "6 (cm)", "x (cm)"). TUYỆT ĐỐI KHÔNG ĐƯỢC đặt xmin sát vào cạnh hình làm cắt lẹm các chữ số và mũi tên bên trái!
-        * TỌA ĐỘ ymin (mép trên): PHẢI bao trọn đỉnh cao nhất cùng mũi tên hoặc nhãn kích thước ở mép trên cùng của hình.
+        * TỌA ĐỘ xmin (mép trái): BẮT BUỘC PHẢI MỞ RỘNG ĐỦ SANG BÊN TRÁI (thường xmin < 120 trên thang 1000) để BAO TRỌN 100%% tất cả các nhãn chữ/số và mũi tên đo đạc bên trái hình (như nhãn "y (cm)", "x (cm)", "6 (cm)"). TUYỆT ĐỐI KHÔNG ĐƯỢC đặt xmin sát vào cạnh đứng của hình làm cắt mất chữ 'x' hoặc số '6'!
+        * TỌA ĐỘ ymin (mép trên): BẮT BUỘC PHẢI BẮT ĐẦU TỪ KHOẢNG TRẮNG NGAY TRÊN ĐỈNH CAO NHẤT CỦA HÌNH VẼ HOẶC MŨI TÊN TRÊN CÙNG.
+          TUYỆT ĐỐI KHÔNG LẤY LÊN TRÊN VÀO KHỐI VĂN BẢN ĐỀ BÀI HOẶC KHUNG NỀN BO GÓC CỦA ĐỀ BÀI (kể cả chữ '(như hình vẽ)' hay 'Đa thức biểu thị diện tích...'). Nếu đề bài nằm trong khung màu bo góc, ymin PHẢI BẮT ĐẦU HOÀN TOÀN BÊN DƯỚI ĐÁY KHUNG NỀN ĐÓ!
         * TỌA ĐỘ xmax (mép phải): PHẢI bao trọn đỉnh và mũi tên/nhãn xa nhất bên phải của hình.
+        * TỌA ĐỘ ymax (mép dưới): DỪNG LẠI NGAY DƯỚI mũi tên hoặc nhãn số đo ở đáy hình (ví dụ ngay dưới "8 (cm)", "y (cm)"). TUYỆT ĐỐI KHÔNG kéo xuống dính vào các phương án A, B, C, D!
       + TUYỆT ĐỐI LOẠI TRỪ (KHÔNG ĐƯỢC ĐỂ DÍNH VÀO ẢNH CẮT):
-        * TUYỆT ĐỐI KHÔNG CHỨA VĂN BẢN ĐỀ BÀI: Tọa độ ymin phải nằm dưới dòng chữ cuối cùng của đề bài câu hỏi.
-        * TUYỆT ĐỐI KHÔNG CHỨA CÁC PHƯƠNG ÁN TRẮC NGHIỆM A, B, C, D (hoặc các khối đáp án nằm bên dưới hình vẽ): Các công thức toán học có tiền tố A, B, C, D bên dưới hình là các phương án lựa chọn, ĐÃ ĐƯỢC BÓC TÁCH VÀO "options", KHÔNG PHẢI là chú thích của hình vẽ. Tọa độ ymax BẮT BUỘC PHẢI DỪNG LẠI NGAY DƯỚI mũi tên hoặc nhãn số đo ở đáy hình (ví dụ ngay dưới "8 (cm)", "y (cm)"). TUYỆT ĐỐI KHÔNG ĐƯỢC kéo ymax xuống dính vào các phương án A, B, C, D!
+        * TUYỆT ĐỐI KHÔNG CHỨA VĂN BẢN ĐỀ BÀI HOẶC VIỀN KHUNG ĐỀ BÀI.
+        * TUYỆT ĐỐI KHÔNG CHỨA CÁC PHƯƠNG ÁN TRẮC NGHIỆM A, B, C, D (hoặc các khối đáp án nằm bên dưới hình vẽ): Các công thức toán học có tiền tố A, B, C, D bên dưới hình là các phương án lựa chọn, ĐÃ ĐƯỢC BÓC TÁCH VÀO "options", KHÔNG PHẢI là chú thích của hình vẽ.
     - TUYỆT ĐỐI KHÔNG tự chèn [DIAGRAM_X_Y] vào đề bài nếu không có tọa độ box_2d tương ứng trong "diagrams".
 21. CẤU TRÚC ĐẦU RA JSON MẪU (OUTPUT SCHEMA - TUYỆT ĐỐI KHÔNG CÓ TRƯỜNG "is_group"):
 [
@@ -887,7 +892,8 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
               "step": 1,
               "title": "Áp dụng định lý Pythagore",
               "content": "Áp dụng định lý Pythagore vào tam giác vuông:",
-              "formula": "$BC = \\sqrt{600^2 + 450^2} = 750\\text{m}$"
+              "formula": "$BC = \\sqrt{600^2 + 450^2} = 750\\text{m}$",
+              "point": 1.0
             }
           ],
           "conclusion": "Vậy khoảng cách bằng $750\\text{m}$."
@@ -1075,6 +1081,7 @@ CHỈ trả về DUY NHẤT chuỗi JSON hợp lệ (mảng các block), tuyệt
 		if len(response.Candidates) > 0 && len(response.Candidates[0].Content.Parts) > 0 {
 			rawJSON = response.Candidates[0].Content.Parts[0].Text
 			log.Printf("[AI Question Extractor] Successfully extracted questions using model: %s", currentModel)
+			log.Printf("[AI Question Extractor] RAW JSON: %s", rawJSON)
 			lastErr = nil
 			break
 		}
