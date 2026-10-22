@@ -75,12 +75,17 @@ func CropDiagram(src image.Image, box []float64, targetDir string) (string, erro
 	width := float64(bounds.Dx())
 	height := float64(bounds.Dy())
 
-	// Nới rộng mỗi phía 10px để tránh cắt lẹm viền, chữ hoặc chi tiết quanh hình vẽ
-	padding := 10
-	x0 := int(xmin*width) - padding
-	y0 := int(ymin*height) - padding
-	x1 := int(xmax*width) + padding
-	y1 := int(ymax*height) + padding
+	// Nới rộng chiều ngang (padX = 15px) để đảm bảo không bị lẹm các nhãn chữ/số bên trái (như "x (cm)", "6 (cm)")
+	// và mép phải. Không nới rộng lên trên (padYTop = 0px) để tránh cắt dính vào viền khung/chữ đề bài phía trên.
+	// Nới nhẹ phía dưới (padYBottom = 4px) để hình thoáng mà không dính vào các phương án A, B, C, D.
+	padX := 15
+	padYTop := 0
+	padYBottom := 8
+
+	x0 := int(xmin*width) - padX
+	y0 := int(ymin*height) - padYTop
+	x1 := int(xmax*width) + padX
+	y1 := int(ymax*height) + padYBottom
 
 	// Clamp to image dimensions
 	if x0 < bounds.Min.X {
@@ -95,6 +100,9 @@ func CropDiagram(src image.Image, box []float64, targetDir string) (string, erro
 	if y1 > bounds.Max.Y {
 		y1 = bounds.Max.Y
 	}
+
+	// Tinh chỉnh tọa độ thông minh: loại bỏ viền khung/chữ thừa phía trên và nới rộng đủ cho nhãn
+	x0, y0, x1, y1 = refineDiagramBounds(src, x0, y0, x1, y1)
 
 	// Ensure valid bounding area
 	if x1 <= x0 {
@@ -140,4 +148,124 @@ func CropDiagram(src image.Image, box []float64, targetDir string) (string, erro
 
 	// Always return the standard temp URL for frontend preview
 	return fmt.Sprintf("/uploads/temp/%s", fileName), nil
+}
+
+// refineDiagramBounds tự động rà quét để:
+// 1. Loại bỏ viền khung hoặc dòng chữ đề bài bị dính ở đỉnh (y0): nếu y0 rơi vào vùng chữ/khung màu
+//    và có khoảng trắng (nền trắng) ngăn cách với hình vẽ, y0 sẽ nhảy xuống dưới khoảng trắng đó.
+// 2. Nới rộng y1 xuống dưới nếu có các đường gióng kích thước/chữ số kích thước ở đáy (như 8 (cm), y (cm))
+//    trước khi chạm đến khoảng trắng ngăn cách với các phương án A, B, C, D.
+// 3. Nới rộng x0 sang trái để đảm bảo không bị lẹm các nhãn kích thước bên trái.
+func refineDiagramBounds(src image.Image, x0, y0, x1, y1 int) (int, int, int, int) {
+	b := src.Bounds()
+	if x0 < b.Min.X {
+		x0 = b.Min.X
+	}
+	if y0 < b.Min.Y {
+		y0 = b.Min.Y
+	}
+	if x1 > b.Max.X {
+		x1 = b.Max.X
+	}
+	if y1 > b.Max.Y {
+		y1 = b.Max.Y
+	}
+
+	// Chỉ áp dụng tinh chỉnh nâng cao nếu tài liệu có nền sáng/trắng (kiểm tra 4 góc ảnh)
+	cR, cG, cB, _ := src.At(b.Min.X, b.Min.Y).RGBA()
+	if (cR>>8) < 200 || (cG>>8) < 200 || (cB>>8) < 200 {
+		return x0, y0, x1, y1
+	}
+
+	isBg := func(x, y int) bool {
+		r, g, b, _ := src.At(x, y).RGBA()
+		r8, g8, b8 := int(r>>8), int(g>>8), int(b>>8)
+		return r8 >= 246 && g8 >= 246 && b8 >= 246
+	}
+
+	// 1. Refine y0 (top): Nếu y0 chạm vào văn bản đề bài hoặc khung màu của đề bài,
+	// tìm dải khoảng trắng (white gap) nằm giữa đề bài và đỉnh hình vẽ để cắt bỏ hoàn toàn phần thừa phía trên.
+	sampleW := x1 - x0
+	if sampleW > 10 {
+		for y := y0; y < y0+90 && y < y1-20; y++ {
+			bgCount := 0
+			for x := x0; x < x1; x++ {
+				if isBg(x, y) {
+					bgCount++
+				}
+			}
+			// Nếu hàng này gần như là nền trắng toàn bộ (>= 94%), đây là khoảng phân cách an toàn
+			if bgCount*100/sampleW >= 94 {
+				// Tìm hàng đầu tiên có nét vẽ/chữ của hình vẽ ngay sau khoảng trắng
+				for ny := y; ny < y1; ny++ {
+					hasInk := false
+					for x := x0; x < x1; x++ {
+						if !isBg(x, ny) {
+							hasInk = true
+							break
+						}
+					}
+					if hasInk {
+						y0 = ny - 2
+						if y0 < b.Min.Y {
+							y0 = b.Min.Y
+						}
+						break
+					}
+				}
+				break
+			}
+		}
+	}
+
+	// 2. Refine y1 (bottom): Mở rộng xuống dưới nếu có các đường gióng kích thước/nhãn số đo ở đáy
+	maxY := y1 + 70
+	if maxY > b.Max.Y {
+		maxY = b.Max.Y
+	}
+	lastInkY := y1
+	for y := y1; y < maxY; y++ {
+		inkCount := 0
+		for x := x0; x < x1; x++ {
+			if !isBg(x, y) {
+				inkCount++
+			}
+		}
+		if inkCount >= 4 {
+			lastInkY = y
+		} else if y > lastInkY+6 {
+			// Gặp dải trắng 6px trước khi đến phương án A, B, C, D thì dừng
+			break
+		}
+	}
+	y1 = lastInkY + 6
+	if y1 > b.Max.Y {
+		y1 = b.Max.Y
+	}
+
+	// 3. Refine x0 (left): Mở rộng sang trái để bao trọn nhãn kích thước bên trái
+	minX := x0 - 40
+	if minX < b.Min.X {
+		minX = b.Min.X
+	}
+	firstInkX := x0
+	for x := x0; x >= minX; x-- {
+		inkCount := 0
+		for y := y0; y < y1; y++ {
+			if !isBg(x, y) {
+				inkCount++
+			}
+		}
+		if inkCount >= 2 {
+			firstInkX = x
+		} else if x < firstInkX-5 {
+			break
+		}
+	}
+	x0 = firstInkX - 4
+	if x0 < b.Min.X {
+		x0 = b.Min.X
+	}
+
+	return x0, y0, x1, y1
 }
