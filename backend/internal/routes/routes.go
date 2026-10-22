@@ -138,6 +138,7 @@ func SetupRouter() *gin.Engine {
 			users.GET("/me", userHandler.GetProfile)
 			users.GET("", middleware.RoleMiddleware("admin"), userHandler.GetUsers)
 			users.PUT("/:id/status", middleware.RoleMiddleware("admin"), userHandler.UpdateUserStatus)
+			users.PUT("/:id/role", middleware.RoleMiddleware("admin"), userHandler.UpdateUserRole)
 			users.POST("/:id/recharge", middleware.RoleMiddleware("admin"), userHandler.RechargeUser)
 
 			users.PUT("/me/grade", authHandler.UpdateGrade)
@@ -208,6 +209,18 @@ func SetupRouter() *gin.Engine {
 			// Reported questions admin
 			staff.GET("/questions/reported", handlers.GetReportedQuestions)
 			staff.POST("/questions/reported/:id/resolve", handlers.ResolveReportQuestion)
+
+			// Vouchers admin & teacher
+			voucherHandler := handlers.NewVoucherHandler(config.DB)
+			staff.POST("/vouchers", voucherHandler.CreateVoucher)
+		}
+
+		// Voucher & Affiliate Access (admin, teacher, affiliate)
+		voucherAccess := protected.Group("")
+		voucherAccess.Use(middleware.RoleMiddleware("admin", "teacher", "affiliate"))
+		{
+			voucherHandler := handlers.NewVoucherHandler(config.DB)
+			voucherAccess.GET("/vouchers", voucherHandler.GetVouchers)
 		}
 
 		protected.POST("/ocr", ocrController.ExtractText)

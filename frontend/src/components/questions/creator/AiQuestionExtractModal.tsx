@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/Button'
 import { QuestionBlock } from '@/types/question'
 import { apiFetch } from '@/lib/api'
 import { toast } from '@/components/ui/ToastProvider'
-import { formatTextToHtml, formatQuestionContent, formatSolutionGuide } from './utils/questionTextFormatter'
+import { formatTextToHtml, formatQuestionContent, formatSolutionGuide, ensureMathDelimiters } from './utils/questionTextFormatter'
 
 export interface AiQuestionExtractModalProps {
   isOpen: boolean
@@ -171,22 +171,48 @@ export default function AiQuestionExtractModal({
       }
 
       // Chuẩn hóa đúng 100% CẤU TRÚC ĐẦU RA JSON MẪU (OUTPUT SCHEMA) của người dùng:
-      // Block: shared_content, type_question, questions
+      // Block: shared_content, type_question, questions (TUYỆT ĐỐI KHÔNG CÓ is_group)
       // Question: content, type, grade, topic, difficulty_level, difficulty_point, point, tags, options, correct_answer, solution_guide, hint, quick_solve_tips, general_method, mistakes
       const standardJsonBlocks = extractedBlocks.map((block) => {
+        const hasShared = block.shared_content !== null && block.shared_content !== undefined && block.shared_content.trim() !== '';
         const isGroup = block.type_question?.toLowerCase() === 'group' || 
           (block.questions && block.questions.length > 1) || 
-          (block.shared_content !== null && block.shared_content !== undefined && block.shared_content.trim() !== '')
+          hasShared;
 
         return {
-          shared_content: isGroup && block.shared_content ? block.shared_content : null,
+          shared_content: block.shared_content && block.shared_content.trim() !== '' ? block.shared_content : null,
           type_question: (isGroup ? 'group' : 'single') as 'group' | 'single',
           questions: (block.questions || []).map((q) => {
-            const cleanedOptions = (q.options || []).map((opt) =>
-              opt.replace(/^(?:<p>\s*)?[A-Da-d][.)]\s*/i, (match) =>
+            const cleanedOptions = (q.options || []).map((opt) => {
+              const stripped = opt.replace(/^(?:<p>\s*)?[A-Da-d][.)]\s*/i, (match) =>
                 match.startsWith('<p>') ? '<p>' : ''
               )
+              return ensureMathDelimiters(stripped)
+            })
+
+            let rawAns = (q.correct_answer || '').replace(/^(?:<p>\s*)?[A-Da-d][.)]\s*/i, (match) =>
+              match.startsWith('<p>') ? '<p>' : ''
             )
+            // Nếu đáp án là chữ cái A, B, C, D thì map sang option tương ứng
+            if (/^[A-Da-d]$/.test(rawAns.trim())) {
+              const idx = rawAns.trim().toUpperCase().charCodeAt(0) - 65
+              if (cleanedOptions[idx]) {
+                rawAns = cleanedOptions[idx]
+              }
+            }
+            const finalCorrectAnswer = ensureMathDelimiters(rawAns)
+
+            const processedGuide = q.solution_guide && typeof q.solution_guide === 'object'
+              ? {
+                  ...q.solution_guide,
+                  steps: Array.isArray(q.solution_guide.steps)
+                    ? q.solution_guide.steps.map((st: any) => ({
+                        ...st,
+                        formula: st.formula ? ensureMathDelimiters(st.formula) : st.formula,
+                      }))
+                    : [],
+                }
+              : q.solution_guide || { steps: [], conclusion: '' }
 
             const qPoint = q.point !== undefined && q.point !== null && Number(q.point) > 0 ? Math.round(Number(q.point)) : 1
 
@@ -200,10 +226,11 @@ export default function AiQuestionExtractModal({
               point: qPoint,
               tags: Array.isArray(q.tags) && q.tags.length > 0 ? q.tags : (q.topic ? [q.topic] : []),
               options: q.type === 'Tự luận' ? [] : cleanedOptions,
-              correct_answer: q.correct_answer || '',
-              solution_guide: q.solution_guide || { steps: [], conclusion: '' },
+              correct_answer: finalCorrectAnswer,
+              solution_guide: processedGuide,
               hint: q.hint || '',
-              quick_solve_tips: q.quick_solve_tips || '',
+              short_answer: (q as any).short_answer || q.quick_solve_tips || '',
+              quick_solve_tips: (q as any).short_answer || q.quick_solve_tips || '',
               general_method: q.general_method || '',
               mistakes: q.mistakes || '',
             }

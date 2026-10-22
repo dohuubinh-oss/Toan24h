@@ -4,6 +4,7 @@ export interface Question {
   book_name?: string;
   cate?: 'exam' | 'practice';
   type_question: 'group' | 'single';
+  shared_content?: string | null;
   content: string;
   type: 'Trắc nghiệm' | 'Tự luận';
   grade: number | string | null;
@@ -17,7 +18,10 @@ export interface Question {
   solution_guide?: any;
   hint?: string;
   mistakes?: string;
+  short_answer?: string;
+  shortAnswer?: string;
   quick_solve_tips?: string;
+  quickSolveTips?: string;
   general_method?: string;
   subQuestions?: Question[];
 }

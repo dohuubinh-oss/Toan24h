@@ -1,0 +1,263 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/modeptrai/Desktop/toan6789.vn/.archify/architecture-project-flows-20261022-134600/candidate.json",
+    "sha256": "d877f9cb420529bfc073d0603c6709169f9247dd62e9b79f671372a1856d57db",
+    "bytes": 8079
+  },
+  "artifact": {
+    "path": "/Users/modeptrai/Desktop/toan6789.vn/.archify/architecture-project-flows-20261022-134600/project-flows.html",
+    "sha256": "6be9aea4c8448858f393543159c17ac21a12be1e6dc62460598f6d97fa81d47d",
+    "bytes": 851190
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/modeptrai/Desktop/toan6789.vn/.archify/architecture-project-flows-20261022-134600/project-flows.finalize.json",
+    "summaryReceipt": "/Users/modeptrai/Desktop/toan6789.vn/.archify/architecture-project-flows-20261022-134600/project-flows.finalize-summary.json",
+    "browserCheckReceipt": "/Users/modeptrai/Desktop/toan6789.vn/.archify/architecture-project-flows-20261022-134600/project-flows.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-22T06:47:31.402Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2268,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 7,
+      "routesOverSuggestedBends": 4,
+      "routesOverSuggestedStretch": 1
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "from": "clients_student",
+            "to": "edge_nginx",
+            "label": "HTTPS",
+            "collectionIndex": 0,
+            "artifactIndex": 1
+          },
+          "right": {
+            "from": "app_nextjs",
+            "to": "api_payment",
+            "label": "Nạp VIP",
+            "collectionIndex": 7,
+            "artifactIndex": 8
+          },
+          "point": [
+            90,
+            258
+          ]
+        },
+        {
+          "left": {
+            "from": "clients_admin",
+            "to": "edge_nginx",
+            "label": "HTTPS",
+            "collectionIndex": 2,
+            "artifactIndex": 3
+          },
+          "right": {
+            "from": "app_nextjs",
+            "to": "api_payment",
+            "label": "Nạp VIP",
+            "collectionIndex": 7,
+            "artifactIndex": 8
+          },
+          "point": [
+            257,
+            526
+          ]
+        },
+        {
+          "left": {
+            "from": "app_nextjs",
+            "to": "api_payment",
+            "label": "Nạp VIP",
+            "collectionIndex": 7,
+            "artifactIndex": 8
+          },
+          "right": {
+            "from": "app_nextjs",
+            "to": "api_admin",
+            "label": "Phân quyền role",
+            "collectionIndex": 8,
+            "artifactIndex": 9
+          },
+          "point": [
+            319,
+            526
+          ],
+          "sharedNode": "app_nextjs"
+        },
+        {
+          "left": {
+            "from": "api_payment",
+            "to": "db_postgres",
+            "label": "Gia hạn tài khoản",
+            "collectionIndex": 12,
+            "artifactIndex": 13
+          },
+          "right": {
+            "from": "api_ocr",
+            "to": "storage_local",
+            "label": "Lưu ảnh gốc",
+            "collectionIndex": 15,
+            "artifactIndex": 16
+          },
+          "point": [
+            442,
+            517.9333333333333
+          ]
+        },
+        {
+          "left": {
+            "from": "api_payment",
+            "to": "db_postgres",
+            "label": "Gia hạn tài khoản",
+            "collectionIndex": 12,
+            "artifactIndex": 13
+          },
+          "right": {
+            "from": "api_ocr",
+            "to": "ext_gemini",
+            "label": "OCR &amp; Trích xuất",
+            "collectionIndex": 16,
+            "artifactIndex": 17
+          },
+          "point": [
+            630,
+            438
+          ]
+        },
+        {
+          "left": {
+            "from": "api_admin",
+            "to": "db_postgres",
+            "label": "Set Teacher / Affiliate",
+            "collectionIndex": 13,
+            "artifactIndex": 14
+          },
+          "right": {
+            "from": "api_ocr",
+            "to": "ext_gemini",
+            "label": "OCR &amp; Trích xuất",
+            "collectionIndex": 16,
+            "artifactIndex": 17
+          },
+          "point": [
+            715,
+            438
+          ]
+        },
+        {
+          "left": {
+            "from": "api_admin",
+            "to": "db_postgres",
+            "label": "Set Teacher / Affiliate",
+            "collectionIndex": 13,
+            "artifactIndex": 14
+          },
+          "right": {
+            "from": "api_payment",
+            "to": "ext_payos",
+            "label": "Tạo QR &amp; Webhook",
+            "collectionIndex": 17,
+            "artifactIndex": 18
+          },
+          "point": [
+            715,
+            578
+          ]
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "from": "app_nextjs",
+            "to": "api_exam",
+            "label": "Làm &amp; nộp bài",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "bends": 3,
+          "stretch": 1.314
+        },
+        {
+          "relationship": {
+            "from": "app_nextjs",
+            "to": "api_payment",
+            "label": "Nạp VIP",
+            "collectionIndex": 7,
+            "artifactIndex": 8
+          },
+          "bends": 3,
+          "stretch": 1.64
+        },
+        {
+          "relationship": {
+            "from": "app_nextjs",
+            "to": "api_admin",
+            "label": "Phân quyền role",
+            "collectionIndex": 8,
+            "artifactIndex": 9
+          },
+          "bends": 6,
+          "stretch": 1.061
+        },
+        {
+          "relationship": {
+            "from": "api_auth",
+            "to": "db_postgres",
+            "label": "Ghi nhận VIP",
+            "collectionIndex": 9,
+            "artifactIndex": 10
+          },
+          "bends": 3,
+          "stretch": 1.111
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "api_ocr has 3 relationships facing its right side, which fits 2 ports: make that side at least 60px, or move some of those neighbours so they face another side of api_ocr.",
+      "clients_student → edge_nginx crosses app_nextjs → api_payment: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "clients_admin → edge_nginx crosses app_nextjs → api_payment: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "app_nextjs → api_payment and app_nextjs → api_admin cross next to app_nextjs: move node api_payment or api_admin so the two reach app_nextjs from different sides (for example one level with it, one directly above or below it).",
+      "api_payment → db_postgres crosses api_ocr → storage_local: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "api_payment → db_postgres crosses api_ocr → ext_gemini: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "api_admin → db_postgres crosses api_ocr → ext_gemini: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "api_admin → db_postgres crosses api_payment → ext_payos: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

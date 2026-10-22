@@ -34,7 +34,7 @@ export default function AIHintPanel({ isOpen, onClose, question, unlockedLevel, 
   const hints = [
     { level: 1, title: 'Gợi ý', icon: Lightbulb, content: question.hint, color: 'blue' },
     { level: 2, title: 'Lỗi thường gặp', icon: AlertTriangle, content: question.mistakes, color: 'red' },
-    { level: 3, title: 'Mẹo giải nhanh', icon: Zap, content: question.quick_solve_tips, color: 'amber' },
+    { level: 3, title: 'Lời giải ngắn', icon: Zap, content: question.short_answer || question.shortAnswer || question.quick_solve_tips || question.quickSolveTips, color: 'amber' },
     { level: 4, title: 'Phương pháp tổng quát', icon: BookOpen, content: question.general_method, color: 'indigo' },
   ].filter(h => h.content) // Show all available hints
 

@@ -11,7 +11,9 @@ export interface SubQuestion {
 }
 
 interface ContentQuestionProps {
-  sharedContext?: string;
+  sharedContext?: string | null;
+  shared_content?: string | null;
+  sharedContent?: string | null;
   
   // Single Question Props
   content?: string;
@@ -31,6 +33,8 @@ interface ContentQuestionProps {
 
 export default function ContentQuestion({
   sharedContext,
+  shared_content,
+  sharedContent,
   content,
   options,
   correctAnswer,
@@ -41,6 +45,7 @@ export default function ContentQuestion({
   optionLayout = 'grid-2',
   showCorrectBadge = true
 }: ContentQuestionProps) {
+  const effectiveSharedContext = sharedContext || shared_content || sharedContent;
   
   // Helper to render a single question's body (either standalone or sub-question)
   const renderQuestionBody = (
@@ -96,7 +101,6 @@ export default function ContentQuestion({
               )}
             </div>
           )}
-
           {/* Essay Answer / Đáp án tự luận */}
           {(qIsEssay || (!qOptions || qOptions.length === 0)) && qCorrect && showCorrectBadge && (
             <div className="mb-6 p-4 rounded-xl border border-emerald-200 bg-emerald-50/60 shadow-xs">
@@ -125,10 +129,10 @@ export default function ContentQuestion({
   return (
     <>
       {/* Shared Context for Group Questions */}
-      {sharedContext && (
+      {effectiveSharedContext && (
         <div className="pl-4 border-l-[3px] border-primary mb-8 ml-2">
           <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Nội dung dẫn chung</h4>
-          <MathText content={sharedContext} className="text-lg font-bold text-slate-800 leading-relaxed" />
+          <MathText content={effectiveSharedContext} className="text-lg font-bold text-slate-800 leading-relaxed" />
         </div>
       )}
 

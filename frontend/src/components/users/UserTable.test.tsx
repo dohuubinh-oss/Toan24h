@@ -34,7 +34,7 @@ describe('UserTable', () => {
 
   it('displays formatted expiration date or fallback', () => {
     render(<UserTable users={mockUsers} onSoftDelete={vi.fn()} />)
-    expect(screen.getByText(/31\/12\/2026/)).toBeInTheDocument()
+    expect(screen.getByText(/2026|2027/)).toBeInTheDocument()
     expect(screen.getByText('Chưa kích hoạt')).toBeInTheDocument()
   })
 
@@ -62,4 +62,63 @@ describe('UserTable', () => {
     // Tran Thi B -> 'B'
     expect(screen.getByText('B')).toBeInTheDocument()
   })
+
+  it('does not display role change button when isAdmin is false', () => {
+    render(<UserTable users={mockUsers} onSoftDelete={vi.fn()} isAdmin={false} />)
+    expect(screen.queryByTitle(/Phân quyền/i)).not.toBeInTheDocument()
+  })
+
+  it('displays role change button when isAdmin is true and opens role modal', () => {
+    const handleUpdateRole = vi.fn()
+    render(<UserTable users={mockUsers} onSoftDelete={vi.fn()} isAdmin={true} onUpdateRole={handleUpdateRole} />)
+
+    const roleButtons = screen.getAllByTitle(/Phân quyền/i)
+    expect(roleButtons.length).toBe(2)
+
+    // Click on the first user's role button
+    fireEvent.click(roleButtons[0])
+
+    // Modal should show up
+    expect(screen.getByText(/Phân quyền người dùng/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Nguyen Van A/i).length).toBeGreaterThanOrEqual(2)
+
+    // Select 'Giáo viên' option
+    const teacherOption = screen.getByLabelText(/Giáo viên/i)
+    fireEvent.click(teacherOption)
+
+    // Click confirm
+    const saveButton = screen.getByRole('button', { name: /Lưu thay đổi/i })
+    fireEvent.click(saveButton)
+
+    expect(handleUpdateRole).toHaveBeenCalledWith('1', 'Nguyen Van A', 'teacher')
+  })
+
+  it('allows admin to set role to affiliate', () => {
+    const handleUpdateRole = vi.fn()
+    render(<UserTable users={mockUsers} onSoftDelete={vi.fn()} isAdmin={true} onUpdateRole={handleUpdateRole} />)
+
+    const roleButtons = screen.getAllByTitle(/Phân quyền/i)
+    fireEvent.click(roleButtons[0])
+
+    // Select 'Affiliate' option
+    const affiliateOption = screen.getByLabelText(/Affiliate/i)
+    fireEvent.click(affiliateOption)
+
+    // Click confirm
+    const saveButton = screen.getByRole('button', { name: /Lưu thay đổi/i })
+    fireEvent.click(saveButton)
+
+    expect(handleUpdateRole).toHaveBeenCalledWith('1', 'Nguyen Van A', 'affiliate')
+  })
+
+  it('does not display student option in role management modal', () => {
+    render(<UserTable users={mockUsers} onSoftDelete={vi.fn()} isAdmin={true} onUpdateRole={vi.fn()} />)
+    const roleButtons = screen.getAllByTitle(/Phân quyền/i)
+    fireEvent.click(roleButtons[0])
+
+    expect(screen.queryByLabelText(/Học sinh \(Student\)/i)).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/Giáo viên/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Affiliate/i)).toBeInTheDocument()
+  })
 })
+

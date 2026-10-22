@@ -42,10 +42,12 @@ func isStaffRequester(c *gin.Context) bool {
 func sanitizeQuestionForPublic(q *models.Question) {
 	q.CorrectAnswer = ""
 	q.SolutionGuide = ""
+	q.ShortAnswer = ""
 	q.QuickSolveTips = ""
 	for i := range q.SubQuestions {
 		q.SubQuestions[i].CorrectAnswer = ""
 		q.SubQuestions[i].SolutionGuide = ""
+		q.SubQuestions[i].ShortAnswer = ""
 		q.SubQuestions[i].QuickSolveTips = ""
 	}
 }
@@ -75,6 +77,7 @@ type QuestionDetail struct {
 	CorrectAnswer   string   `json:"correct_answer"`
 	SolutionGuide   any      `json:"solution_guide"`
 	Hint            string   `json:"hint"`
+	ShortAnswer     string   `json:"short_answer"`
 	QuickSolveTips  string   `json:"quick_solve_tips"`
 	GeneralMethod   string   `json:"general_method"`
 	Mistakes        string   `json:"mistakes"`
@@ -236,7 +239,18 @@ func BulkCreateQuestions(c *gin.Context) {
 				CorrectAnswer:   processHtmlImages(detail.CorrectAnswer, detail.Grade),
 				SolutionGuide:   processHtmlImages(stringifySolutionGuide(detail.SolutionGuide), detail.Grade),
 				Hint:            processHtmlImages(detail.Hint, detail.Grade),
-				QuickSolveTips:  processHtmlImages(detail.QuickSolveTips, detail.Grade),
+				ShortAnswer:     processHtmlImages(func() string {
+					if detail.ShortAnswer != "" {
+						return detail.ShortAnswer
+					}
+					return detail.QuickSolveTips
+				}(), detail.Grade),
+				QuickSolveTips:  processHtmlImages(func() string {
+					if detail.ShortAnswer != "" {
+						return detail.ShortAnswer
+					}
+					return detail.QuickSolveTips
+				}(), detail.Grade),
 				GeneralMethod:   processHtmlImages(detail.GeneralMethod, detail.Grade),
 				Mistakes:        processHtmlImages(detail.Mistakes, detail.Grade),
 			}

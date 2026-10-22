@@ -26,11 +26,14 @@ function UsersPageContent() {
 
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     const match = document.cookie.match(/(?:^|; )userRole=([^;]*)/);
     const userRole = match ? decodeURIComponent(match[1]) : null;
-    if (userRole && userRole !== 'admin') {
+    if (userRole === 'admin') {
+      setIsAdmin(true);
+    } else {
       router.replace('/dashboard/questions');
     }
   }, [router]);
@@ -38,7 +41,8 @@ function UsersPageContent() {
   const fetchUsers = async () => {
     const match = document.cookie.match(/(?:^|; )userRole=([^;]*)/);
     const userRole = match ? decodeURIComponent(match[1]) : null;
-    if (userRole && userRole !== 'admin') {
+    if (userRole !== 'admin') {
+      setLoading(false);
       router.replace('/dashboard/questions');
       return;
     }
@@ -86,6 +90,32 @@ function UsersPageContent() {
     }
   }
 
+  const handleUpdateRole = async (id: string, name: string, newRole: string) => {
+    const match = document.cookie.match(/(?:^|; )userRole=([^;]*)/);
+    const currentRole = match ? decodeURIComponent(match[1]) : null;
+    if (currentRole !== 'admin') {
+      toast.error('Chỉ Admin mới có quyền thay đổi vai trò người dùng');
+      return;
+    }
+
+    try {
+      await apiFetch(`/users/${id}/role`, {
+        method: 'PUT',
+        body: JSON.stringify({ role: newRole })
+      });
+      const roleMap: Record<string, string> = {
+        teacher: 'Giáo viên',
+        affiliate: 'Affiliate',
+        student: 'Học sinh',
+        admin: 'Admin'
+      };
+      toast.success(`Đã cập nhật vai trò của ${name} thành ${roleMap[newRole] || newRole}`);
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(`Lỗi cập nhật vai trò: ${err.message}`);
+    }
+  }
+
   // Paginate locally for now (can be moved to server-side if needed)
   const itemsPerPage = 10
   const totalItems = users.length
@@ -102,7 +132,12 @@ function UsersPageContent() {
         {loading ? (
           <div className="p-8 text-center text-slate-500">Đang tải dữ liệu...</div>
         ) : (
-          <UserTable users={paginatedUsers} onSoftDelete={handleSoftDelete} />
+          <UserTable 
+            users={paginatedUsers} 
+            onSoftDelete={handleSoftDelete}
+            isAdmin={isAdmin}
+            onUpdateRole={handleUpdateRole}
+          />
         )}
 
         

@@ -23,7 +23,16 @@ export async function login(data: any) {
   return res
 }
 
-export async function registerUser(data: any) {
+export interface RegisterData {
+  email: string
+  password: string
+  fullName: string
+  role?: string
+  grade?: string
+  voucherCode?: string
+}
+
+export async function registerUser(data: RegisterData) {
   const res = await apiFetch('/auth/register', {
     method: 'POST',
     body: JSON.stringify(data)

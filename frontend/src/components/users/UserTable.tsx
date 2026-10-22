@@ -1,7 +1,7 @@
 'use client'
 
-import React from 'react'
-import { LockKeyhole, Users, Calendar } from 'lucide-react'
+import React, { useState } from 'react'
+import { LockKeyhole, Users, Calendar, UserCog, X } from 'lucide-react'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
 import { getAvatarInitial } from '@/lib/utils'
@@ -21,13 +21,30 @@ export type User = {
 interface UserTableProps {
   users: User[];
   onSoftDelete: (id: string, name: string) => void;
+  isAdmin?: boolean;
+  onUpdateRole?: (id: string, name: string, newRole: string) => void;
 }
 
-export default function UserTable({ users, onSoftDelete }: UserTableProps) {
+export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpdateRole }: UserTableProps) {
   const [now] = React.useState(() => Date.now())
+  const [roleModalUser, setRoleModalUser] = useState<User | null>(null)
+  const [selectedRole, setSelectedRole] = useState<string>('teacher')
+
   const handleDelete = (id: string, name: string) => {
     if (window.confirm(`Hành động này sẽ khóa tài khoản của người dùng. Bạn có chắc chắn muốn khóa người dùng ${name}?`)) {
       onSoftDelete(id, name);
+    }
+  }
+
+  const handleOpenRoleModal = (user: User) => {
+    setRoleModalUser(user)
+    setSelectedRole(user.role === 'affiliate' ? 'affiliate' : 'teacher')
+  }
+
+  const handleConfirmRoleChange = () => {
+    if (roleModalUser && onUpdateRole) {
+      onUpdateRole(roleModalUser.id, roleModalUser.name, selectedRole)
+      setRoleModalUser(null)
     }
   }
 
@@ -55,6 +72,35 @@ export default function UserTable({ users, onSoftDelete }: UserTableProps) {
         return { label: 'Hết hạn', colorClass: 'text-amber-600', dotClass: 'bg-amber-500' };
       default:
         return { label: status, colorClass: 'text-slate-600', dotClass: 'bg-slate-500' };
+    }
+  }
+
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'teacher':
+        return (
+          <Badge size="sm" className="bg-purple-50 text-purple-700 border border-purple-200 font-medium">
+            Giáo viên
+          </Badge>
+        )
+      case 'affiliate':
+        return (
+          <Badge size="sm" className="bg-amber-50 text-amber-700 border border-amber-200 font-medium">
+            Affiliate
+          </Badge>
+        )
+      case 'admin':
+        return (
+          <Badge size="sm" className="bg-slate-800 text-white font-medium">
+            Admin
+          </Badge>
+        )
+      default:
+        return (
+          <Badge variant="info" size="sm" className="font-medium">
+            Học sinh
+          </Badge>
+        )
     }
   }
 
@@ -95,13 +141,7 @@ export default function UserTable({ users, onSoftDelete }: UserTableProps) {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <Badge 
-                    variant={user.role === 'student' ? 'info' : user.role === 'admin' ? 'default' : 'default'}
-                    className={user.role === 'teacher' ? 'bg-purple-50 text-purple-600 border border-purple-200' : ''}
-                    size="sm"
-                  >
-                    {user.role === 'student' ? 'Học sinh' : user.role === 'teacher' ? 'Giáo viên' : 'Admin'}
-                  </Badge>
+                  {getRoleBadge(user.role)}
                 </td>
                 <td className="px-6 py-4 text-sm font-medium text-slate-700">{user.grade || '—'}</td>
                 <td className="px-6 py-4 text-sm font-medium text-slate-700">
@@ -123,7 +163,18 @@ export default function UserTable({ users, onSoftDelete }: UserTableProps) {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end gap-1.5">
+                    {isAdmin && onUpdateRole && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50" 
+                        title="Phân quyền (Teacher / Affiliate)"
+                        onClick={() => handleOpenRoleModal(user)}
+                      >
+                        <UserCog className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button 
                       variant="ghost" 
                       size="icon" 
@@ -140,6 +191,81 @@ export default function UserTable({ users, onSoftDelete }: UserTableProps) {
           </tbody>
         </table>
       </div>
+
+      {/* Role Management Modal */}
+      {roleModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+              <div>
+                <h3 className="font-bold text-lg text-slate-800">Phân quyền người dùng</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Cập nhật quyền cho {roleModalUser.name}</p>
+              </div>
+              <button 
+                onClick={() => setRoleModalUser(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-3">
+              <label 
+                className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${selectedRole === 'teacher' ? 'border-purple-500 bg-purple-50/40 ring-1 ring-purple-500' : 'border-slate-200 hover:bg-slate-50'}`}
+              >
+                <input 
+                  type="radio" 
+                  name="userRole" 
+                  value="teacher" 
+                  checked={selectedRole === 'teacher'} 
+                  onChange={(e) => setSelectedRole(e.target.value)} 
+                  className="mt-1 text-purple-600 focus:ring-purple-500" 
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-800 text-sm">Giáo viên (Teacher)</span>
+                    <span className="px-2 py-0.5 text-[11px] font-semibold rounded bg-purple-100 text-purple-700">Hoa hồng 50%</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Có quyền biên soạn câu hỏi, tạo đề thi, bài giảng. Hưởng 50% hoa hồng khi học sinh dùng mã voucher.
+                  </p>
+                </div>
+              </label>
+
+              <label 
+                className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${selectedRole === 'affiliate' ? 'border-amber-500 bg-amber-50/40 ring-1 ring-amber-500' : 'border-slate-200 hover:bg-slate-50'}`}
+              >
+                <input 
+                  type="radio" 
+                  name="userRole" 
+                  value="affiliate" 
+                  checked={selectedRole === 'affiliate'} 
+                  onChange={(e) => setSelectedRole(e.target.value)} 
+                  className="mt-1 text-amber-600 focus:ring-amber-500" 
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-800 text-sm">Affiliate (Cộng tác viên)</span>
+                    <span className="px-2 py-0.5 text-[11px] font-semibold rounded bg-amber-100 text-amber-700">Hoa hồng 30%</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Vai trò giới thiệu học sinh và hưởng 30% hoa hồng khi học sinh đăng ký hoặc nâng cấp.
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 p-4 bg-slate-50 border-t border-slate-100">
+              <Button variant="outline" size="sm" onClick={() => setRoleModalUser(null)}>
+                Hủy
+              </Button>
+              <Button size="sm" onClick={handleConfirmRoleChange}>
+                Lưu thay đổi
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

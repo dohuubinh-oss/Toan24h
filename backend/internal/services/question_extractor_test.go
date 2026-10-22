@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"image"
 	"image/color"
 	"image/draw"
@@ -407,6 +408,131 @@ func TestParseAndProcessExtractedBlocks_StructuredSolutionGuideAndTypeQuestion(t
 	step1, ok := steps[0].(map[string]interface{})
 	assert.True(t, ok)
 	assert.Equal(t, "Áp dụng định lý Viète", step1["title"])
+	assert.Equal(t, "$S = 5, P = 6$", step1["formula"])
+}
+
+func TestEnsureMathDelimiters(t *testing.T) {
+	// Equation & solutions
+	assert.Equal(t, "$x = 2; x = 3$", EnsureMathDelimiters("x = 2; x = 3"))
+	assert.Equal(t, "$x = \\pm 2$", EnsureMathDelimiters("x = \\pm 2"))
+	assert.Equal(t, "$x = ±2$", EnsureMathDelimiters("x = ±2"))
+	assert.Equal(t, "$S = 6$", EnsureMathDelimiters("S = 6"))
+	assert.Equal(t, "$m > 1$", EnsureMathDelimiters("m > 1"))
+	assert.Equal(t, "$2$", EnsureMathDelimiters("2"))
+	assert.Equal(t, "$-5$", EnsureMathDelimiters("-5"))
+	assert.Equal(t, "$\\frac{1}{2}$", EnsureMathDelimiters("\\frac{1}{2}"))
+	assert.Equal(t, "$1/2$", EnsureMathDelimiters("1/2"))
+
+	// Already wrapped in $
+	assert.Equal(t, "$x = 2$", EnsureMathDelimiters("$x = 2$"))
+	assert.Equal(t, "$$x = 2$$", EnsureMathDelimiters("$$x = 2$$"))
+
+	// Pure Vietnamese text (no math)
+	assert.Equal(t, "Vô nghiệm", EnsureMathDelimiters("Vô nghiệm"))
+	assert.Equal(t, "Vô số nghiệm", EnsureMathDelimiters("Vô số nghiệm"))
+	assert.Equal(t, "Đúng", EnsureMathDelimiters("Đúng"))
+	assert.Equal(t, "Sai", EnsureMathDelimiters("Sai"))
+
+	// HTML wrapped
+	assert.Equal(t, "<p>$x = 2; x = 3$</p>", EnsureMathDelimiters("<p>x = 2; x = 3</p>"))
+}
+
+func TestExtractedBlocks_NoIsGroupInJson(t *testing.T) {
+	tempDir := "./uploads/temp"
+	rawJSON := `[
+		{
+			"shared_content": null,
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Giải phương trình $x^2 - 4 = 0$",
+					"type": "Trắc nghiệm",
+					"grade": 9,
+					"topic": "Công thức nghiệm phương trình bậc hai",
+					"options": ["x = 2", "x = -2", "x = \\pm 2", "Vô nghiệm"],
+					"correct_answer": "C. x = \\pm 2",
+					"solution_guide": {
+						"steps": [
+							{
+								"step": 1,
+								"title": "Chuyển vế",
+								"content": "Chuyển hằng số sang vế phải",
+								"formula": "x^2 = 4"
+							}
+						],
+						"conclusion": "Vậy $x = \\pm 2$"
+					}
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+
+	// Check options are wrapped in $...$
+	assert.Equal(t, "$x = 2$", blocks[0].Questions[0].Options[0])
+	assert.Equal(t, "$x = -2$", blocks[0].Questions[0].Options[1])
+	assert.Equal(t, "$x = \\pm 2$", blocks[0].Questions[0].Options[2])
+	assert.Equal(t, "Vô nghiệm", blocks[0].Questions[0].Options[3])
+	assert.Equal(t, "$x = \\pm 2$", blocks[0].Questions[0].CorrectAnswer)
+
+	// Verify formula in steps is wrapped
+	solMap := blocks[0].Questions[0].SolutionGuide.(map[string]interface{})
+	steps := solMap["steps"].([]interface{})
+	step1 := steps[0].(map[string]interface{})
+	assert.Equal(t, "$x^2 = 4$", step1["formula"])
+
+	// Check JSON serialization has NO "is_group"
+	jsonBytes, err := json.Marshal(blocks)
+	assert.NoError(t, err)
+	jsonStr := string(jsonBytes)
+	assert.False(t, strings.Contains(jsonStr, `"is_group"`), "JSON must NOT contain 'is_group'")
+}
+
+func TestParseAndProcessExtractedBlocks_ShortAnswer(t *testing.T) {
+	tempDir := "./uploads/temp"
+
+	// 1. JSON with new short_answer field
+	rawJSON1 := `[
+		{
+			"shared_content": null,
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Tính nhanh",
+					"type": "Tự luận",
+					"short_answer": "Áp dụng định lý Viète: $x_1+x_2=5$"
+				}
+			]
+		}
+	]`
+	blocks1, err := ParseAndProcessExtractedBlocks(rawJSON1, nil, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks1, 1)
+	assert.Equal(t, "Áp dụng định lý Viète: $x_1+x_2=5$", blocks1[0].Questions[0].ShortAnswer)
+	assert.Equal(t, "Áp dụng định lý Viète: $x_1+x_2=5$", blocks1[0].Questions[0].QuickSolveTips)
+
+	// 2. Legacy JSON with quick_solve_tips field
+	rawJSON2 := `[
+		{
+			"shared_content": null,
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Tính nhanh",
+					"type": "Tự luận",
+					"quick_solve_tips": "Bấm máy tính Casio 580"
+				}
+			]
+		}
+	]`
+	blocks2, err := ParseAndProcessExtractedBlocks(rawJSON2, nil, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks2, 1)
+	assert.Equal(t, "Bấm máy tính Casio 580", blocks2[0].Questions[0].ShortAnswer)
+	assert.Equal(t, "Bấm máy tính Casio 580", blocks2[0].Questions[0].QuickSolveTips)
 }
 
 

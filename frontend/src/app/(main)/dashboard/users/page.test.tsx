@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import UsersPage from './page'
 
 vi.mock('next/navigation', () => ({
@@ -30,6 +30,10 @@ vi.mock('@/lib/api', () => ({
 }))
 
 describe('UsersPage', () => {
+  beforeEach(() => {
+    document.cookie = 'userRole=admin; path=/'
+  })
+
   it('renders all sections', async () => {
     render(<UsersPage />)
     expect(screen.getByTestId('user-header')).toBeInTheDocument()

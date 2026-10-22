@@ -22,6 +22,17 @@ func ConnectDB(dsn string) error {
 		return fmt.Errorf("failed to connect database: %w", err)
 	}
 
+	// Safe column migration: rename quick_solve_tips to short_answer if table exists
+	if DB.Migrator().HasTable(&models.Question{}) {
+		hasOld := DB.Migrator().HasColumn(&models.Question{}, "quick_solve_tips")
+		hasNew := DB.Migrator().HasColumn(&models.Question{}, "short_answer")
+		if hasOld && !hasNew {
+			_ = DB.Migrator().RenameColumn(&models.Question{}, "quick_solve_tips", "short_answer")
+		} else if hasOld && hasNew {
+			_ = DB.Exec("UPDATE questions SET short_answer = quick_solve_tips WHERE (short_answer IS NULL OR short_answer = '') AND quick_solve_tips IS NOT NULL AND quick_solve_tips != ''")
+		}
+	}
+
 	err = DB.AutoMigrate(
 		&models.User{},
 		&models.Lecture{},
@@ -31,6 +42,8 @@ func ConnectDB(dsn string) error {
 		&models.LectureBookmark{},
 		&models.Notification{},
 		&models.Transaction{},
+		&models.Voucher{},
+		&models.VoucherUsage{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)

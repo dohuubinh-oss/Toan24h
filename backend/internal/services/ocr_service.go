@@ -12,10 +12,6 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 
 	"encoding/base64"
-	"image"
-	"image/jpeg"
-	_ "image/png" // register PNG format
-	"golang.org/x/image/draw"
 )
 
 type OCRResult struct {
@@ -146,39 +142,3 @@ Yêu cầu:
 	return &ocrResult, nil
 }
 
-func compressAndResizeImage(fileBytes []byte, maxDim int) ([]byte, string, error) {
-	img, _, err := image.Decode(bytes.NewReader(fileBytes))
-	if err != nil {
-		return nil, "", err
-	}
-
-	bounds := img.Bounds()
-	width := bounds.Dx()
-	height := bounds.Dy()
-
-	if width > maxDim || height > maxDim {
-		// Calculate new dimensions
-		ratio := float64(width) / float64(height)
-		var newWidth, newHeight int
-		if width > height {
-			newWidth = maxDim
-			newHeight = int(float64(maxDim) / ratio)
-		} else {
-			newHeight = maxDim
-			newWidth = int(float64(maxDim) * ratio)
-		}
-
-		dst := image.NewRGBA(image.Rect(0, 0, newWidth, newHeight))
-		draw.BiLinear.Scale(dst, dst.Bounds(), img, bounds, draw.Over, nil)
-		img = dst
-	}
-
-	buf := new(bytes.Buffer)
-	// Compress as JPEG
-	err = jpeg.Encode(buf, img, &jpeg.Options{Quality: 80})
-	if err != nil {
-		return nil, "", err
-	}
-
-	return buf.Bytes(), "image/jpeg", nil
-}

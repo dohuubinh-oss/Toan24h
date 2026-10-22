@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Gift } from 'lucide-react'
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
@@ -17,6 +17,7 @@ type RegisterFormValues = {
   identity: string
   password: string
   confirmPassword: string
+  voucherCode?: string
 }
 
 export default function RegisterForm() {
@@ -40,12 +41,17 @@ export default function RegisterForm() {
     setIsLoading(true)
     setErrorMessage('')
     try {
-      await registerUser({
+      const res = await registerUser({
         fullName: data.fullname,
         email: data.identity,
-        password: data.password
+        password: data.password,
+        voucherCode: data.voucherCode?.trim() || undefined
       })
-      toast.success('Đăng ký thành công! Vui lòng đăng nhập.')
+      if (res?.freeMonths && res.freeMonths > 0) {
+        toast.success(`Đăng ký thành công! Bạn nhận được ${res.freeMonths} tháng VIP miễn phí. Vui lòng đăng nhập.`)
+      } else {
+        toast.success('Đăng ký thành công! Vui lòng đăng nhập.')
+      }
       router.push('/login?registered=true')
     } catch (error: any) {
       let msg = error.message
@@ -180,6 +186,28 @@ export default function RegisterForm() {
             {errors.confirmPassword && (
               <p className="text-red-500 text-xs mt-1 font-medium">{errors.confirmPassword.message}</p>
             )}
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <Label htmlFor="voucherCode" className="flex items-center gap-1.5 text-slate-700">
+                <Gift className="w-4 h-4 text-emerald-600" />
+                Mã giới thiệu / Khuyến mãi
+              </Label>
+              <span className="text-xs text-slate-400 font-normal">Không bắt buộc</span>
+            </div>
+            <div className="relative mt-2">
+              <Input
+                {...register('voucherCode')}
+                id="voucherCode"
+                placeholder="Nhập mã (ví dụ: TOANVIP3M)"
+                type="text"
+                className="uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal font-medium"
+              />
+            </div>
+            <p className="text-xs text-slate-500 mt-1.5">
+              Nhập mã từ thầy cô hoặc đối tác Affiliate để nhận thêm thời hạn VIP miễn phí.
+            </p>
           </div>
 
           <Button

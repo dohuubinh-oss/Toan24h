@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Toan6789.vn - Kiến trúc Hệ thống & Các Flow Nghiệp vụ",
+    "subtitle": "Bản đồ luồng dữ liệu, phân tầng kỹ thuật và các luồng chức năng cốt lõi",
+    "output": ".archify/architecture-project-flows-20261022-134600/project-flows.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "view_overview",
+        "label": "Toàn cảnh Hệ thống",
+        "focus": ["clients_student", "clients_teacher", "clients_admin", "edge_nginx", "app_nextjs", "api_auth", "api_exam", "api_ocr", "api_payment", "api_admin", "db_postgres", "ext_gemini", "ext_payos"]
+      },
+      {
+        "id": "view_auth_voucher",
+        "label": "Flow 1: Đăng ký & Voucher",
+        "focus": ["clients_student", "edge_nginx", "app_nextjs", "api_auth", "db_postgres"]
+      },
+      {
+        "id": "view_ocr_questions",
+        "label": "Flow 2: OCR & Soạn câu hỏi",
+        "focus": ["clients_teacher", "edge_nginx", "app_nextjs", "api_ocr", "ext_gemini", "storage_local", "db_postgres"]
+      },
+      {
+        "id": "view_exam_flow",
+        "label": "Flow 3: Làm bài thi & Điểm",
+        "focus": ["clients_student", "edge_nginx", "app_nextjs", "api_exam", "db_postgres"]
+      },
+      {
+        "id": "view_payment_vip",
+        "label": "Flow 4: Nạp tiền VIP & PayOS",
+        "focus": ["clients_student", "edge_nginx", "app_nextjs", "api_payment", "ext_payos", "db_postgres"]
+      }
+    ]
+  },
+  "components": [
+    { "id": "clients_student", "type": "external", "label": "Học sinh", "sublabel": "Thi thử & Đăng ký", "pos": [30, 190], "size": [120, 56], "icon": "person" },
+    { "id": "clients_teacher", "type": "external", "label": "Giáo viên", "sublabel": "Soạn đề & Giới thiệu", "pos": [30, 390], "size": [120, 56], "icon": "person" },
+    { "id": "clients_admin", "type": "external", "label": "Admin", "sublabel": "Phân quyền & Voucher", "pos": [30, 590], "size": [120, 56], "icon": "person" },
+
+    { "id": "edge_nginx", "type": "security", "label": "Nginx Gateway", "sublabel": "Proxy SSL :443", "pos": [195, 390], "size": [124, 56], "tag": ":443" },
+    { "id": "app_nextjs", "type": "frontend", "label": "Next.js 14", "sublabel": "KaTeX & Tailwind", "pos": [195, 230], "size": [124, 56], "tag": ":3000" },
+
+    { "id": "api_auth", "type": "backend", "label": "Auth & Voucher", "sublabel": "JWT, Đăng ký VIP", "pos": [365, 130], "size": [140, 56], "tag": "Flow 1" },
+    { "id": "api_exam", "type": "backend", "label": "Exam & Grading", "sublabel": "Chấm thi, XP, Streak", "pos": [365, 270], "size": [140, 56], "tag": "Flow 3" },
+    { "id": "api_ocr", "type": "backend", "label": "OCR & Questions", "sublabel": "LaTeX, Lời giải ngắn", "pos": [365, 410], "size": [140, 56], "tag": "Flow 2" },
+    { "id": "api_payment", "type": "backend", "label": "Payment Service", "sublabel": "PayOS Webhook", "pos": [365, 550], "size": [140, 56], "tag": "Flow 4" },
+    { "id": "api_admin", "type": "backend", "label": "User Management", "sublabel": "Set Teacher / Affiliate", "pos": [365, 690], "size": [140, 56], "tag": "Flow 5" },
+
+    { "id": "db_postgres", "type": "database", "label": "PostgreSQL 15", "sublabel": "users, vouchers, exams", "pos": [555, 330], "size": [136, 62], "tag": ":5432" },
+    { "id": "storage_local", "type": "cloud", "label": "Uploads Storage", "sublabel": "Ảnh đề thi gốc", "pos": [555, 490], "size": [136, 56], "tag": "Files" },
+
+    { "id": "ext_telegram", "type": "external", "label": "Telegram Bot", "sublabel": "QR Login & OTP", "pos": [740, 170], "size": [135, 56], "tag": "Bot" },
+    { "id": "ext_gemini", "type": "external", "label": "Gemini AI", "sublabel": "OCR đề thi & LaTeX", "pos": [740, 410], "size": [135, 56], "tag": "Vision AI" },
+    { "id": "ext_payos", "type": "external", "label": "PayOS Gateway", "sublabel": "VietQR IPN Webhook", "pos": [740, 550], "size": [135, 56], "tag": "Banking" }
+  ],
+  "boundaries": [
+    { "kind": "security-group", "label": "Tầng Người dùng & Thiết bị", "wraps": ["clients_student", "clients_teacher", "clients_admin"] },
+    { "kind": "region", "label": "Cổng kết nối & Giao diện (Edge)", "wraps": ["edge_nginx", "app_nextjs"] },
+    { "kind": "region", "label": "Backend Core (Golang Gin)", "wraps": ["api_auth", "api_exam", "api_ocr", "api_payment", "api_admin"] },
+    { "kind": "security-group", "label": "Tầng CSDL & Lưu trữ", "wraps": ["db_postgres", "storage_local"] },
+    { "kind": "region", "label": "Dịch vụ Tích hợp (External)", "wraps": ["ext_telegram", "ext_gemini", "ext_payos"] }
+  ],
+  "connections": [
+    { "from": "clients_student", "to": "edge_nginx", "label": "HTTPS", "variant": "emphasis" },
+    { "from": "clients_teacher", "to": "edge_nginx", "label": "HTTPS", "variant": "emphasis" },
+    { "from": "clients_admin", "to": "edge_nginx", "label": "HTTPS", "variant": "emphasis" },
+    { "from": "edge_nginx", "to": "app_nextjs", "label": "reverse proxy" },
+
+    { "from": "app_nextjs", "to": "api_auth", "label": "Đăng ký & Voucher" },
+    { "from": "app_nextjs", "to": "api_exam", "label": "Làm & nộp bài" },
+    { "from": "app_nextjs", "to": "api_ocr", "label": "Upload ảnh đề" },
+    { "from": "app_nextjs", "to": "api_payment", "label": "Nạp VIP" },
+    { "from": "app_nextjs", "to": "api_admin", "label": "Phân quyền role" },
+
+    { "from": "api_auth", "to": "db_postgres", "label": "Ghi nhận VIP" },
+    { "from": "api_exam", "to": "db_postgres", "label": "Lưu bài thi & XP" },
+    { "from": "api_ocr", "to": "db_postgres", "label": "Lưu câu hỏi & LaTeX" },
+    { "from": "api_payment", "to": "db_postgres", "label": "Gia hạn tài khoản" },
+    { "from": "api_admin", "to": "db_postgres", "label": "Set Teacher / Affiliate" },
+
+    { "from": "api_auth", "to": "ext_telegram", "label": "QR Login", "variant": "dashed" },
+    { "from": "api_ocr", "to": "storage_local", "label": "Lưu ảnh gốc", "variant": "dashed" },
+    { "from": "api_ocr", "to": "ext_gemini", "label": "OCR & Trích xuất", "variant": "emphasis" },
+    { "from": "api_payment", "to": "ext_payos", "label": "Tạo QR & Webhook", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "Flow 1: Xác thực & Affiliate Voucher",
+      "items": [
+        "Học sinh nhập mã giới thiệu khi đăng ký -> Backend kiểm tra tính hợp lệ trong Transaction.",
+        "Kích hoạt VIP miễn phí, ghi nhận lượt dùng và tính hoa hồng cho Giáo viên (50%) hoặc Affiliate (30%)."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Flow 2: Soạn thảo câu hỏi & OCR Toán học",
+      "items": [
+        "Giáo viên tải ảnh đề thi -> Backend gọi Gemini Vision AI bóc tách cấu trúc câu hỏi.",
+        "Trình soạn thảo hỗ trợ công thức toán KaTeX, góc hình học (\\hat{A}), gợi ý và lời giải ngắn."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Flow 3: Thi trực tuyến, Chấm điểm & Khiếu nại",
+      "items": [
+        "Học sinh làm đề thi trắc nghiệm & tự luận theo thời gian thực.",
+        "Hệ thống tự động chấm điểm, tính chuỗi Streak, cộng điểm kinh nghiệm (XP) và xếp hạng tuần."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Flow 4: Nạp tiền PayOS & Webhook tự động",
+      "items": [
+        "Tạo đơn thanh toán chuẩn VietQR liên kết PayOS.",
+        "PayOS Webhook gọi về backend xác thực giao dịch idempotent và kích hoạt VIP ngay lập tức."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Flow 5: Quản trị & Phân quyền Admin",
+      "items": [
+        "Admin quản lý danh sách người dùng, thực hiện khóa tài khoản hoặc phân quyền Teacher / Affiliate.",
+        "Phát hành và quản lý các chiến dịch mã khuyến mãi toàn hệ thống."
+      ]
+    }
+  ]
+}

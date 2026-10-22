@@ -235,7 +235,10 @@ function CreateQuestionContent() {
       if (editId) {
         // If editing a group question, we assume the backend endpoint handles the whole hierarchy or we just send the single root Question if 'single'
         const block = questionBlocks[0];
-        const isGroup = block.is_group === true;
+        const isGroup = block.is_group === true || 
+          block.type_question === 'group' || 
+          (!!block.shared_content && block.shared_content.trim() !== '') || 
+          (block.questions && block.questions.length > 1);
         
         let payload: Partial<Question>;
         if (isGroup) {
@@ -264,17 +267,26 @@ function CreateQuestionContent() {
           throw new Error('Cập nhật thất bại. Backend trả về lỗi hoặc thiếu thông tin.');
         }
       } else {
-        const payload = questionBlocks.map(block => ({
-          shared_content: block.shared_content,
-          is_group: block.is_group === true,
-          point: block.point || (block.is_group ? block.questions.length : 1),
-          questions: block.questions.map(q => ({
-            ...q,
-            grade: typeof q.grade === 'string' ? parseInt(q.grade) : (q.grade || 0),
-            difficulty_point: q.difficulty_point || 0,
-            point: q.point || 1,
-          }))
-        }));
+        const payload = questionBlocks.map(block => {
+          const isGroup = block.is_group === true || 
+            block.type_question === 'group' || 
+            (!!block.shared_content && block.shared_content.trim() !== '') || 
+            (block.questions && block.questions.length > 1);
+
+          return {
+            shared_content: block.shared_content,
+            type_question: (isGroup ? 'group' : 'single') as 'group' | 'single',
+            is_group: isGroup,
+            point: block.point || (isGroup ? block.questions.length : 1),
+            questions: block.questions.map(q => ({
+              ...q,
+              type_question: isGroup ? 'group' : 'single',
+              grade: typeof q.grade === 'string' ? parseInt(q.grade) : (q.grade || 0),
+              difficulty_point: q.difficulty_point || 0,
+              point: q.point || 1,
+            }))
+          };
+        });
 
         await apiFetch('/questions/bulk', {
           method: 'POST',
@@ -294,7 +306,10 @@ function CreateQuestionContent() {
   const currentBlock = questionBlocks[currentBlockIndex] || null;
   const currentQuestion = currentBlock?.questions[currentQuestionIndex] || null;
   const totalBlocks = questionBlocks.length;
-  const isGroup = currentBlock?.is_group === true || (currentBlock?.questions && currentBlock.questions.length > 1);
+  const isGroup = currentBlock?.is_group === true || 
+    currentBlock?.type_question === 'group' ||
+    (!!currentBlock?.shared_content && currentBlock.shared_content.trim() !== '') || 
+    (currentBlock?.questions && currentBlock.questions.length > 1);
   const currentSubIndex = currentQuestionIndex + 1;
   const totalSubInBlock = currentBlock?.questions.length || 1;
 

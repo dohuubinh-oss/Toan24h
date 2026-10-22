@@ -3,6 +3,73 @@
  * Hỗ trợ tự động xuống hàng (<br/>, <p>), danh sách (<ul>, <ol>) và bảo toàn công thức KaTeX ($...$, $$...$$)
  */
 
+/**
+ * Kiểm tra xem chuỗi có phải biểu thức hoặc công thức toán học cần bọc $...$ không
+ */
+export function isMathExpression(s: string): boolean {
+  const trimmed = s.trim()
+  if (!trimmed) return false
+  if (trimmed.includes('$')) return false
+
+  // Chứa ký tự gạch chéo ngược LaTeX: \frac, \sqrt, \pm, \alpha, \le, \ge, \neq, \in, etc.
+  if (trimmed.includes('\\')) return true
+
+  // Chứa toán tử so sánh, số mũ hoặc chỉ số dưới
+  if (/[=<>^_{}]/.test(trimmed)) return true
+
+  // Chứa ký hiệu toán học đặc biệt unicode: ±, ∓, ≤, ≥, ≠, ≈, ∈
+  if (/[±∓≤≥≠≈∈]/.test(trimmed)) return true
+
+  // Là số thực, số nguyên hoặc số âm: 2, -5, 3.14, +2
+  if (/^[+-]?\d+(?:\.\d+)?$/.test(trimmed)) return true
+
+  // Là phân số: 1/2, -3/4
+  if (/^[+-]?\d+\s*\/\s*\d+$/.test(trimmed)) return true
+
+  // Chứa các toán tử toán học (+, -, *, /, =, <, >, ;, ≤, ≥, ≠)
+  if (/[+\-*\/=<>≤≥≠;]/.test(trimmed)) {
+    return true
+  }
+
+  // Ký tự đơn lẻ là biến toán học (x, y, z, m, a, b...)
+  if (/^[a-zA-Z]$/.test(trimmed)) {
+    return true
+  }
+
+  return false
+}
+
+/**
+ * Bắt buộc bọc tất cả công thức toán học, biểu thức, phương trình, số trong $...$
+ * Không có trường hợp ngoại lệ nào cho biểu thức toán học.
+ */
+export function ensureMathDelimiters(text?: string | null): string {
+  if (!text) return ''
+  const trimmed = text.trim()
+  if (!trimmed) return ''
+
+  // Nếu đã chứa $ thì giữ nguyên
+  if (trimmed.includes('$')) {
+    return trimmed
+  }
+
+  // Kiểm tra nếu được bọc trong <p>...</p>
+  if (trimmed.toLowerCase().startsWith('<p>') && trimmed.toLowerCase().endsWith('</p>')) {
+    const inner = trimmed.slice(3, -4).trim()
+    if (inner.includes('$')) return trimmed
+    if (isMathExpression(inner)) {
+      return `<p>$${inner}$</p>`
+    }
+    return trimmed
+  }
+
+  if (isMathExpression(trimmed)) {
+    return `$${trimmed}$`
+  }
+
+  return trimmed
+}
+
 export function cleanCitations(text?: string | null): string {
   if (!text) return ''
   return text

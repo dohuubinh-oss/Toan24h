@@ -3,7 +3,8 @@ import {
   cleanCitations,
   formatTextToHtml,
   formatQuestionContent,
-  formatSolutionGuide
+  formatSolutionGuide,
+  ensureMathDelimiters
 } from './questionTextFormatter'
 
 describe('questionTextFormatter utility', () => {
@@ -108,6 +109,36 @@ describe('questionTextFormatter utility', () => {
       expect(result).toContain('$$x^2 = 4$$')
       expect(result).toContain('$$x = \\pm 2$$')
       expect(result).toContain('Kết luận')
+    })
+  })
+
+  describe('ensureMathDelimiters', () => {
+    it('wraps equations and solutions in $...$', () => {
+      expect(ensureMathDelimiters('x = 2; x = 3')).toBe('$x = 2; x = 3$')
+      expect(ensureMathDelimiters('x = \\pm 2')).toBe('$x = \\pm 2$')
+      expect(ensureMathDelimiters('x = ±2')).toBe('$x = ±2$')
+      expect(ensureMathDelimiters('S = 6')).toBe('$S = 6$')
+      expect(ensureMathDelimiters('m > 1')).toBe('$m > 1$')
+      expect(ensureMathDelimiters('2')).toBe('$2$')
+      expect(ensureMathDelimiters('-5')).toBe('$-5$')
+      expect(ensureMathDelimiters('\\frac{1}{2}')).toBe('$\\frac{1}{2}$')
+      expect(ensureMathDelimiters('1/2')).toBe('$1/2$')
+    })
+
+    it('keeps strings already wrapped in $ as is', () => {
+      expect(ensureMathDelimiters('$x = 2$')).toBe('$x = 2$')
+      expect(ensureMathDelimiters('$$x = 2$$')).toBe('$$x = 2$$')
+    })
+
+    it('does not wrap non-math Vietnamese text', () => {
+      expect(ensureMathDelimiters('Vô nghiệm')).toBe('Vô nghiệm')
+      expect(ensureMathDelimiters('Vô số nghiệm')).toBe('Vô số nghiệm')
+      expect(ensureMathDelimiters('Đúng')).toBe('Đúng')
+      expect(ensureMathDelimiters('Sai')).toBe('Sai')
+    })
+
+    it('wraps math inside <p> tag correctly', () => {
+      expect(ensureMathDelimiters('<p>x = 2; x = 3</p>')).toBe('<p>$x = 2; x = 3$</p>')
     })
   })
 })

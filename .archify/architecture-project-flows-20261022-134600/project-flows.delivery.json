@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "4b4cafed-9482-41f4-922d-5accf1195d0e",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/modeptrai/Desktop/toan6789.vn/.archify/architecture-project-flows-20261022-134600/candidate.json",
+  "output": "/Users/modeptrai/Desktop/toan6789.vn/.archify/architecture-project-flows-20261022-134600/project-flows.html",
+  "specification": {
+    "sha256": "d877f9cb420529bfc073d0603c6709169f9247dd62e9b79f671372a1856d57db",
+    "bytes": 8079
+  },
+  "artifact": {
+    "sha256": "6be9aea4c8448858f393543159c17ac21a12be1e6dc62460598f6d97fa81d47d",
+    "bytes": 851190
+  }
+}

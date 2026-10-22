@@ -119,8 +119,8 @@ describe('AiQuestionExtractModal Component', () => {
               expect.objectContaining({
                 content: 'Câu 1: Giải phương trình $x^2 - 4 = 0$',
                 type: 'Trắc nghiệm',
-                options: ['x = 2', 'x = -2', 'x = ±2', 'Vô nghiệm'],
-                correct_answer: 'C. x = ±2',
+                options: ['$x = 2$', '$x = -2$', '$x = ±2$', 'Vô nghiệm'],
+                correct_answer: '$x = ±2$',
                 grade: 9,
                 difficulty_level: 'Thông hiểu',
                 point: 1,
@@ -130,6 +130,9 @@ describe('AiQuestionExtractModal Component', () => {
         ],
         expect.any(String)
       )
+      // Kiểm tra chuỗi JSON không chứa trường "is_group"
+      const rawJsonArg = onExtractedMock.mock.calls[0][1]
+      expect(rawJsonArg).not.toContain('"is_group"')
       expect(onCloseMock).toHaveBeenCalled()
     })
   })

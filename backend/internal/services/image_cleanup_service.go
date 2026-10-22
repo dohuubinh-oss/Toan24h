@@ -77,7 +77,7 @@ func FilterUnusedQuestionImages(db *gorm.DB, imageURLs []string, deletingQuestio
 		}
 		var count int64
 		query := db.Model(&models.Question{}).
-			Where("content LIKE ? OR CAST(options AS TEXT) LIKE ? OR solution_guide LIKE ? OR hint LIKE ? OR quick_solve_tips LIKE ? OR general_method LIKE ? OR mistakes LIKE ?",
+			Where("content LIKE ? OR CAST(options AS TEXT) LIKE ? OR solution_guide LIKE ? OR hint LIKE ? OR short_answer LIKE ? OR general_method LIKE ? OR mistakes LIKE ?",
 				"%"+imgURL+"%", "%"+imgURL+"%", "%"+imgURL+"%", "%"+imgURL+"%", "%"+imgURL+"%", "%"+imgURL+"%", "%"+imgURL+"%")
 		if len(deletingQuestionIDs) > 0 {
 			query = query.Where("id NOT IN (?)", deletingQuestionIDs)

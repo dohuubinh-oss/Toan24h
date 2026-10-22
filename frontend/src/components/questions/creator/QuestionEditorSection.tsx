@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
   AlignLeft, Bold, Italic, ImagePlus, FileQuestion,
-  CheckCircle2, FileText, Info, Lightbulb, Rocket, Brain, Plus, AlertCircle
+  CheckCircle2, FileText, Info, Lightbulb, Rocket, Brain, Plus, AlertCircle, Zap
 } from 'lucide-react'
 import { Question, QuestionBlock } from '../../../types/question'
 
@@ -14,7 +14,6 @@ interface QuestionEditorSectionProps {
 
 import SharedEditorCard from './editor/SharedEditorCard'
 import RichTextEditor from './editor/RichTextEditor'
-import MathText from '../../ui/MathText'
 import { formatSolutionGuide } from './utils/questionTextFormatter'
 
 function QuestionEditorSection({
@@ -31,7 +30,12 @@ function QuestionEditorSection({
     }
   };
 
-  const isGroup = currentBlock?.is_group === true || currentQuestion?.type_question === 'group';
+  const isGroup = 
+    currentBlock?.is_group === true || 
+    currentBlock?.type_question === 'group' || 
+    currentQuestion?.type_question === 'group' ||
+    (!!currentBlock?.shared_content && currentBlock.shared_content.trim() !== '') ||
+    (currentBlock?.questions && currentBlock.questions.length > 1);
 
   // Helper to check if a multiple-choice option is selected as correct (accurate KaTeX / HTML matching for AI questions & shuffled answers)
   const isOptionSelected = (optLetter: string, optValue: string, optIdx: number) => {
@@ -101,8 +105,8 @@ function QuestionEditorSection({
 
   return (
     <div className="space-y-6">
-      {/* Shared Context Card - Only show if group */}
-      {isGroup && (
+      {/* Shared Context Card - Hiển thị nếu là câu chùm hoặc trường shared_content có nội dung */}
+      {(isGroup || (!!currentBlock?.shared_content && currentBlock.shared_content.trim() !== '')) && (
         <SharedEditorCard
           title="Nội dung dẫn chung"
           icon={<AlignLeft className="text-primary w-5 h-5" />}
@@ -195,32 +199,14 @@ function QuestionEditorSection({
             })}
           </div>
         ) : (
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-bold text-slate-600">Đáp án / Lời giải mẫu tự luận</label>
-              <span className="text-[11px] text-slate-400 font-medium">Hỗ trợ công thức KaTeX ($...$ hoặc bấm ∑)</span>
-            </div>
-            <RichTextEditor
-              hideToolbar={false}
-              smallToolbar={true}
-              showMathButton={true}
-              minHeight="120px"
-              placeholder="Nhập đáp án hoặc lời giải mẫu tự luận (VD: $x = \pm 2$ hoặc $x = 2; x = 3$)..."
-              content={currentQuestion?.correct_answer || ''}
-              onChange={(val) => updateQuestion('correct_answer', val)}
-            />
-            {currentQuestion?.correct_answer && (
-              <div className="mt-3 p-3.5 bg-white rounded-xl border border-emerald-200/80 shadow-xs">
-                <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 uppercase tracking-wider mb-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Xem trước công thức đáp án (KaTeX):</span>
-                </div>
-                <div className="text-base font-semibold text-slate-800 bg-emerald-50/40 p-3 rounded-lg border border-emerald-100 overflow-x-auto">
-                  <MathText content={currentQuestion.correct_answer} />
-                </div>
-              </div>
-            )}
-          </div>
+          <RichTextEditor
+            hideToolbar={true}
+            showMathButton={true}
+            minHeight="100px"
+            placeholder="Nhập đáp án..."
+            content={currentQuestion?.correct_answer || ''}
+            onChange={(val) => updateQuestion('correct_answer', val)}
+          />
         )}
       </div>
 
@@ -248,18 +234,23 @@ function QuestionEditorSection({
             </label>
             <RichTextEditor
               hideToolbar={true}
+              showMathButton={true}
               content={currentQuestion?.hint || ''}
               onChange={(val) => updateQuestion('hint', val)}
             />
           </div>
           <div className="space-y-2">
             <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <Rocket className="w-4 h-4" /> Mẹo giải nhanh
+              <Zap className="w-4 h-4 text-amber-500" /> Lời giải ngắn
             </label>
             <RichTextEditor
               hideToolbar={true}
-              content={currentQuestion?.quick_solve_tips || ''}
-              onChange={(val) => updateQuestion('quick_solve_tips', val)}
+              showMathButton={true}
+              content={currentQuestion?.short_answer || currentQuestion?.quick_solve_tips || ''}
+              onChange={(val) => {
+                updateQuestion('short_answer', val)
+                updateQuestion('quick_solve_tips', val)
+              }}
             />
           </div>
           <div className="space-y-2">
@@ -268,6 +259,7 @@ function QuestionEditorSection({
             </label>
             <RichTextEditor
               hideToolbar={true}
+              showMathButton={true}
               content={currentQuestion?.general_method || ''}
               onChange={(val) => updateQuestion('general_method', val)}
             />
@@ -278,6 +270,7 @@ function QuestionEditorSection({
             </label>
             <RichTextEditor
               hideToolbar={true}
+              showMathButton={true}
               content={currentQuestion?.mistakes || ''}
               onChange={(val) => updateQuestion('mistakes', val)}
             />

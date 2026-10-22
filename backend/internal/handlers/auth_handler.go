@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -39,11 +40,12 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 }
 
 type RegisterRequest struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required,min=6"`
-	FullName string `json:"fullName" binding:"required"`
-	Role     string `json:"role"`
-	Grade    string `json:"grade"`
+	Email       string `json:"email" binding:"required"`
+	Password    string `json:"password" binding:"required,min=6"`
+	FullName    string `json:"fullName" binding:"required"`
+	Role        string `json:"role"`
+	Grade       string `json:"grade"`
+	VoucherCode string `json:"voucherCode"`
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -60,6 +62,22 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	// Validate voucher if provided
+	var voucher *models.Voucher
+	voucherCode := strings.ToUpper(strings.TrimSpace(req.VoucherCode))
+	if voucherCode != "" {
+		var v models.Voucher
+		if err := h.db.Where("UPPER(code) = ?", voucherCode).First(&v).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Mã khuyến mãi không tồn tại"})
+			return
+		}
+		if !v.IsValid() {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Mã khuyến mãi đã hết hạn hoặc hết lượt sử dụng"})
+			return
+		}
+		voucher = &v
+	}
+
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
@@ -69,20 +87,55 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	// Always default public registration to student role to prevent privilege escalation
 	role := "student"
 
+	var userExpiresAt *time.Time
+	if voucher != nil && voucher.FreeMonths > 0 {
+		exp := time.Now().AddDate(0, voucher.FreeMonths, 0)
+		userExpiresAt = &exp
+	}
+
 	user := models.User{
 		Email:        req.Email,
 		PasswordHash: hashedPassword,
 		FullName:     req.FullName,
 		Role:         role,
 		Grade:        req.Grade,
+		ExpiresAt:    userExpiresAt,
 	}
 
-	if err := h.db.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+	err = h.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&user).Error; err != nil {
+			return err
+		}
+
+		if voucher != nil {
+			if err := tx.Model(&models.Voucher{}).Where("id = ?", voucher.ID).Update("used_count", gorm.Expr("used_count + 1")).Error; err != nil {
+				return err
+			}
+
+			usage := models.VoucherUsage{
+				VoucherID:   voucher.ID,
+				UserID:      user.ID,
+				AffiliateID: voucher.AffiliateID,
+			}
+			if err := tx.Create(&usage).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user: " + err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "id": user.ID})
+	resp := gin.H{"message": "User registered successfully", "id": user.ID}
+	if voucher != nil && voucher.FreeMonths > 0 {
+		resp["freeMonths"] = voucher.FreeMonths
+	}
+
+	c.JSON(http.StatusCreated, resp)
 }
 
 type LoginRequest struct {

@@ -219,8 +219,8 @@ function QuestionsPageContent() {
                         </div>
                       )}
                       <ContentQuestion 
-                        content={q.type_question === 'single' ? q.content : undefined}
-                        sharedContext={q.type_question === 'group' ? q.content : undefined}
+                        content={q.type_question === 'single' && !(q as any).shared_content ? q.content : (q.type_question === 'single' ? q.content : undefined)}
+                        sharedContext={q.type_question === 'group' || (q as any).shared_content ? ((q as any).shared_content || q.content) : undefined}
                         options={q.options?.length > 0 ? q.options : undefined}
                         correctAnswer={q.correct_answer}
                         solution={q.solution_guide}

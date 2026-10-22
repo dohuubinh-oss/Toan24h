@@ -13,11 +13,14 @@ describe('QuestionEditorSection Component', () => {
     expect(screen.getByText('Thông tin bổ trợ cho học sinh')).toBeInTheDocument()
   })
 
-  it('renders support fields', () => {
+  it('renders support fields with math formula buttons', () => {
     render(<QuestionEditorSection />)
     expect(screen.getByText('Gợi ý')).toBeInTheDocument()
-    expect(screen.getByText('Mẹo giải nhanh')).toBeInTheDocument()
+    expect(screen.getByText('Lời giải ngắn')).toBeInTheDocument()
     expect(screen.getByText('Phương pháp tổng quát')).toBeInTheDocument()
+    expect(screen.getByText('Lỗi thường gặp')).toBeInTheDocument()
+    const mathButtons = screen.getAllByTitle(/công thức toán/i)
+    expect(mathButtons.length).toBeGreaterThanOrEqual(4)
   })
 
   it('allows selecting correct answer by clicking radio button when option has content', () => {
@@ -81,16 +84,32 @@ describe('QuestionEditorSection Component', () => {
     expect(radioC.checked).toBe(true)
   })
 
-  it('renders essay answer editor and KaTeX preview when question type is Tự luận', () => {
+  it('renders essay answer editor when question type is Tự luận without label text', () => {
     const mockQuestion = {
       type: 'Tự luận',
       options: [],
-      correct_answer: '$x = \\pm 2$'
+      correct_answer: ''
     } as any
 
-    render(<QuestionEditorSection currentQuestion={mockQuestion} />)
+    const { container } = render(<QuestionEditorSection currentQuestion={mockQuestion} />)
     
-    expect(screen.getByText('Đáp án / Lời giải mẫu tự luận')).toBeInTheDocument()
-    expect(screen.getByText('Xem trước công thức đáp án (KaTeX):')).toBeInTheDocument()
+    expect(container.querySelector('.bg-slate-50')).toBeInTheDocument()
+    expect(screen.queryByText('Đáp án / Lời giải mẫu tự luận')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Hỗ trợ công thức KaTeX/i)).not.toBeInTheDocument()
+  })
+
+  it('renders component dẫn chung when shared_content has text even if is_group is not set', () => {
+    const mockQuestion = {
+      type: 'Trắc nghiệm',
+      options: ['A', 'B', 'C', 'D'],
+    } as any
+    const mockBlock = {
+      shared_content: 'Đoạn trích văn bản dẫn chung',
+      questions: [mockQuestion]
+    } as any
+
+    render(<QuestionEditorSection currentQuestion={mockQuestion} currentBlock={mockBlock} />)
+    
+    expect(screen.getByText('Nội dung dẫn chung')).toBeInTheDocument()
   })
 })

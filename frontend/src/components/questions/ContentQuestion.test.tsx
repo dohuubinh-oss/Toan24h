@@ -4,12 +4,37 @@ import { describe, it, expect } from 'vitest';
 import ContentQuestion from './ContentQuestion';
 
 describe('ContentQuestion Component', () => {
-  it('renders essay answer with KaTeX when isEssay is true and correctAnswer is provided', () => {
+  it('renders sharedContext when provided', () => {
+    render(
+      <ContentQuestion
+        sharedContext="Cho biểu thức $P(x) = x^2 - 1$"
+        content="Tính giá trị $P(2)$"
+        isEssay={true}
+      />
+    );
+
+    expect(screen.getByText('Nội dung dẫn chung')).toBeInTheDocument();
+  });
+
+  it('renders component dẫn chung when shared_content prop is provided', () => {
+    render(
+      <ContentQuestion
+        shared_content="Đoạn văn bản dẫn chung cho bài toán"
+        content="Câu hỏi số 1"
+        isEssay={true}
+      />
+    );
+
+    expect(screen.getByText('Nội dung dẫn chung')).toBeInTheDocument();
+    expect(screen.getByText('Đoạn văn bản dẫn chung cho bài toán')).toBeInTheDocument();
+  });
+
+  it('renders essay answer with KaTeX when isEssay is true and correctAnswer is provided with $', () => {
     const { container } = render(
       <ContentQuestion
         content="Tìm nghiệm của phương trình $x^2 - 4 = 0$"
         isEssay={true}
-        correctAnswer="x = \pm 2"
+        correctAnswer="$x = \pm 2$"
       />
     );
 

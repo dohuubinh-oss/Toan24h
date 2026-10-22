@@ -224,7 +224,10 @@ export async function getQuestions(page: number = 1, limit: number = 20, filters
             solution_guide: sub.solutionGuide,
             difficulty_level: sub.difficultyLevel,
             difficulty_point: sub.difficultyPoint,
-            quick_solve_tips: sub.quickSolveTips,
+            short_answer: sub.shortAnswer ?? (sub as any).short_answer ?? sub.quickSolveTips,
+            shortAnswer: sub.shortAnswer ?? (sub as any).short_answer ?? sub.quickSolveTips,
+            quick_solve_tips: sub.quickSolveTips ?? sub.shortAnswer,
+            quickSolveTips: sub.quickSolveTips ?? sub.shortAnswer,
             general_method: sub.generalMethod,
             hint: sub.hint,
             mistakes: sub.mistakes,
@@ -242,7 +245,10 @@ export async function getQuestions(page: number = 1, limit: number = 20, filters
         solution_guide: q.solutionGuide,
         difficulty_level: q.difficultyLevel,
         difficulty_point: q.difficultyPoint,
-        quick_solve_tips: q.quickSolveTips,
+        short_answer: q.shortAnswer ?? (q as any).short_answer ?? q.quickSolveTips,
+        shortAnswer: q.shortAnswer ?? (q as any).short_answer ?? q.quickSolveTips,
+        quick_solve_tips: q.quickSolveTips ?? q.shortAnswer,
+        quickSolveTips: q.quickSolveTips ?? q.shortAnswer,
         general_method: q.generalMethod,
         hint: q.hint,
         mistakes: q.mistakes,
@@ -296,7 +302,10 @@ export async function getQuestion(id: string): Promise<Question | null> {
             solution_guide: sub.solutionGuide,
             difficulty_level: sub.difficultyLevel,
             difficulty_point: sub.difficultyPoint,
-            quick_solve_tips: sub.quickSolveTips,
+            short_answer: sub.shortAnswer ?? (sub as any).short_answer ?? sub.quickSolveTips,
+            shortAnswer: sub.shortAnswer ?? (sub as any).short_answer ?? sub.quickSolveTips,
+            quick_solve_tips: sub.quickSolveTips ?? sub.shortAnswer,
+            quickSolveTips: sub.quickSolveTips ?? sub.shortAnswer,
             general_method: sub.generalMethod,
             hint: sub.hint,
             mistakes: sub.mistakes,
@@ -314,7 +323,10 @@ export async function getQuestion(id: string): Promise<Question | null> {
         solution_guide: q.solutionGuide,
         difficulty_level: q.difficultyLevel,
         difficulty_point: q.difficultyPoint,
-        quick_solve_tips: q.quickSolveTips,
+        short_answer: q.shortAnswer ?? (q as any).short_answer ?? q.quickSolveTips,
+        shortAnswer: q.shortAnswer ?? (q as any).short_answer ?? q.quickSolveTips,
+        quick_solve_tips: q.quickSolveTips ?? q.shortAnswer,
+        quickSolveTips: q.quickSolveTips ?? q.shortAnswer,
         general_method: q.generalMethod,
         hint: q.hint,
         mistakes: q.mistakes,
@@ -333,6 +345,7 @@ export async function getQuestion(id: string): Promise<Question | null> {
 
 export async function updateQuestion(id: string, data: Partial<Question>): Promise<Question | null> {
   try {
+    const shortVal = data.short_answer ?? data.shortAnswer ?? data.quick_solve_tips ?? (data as any).quickSolveTips
     // Convert snake_case back to camelCase for backend
     const payload = {
       ...data,
@@ -343,24 +356,31 @@ export async function updateQuestion(id: string, data: Partial<Question>): Promi
       solutionGuide: data.solution_guide ?? (data as any).solutionGuide,
       difficultyLevel: data.difficulty_level ?? (data as any).difficultyLevel,
       difficultyPoint: data.difficulty_point ?? (data as any).difficultyPoint,
-      quickSolveTips: data.quick_solve_tips ?? (data as any).quickSolveTips,
+      shortAnswer: shortVal,
+      short_answer: shortVal,
+      quickSolveTips: shortVal,
       generalMethod: data.general_method ?? (data as any).generalMethod,
       hint: data.hint,
       mistakes: data.mistakes,
       bookName: data.book_name ?? (data as any).bookName,
-      subQuestions: data.subQuestions ? data.subQuestions.map((sub: any) => ({
-        ...sub,
-        tags: Array.isArray(sub.tags) ? JSON.stringify(sub.tags) : (sub.tags || '[]'),
-        options: Array.isArray(sub.options) ? JSON.stringify(sub.options) : (sub.options || '[]'),
-        typeQuestion: sub.type_question ?? sub.typeQuestion,
-        correctAnswer: sub.correct_answer ?? sub.correctAnswer,
-        solutionGuide: sub.solution_guide ?? sub.solutionGuide,
-        difficultyLevel: sub.difficulty_level ?? sub.difficultyLevel,
-        difficultyPoint: sub.difficulty_point ?? sub.difficultyPoint,
-        quickSolveTips: sub.quick_solve_tips ?? sub.quickSolveTips,
-        generalMethod: sub.general_method ?? sub.generalMethod,
-        bookName: sub.book_name ?? sub.bookName,
-      })) : undefined
+      subQuestions: data.subQuestions ? data.subQuestions.map((sub: any) => {
+        const subShort = sub.short_answer ?? sub.shortAnswer ?? sub.quick_solve_tips ?? sub.quickSolveTips
+        return {
+          ...sub,
+          tags: Array.isArray(sub.tags) ? JSON.stringify(sub.tags) : (sub.tags || '[]'),
+          options: Array.isArray(sub.options) ? JSON.stringify(sub.options) : (sub.options || '[]'),
+          typeQuestion: sub.type_question ?? sub.typeQuestion,
+          correctAnswer: sub.correct_answer ?? sub.correctAnswer,
+          solutionGuide: sub.solution_guide ?? sub.solutionGuide,
+          difficultyLevel: sub.difficulty_level ?? sub.difficultyLevel,
+          difficultyPoint: sub.difficulty_point ?? sub.difficultyPoint,
+          shortAnswer: subShort,
+          short_answer: subShort,
+          quickSolveTips: subShort,
+          generalMethod: sub.general_method ?? sub.generalMethod,
+          bookName: sub.book_name ?? sub.bookName,
+        }
+      }) : undefined
     }
     
     // Clean up snake_case keys if necessary, or just send both. The backend will map properly if JSON tags align.

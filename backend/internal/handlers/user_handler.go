@@ -86,6 +86,56 @@ func (h *UserHandler) UpdateUserStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Cập nhật thành công", "user": user})
 }
 
+type UpdateRoleRequest struct {
+	Role string `json:"role" binding:"required"`
+}
+
+// UpdateUserRole cập nhật vai trò người dùng (Chỉ dành cho Admin)
+func (h *UserHandler) UpdateUserRole(c *gin.Context) {
+	adminRole := c.GetString("userRole")
+	if adminRole != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Chỉ có Admin mới có quyền thay đổi vai trò người dùng"})
+		return
+	}
+
+	id := c.Param("id")
+	var req UpdateRoleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu không hợp lệ: " + err.Error()})
+		return
+	}
+
+	newRole := strings.ToLower(strings.TrimSpace(req.Role))
+	validRoles := map[string]bool{
+		"admin":     true,
+		"teacher":   true,
+		"affiliate": true,
+		"student":   true,
+	}
+
+	if !validRoles[newRole] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Vai trò không hợp lệ"})
+		return
+	}
+
+	var user models.User
+	if err := h.db.Where("id = ?", id).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy người dùng"})
+		return
+	}
+
+	user.Role = newRole
+	if err := h.db.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi cập nhật vai trò: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Cập nhật vai trò thành công",
+		"user":    user,
+	})
+}
+
 type RechargeRequest struct {
 	Months int `json:"months" binding:"required,min=1"`
 }

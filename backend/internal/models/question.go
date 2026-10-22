@@ -32,7 +32,8 @@ type Question struct {
 	
 	SolutionGuide   string         `gorm:"type:text;not null" json:"solutionGuide"`
 	Hint            string         `gorm:"type:text" json:"hint"`
-	QuickSolveTips  string         `gorm:"type:text" json:"quickSolveTips"`
+	ShortAnswer     string         `gorm:"type:text;column:short_answer" json:"shortAnswer,omitempty"`
+	QuickSolveTips  string         `gorm:"-" json:"quickSolveTips,omitempty"`
 	GeneralMethod   string         `gorm:"type:text" json:"generalMethod"`
 	Mistakes        string         `gorm:"type:text" json:"mistakes"`
 
@@ -51,12 +52,31 @@ func (q *Question) BeforeCreate(tx *gorm.DB) (err error) {
 	if q.GgDrive == "" && q.BookName != "" {
 		q.GgDrive = q.BookName
 	}
+	if q.ShortAnswer == "" && q.QuickSolveTips != "" {
+		q.ShortAnswer = q.QuickSolveTips
+	} else if q.QuickSolveTips == "" && q.ShortAnswer != "" {
+		q.QuickSolveTips = q.ShortAnswer
+	}
+	return
+}
+
+func (q *Question) BeforeUpdate(tx *gorm.DB) (err error) {
+	if q.ShortAnswer == "" && q.QuickSolveTips != "" {
+		q.ShortAnswer = q.QuickSolveTips
+	} else if q.QuickSolveTips == "" && q.ShortAnswer != "" {
+		q.QuickSolveTips = q.ShortAnswer
+	}
 	return
 }
 
 func (q *Question) AfterFind(tx *gorm.DB) (err error) {
 	if q.BookName == "" {
 		q.BookName = q.GgDrive
+	}
+	if q.QuickSolveTips == "" && q.ShortAnswer != "" {
+		q.QuickSolveTips = q.ShortAnswer
+	} else if q.ShortAnswer == "" && q.QuickSolveTips != "" {
+		q.ShortAnswer = q.QuickSolveTips
 	}
 	return
 }
