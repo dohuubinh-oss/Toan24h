@@ -132,17 +132,18 @@ func (h *VoucherHandler) GetVouchers(c *gin.Context) {
 	var vouchers []models.Voucher
 	query := h.db.Order("created_at desc")
 
-	if role == "admin" {
+	switch role {
+	case "admin":
 		if err := query.Find(&vouchers).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-	} else if role == "teacher" || role == "affiliate" {
+	case "teacher", "affiliate":
 		if err := query.Where("affiliate_id = ?", userID).Find(&vouchers).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-	} else {
+	default:
 		c.JSON(http.StatusForbidden, gin.H{"error": "Bạn không có quyền truy cập danh sách mã"})
 		return
 	}
