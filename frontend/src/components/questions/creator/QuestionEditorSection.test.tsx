@@ -112,4 +112,46 @@ describe('QuestionEditorSection Component', () => {
     
     expect(screen.getByText('Nội dung dẫn chung')).toBeInTheDocument()
   })
+
+  it('allows switching between step-by-step and freeform solution guide modes', () => {
+    const mockQuestion = {
+      type: 'Tự luận',
+      solution_guide: {
+        steps: [
+          { step: 1, title: 'Bước 1', content: 'Tìm x', point: 0.5 }
+        ],
+        conclusion: 'Xong'
+      }
+    } as any
+
+    render(<QuestionEditorSection currentQuestion={mockQuestion} />)
+
+    expect(screen.getByText('Từng bước (có điểm)')).toBeInTheDocument()
+    expect(screen.getByText('Văn bản tự do')).toBeInTheDocument()
+    expect(screen.getByText(/Thang điểm từng bước giải/i)).toBeInTheDocument()
+
+    // Switch to freeform mode
+    fireEvent.click(screen.getByText('Văn bản tự do'))
+    expect(screen.queryByText(/Thang điểm từng bước giải/i)).not.toBeInTheDocument()
+  })
+
+  it('synchronizes total step points to question point', () => {
+    const updateQuestion = vi.fn()
+    const mockQuestion = {
+      type: 'Tự luận',
+      solution_guide: {
+        steps: [
+          { step: 1, title: 'Bước 1', content: 'Tìm x', point: 0.5 }
+        ],
+        conclusion: 'Xong'
+      }
+    } as any
+
+    render(<QuestionEditorSection currentQuestion={mockQuestion} updateQuestion={updateQuestion} />)
+
+    const pointInput = screen.getByRole('spinbutton')
+    fireEvent.change(pointInput, { target: { value: '1.5' } })
+
+    expect(updateQuestion).toHaveBeenCalledWith('point', 1.5)
+  })
 })
