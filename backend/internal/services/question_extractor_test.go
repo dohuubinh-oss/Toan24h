@@ -790,3 +790,64 @@ func TestParseAndProcessExtractedBlocks_StepPoints(t *testing.T) {
 	step2 := steps[1].(map[string]interface{})
 	assert.Equal(t, 1.5, step2["point"])
 }
+
+func TestCleanQuestionPrefix(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected string
+	}{
+		{"Câu 18. Cho đa thức A", "Cho đa thức A"},
+		{"Câu 18: Cho đa thức A", "Cho đa thức A"},
+		{"Câu 18 - Cho đa thức A", "Cho đa thức A"},
+		{"Câu 1. Rút gọn biểu thức", "Rút gọn biểu thức"},
+		{"Câu 01. Rút gọn biểu thức", "Rút gọn biểu thức"},
+		{"Câu 18a. Tính diện tích tam giác", "Tính diện tích tam giác"},
+		{"Câu 18.a. Tính diện tích tam giác", "Tính diện tích tam giác"},
+		{"Bài 5. Tìm x biết", "Tìm x biết"},
+		{"Bài 12: Giải phương trình", "Giải phương trình"},
+		{"**Câu 18.** Rút gọn biểu thức", "Rút gọn biểu thức"},
+		{"<p>Câu 18. Cho đa thức A</p>", "<p>Cho đa thức A</p>"},
+		{"<p><strong>Câu 18:</strong> Cho biểu thức A</p>", "<p>Cho biểu thức A</p>"},
+		{"<p class=\"math\"><b>Bài 4.</b> Giải hệ</p>", "<p class=\"math\">Giải hệ</p>"},
+		{"Câu chuyện về định lý Pythagoras", "Câu chuyện về định lý Pythagoras"},
+		{"Bài toán sau đây:", "Bài toán sau đây:"},
+		{"", ""},
+	}
+
+	for _, tc := range testCases {
+		actual := CleanQuestionPrefix(tc.input)
+		assert.Equal(t, tc.expected, actual, "Failed on input: %s", tc.input)
+	}
+}
+
+func TestParseAndProcessExtractedBlocks_CleansQuestionPrefix(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	rawJSON := `[
+		{
+			"shared_content": "Bài 2. Cho hình vuông ABCD cạnh a",
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Câu 18. Rút gọn biểu thức sau: $A = (x+1)^2$",
+					"type": "Tự luận",
+					"correct_answer": "$A = x^2 + 2x + 1$",
+					"short_answer": "Khai triển hằng đẳng thức $(a+b)^2$: $A = x^2 + 2x + 1$."
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 8)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+
+	// Since it's single with shared_content, shared_content is merged into content
+	// Both "Bài 2. " and "Câu 18. " should be cleaned!
+	assert.False(t, strings.HasPrefix(blocks[0].Questions[0].Content, "Câu 18."))
+	assert.False(t, strings.HasPrefix(blocks[0].Questions[0].Content, "Bài 2."))
+	assert.True(t, strings.Contains(blocks[0].Questions[0].Content, "Rút gọn biểu thức sau:"))
+	assert.Equal(t, "Khai triển hằng đẳng thức $(a+b)^2$: $A = x^2 + 2x + 1$.", blocks[0].Questions[0].ShortAnswer)
+}
+

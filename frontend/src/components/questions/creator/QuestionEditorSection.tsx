@@ -246,6 +246,7 @@ function QuestionEditorSection({
             <RichTextEditor
               hideToolbar={true}
               showMathButton={true}
+              placeholder="Nhập lời giải ngắn kèm giải thích vắn tắt (1-2 câu)..."
               content={currentQuestion?.short_answer || currentQuestion?.quick_solve_tips || ''}
               onChange={(val) => {
                 updateQuestion('short_answer', val)

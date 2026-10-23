@@ -118,9 +118,23 @@ type rawGeminiBlock struct {
 }
 
 var (
-	rxFraction  = regexp.MustCompile(`^[+-]?\d+\s*/\s*\d+$`)
-	rxMathChars = regexp.MustCompile(`[+\-*\/=<>≤≥≠;]`)
+	rxFraction               = regexp.MustCompile(`^[+-]?\d+\s*/\s*\d+$`)
+	rxMathChars              = regexp.MustCompile(`[+\-*\/=<>≤≥≠;]`)
+	rxQuestionPrefixWithP    = regexp.MustCompile(`^(<p(?:\s+[^>]*)?>)\s*(?:<strong[^>]*>|<b[^>]*>|\*\*)?\s*(?:[Cc][Ââ][Uu]|[Bb][Àà][Ii])\s+\d+(?:[a-zA-Z]|\.[a-zA-Z])?(?:<\/strong>|<\/b>|\*\*)?\s*(?:[\.:\)\-]+\s*(?:<\/strong>|<\/b>|\*\*)?\s*|\s+)`)
+	rxQuestionPrefixWithoutP = regexp.MustCompile(`^\s*(?:<strong[^>]*>|<b[^>]*>|\*\*)?\s*(?:[Cc][Ââ][Uu]|[Bb][Àà][Ii])\s+\d+(?:[a-zA-Z]|\.[a-zA-Z])?(?:<\/strong>|<\/b>|\*\*)?\s*(?:[\.:\)\-]+\s*(?:<\/strong>|<\/b>|\*\*)?\s*|\s+)`)
 )
+
+// CleanQuestionPrefix loại bỏ các tiền tố đánh số câu hỏi như "Câu 18.", "Câu 1:", "Bài 5.", "**Câu 18.**", "<p>Câu 18.</p>"
+func CleanQuestionPrefix(s string) string {
+	trimmed := strings.TrimSpace(s)
+	if trimmed == "" {
+		return ""
+	}
+	if rxQuestionPrefixWithP.MatchString(trimmed) {
+		return rxQuestionPrefixWithP.ReplaceAllString(trimmed, "$1")
+	}
+	return rxQuestionPrefixWithoutP.ReplaceAllString(trimmed, "")
+}
 
 // isMathExpression kiểm tra xem chuỗi có phải là biểu thức hoặc ký hiệu toán học cần bọc $...$ không
 func isMathExpression(s string) bool {
@@ -450,18 +464,21 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 			if isGroup {
 				tq = "group"
 				if rb.SharedContent != nil && strings.TrimSpace(*rb.SharedContent) != "" {
-					sharedContent = rb.SharedContent
+					cleaned := CleanQuestionPrefix(*rb.SharedContent)
+					sharedContent = &cleaned
 				}
 			}
 		} else if len(rb.Questions) == 1 && rb.SharedContent != nil && strings.TrimSpace(*rb.SharedContent) != "" {
 			// Nếu chỉ có 1 câu hỏi nhưng AI tách đoạn dẫn chuyện vào shared_content (như bài toán thực tế Câu 9),
 			// tự động gộp shared_content vào đầu content của câu hỏi đó và chuyển về câu đơn ('single').
-			sc := strings.TrimSpace(*rb.SharedContent)
-			qc := strings.TrimSpace(rb.Questions[0].Content)
+			sc := CleanQuestionPrefix(strings.TrimSpace(*rb.SharedContent))
+			qc := CleanQuestionPrefix(strings.TrimSpace(rb.Questions[0].Content))
 			if qc == "" {
 				rb.Questions[0].Content = sc
 			} else if !strings.Contains(qc, sc) {
 				rb.Questions[0].Content = sc + "\n" + qc
+			} else {
+				rb.Questions[0].Content = qc
 			}
 			rb.SharedContent = nil
 			sharedContent = nil
@@ -470,6 +487,7 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 		// Hậu xử lý từng câu hỏi trong block
 		for qIdx := range rb.Questions {
 			q := &rb.Questions[qIdx]
+			q.Content = CleanQuestionPrefix(q.Content)
 
 			// Xác định khối lớp
 			if q.Grade == 0 && len(fallbackGrade) > 0 && fallbackGrade[0] > 0 {
@@ -585,6 +603,35 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 				q.ShortAnswer = q.QuickSolveTips
 			} else if q.QuickSolveTips == "" && q.ShortAnswer != "" {
 				q.QuickSolveTips = q.ShortAnswer
+			} else if q.ShortAnswer == "" && q.QuickSolveTips == "" {
+				// Fallback: nếu AI không trả về, trích xuất ngắn gọn từ bước giải hoặc kết luận
+				if solMap, ok := q.SolutionGuide.(map[string]interface{}); ok {
+					conclusion, _ := solMap["conclusion"].(string)
+					steps, _ := solMap["steps"].([]interface{})
+					if len(steps) > 0 {
+						if step1, ok := steps[0].(map[string]interface{}); ok {
+							title, _ := step1["title"].(string)
+							formula, _ := step1["formula"].(string)
+							var parts []string
+							if title != "" {
+								parts = append(parts, title)
+							}
+							if formula != "" {
+								parts = append(parts, formula)
+							}
+							if conclusion != "" {
+								parts = append(parts, conclusion)
+							}
+							if len(parts) > 0 {
+								q.ShortAnswer = strings.Join(parts, ": ")
+								q.QuickSolveTips = q.ShortAnswer
+							}
+						}
+					} else if conclusion != "" {
+						q.ShortAnswer = conclusion
+						q.QuickSolveTips = conclusion
+					}
+				}
 			}
 
 			// Đảm bảo solution_guide không bị null và bọc công thức nếu có
@@ -703,7 +750,7 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 		}
 		for qIdx := range rb.Questions {
 			q := &rb.Questions[qIdx]
-			q.Content = strings.TrimSpace(rxOrphanDiagram.ReplaceAllString(q.Content, " "))
+			q.Content = CleanQuestionPrefix(strings.TrimSpace(rxOrphanDiagram.ReplaceAllString(q.Content, " ")))
 			if solStr, ok := q.SolutionGuide.(string); ok {
 				q.SolutionGuide = strings.TrimSpace(rxOrphanDiagram.ReplaceAllString(solStr, " "))
 			}
@@ -809,7 +856,10 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
      "formula": "$S = x_1 + x_2 = 5, \\quad P = x_1 x_2 = 6$"
      Ví dụ SAI (cấm):
      "options": ["x = 2; x = 3", "x = 1; x = 6"], "correct_answer": "x = 2; x = 3"
-4. "content": Nội dung câu hỏi bằng LaTeX (Không bao gồm phương án lựa chọn A, B, C, D). Mọi biểu thức/ký hiệu toán học BẮT BUỘC phải viết bằng LaTeX chuẩn ($...$ hoặc $$...$$) để hiển thị đẹp bằng KaTeX.
+4. "content": Nội dung câu hỏi bằng LaTeX:
+   - TUYỆT ĐỐI LOẠI BỎ TOÀN BỘ TIỀN TỐ ĐÁNH SỐ CÂU HỎI như "Câu 1.", "Câu 18.", "Câu 18:", "Bài 1.", "Bài 18:" ở đầu câu hỏi vì hệ thống quản lý đề thi sẽ tự động đánh số thứ tự. Chỉ lấy phần câu hỏi thực sự bắt đầu sau số câu (ví dụ: đề gốc ghi "Câu 18. Cho đa thức A = ..." thì chỉ lấy "Cho đa thức A = ...").
+   - KHÔNG bao gồm các phương án lựa chọn A, B, C, D (các phương án phải đưa vào trường "options").
+   - Mọi biểu thức/ký hiệu toán học BẮT BUỘC phải viết bằng LaTeX chuẩn ($...$ hoặc $$...$$) để hiển thị đẹp bằng KaTeX.
 5. "type": string (Chỉ chọn một trong hai: 'Trắc nghiệm' hoặc 'Tự luận').
 6. "grade": int (Chỉ chọn một trong các số: 5, 6, 7, 8, 9).
 7. "topic": string (Tùy theo khối lớp và nội dung câu hỏi, chọn 1 và chỉ 1 chủ đề tương ứng lớp và phù hợp nhất trong danh mục chủ đề ở trên).
@@ -833,7 +883,11 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
       + "point": float (Thang điểm cho bước này. BẮT BUỘC tổng điểm các bước giải phải bằng điểm của câu hỏi "point", ví dụ câu 1 điểm thì bước 1 là 0.5, bước 2 là 0.5; câu 2 điểm thì bước 1 là 1.0, bước 2 là 1.0)
     - "conclusion": string (Nội dung kết luận/đáp số cuối cùng)
 15. "hint": Chỉ dẫn nhỏ, gợi nhớ công thức hoặc hướng tiếp cận bài toán.
-16. "short_answer": Lời giải ngắn gọn, cô đọng nhất giúp học sinh nhìn vào là biết ngay cách giải bài toán. Nếu đề bài/tài liệu gốc có sẵn đáp án mẫu hoặc lời giải vắn tắt thì trích xuất vào; nếu không có thì AI bắt buộc phải tự giải và sinh ra lời giải ngắn gọn, súc tích nhất.
+16. "short_answer": Lời giải ngắn gọn kèm lời giải thích ngắn súc tích (1-2 câu) giúp học sinh hiểu ngay bản chất và lý do chọn đáp án:
+    - BẮT BUỘC PHẢI CÓ LỜI GIẢI THÍCH NGẮN: Nêu mấu chốt lập luận, định lý/công thức áp dụng và các bước tính toán cô đọng nhất, TUYỆT ĐỐI KHÔNG CHỈ GHI MỖI ĐÁP SỐ HOẶC CÔNG THỨC TRƠ TRỌI.
+    - Với Trắc nghiệm: Nêu ngắn gọn lý do chọn đáp án đúng (ví dụ: "Áp dụng định lý Pythagoras: $BC = \sqrt{600^2 + 450^2} = 750\text{m}$. Do đó chọn đáp án C.").
+    - Với Tự luận: Tóm tắt 1-2 dòng giải thích mấu chốt giải và đáp số (ví dụ: "Thay $x = 2$ vào biểu thức ta được $A = 2^2 + 3 \cdot 2 - 1 = 9$.").
+    - Đồng thời gán giá trị này cho cả "quick_solve_tips".
 17. "general_method": Công thức tổng quát hóa cho dạng bài toán này.
 18. "mistakes": Các lỗi sai học sinh thường vấp phải.
 19. Bảng biến thiên, Bảng xét dấu hoặc Bảng số liệu: HÃY chuyển đổi trực tiếp thành bảng HTML (thẻ <table>, <tr>, <td>) hoặc bảng Markdown rõ ràng, KHÔNG cắt thành ảnh.
@@ -899,7 +953,7 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
           "conclusion": "Vậy khoảng cách bằng $750\\text{m}$."
         },
         "hint": "Áp dụng định lý Pythagore cho tam giác vuông",
-        "short_answer": "$BC = \\sqrt{600^2 + 450^2} = 750\\text{m}$",
+        "short_answer": "Áp dụng định lý Pythagoras cho tam giác vuông: $BC = \\sqrt{600^2 + 450^2} = 750\\text{m}$. Do đó khoảng cách bằng $750\\text{m}$.",
         "general_method": "Sử dụng định lý Pythagore",
         "mistakes": "Nhầm cạnh huyền với cạnh góc vuông"
       }
@@ -932,7 +986,7 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
           "conclusion": "Vậy $BC = 10\\text{ cm}$."
         },
         "hint": "Sử dụng định lý Pythagoras trong tam giác vuông",
-        "short_answer": "$BC = \\sqrt{6^2 + 8^2} = 10\\text{ cm}$",
+        "short_answer": "Áp dụng định lý Pythagoras trong tam giác $ABC$ vuông tại $A$: $BC = \\sqrt{AB^2 + AC^2} = \\sqrt{6^2 + 8^2} = 10\\text{ cm}$.",
         "general_method": "Áp dụng định lý Pythagoras $BC = \\sqrt{AB^2 + AC^2}$",
         "mistakes": "Quên khai căn bậc hai sau khi cộng bình phương"
       },
@@ -959,7 +1013,7 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
           "conclusion": "Vậy $AH = 4.8\\text{ cm}$."
         },
         "hint": "Áp dụng hệ thức liên hệ giữa cạnh góc vuông, cạnh huyền và đường cao",
-        "short_answer": "$AH = \\frac{AB \\cdot AC}{BC} = 4.8\\text{ cm}$",
+        "short_answer": "Áp dụng hệ thức lượng $AB \\cdot AC = BC \\cdot AH \\implies AH = \\frac{6 \\cdot 8}{10} = 4.8\\text{ cm}$.",
         "general_method": "Sử dụng công thức $AH = \\frac{AB \\cdot AC}{BC}$",
         "mistakes": "Tính nhầm cạnh huyền hoặc nhầm lẫn giữa các hệ thức lượng"
       }

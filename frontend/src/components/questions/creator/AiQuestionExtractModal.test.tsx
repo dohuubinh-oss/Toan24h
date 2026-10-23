@@ -117,7 +117,7 @@ describe('AiQuestionExtractModal Component', () => {
             type_question: 'single',
             questions: [
               expect.objectContaining({
-                content: 'Câu 1: Giải phương trình $x^2 - 4 = 0$',
+                content: 'Giải phương trình $x^2 - 4 = 0$',
                 type: 'Trắc nghiệm',
                 options: ['$x = 2$', '$x = -2$', '$x = ±2$', 'Vô nghiệm'],
                 correct_answer: '$x = ±2$',

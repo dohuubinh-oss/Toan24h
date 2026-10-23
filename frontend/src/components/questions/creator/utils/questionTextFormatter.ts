@@ -146,9 +146,28 @@ export function formatTextToHtml(text?: string | null): string {
   return htmlBlocks.filter(Boolean).join('')
 }
 
+/**
+ * Loại bỏ tiền tố đánh số câu hỏi như "Câu 18.", "Câu 1:", "Bài 5.", "**Câu 18.**", "<p>Câu 18.</p>"
+ */
+export function cleanQuestionPrefix(text?: string | null): string {
+  if (!text) return ''
+  const trimmed = text.trim()
+  if (!trimmed) return ''
+
+  // Có thẻ <p ...> ở đầu
+  const rxWithP = /^(<p(?:\s+[^>]*)?>)\s*(?:<strong[^>]*>|<b[^>]*>|\*\*)?\s*(?:câu|bài)\s+\d+(?:[a-zA-Z]|\.[a-zA-Z])?(?:<\/strong>|<\/b>|\*\*)?\s*(?:[\.:\)\-]+\s*(?:<\/strong>|<\/b>|\*\*)?\s*|\s+)/i
+  if (rxWithP.test(trimmed)) {
+    return trimmed.replace(rxWithP, '$1')
+  }
+
+  // Không có thẻ <p>
+  const rxWithoutP = /^\s*(?:<strong[^>]*>|<b[^>]*>|\*\*)?\s*(?:câu|bài)\s+\d+(?:[a-zA-Z]|\.[a-zA-Z])?(?:<\/strong>|<\/b>|\*\*)?\s*(?:[\.:\)\-]+\s*(?:<\/strong>|<\/b>|\*\*)?\s*|\s+)/i
+  return trimmed.replace(rxWithoutP, '')
+}
+
 export function formatQuestionContent(content?: string | null): string {
   if (!content) return ''
-  return formatTextToHtml(cleanCitations(content))
+  return formatTextToHtml(cleanQuestionPrefix(cleanCitations(content)))
 }
 
 export function formatSolutionGuide(guide: any): string {

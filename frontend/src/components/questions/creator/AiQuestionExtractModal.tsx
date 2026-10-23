@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/Button'
 import { QuestionBlock } from '@/types/question'
 import { apiFetch } from '@/lib/api'
 import { toast } from '@/components/ui/ToastProvider'
-import { formatTextToHtml, formatQuestionContent, formatSolutionGuide, ensureMathDelimiters } from './utils/questionTextFormatter'
+import { formatTextToHtml, formatQuestionContent, formatSolutionGuide, ensureMathDelimiters, cleanQuestionPrefix } from './utils/questionTextFormatter'
 
 export interface AiQuestionExtractModalProps {
   isOpen: boolean
@@ -178,13 +178,13 @@ export default function AiQuestionExtractModal({
         const questionsList = block.questions || [];
         const isGroup = (block.type_question?.toLowerCase() === 'group' || hasShared) && questionsList.length > 1;
 
-        let finalShared = isGroup && hasShared ? block.shared_content : null;
+        let finalShared = isGroup && hasShared ? cleanQuestionPrefix(block.shared_content) : null;
         let questions = [...questionsList];
 
         // Nếu chỉ có 1 câu hỏi con nhưng có shared_content dẫn dắt (như Câu 9), tự động gộp vào nội dung câu hỏi
         if (!isGroup && questions.length === 1 && hasShared) {
-          const sc = block.shared_content!.trim();
-          const qc = questions[0].content?.trim() || '';
+          const sc = cleanQuestionPrefix(block.shared_content!.trim());
+          const qc = cleanQuestionPrefix(questions[0].content?.trim() || '');
           if (!qc.includes(sc)) {
             questions[0] = {
               ...questions[0],
@@ -232,7 +232,7 @@ export default function AiQuestionExtractModal({
             const qPoint = q.point !== undefined && q.point !== null && Number(q.point) > 0 ? Math.round(Number(q.point)) : 1
 
             return {
-              content: q.content || '',
+              content: cleanQuestionPrefix(q.content || ''),
               type: (q.type === 'Trắc nghiệm' ? 'Trắc nghiệm' : 'Tự luận') as 'Trắc nghiệm' | 'Tự luận',
               grade: q.grade || (selectedGrade ? (selectedGrade === 'chuyen_cap' ? 'chuyen_cap' : parseInt(selectedGrade, 10)) : 9),
               topic: q.topic || '',

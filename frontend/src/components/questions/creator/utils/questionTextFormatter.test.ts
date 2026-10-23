@@ -4,7 +4,8 @@ import {
   formatTextToHtml,
   formatQuestionContent,
   formatSolutionGuide,
-  ensureMathDelimiters
+  ensureMathDelimiters,
+  cleanQuestionPrefix
 } from './questionTextFormatter'
 
 describe('questionTextFormatter utility', () => {
@@ -163,6 +164,29 @@ describe('questionTextFormatter utility', () => {
 
     it('wraps math inside <p> tag correctly', () => {
       expect(ensureMathDelimiters('<p>x = 2; x = 3</p>')).toBe('<p>$x = 2; x = 3$</p>')
+    })
+  })
+
+  describe('cleanQuestionPrefix', () => {
+    it('removes Câu X. or Bài X. prefixes', () => {
+      expect(cleanQuestionPrefix('Câu 18. Cho đa thức A')).toBe('Cho đa thức A')
+      expect(cleanQuestionPrefix('Câu 18: Cho đa thức A')).toBe('Cho đa thức A')
+      expect(cleanQuestionPrefix('Câu 18 - Cho đa thức A')).toBe('Cho đa thức A')
+      expect(cleanQuestionPrefix('Câu 1. Rút gọn biểu thức')).toBe('Rút gọn biểu thức')
+      expect(cleanQuestionPrefix('Bài 5. Tìm x biết')).toBe('Tìm x biết')
+      expect(cleanQuestionPrefix('**Câu 18.** Rút gọn biểu thức')).toBe('Rút gọn biểu thức')
+      expect(cleanQuestionPrefix('<p>Câu 18. Cho đa thức A</p>')).toBe('<p>Cho đa thức A</p>')
+      expect(cleanQuestionPrefix('<p><strong>Câu 18:</strong> Cho biểu thức A</p>')).toBe('<p>Cho biểu thức A</p>')
+    })
+
+    it('does not remove words like Câu chuyện or Bài toán', () => {
+      expect(cleanQuestionPrefix('Câu chuyện về Pythagoras')).toBe('Câu chuyện về Pythagoras')
+      expect(cleanQuestionPrefix('Bài toán sau đây:')).toBe('Bài toán sau đây:')
+    })
+
+    it('handles empty and null inputs', () => {
+      expect(cleanQuestionPrefix('')).toBe('')
+      expect(cleanQuestionPrefix(null as any)).toBe('')
     })
   })
 })
