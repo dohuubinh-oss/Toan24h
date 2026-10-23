@@ -53,23 +53,9 @@ describe('JsonInputCard', () => {
     expect(screen.getByText('Cú pháp JSON không hợp lệ')).toBeInTheDocument()
   })
 
-  it('formats unformatted JSON with 2-space indentation when clicking format button', () => {
-    render(<JsonInputCard onProcess={vi.fn()} initialValue='{"a":1,"b":[2,3]}' />)
-
-    const formatBtn = screen.getByRole('button', { name: /định dạng/i })
-    fireEvent.click(formatBtn)
-
-    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
-    expect(textarea.value).toBe(JSON.stringify({ a: 1, b: [2, 3] }, null, 2))
-  })
-
-  it('shows error when clicking format button on invalid JSON', () => {
-    render(<JsonInputCard onProcess={vi.fn()} initialValue='{ invalid json }' />)
-
-    const formatBtn = screen.getByRole('button', { name: /định dạng/i })
-    fireEvent.click(formatBtn)
-
-    expect(screen.getByText(/JSON không hợp lệ/i)).toBeInTheDocument()
+  it('does not render format button', () => {
+    render(<JsonInputCard onProcess={vi.fn()} initialValue='{"a":1}' />)
+    expect(screen.queryByRole('button', { name: /định dạng/i })).not.toBeInTheDocument()
   })
 
   it('updates textarea when initialValue prop changes', () => {

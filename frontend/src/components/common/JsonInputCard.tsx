@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Code2, Settings2, Sparkles, Upload, Copy, Check } from 'lucide-react'
+import { Code2, Settings2, Upload, Copy, Check } from 'lucide-react'
 
 export interface JsonInputCardProps {
   title?: string;
@@ -54,18 +54,6 @@ export default function JsonInputCard({
     }
   }, [initialValue])
 
-  const handleFormat = () => {
-    setError(null)
-    if (!jsonInput.trim()) return
-    try {
-      const parsed = JSON.parse(jsonInput)
-      setJsonInput(JSON.stringify(parsed, null, 2))
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Cú pháp không hợp lệ'
-      setError(`JSON không hợp lệ: ${msg}`)
-    }
-  }
-
   const handleProcess = () => {
     setError(null)
     if (!jsonInput.trim()) {
@@ -119,17 +107,6 @@ export default function JsonInputCard({
               <span>{copied ? 'Đã sao chép prompt' : 'Sao chép prompt'}</span>
             </button>
           )}
-
-          <button
-            type="button"
-            disabled={disabled || !jsonInput.trim()}
-            onClick={handleFormat}
-            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-            title="Tự động căn chỉnh và thụt lề JSON"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Định dạng</span>
-          </button>
         </div>
       </div>
 
