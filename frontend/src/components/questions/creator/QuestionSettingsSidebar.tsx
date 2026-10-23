@@ -183,11 +183,6 @@ export default function QuestionSettingsSidebar({
                 value={currentQuestion?.point !== undefined && currentQuestion?.point !== null ? currentQuestion.point : ''}
                 onChange={(e) => updateQuestion('point', e.target.value === '' ? null : parseFloat(e.target.value))}
               />
-              {currentQuestion?.solution_guide && typeof currentQuestion.solution_guide === 'object' && Array.isArray(currentQuestion.solution_guide.steps) && currentQuestion.solution_guide.steps.length > 0 && (
-                <p className="text-[10px] text-emerald-600 font-bold px-0.5 leading-tight">
-                  ✨ Tính từ {currentQuestion.solution_guide.steps.length} bước giải
-                </p>
-              )}
             </div>
 
             <div className="space-y-1.5">

@@ -14,7 +14,6 @@ interface QuestionEditorSectionProps {
 
 import SharedEditorCard from './editor/SharedEditorCard'
 import RichTextEditor from './editor/RichTextEditor'
-import StepByStepSolutionEditor from './editor/StepByStepSolutionEditor'
 import { formatSolutionGuide } from './utils/questionTextFormatter'
 
 function QuestionEditorSection({
@@ -24,16 +23,6 @@ function QuestionEditorSection({
   updateQuestion = () => { }
 }: QuestionEditorSectionProps) {
   const isEssay = currentQuestion?.type === 'Tự luận';
-
-  const [guideMode, setGuideMode] = useState<'step' | 'freeform'>('step');
-
-  useEffect(() => {
-    if (typeof currentQuestion?.solution_guide === 'string' && currentQuestion.solution_guide.trim() !== '') {
-      setGuideMode('freeform');
-    } else {
-      setGuideMode('step');
-    }
-  }, [currentQuestion?.id]);
 
   const handleSetEssay = (val: boolean) => {
     if (updateQuestion) {
@@ -222,53 +211,13 @@ function QuestionEditorSection({
       </div>
 
       {/* Solution Section */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-4 bg-white flex flex-wrap items-center justify-between gap-4 border-b border-slate-100">
-          <div className="flex items-center gap-2 px-2">
-            <FileText className="text-primary w-5 h-5" />
-            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">Lời giải chi tiết</h2>
-          </div>
-          <div className="bg-slate-100 p-1 rounded-xl flex items-center">
-            <button
-              type="button"
-              onClick={() => setGuideMode('step')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                guideMode === 'step' ? 'bg-white shadow-xs text-blue-700 font-extrabold' : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              Từng bước (có điểm)
-            </button>
-            <button
-              type="button"
-              onClick={() => setGuideMode('freeform')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                guideMode === 'freeform' ? 'bg-white shadow-xs text-blue-700 font-extrabold' : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              Văn bản tự do
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6">
-          {guideMode === 'step' ? (
-            <StepByStepSolutionEditor
-              guide={typeof currentQuestion?.solution_guide === 'object' ? currentQuestion.solution_guide : null}
-              onChange={(newGuide) => updateQuestion('solution_guide', newGuide)}
-              onTotalPointChange={(totalPoint) => updateQuestion('point', totalPoint)}
-            />
-          ) : (
-            <RichTextEditor
-              hideToolbar={false}
-              showMathButton={true}
-              minHeight="180px"
-              placeholder="Nhập lời giải chi tiết..."
-              content={typeof currentQuestion?.solution_guide === 'object' ? formatSolutionGuide(currentQuestion?.solution_guide) : (currentQuestion?.solution_guide || '')}
-              onChange={(val) => updateQuestion('solution_guide', val)}
-            />
-          )}
-        </div>
-      </div>
+      <SharedEditorCard
+        title="Lời giải chi tiết"
+        icon={<FileText className="text-primary w-5 h-5" />}
+        content={typeof currentQuestion?.solution_guide === 'object' ? formatSolutionGuide(currentQuestion?.solution_guide) : (currentQuestion?.solution_guide || '')}
+        onContentChange={(val) => updateQuestion('solution_guide', val)}
+        placeholder="Nhập lời giải chi tiết..."
+      />
 
       {/* Support Info */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
