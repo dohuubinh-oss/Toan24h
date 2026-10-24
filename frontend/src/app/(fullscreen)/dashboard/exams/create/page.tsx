@@ -174,20 +174,26 @@ function CreateExamPageContent() {
       return;
     }
 
-    const { diffScore } = calculateExamDifficulty(exam.questions);
-    const questionIds = exam.questions.map(q => q.id).filter(Boolean);
-
-    const payload = {
-      title: exam.title,
-      examCode: exam.examCode,
-      cate: exam.cate,
-      type: exam.type,
-      grade: exam.grade,
-      duration: exam.duration,
-      diffScore: diffScore,
-      questionIds: questionIds,
-      lectureId: exam.lectureId,
+    const getExamPayload = () => {
+      const { diffScore } = calculateExamDifficulty(exam.questions);
+      const questionIds = exam.questions.map(q => q.id).filter(Boolean);
+      return {
+        payload: {
+          title: exam.title,
+          examCode: exam.examCode,
+          cate: exam.cate,
+          type: exam.type,
+          grade: exam.grade,
+          duration: exam.duration,
+          diffScore: diffScore,
+          questionIds: questionIds,
+          lectureId: exam.lectureId,
+        },
+        questionIds,
+      };
     };
+
+    const { payload, questionIds } = getExamPayload();
 
     // If editing an existing exam, check for removed questions that may be orphans
     if (examId && initialQuestionIds.length > 0) {
@@ -220,36 +226,34 @@ function CreateExamPageContent() {
     setShowOrphanModal(false);
     const { diffScore } = calculateExamDifficulty(exam.questions);
     const questionIds = exam.questions.map(q => q.id).filter(Boolean);
-    const payload = {
+    await executeSave({
       title: exam.title,
       examCode: exam.examCode,
       cate: exam.cate,
       type: exam.type,
       grade: exam.grade,
       duration: exam.duration,
-      diffScore: diffScore,
-      questionIds: questionIds,
+      diffScore,
+      questionIds,
       lectureId: exam.lectureId,
-    };
-    await executeSave(payload, selectedIds);
+    }, selectedIds);
   };
 
   const handleKeepOrphans = async () => {
     setShowOrphanModal(false);
     const { diffScore } = calculateExamDifficulty(exam.questions);
     const questionIds = exam.questions.map(q => q.id).filter(Boolean);
-    const payload = {
+    await executeSave({
       title: exam.title,
       examCode: exam.examCode,
       cate: exam.cate,
       type: exam.type,
       grade: exam.grade,
       duration: exam.duration,
-      diffScore: diffScore,
-      questionIds: questionIds,
+      diffScore,
+      questionIds,
       lectureId: exam.lectureId,
-    };
-    await executeSave(payload);
+    });
   };
 
   const handleCancelOrphans = () => {

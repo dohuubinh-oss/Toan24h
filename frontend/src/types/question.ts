@@ -5,6 +5,7 @@ export interface Question {
   cate?: 'exam' | 'practice';
   type_question: 'group' | 'single';
   shared_content?: string | null;
+  diagram_svg?: string | null;
   content: string;
   type: 'Trắc nghiệm' | 'Tự luận';
   grade: number | string | null;
@@ -28,6 +29,7 @@ export interface Question {
 
 export interface QuestionBlock {
   shared_content: string | null;
+  diagram_svg?: string | null;
   type_question?: 'group' | 'single';
   is_group?: boolean;
   point?: number | null;

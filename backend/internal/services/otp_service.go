@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 
@@ -40,7 +41,8 @@ func (s *OTPService) GenerateOTP() string {
 
 // SaveOTP stores the OTP for 10 minutes
 func (s *OTPService) SaveOTP(email, otp string) error {
-	key := fmt.Sprintf("otp:forgot:%s", email)
+	cleanEmail := strings.ToLower(strings.TrimSpace(email))
+	key := fmt.Sprintf("otp:forgot:%s", cleanEmail)
 
 	// Try Redis if available
 	if config.RedisClient != nil {
@@ -64,16 +66,21 @@ func (s *OTPService) SaveOTP(email, otp string) error {
 
 // VerifyOTP checks if the provided OTP is valid for the given email with max 5 attempts limit
 func (s *OTPService) VerifyOTP(email, otp string) bool {
-	key := fmt.Sprintf("otp:forgot:%s", email)
+	cleanEmail := strings.ToLower(strings.TrimSpace(email))
+	key := fmt.Sprintf("otp:forgot:%s", cleanEmail)
 
 	// Check Redis first if available
 	if config.RedisClient != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
-		attempts, _ := config.RedisClient.Incr(ctx, key+":attempts").Result()
+		attemptsKey := key + ":attempts"
+		attempts, _ := config.RedisClient.Incr(ctx, attemptsKey).Result()
+		if attempts == 1 {
+			_ = config.RedisClient.Expire(ctx, attemptsKey, 10*time.Minute).Err()
+		}
 		if attempts > 5 {
 			_ = config.RedisClient.Del(ctx, key).Err()
-			_ = config.RedisClient.Del(ctx, key+":attempts").Err()
+			_ = config.RedisClient.Del(ctx, attemptsKey).Err()
 			return false
 		}
 		savedOTP, err := config.RedisClient.Get(ctx, key).Result()
@@ -116,12 +123,14 @@ func (s *OTPService) VerifyOTP(email, otp string) bool {
 
 // DeleteOTP removes the OTP key after successful reset
 func (s *OTPService) DeleteOTP(email string) {
-	key := fmt.Sprintf("otp:forgot:%s", email)
+	cleanEmail := strings.ToLower(strings.TrimSpace(email))
+	key := fmt.Sprintf("otp:forgot:%s", cleanEmail)
 
 	if config.RedisClient != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		_ = config.RedisClient.Del(ctx, key).Err()
+		_ = config.RedisClient.Del(ctx, key+":attempts").Err()
 	}
 
 	memoryOTPStore.Delete(key)

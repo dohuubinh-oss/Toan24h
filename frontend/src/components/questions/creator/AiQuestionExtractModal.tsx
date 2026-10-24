@@ -194,8 +194,11 @@ export default function AiQuestionExtractModal({
           finalShared = null;
         }
 
+        const blockDiagramSvg = block.diagram_svg || (block as any).diagramSvg || (questions[0]?.solution_guide && typeof questions[0]?.solution_guide === 'object' ? (questions[0].solution_guide.diagram_svg || questions[0].solution_guide.diagramSvg) : null) || null;
+
         return {
           shared_content: finalShared,
+          diagram_svg: blockDiagramSvg,
           type_question: (isGroup ? 'group' : 'single') as 'group' | 'single',
           questions: questions.map((q) => {
             const cleanedOptions = (q.options || []).map((opt) => {
@@ -220,6 +223,7 @@ export default function AiQuestionExtractModal({
             const processedGuide = q.solution_guide && typeof q.solution_guide === 'object'
               ? {
                   ...q.solution_guide,
+                  diagram_svg: q.solution_guide.diagram_svg || q.solution_guide.diagramSvg || null,
                   steps: Array.isArray(q.solution_guide.steps)
                     ? q.solution_guide.steps.map((st: any) => ({
                         ...st,
@@ -243,6 +247,7 @@ export default function AiQuestionExtractModal({
               options: q.type === 'Tự luận' ? [] : cleanedOptions,
               correct_answer: finalCorrectAnswer,
               solution_guide: processedGuide,
+              diagram_svg: (processedGuide && typeof processedGuide === 'object' ? processedGuide.diagram_svg : null) || (q as any).diagram_svg || null,
               hint: q.hint || '',
               short_answer: (q as any).short_answer || q.quick_solve_tips || '',
               quick_solve_tips: (q as any).short_answer || q.quick_solve_tips || '',
@@ -281,7 +286,7 @@ export default function AiQuestionExtractModal({
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             <div>
-              <h3 className="font-bold text-base leading-tight">Bóc tách đề thi bằng AI</h3>
+              <h3 className="font-bold text-base leading-tight">Bóc tách câu hỏi bằng AI</h3>
               <p className="text-xs text-white/80 mt-0.5">
                 Nhận diện câu hỏi, công thức LaTeX và tự động cắt hình học Oxy
               </p>
@@ -306,38 +311,6 @@ export default function AiQuestionExtractModal({
               <span>{errorMessage}</span>
             </div>
           )}
-
-          {/* Target Grade Selection */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="ai-extract-grade"
-                className="text-xs font-bold text-slate-700 uppercase tracking-wider"
-              >
-                Khối lớp mục tiêu
-              </label>
-              <span className="text-[11px] text-slate-400">
-                AI sẽ tự động gán chủ đề chuẩn theo khối lớp này
-              </span>
-            </div>
-            <div className="relative">
-              <select
-                id="ai-extract-grade"
-                aria-label="Khối lớp mục tiêu"
-                value={selectedGrade}
-                onChange={(e) => setSelectedGrade(e.target.value)}
-                disabled={isExtracting}
-                className="w-full appearance-none px-3.5 h-11 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
-              >
-                <option value="">Tự động nhận diện theo đề thi</option>
-                <option value="5">Lớp 5</option>
-                <option value="6">Lớp 6</option>
-                <option value="7">Lớp 7</option>
-                <option value="8">Lớp 8</option>
-                <option value="9">Lớp 9</option>
-              </select>
-            </div>
-          </div>
 
           {/* Upload Dropzone */}
           <div className="space-y-2">

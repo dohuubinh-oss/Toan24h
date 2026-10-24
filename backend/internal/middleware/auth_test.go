@@ -51,6 +51,14 @@ func TestAuthMiddleware(t *testing.T) {
 			},
 			expectedCode: http.StatusUnauthorized,
 		},
+		{
+			name: "Refresh Token Disallowed in AuthMiddleware",
+			setupRequest: func(req *http.Request) {
+				refreshToken, _ := utils.GenerateRefreshToken(userID)
+				req.Header.Set("Authorization", "Bearer "+refreshToken)
+			},
+			expectedCode: http.StatusUnauthorized,
+		},
 	}
 
 	for _, tt := range tests {

@@ -151,7 +151,7 @@ export default function UpgradePage() {
           accountNumber: txData.accountNumber,
           accountName: txData.accountName,
           bin: txData.bin,
-          content: txData.content || `T24H ${txData.orderCode || txData.transactionId}`,
+          content: txData.content || `TOAN6789 ${txData.orderCode || txData.transactionId}`,
         })
         setIsModalOpen(true)
       } else {

@@ -54,16 +54,22 @@ type PayOSResponse struct {
 }
 
 type PayOSWebhookData struct {
-	OrderCode           int64  `json:"orderCode"`
-	Amount              int    `json:"amount"`
-	Description         string `json:"description"`
-	AccountNumber       string `json:"accountNumber"`
-	Reference           string `json:"reference"`
-	TransactionDateTime string `json:"transactionDateTime"`
-	Currency            string `json:"currency"`
-	PaymentLinkID       string `json:"paymentLinkId"`
-	Code                string `json:"code"`
-	Desc                string `json:"desc"`
+	OrderCode              int64  `json:"orderCode"`
+	Amount                 int    `json:"amount"`
+	Description            string `json:"description"`
+	AccountNumber          string `json:"accountNumber"`
+	Reference              string `json:"reference"`
+	TransactionDateTime    string `json:"transactionDateTime"`
+	Currency               string `json:"currency"`
+	PaymentLinkID          string `json:"paymentLinkId"`
+	Code                   string `json:"code"`
+	Desc                   string `json:"desc"`
+	CounterAccountBankID   string `json:"counterAccountBankId"`
+	CounterAccountBankName string `json:"counterAccountBankName"`
+	CounterAccountName     string `json:"counterAccountName"`
+	CounterAccountNumber  string `json:"counterAccountNumber"`
+	VirtualAccountName     string `json:"virtualAccountName"`
+	VirtualAccountNumber   string `json:"virtualAccountNumber"`
 }
 
 type PayOSWebhookBody struct {
@@ -82,9 +88,37 @@ func (s *PayOSService) GenerateCreatePaymentSignature(orderCode int64, amount in
 	return hex.EncodeToString(h.Sum(nil))
 }
 
+// SortObjByKey formats any map[string]interface{} into a sorted query string: key1=val1&key2=val2...
+func SortObjByKey(params map[string]interface{}) string {
+	keys := make([]string, 0, len(params))
+	for k := range params {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var pairs []string
+	for _, k := range keys {
+		val := params[k]
+		valStr := ""
+		if val != nil {
+			valStr = fmt.Sprintf("%v", val)
+		}
+		pairs = append(pairs, fmt.Sprintf("%s=%s", k, valStr))
+	}
+	return strings.Join(pairs, "&")
+}
+
+// GenerateWebhookSignatureFromMap creates HMAC-SHA256 signature from dynamic data map
+func (s *PayOSService) GenerateWebhookSignatureFromMap(dataMap map[string]interface{}) string {
+	sortedDataStr := SortObjByKey(dataMap)
+	h := hmac.New(sha256.New, []byte(s.ChecksumKey))
+	h.Write([]byte(sortedDataStr))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
 // GenerateWebhookDataSignature creates HMAC-SHA256 signature for webhook verification
 func (s *PayOSService) GenerateWebhookDataSignature(data PayOSWebhookData) string {
-	params := map[string]string{
+	params := map[string]interface{}{
 		"orderCode":           strconv.FormatInt(data.OrderCode, 10),
 		"amount":              strconv.Itoa(data.Amount),
 		"description":         data.Description,
@@ -96,22 +130,34 @@ func (s *PayOSService) GenerateWebhookDataSignature(data PayOSWebhookData) strin
 		"code":                data.Code,
 		"desc":                data.Desc,
 	}
-
-	keys := make([]string, 0, len(params))
-	for k := range params {
-		keys = append(keys, k)
+	if data.CounterAccountBankID != "" {
+		params["counterAccountBankId"] = data.CounterAccountBankID
 	}
-	sort.Strings(keys)
-
-	var pairs []string
-	for _, k := range keys {
-		pairs = append(pairs, fmt.Sprintf("%s=%s", k, params[k]))
+	if data.CounterAccountBankName != "" {
+		params["counterAccountBankName"] = data.CounterAccountBankName
 	}
-	sortedDataStr := strings.Join(pairs, "&")
+	if data.CounterAccountName != "" {
+		params["counterAccountName"] = data.CounterAccountName
+	}
+	if data.CounterAccountNumber != "" {
+		params["counterAccountNumber"] = data.CounterAccountNumber
+	}
+	if data.VirtualAccountName != "" {
+		params["virtualAccountName"] = data.VirtualAccountName
+	}
+	if data.VirtualAccountNumber != "" {
+		params["virtualAccountNumber"] = data.VirtualAccountNumber
+	}
 
-	h := hmac.New(sha256.New, []byte(s.ChecksumKey))
-	h.Write([]byte(sortedDataStr))
-	return hex.EncodeToString(h.Sum(nil))
+	return s.GenerateWebhookSignatureFromMap(params)
+}
+
+func (s *PayOSService) VerifyWebhookSignatureFromMap(dataMap map[string]interface{}, signature string) bool {
+	if s.ChecksumKey == "" {
+		return false
+	}
+	expectedSignature := s.GenerateWebhookSignatureFromMap(dataMap)
+	return hmac.Equal([]byte(expectedSignature), []byte(signature))
 }
 
 func (s *PayOSService) VerifyWebhookSignature(data PayOSWebhookData, signature string) bool {
@@ -128,7 +174,7 @@ func (s *PayOSService) CreatePaymentLink(orderCode int64, amount int, descriptio
 	// Fallback/Mock mode for local dev without credentials
 	if s.ClientID == "" || s.APIKey == "" || s.ChecksumKey == "" {
 		accountNo := "1234567890"
-		accountName := "TOAN24H EDUCATION"
+		accountName := "TOAN6789 EDUCATION"
 		vietQr := fmt.Sprintf("https://img.vietqr.io/image/MB-%s-compact2.png?amount=%d&addInfo=%s&accountName=%s",
 			accountNo, amount, description, accountName)
 

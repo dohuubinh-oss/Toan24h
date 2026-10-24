@@ -182,6 +182,16 @@ export function formatSolutionGuide(guide: any): string {
   if (typeof guide === 'object') {
     let html = `<div class="exercise-content bg-transparent p-4">`
 
+    // 0. Hình vẽ minh họa lời giải SVG (nếu có)
+    const rawSvg = guide.diagram_svg || guide.diagramSvg || guide.DiagramSVG
+    if (rawSvg && typeof rawSvg === 'string' && rawSvg.trim().startsWith('<svg')) {
+      const cleanSvg = rawSvg.trim()
+      const encodedSvg = `data:image/svg+xml;utf8,${encodeURIComponent(cleanSvg)}`
+      html += `<div class="solution-diagram-wrapper my-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center shadow-xs">
+        <img src="${encodedSvg}" alt="Hình vẽ minh họa lời giải" class="max-w-[420px] max-h-[320px] w-auto h-auto mx-auto object-contain rounded-lg" />
+      </div>`
+    }
+
     if (guide.problem) {
       const cleanProb = cleanCitations(guide.problem)
       const formattedProb = formatTextToHtml(cleanProb)

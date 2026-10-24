@@ -92,12 +92,6 @@ type UpdateRoleRequest struct {
 
 // UpdateUserRole cập nhật vai trò người dùng (Chỉ dành cho Admin)
 func (h *UserHandler) UpdateUserRole(c *gin.Context) {
-	adminRole := c.GetString("userRole")
-	if adminRole != "admin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Chỉ có Admin mới có quyền thay đổi vai trò người dùng"})
-		return
-	}
-
 	id := c.Param("id")
 	var req UpdateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

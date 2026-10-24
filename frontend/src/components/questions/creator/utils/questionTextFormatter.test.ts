@@ -135,6 +135,18 @@ describe('questionTextFormatter utility', () => {
       const html = formatSolutionGuide(guideWithoutPoints)
       expect(html).not.toContain('điểm</span>')
     })
+
+    it('renders fixed illustration diagram when diagram_svg is provided', () => {
+      const svg = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#2563eb" /></svg>'
+      const guideWithSvg = {
+        diagram_svg: svg,
+        steps: [{ step: 1, title: 'Bước 1', content: 'Vẽ hình tròn' }],
+        conclusion: 'Xong'
+      }
+      const html = formatSolutionGuide(guideWithSvg)
+      expect(html).toContain('solution-diagram-wrapper')
+      expect(html).toContain('data:image/svg+xml;utf8,')
+    })
   })
 
   describe('ensureMathDelimiters', () => {

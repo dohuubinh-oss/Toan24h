@@ -34,6 +34,10 @@ func QueueGradingJob(submissionID uuid.UUID) error {
 
 // StartGradingWorkers starts a pool of workers to process grading jobs from Redis.
 func StartGradingWorkers(workerCount int, processFunc func(submissionID uuid.UUID)) {
+	if config.RedisClient == nil {
+		log.Println("Redis client is nil, grading workers will not start.")
+		return
+	}
 	log.Printf("Starting %d grading workers...", workerCount)
 	for i := 0; i < workerCount; i++ {
 		go func(workerID int) {

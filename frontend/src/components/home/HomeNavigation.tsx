@@ -71,7 +71,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
               toast.success(
                 (t) => (
                   <span className="flex flex-col gap-1">
-                    <span><b>Zalo giả lập:</b> {latest.title} - Bài thi của bạn đã được AI chấm xong.</span>
+                    <span><b>Thông báo mới:</b> {latest.title} - {latest.message}</span>
                     <Link href={latest.link} className="text-primary underline text-sm font-semibold" onClick={() => toast.dismiss(t.id)}>
                       Nhấn link để xem chi tiết kết quả.
                     </Link>

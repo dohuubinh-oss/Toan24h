@@ -70,19 +70,12 @@ export default function TelegramLoginWidget({
     const interval = setInterval(async () => {
       try {
         const res = await apiFetch(`/auth/telegram-qr/status/${sessionId}`)
-        if (res && res.status === 'completed' && res.user) {
+        if (res && res.status === 'completed') {
           setQrStatus('completed')
           clearInterval(interval)
-          if (res.user) {
-            localStorage.setItem('user', JSON.stringify(res.user))
-            document.cookie = `userRole=${res.user.role}; path=/; max-age=86400; SameSite=Lax`
-            if (res.user.grade) {
-              document.cookie = `userGrade=${res.user.grade}; path=/; max-age=86400; SameSite=Lax`
-            }
-          }
           setTimeout(() => {
             setShowQrModal(false)
-            onAuthSuccessRef.current(res.user)
+            onAuthSuccessRef.current(res)
           }, 800)
         }
       } catch (err) {

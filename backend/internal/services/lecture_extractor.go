@@ -99,11 +99,24 @@ func ExtractLectureFromImages(files [][]byte, mimeTypes []string) (string, error
 
 	primaryModel := os.Getenv("GEMINI_MODEL")
 	if primaryModel == "" {
-		primaryModel = "gemini-3.5-flash-lite"
+		primaryModel = "gemini-3.8-flash"
 	}
 
-	candidateModels := []string{primaryModel}
-	for _, m := range []string{"gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.6-flash"} {
+	validModels := []string{
+		"gemini-3.8-flash",
+		"gemini-flash-latest",
+		"gemini-3.7-flash",
+		"gemini-3.6-flash",
+		"gemini-3.5-flash",
+		"gemini-3.1-pro-preview",
+		"gemini-pro-latest",
+	}
+
+	candidateModels := []string{}
+	if primaryModel != "" {
+		candidateModels = append(candidateModels, primaryModel)
+	}
+	for _, m := range validModels {
 		found := false
 		for _, exist := range candidateModels {
 			if exist == m {

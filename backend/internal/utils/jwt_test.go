@@ -34,7 +34,7 @@ func TestJWTGenerationAndValidation(t *testing.T) {
 	}
 
 	// 3. Validate Access Token
-	claims, err := utils.ValidateToken(accessToken)
+	claims, err := utils.ValidateAccessToken(accessToken)
 	if err != nil {
 		t.Fatalf("Failed to validate access token: %v", err)
 	}
@@ -44,21 +44,36 @@ func TestJWTGenerationAndValidation(t *testing.T) {
 	if claims.Role != role {
 		t.Errorf("Expected Role %v, got %v", role, claims.Role)
 	}
+	if claims.TokenType != "access" {
+		t.Errorf("Expected TokenType access, got %v", claims.TokenType)
+	}
 
-	// 4. Validate Refresh Token
-	refreshClaims, err := utils.ValidateToken(refreshToken)
+	// 4. Access token should fail refresh token validation
+	if _, err := utils.ValidateRefreshToken(accessToken); err == nil {
+		t.Fatalf("Expected error when validating access token as refresh token, got nil")
+	}
+
+	// 5. Validate Refresh Token
+	refreshClaims, err := utils.ValidateRefreshToken(refreshToken)
 	if err != nil {
 		t.Fatalf("Failed to validate refresh token: %v", err)
 	}
 	if refreshClaims.UserID != userID {
 		t.Errorf("Expected UserID %v, got %v", userID, refreshClaims.UserID)
 	}
-	if refreshClaims.Role != "" { // refresh token shouldn't necessarily need role, or it could be empty
+	if refreshClaims.Role != "" {
 		t.Errorf("Expected Role empty for refresh token, got %v", refreshClaims.Role)
 	}
+	if refreshClaims.TokenType != "refresh" {
+		t.Errorf("Expected TokenType refresh, got %v", refreshClaims.TokenType)
+	}
 
-	// 5. Test Expired Token (simulated)
-	// We can't easily test expiration unless we mock time, but we can test invalid token
+	// 6. Refresh token should fail access token validation
+	if _, err := utils.ValidateAccessToken(refreshToken); err == nil {
+		t.Fatalf("Expected error when validating refresh token as access token, got nil")
+	}
+
+	// 7. Test Expired / Invalid Token
 	_, err = utils.ValidateToken("invalid.token.string")
 	if err == nil {
 		t.Fatalf("Expected error for invalid token, got nil")

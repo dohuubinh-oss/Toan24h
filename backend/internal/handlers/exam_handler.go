@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 
 	"github.com/modeptrai/exam-model-backend/internal/config"
@@ -41,6 +42,27 @@ type OrphanQuestionInfo struct {
 	Content  string `json:"content"`
 }
 
+// getOtherExamsQuestionSet returns a set of question IDs that exist in other exams (excluding currentExamID)
+func getOtherExamsQuestionSet(db *gorm.DB, currentExamID string, candidateIDs []string) (map[string]bool, error) {
+	used := make(map[string]bool)
+	if len(candidateIDs) == 0 {
+		return used, nil
+	}
+
+	var otherQuestionIDs []string
+	if err := db.Model(&models.Exam{}).
+		Select("DISTINCT unnest(question_ids)").
+		Where("id != ? AND question_ids && ?", currentExamID, pq.StringArray(candidateIDs)).
+		Pluck("unnest", &otherQuestionIDs).Error; err != nil {
+		return nil, err
+	}
+
+	for _, id := range otherQuestionIDs {
+		used[id] = true
+	}
+	return used, nil
+}
+
 func CheckOrphanQuestions(c *gin.Context) {
 	examID := c.Param("id")
 	var payload CheckOrphansPayload
@@ -49,22 +71,24 @@ func CheckOrphanQuestions(c *gin.Context) {
 		return
 	}
 
-	orphans := make([]OrphanQuestionInfo, 0)
-	for _, qID := range payload.QuestionIDs {
-		if qID == "" {
-			continue
-		}
-		var otherCount int64
-		if err := config.DB.Model(&models.Exam{}).
-			Where("id != ? AND ? = ANY(question_ids)", examID, qID).
-			Count(&otherCount).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check exams: " + err.Error()})
-			return
-		}
+	usedSet, err := getOtherExamsQuestionSet(config.DB, examID, payload.QuestionIDs)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check exams: " + err.Error()})
+		return
+	}
 
-		if otherCount == 0 {
-			var q models.Question
-			if err := config.DB.Select("id, gg_drive, content").Where("id = ?", qID).First(&q).Error; err == nil {
+	var orphanIDs []string
+	for _, qID := range payload.QuestionIDs {
+		if qID != "" && !usedSet[qID] {
+			orphanIDs = append(orphanIDs, qID)
+		}
+	}
+
+	orphans := make([]OrphanQuestionInfo, 0)
+	if len(orphanIDs) > 0 {
+		var questions []models.Question
+		if err := config.DB.Select("id, gg_drive, content").Where("id IN (?)", orphanIDs).Find(&questions).Error; err == nil {
+			for _, q := range questions {
 				orphans = append(orphans, OrphanQuestionInfo{
 					ID:       q.ID.String(),
 					BookName: q.GgDrive,
@@ -108,26 +132,24 @@ func UpdateExam(c *gin.Context) {
 		}
 
 		if len(payload.DeleteOrphanQuestionIDs) > 0 {
+			usedSet, err := getOtherExamsQuestionSet(tx, id, payload.DeleteOrphanQuestionIDs)
+			if err != nil {
+				return err
+			}
+
+			var toDeleteIDs []string
 			for _, qID := range payload.DeleteOrphanQuestionIDs {
-				if qID == "" {
-					continue
+				if qID != "" && !usedSet[qID] {
+					toDeleteIDs = append(toDeleteIDs, qID)
 				}
-				// Verify question is not in other exams
-				var otherCount int64
-				if err := tx.Model(&models.Exam{}).
-					Where("id != ? AND ? = ANY(question_ids)", id, qID).
-					Count(&otherCount).Error; err != nil {
+			}
+
+			if len(toDeleteIDs) > 0 {
+				if err := tx.Delete(&models.Question{}, "id IN (?)", toDeleteIDs).Error; err != nil {
 					return err
 				}
-
-				if otherCount == 0 {
-					// Soft delete question and any subquestions
-					if err := tx.Delete(&models.Question{}, "id = ?", qID).Error; err != nil {
-						return err
-					}
-					if err := tx.Delete(&models.Question{}, "parent_id = ?", qID).Error; err != nil {
-						return err
-					}
+				if err := tx.Delete(&models.Question{}, "parent_id IN (?)", toDeleteIDs).Error; err != nil {
+					return err
 				}
 			}
 		}
@@ -178,19 +200,15 @@ func DeleteExam(c *gin.Context) {
 	}
 
 	// 1. Identify orphan questions (questions only belonging to this exam)
+	usedSet, err := getOtherExamsQuestionSet(config.DB, id, exam.QuestionIDs)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check other exams: " + err.Error()})
+		return
+	}
+
 	var orphanQuestionIDs []string
 	for _, qID := range exam.QuestionIDs {
-		if qID == "" {
-			continue
-		}
-		var otherCount int64
-		if err := config.DB.Model(&models.Exam{}).
-			Where("id != ? AND ? = ANY(question_ids)", id, qID).
-			Count(&otherCount).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check other exams: " + err.Error()})
-			return
-		}
-		if otherCount == 0 {
+		if qID != "" && !usedSet[qID] {
 			orphanQuestionIDs = append(orphanQuestionIDs, qID)
 		}
 	}
@@ -222,7 +240,7 @@ func DeleteExam(c *gin.Context) {
 	}
 
 	// 4. Execute cascading DB deletions in a Transaction
-	err := config.DB.Transaction(func(tx *gorm.DB) error {
+	err = config.DB.Transaction(func(tx *gorm.DB) error {
 		// Hard delete all submissions of this exam
 		if err := tx.Unscoped().Where("exam_id = ?", exam.ID).Delete(&models.Submission{}).Error; err != nil {
 			return err

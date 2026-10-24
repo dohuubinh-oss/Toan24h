@@ -28,7 +28,7 @@ func TestPayOSService_VerifyWebhookSignature(t *testing.T) {
 	webhookData := services.PayOSWebhookData{
 		OrderCode:           1710900000000,
 		Amount:              450000,
-		Description:         "T24H 1710900000000",
+		Description:         "TOAN6789 1710900000000",
 		AccountNumber:       "1234567890",
 		Reference:           "FT240101",
 		TransactionDateTime: "2026-03-20 12:00:00",
@@ -50,6 +50,35 @@ func TestPayOSService_VerifyWebhookSignature(t *testing.T) {
 	isInvalid := service.VerifyWebhookSignature(webhookData, "invalid-sig")
 	if isInvalid {
 		t.Errorf("Expected invalid webhook signature to fail")
+	}
+}
+
+func TestPayOSService_VerifyWebhookSignatureFromMap_WithAllFields(t *testing.T) {
+	checksumKey := "0d54020a13ee42a8b9f71c4c8d55a7ee"
+	service := services.NewPayOSService("client-id", "api-key", checksumKey)
+
+	payloadMap := map[string]interface{}{
+		"orderCode":              123456,
+		"amount":                 3000,
+		"description":            "TOAN6789 123456",
+		"accountNumber":          "12345678",
+		"reference":              "TF230204212323",
+		"transactionDateTime":    "2026-03-20 18:25:00",
+		"currency":               "VND",
+		"paymentLinkId":          "124c33293c43417ab7879e14c8d9eb18",
+		"code":                   "00",
+		"desc":                   "Thành công",
+		"counterAccountBankId":   "",
+		"counterAccountBankName": "",
+		"counterAccountName":     "",
+		"counterAccountNumber":  "",
+		"virtualAccountName":     "",
+		"virtualAccountNumber":   "",
+	}
+
+	sig := service.GenerateWebhookSignatureFromMap(payloadMap)
+	if !service.VerifyWebhookSignatureFromMap(payloadMap, sig) {
+		t.Errorf("Expected signature from dynamic map with all PayOS fields to verify successfully")
 	}
 }
 

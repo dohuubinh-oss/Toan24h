@@ -40,18 +40,20 @@ func IsConsecutiveDay(date1, date2 time.Time) bool {
 }
 
 // AwardExamXP handles XP calculation, user balance update, and streak tracking
-func AwardExamXP(db *gorm.DB, userID uuid.UUID, examID uuid.UUID, cate string, newScore float64) (int, bool, error) {
+func AwardExamXP(db *gorm.DB, userID uuid.UUID, examID uuid.UUID, currentSubmissionID uuid.UUID, cate string, newScore float64) (int, bool, error) {
 	var user models.User
 	if err := db.First(&user, "id = ?", userID).Error; err != nil {
 		return 0, false, err
 	}
 
-	// 1. Find previous highest score for this exam by this user
+	// 1. Find previous highest score for this exam by this user (excluding current submission)
 	var maxScore *float64
-	row := db.Model(&models.Submission{}).
-		Where("user_id = ? AND exam_id = ? AND status = ?", userID, examID, models.StatusGraded).
-		Select("MAX(total_score)").
-		Row()
+	query := db.Model(&models.Submission{}).
+		Where("user_id = ? AND exam_id = ? AND status = ?", userID, examID, models.StatusGraded)
+	if currentSubmissionID != uuid.Nil {
+		query = query.Where("id != ?", currentSubmissionID)
+	}
+	row := query.Select("MAX(total_score)").Row()
 	_ = row.Scan(&maxScore)
 
 	prevMax := 0.0

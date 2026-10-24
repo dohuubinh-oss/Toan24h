@@ -11,7 +11,7 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/models"
 )
 
-var questionImgRegex = regexp.MustCompile(`src="(/uploads/questions/[^"]+)"`)
+var questionImgRegex = regexp.MustCompile(`src=["'](/uploads/questions/[^"']+)["']`)
 
 // ExtractQuestionImageURLs extracts all unique image URLs matching `/uploads/questions/...` from HTML / text strings.
 func ExtractQuestionImageURLs(texts ...string) []string {

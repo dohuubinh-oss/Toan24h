@@ -56,7 +56,7 @@ export default function RegisterForm() {
     } catch (error: any) {
       let msg = error.message
       if (msg.includes('Email already in use') || msg.includes('email')) {
-        msg = 'Đăng ký thất bại. Email hoặc số điện thoại có thể đã tồn tại.'
+        msg = 'Đăng ký thất bại. Email này đã được sử dụng.'
       }
       setErrorMessage(msg || 'Đăng ký thất bại. Vui lòng thử lại sau.')
       toast.error(msg || 'Đăng ký thất bại.')
@@ -134,7 +134,7 @@ export default function RegisterForm() {
                   required: 'Vui lòng nhập mật khẩu',
                   minLength: { value: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự' },
                   pattern: {
-                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/,
+                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{6,}$/,
                     message: 'Mật khẩu phải chứa chữ hoa, chữ thường, số và ký tự đặc biệt'
                   }
                 })}

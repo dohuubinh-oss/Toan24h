@@ -133,7 +133,7 @@ export default function QuestionSettingsSidebar({
                 className="w-full appearance-none bg-none px-3 h-12 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all cursor-pointer"
                 value={currentQuestion?.grade?.toString() || ""}
                 onChange={(e) => {
-                  updateQuestion('grade', e.target.value === "chuyen_cap" ? "chuyen_cap" : parseInt(e.target.value, 10));
+                  updateQuestion('grade', parseInt(e.target.value, 10));
                   updateQuestion('topic', '');
                 }}
               >
@@ -143,7 +143,6 @@ export default function QuestionSettingsSidebar({
                 <option value="7">Lớp 7</option>
                 <option value="8">Lớp 8</option>
                 <option value="9">Lớp 9</option>
-                <option value="chuyen_cap">Chuyển cấp</option>
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none w-5 h-5" />
             </div>

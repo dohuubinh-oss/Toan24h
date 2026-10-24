@@ -66,6 +66,11 @@ func setupExamTestEnv(t *testing.T) (*gin.Engine, *gorm.DB, func()) {
 
 	gin.SetMode(gin.TestMode)
 	r := gin.Default()
+	testUserID := uuid.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("userID", testUserID)
+		c.Next()
+	})
 	r.POST("/api/v1/exams/:id/submit", handlers.SubmitExam)
 
 	return r, db, cleanup

@@ -2,13 +2,12 @@
 
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useRouter } from 'next/navigation'
 import { Eye, EyeOff } from 'lucide-react'
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
 import { Checkbox } from '../ui/Checkbox'
-import { login } from '@/lib/authApi'
+import { login, syncAuthSession } from '@/lib/authApi'
 import GoogleSignInButton from './GoogleSignInButton'
 import toast from 'react-hot-toast'
 
@@ -22,8 +21,6 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-
-  const router = useRouter()
 
   const {
     register,
@@ -47,12 +44,8 @@ export default function LoginForm() {
         password: data.password
       })
 
-      if (res.user) {
-        localStorage.setItem('user', JSON.stringify(res.user))
-        document.cookie = `userRole=${res.user.role}; path=/; max-age=86400; SameSite=Lax`
-        if (res.user.grade) {
-          document.cookie = `userGrade=${res.user.grade}; path=/; max-age=86400; SameSite=Lax`
-        }
+      if (res?.user) {
+        syncAuthSession(res)
       }
 
       toast.success('Đăng nhập thành công! Đang chuyển hướng...')

@@ -145,7 +145,13 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 			return
 		}
 	} else {
-		// Existing user: Link Google ID if not already linked
+		// Existing user: Check if account is locked
+		if user.Status == "locked" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Tài khoản của bạn đã bị khóa"})
+			return
+		}
+
+		// Link Google ID if not already linked
 		updates := map[string]interface{}{}
 		if user.GoogleID == nil || *user.GoogleID != claims.Sub {
 			updates["google_id"] = claims.Sub

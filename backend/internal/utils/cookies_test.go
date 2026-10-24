@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -32,6 +33,7 @@ func TestSetAndClearAuthCookies(t *testing.T) {
 		cookieMap := make(map[string]string)
 		for _, ck := range cookies {
 			cookieMap[ck.Name] = ck.Value
+			assert.Equal(t, http.SameSiteLaxMode, ck.SameSite)
 		}
 
 		assert.Equal(t, "access-token-123", cookieMap["accessToken"])
@@ -52,6 +54,7 @@ func TestSetAndClearAuthCookies(t *testing.T) {
 		for _, ck := range cookies {
 			assert.Equal(t, -1, ck.MaxAge)
 			assert.Empty(t, ck.Value)
+			assert.Equal(t, http.SameSiteLaxMode, ck.SameSite)
 		}
 	})
 }

@@ -43,14 +43,9 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         const userStr = localStorage.getItem('user')
         if (userStr) {
           const user = JSON.parse(userStr)
-          if (
-            user.role === 'vip' || 
-            user.role === 'admin' || 
-            user.role === 'teacher' || 
-            user.isVip || 
-            user.plan === 'vip' || 
-            user.subscriptionPlan === 'vip'
-          ) {
+          const isStaff = user.role === 'admin' || user.role === 'teacher'
+          const isVipActive = Boolean(user.expiresAt && new Date(user.expiresAt) > new Date())
+          if (isStaff || isVipActive) {
             setIsVip(true)
           }
         }
@@ -73,6 +68,8 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
   useEffect(() => {
     let isMounted = true
+    let pollInterval: NodeJS.Timeout | null = null
+
     const fetchResult = async () => {
       try {
         const data = await getExamResultById(id)
@@ -97,6 +94,16 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           const sub = data.submission as any
           setOverallEssayFeedback(sub.overallEssayFeedback || sub.overall_essay_feedback || '')
           setOverallComprehensionFeedback(sub.overallComprehensionFeedback || sub.overall_comprehension_feedback || '')
+
+          const status = data.submission.status
+          if (status === 'graded' || status === 'needs_review') {
+            if (pollInterval) {
+              clearInterval(pollInterval)
+              pollInterval = null
+            }
+          } else if (!pollInterval && isMounted) {
+            pollInterval = setInterval(fetchResult, 3000)
+          }
         } else {
           toast.error("Không tìm thấy kết quả bài thi")
         }
@@ -112,8 +119,9 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     fetchResult()
     return () => {
       isMounted = false
+      if (pollInterval) clearInterval(pollInterval)
     }
-  }, [id])
+  }, [id, toast])
 
   // Memoize mapped questions and status
   const mappedData = useMemo(() => {

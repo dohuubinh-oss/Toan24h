@@ -53,33 +53,59 @@ export default function PayOSPaymentModal({
     }
   }, [isOpen, paymentData?.orderCode])
 
-  // Polling transaction status every 3s
+  // Polling transaction status every 2.5s (targeting lightweight /payments/status/:orderCode)
   useEffect(() => {
     if (!isOpen || !paymentData || isPaymentSuccess) return
 
+    let pollCount = 0
+    const maxPolls = 360 // 360 * 2.5s = 15 minutes timeout
+
     const interval = setInterval(async () => {
+      pollCount++
+      if (pollCount > maxPolls) {
+        clearInterval(interval)
+        return
+      }
+
       try {
-        const res = await apiFetch('/payments/my-transactions')
-        const transactions = Array.isArray(res) ? res : res?.data
-        if (Array.isArray(transactions)) {
-          const tx = transactions.find(
-            (t: any) =>
-              t.id === paymentData.transactionId ||
-              t.orderCode === paymentData.orderCode
-          )
-          if (tx && tx.status === 'completed') {
-            setIsPaymentSuccess(true)
-            toast.success('🎉 Thanh toán thành công! Tài khoản của bạn đã được gia hạn.')
-            setTimeout(() => {
-              onClose()
-              router.push('/profile?upgraded=true')
-            }, 2000)
-          }
+        // Query single transaction status directly
+        const res = await apiFetch(`/payments/status/${paymentData.orderCode}`)
+        const tx = res?.data || res
+        if (tx && tx.status === 'completed') {
+          setIsPaymentSuccess(true)
+          toast.success('🎉 Thanh toán thành công! Tài khoản của bạn đã được gia hạn.')
+          clearInterval(interval)
+          setTimeout(() => {
+            onClose()
+            router.push('/profile?upgraded=true')
+          }, 2000)
         }
       } catch (e) {
-        console.error('Polling error', e)
+        // Graceful fallback to /payments/my-transactions if status endpoint fails
+        try {
+          const myTxRes = await apiFetch('/payments/my-transactions')
+          const transactions = Array.isArray(myTxRes) ? myTxRes : myTxRes?.data
+          if (Array.isArray(transactions)) {
+            const tx = transactions.find(
+              (t: any) =>
+                t.id === paymentData.transactionId ||
+                t.orderCode === paymentData.orderCode
+            )
+            if (tx && tx.status === 'completed') {
+              setIsPaymentSuccess(true)
+              toast.success('🎉 Thanh toán thành công! Tài khoản của bạn đã được gia hạn.')
+              clearInterval(interval)
+              setTimeout(() => {
+                onClose()
+                router.push('/profile?upgraded=true')
+              }, 2000)
+            }
+          }
+        } catch (fallbackErr) {
+          console.error('Polling error', fallbackErr)
+        }
       }
-    }, 3000)
+    }, 2500)
 
     return () => clearInterval(interval)
   }, [isOpen, paymentData, isPaymentSuccess, router, onClose])
@@ -94,9 +120,9 @@ export default function PayOSPaymentModal({
   }
 
   const accountNumber = paymentData.accountNumber || '1234567890'
-  const accountName = paymentData.accountName || 'TOAN24H EDUCATION'
+  const accountName = paymentData.accountName || 'TOAN6789 EDUCATION'
   const bankName = 'MB Bank (Ngân hàng Quân Đội)'
-  const content = paymentData.content || `T24H ${paymentData.orderCode}`
+  const content = paymentData.content || `TOAN6789 ${paymentData.orderCode}`
 
   // Standard VietQR fallback
   const fallbackVietQrUrl = `https://img.vietqr.io/image/MB-${accountNumber}-compact2.png?amount=${
@@ -285,37 +311,39 @@ export default function PayOSPaymentModal({
         <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-3">
             <span>Hệ thống PayOS tự động kích hoạt sau vài giây.</span>
-            {/* Dev Mock Simulation Button */}
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  toast.loading('Đang giả lập thanh toán...', { id: 'mock-pay' })
-                  await apiFetch('/webhooks/payos', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                      code: '00',
-                      desc: 'success',
-                      data: {
-                        orderCode: paymentData.orderCode,
-                        amount: paymentData.amount,
-                        description: content,
+            {/* Dev Mock Simulation Button (Visible only in local development) */}
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    toast.loading('Đang giả lập thanh toán...', { id: 'mock-pay' })
+                    await apiFetch('/webhooks/payos', {
+                      method: 'POST',
+                      body: JSON.stringify({
                         code: '00',
                         desc: 'success',
-                      },
-                      signature: 'mock_dev_signature',
-                    }),
-                  })
-                  toast.success('Đã gửi webhook PayOS thành công!', { id: 'mock-pay' })
-                } catch (e: any) {
-                  toast.error(`Lỗi mock: ${e.message}`, { id: 'mock-pay' })
-                }
-              }}
-              className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold rounded-lg transition-colors border border-amber-300 flex items-center gap-1 cursor-pointer"
-              title="Click để kích hoạt webhook giả lập PayOS mà không cần chuyển khoản thật"
-            >
-              <span>⚡ Test giả lập PayOS (Dev)</span>
-            </button>
+                        data: {
+                          orderCode: paymentData.orderCode,
+                          amount: paymentData.amount,
+                          description: content,
+                          code: '00',
+                          desc: 'success',
+                        },
+                        signature: 'mock_dev_signature',
+                      }),
+                    })
+                    toast.success('Đã gửi webhook PayOS thành công!', { id: 'mock-pay' })
+                  } catch (e: any) {
+                    toast.error(`Lỗi mock: ${e.message}`, { id: 'mock-pay' })
+                  }
+                }}
+                className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold rounded-lg transition-colors border border-amber-300 flex items-center gap-1 cursor-pointer"
+                title="Click để kích hoạt webhook giả lập PayOS mà không cần chuyển khoản thật"
+              >
+                <span>⚡ Test giả lập PayOS (Dev)</span>
+              </button>
+            )}
           </div>
           <button
             type="button"

@@ -81,6 +81,7 @@ export const config = {
     '/practices/:path*',
     '/dashboard/:path*',
     '/profile/:path*',
+    '/exam/:path*',
     '/exams/:path*',
     '/student/:path*',
   ],

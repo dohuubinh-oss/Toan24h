@@ -86,7 +86,6 @@ func TestDualTelegramLinkingAndLogin(t *testing.T) {
 		c.Set("userID", user.ID.String())
 		authHandler.UnlinkTelegram(c)
 	})
-	r.POST("/api/v1/auth/telegram/login", authHandler.TelegramLogin)
 
 	t.Run("Link Slot 1 (Student Telegram)", func(t *testing.T) {
 		reqBody := map[string]interface{}{
@@ -179,22 +178,20 @@ func TestDualTelegramLinkingAndLogin(t *testing.T) {
 	})
 }
 
-func TestTelegramLoginDeprecated(t *testing.T) {
+func TestTelegramQRSessionRequiresLinkUserId(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	authHandler := handlers.NewAuthHandler(nil)
 	r := gin.New()
-	r.POST("/api/v1/auth/telegram", authHandler.TelegramLogin)
+	r.POST("/api/v1/auth/telegram-qr/session", authHandler.CreateTelegramQRSession)
 
-	reqBody := map[string]interface{}{
-		"id": 123456,
-	}
+	reqBody := map[string]interface{}{}
 	bodyBytes, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest(http.MethodPost, "/api/v1/auth/telegram", bytes.NewBuffer(bodyBytes))
+	req, _ := http.NewRequest(http.MethodPost, "/api/v1/auth/telegram-qr/session", bytes.NewBuffer(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var resp map[string]string
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.NoError(t, err)

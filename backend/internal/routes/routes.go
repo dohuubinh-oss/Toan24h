@@ -78,10 +78,8 @@ func SetupRouter() *gin.Engine {
 	paymentHandler := handlers.NewPaymentHandler(config.DB, payosService)
 	webhookHandler := handlers.NewWebhookHandler(config.DB, payosService)
 
-	// Direct root Webhook endpoints for external gateways
+	// Direct root Webhook endpoints for external gateways (PayOS)
 	r.POST("/webhook/payos", webhookHandler.HandlePayOSWebhook)
-	r.POST("/webhook/sepay", webhookHandler.HandleSePayWebhook)
-
 
 	// API Version 1 (Public Routes)
 	v1 := r.Group("/api/v1")
@@ -91,8 +89,6 @@ func SetupRouter() *gin.Engine {
 		v1.POST("/auth/login", authHandler.Login)
 		v1.POST("/auth/google", authHandler.GoogleLogin)
 		v1.POST("/auth/refresh", authHandler.Refresh)
-		v1.POST("/auth/telegram-login", authHandler.TelegramLogin)
-		v1.POST("/auth/telegram", authHandler.TelegramLogin)
 		v1.POST("/auth/telegram-qr/session", authHandler.CreateTelegramQRSession)
 		v1.GET("/auth/telegram-qr/status/:sessionId", authHandler.CheckTelegramQRStatus)
 		v1.POST("/auth/telegram-qr/complete", authHandler.CompleteTelegramQRSession)
@@ -103,7 +99,7 @@ func SetupRouter() *gin.Engine {
 
 		// Webhook routes
 		v1.POST("/webhooks/payos", webhookHandler.HandlePayOSWebhook)
-		v1.POST("/webhooks/bank", webhookHandler.HandleSePayWebhook)
+		v1.POST("/webhook/payos", webhookHandler.HandlePayOSWebhook)
 
 
 		// Read-only Public Questions
@@ -164,6 +160,7 @@ func SetupRouter() *gin.Engine {
 		payments := protected.Group("/payments")
 		{
 			payments.POST("/create", paymentHandler.CreatePayment)
+			payments.GET("/status/:orderCode", paymentHandler.GetPaymentStatus)
 			payments.GET("/my-transactions", paymentHandler.GetMyTransactions)
 		}
 
@@ -183,6 +180,7 @@ func SetupRouter() *gin.Engine {
 			// Questions admin
 			staff.POST("/questions/bulk", handlers.BulkCreateQuestions)
 			staff.POST("/questions/extract-ai", handlers.ExtractAIQuestions)
+			staff.POST("/questions/refine-diagram-svg", handlers.RefineGeometryDiagram)
 			staff.PUT("/questions/:id", handlers.UpdateQuestion)
 			staff.DELETE("/questions/:id", handlers.DeleteQuestion)
 

@@ -11,25 +11,6 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
-// TelegramLoginRequest represents the payload from Telegram Login Widget
-type TelegramLoginRequest struct {
-	ID        int64  `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Username  string `json:"username"`
-	PhotoURL  string `json:"photo_url"`
-	AuthDate  int64  `json:"auth_date"`
-	Hash      string `json:"hash"`
-}
-
-// TelegramLogin handles authentication via Telegram Widget (Deprecated)
-func (h *AuthHandler) TelegramLogin(c *gin.Context) {
-	c.JSON(http.StatusForbidden, gin.H{
-		"error": "Đăng nhập bằng Telegram không còn được hỗ trợ. Vui lòng đăng nhập qua Email hoặc tài khoản Google.",
-	})
-}
-
-
 type LinkTelegramRequest struct {
 	ID               interface{} `json:"id"`
 	TelegramID       interface{} `json:"telegramId"`
@@ -211,7 +192,7 @@ func (h *AuthHandler) UnlinkTelegram(c *gin.Context) {
 	})
 }
 
-// CreateTelegramQRSession creates a temporary session ID for mobile Telegram QR / Deep link login
+// CreateTelegramQRSession creates a temporary session ID for mobile Telegram QR / Deep link linking
 func (h *AuthHandler) CreateTelegramQRSession(c *gin.Context) {
 	var body struct {
 		SessionID  string `json:"sessionId"`
@@ -219,6 +200,20 @@ func (h *AuthHandler) CreateTelegramQRSession(c *gin.Context) {
 		LinkSlot   string `json:"linkSlot"`
 	}
 	_ = c.ShouldBindJSON(&body)
+
+	// If linkUserId is missing from body, try to extract from authenticated context
+	if body.LinkUserID == "" {
+		if uid, err := utils.GetUserIDString(c); err == nil {
+			body.LinkUserID = uid
+		}
+	}
+
+	if body.LinkUserID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Đăng nhập bằng Telegram không còn được hỗ trợ. Telegram chỉ dùng để nhận thông báo từ trang cá nhân.",
+		})
+		return
+	}
 
 	botUsername := os.Getenv("TELEGRAM_BOT_USERNAME")
 	if botUsername == "" {
@@ -241,7 +236,7 @@ func (h *AuthHandler) CreateTelegramQRSession(c *gin.Context) {
 	})
 }
 
-// CheckTelegramQRStatus checks if the mobile Telegram login session has completed
+// CheckTelegramQRStatus checks if the mobile Telegram linking session has completed
 func (h *AuthHandler) CheckTelegramQRStatus(c *gin.Context) {
 	sessionID := c.Param("sessionId")
 	if sessionID == "" {
@@ -259,46 +254,44 @@ func (h *AuthHandler) CheckTelegramQRStatus(c *gin.Context) {
 		// Delete session after single use
 		services.DeleteTelegramQRSession(sessionID)
 
-		// Set cookies
-		setAuthCookies(c, data.AccessToken, data.RefreshToken, data.User.Role, data.User.Grade, formatExpiresAt(data.User.ExpiresAt))
-
 		var tgID int64
-		if data.User.TelegramID != nil {
+		if data.LinkSlot == "2" && data.User.TelegramID2 != nil {
+			tgID = *data.User.TelegramID2
+		} else if data.User.TelegramID != nil {
 			tgID = *data.User.TelegramID
 		} else {
 			tgID = data.TelegramID
 		}
+
 		var tgUser string
-		if data.User.TelegramUser != nil {
+		if data.LinkSlot == "2" && data.User.TelegramUser2 != nil {
+			tgUser = *data.User.TelegramUser2
+		} else if data.User.TelegramUser != nil {
 			tgUser = *data.User.TelegramUser
 		} else {
 			tgUser = data.TelegramUser
 		}
+
 		var tgAvt string
-		if data.User.TelegramAvt != nil {
+		if data.LinkSlot == "2" && data.User.TelegramAvt2 != nil {
+			tgAvt = *data.User.TelegramAvt2
+		} else if data.User.TelegramAvt != nil {
 			tgAvt = *data.User.TelegramAvt
 		}
 
 		c.JSON(http.StatusOK, gin.H{
 			"status":           "completed",
-			"accessToken":      data.AccessToken,
-			"refreshToken":     data.RefreshToken,
+			"slot":             data.LinkSlot,
 			"telegramId":       tgID,
 			"telegramUsername": tgUser,
 			"telegramAvt":      tgAvt,
+			"message":          "Liên kết Telegram nhận thông báo thành công!",
 			"user": gin.H{
-				"id":               data.User.ID,
-				"email":            data.User.Email,
-				"fullName":         data.User.FullName,
-				"role":             data.User.Role,
-				"grade":            data.User.Grade,
-				"points":           data.User.Points,
-				"status":           data.User.Status,
-				"telegramId":       tgID,
-				"telegramUsername": tgUser,
-				"telegramAvt":      tgAvt,
-				"expiresAt":        data.User.ExpiresAt,
-				"createdAt":        data.User.CreatedAt,
+				"id":                data.User.ID,
+				"telegramId":        data.User.TelegramID,
+				"telegramUsername":  data.User.TelegramUser,
+				"telegramId2":       data.User.TelegramID2,
+				"telegramUsername2": data.User.TelegramUser2,
 			},
 		})
 		return
@@ -307,7 +300,7 @@ func (h *AuthHandler) CheckTelegramQRStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "waiting"})
 }
 
-// CompleteTelegramQRSession completes the login when triggered via mobile deep link / bot or simulated auth
+// CompleteTelegramQRSession completes the linking when triggered via mobile deep link / bot
 func (h *AuthHandler) CompleteTelegramQRSession(c *gin.Context) {
 	secretToken := os.Getenv("TELEGRAM_BOT_SECRET_TOKEN")
 	authHeader := c.GetHeader("X-Telegram-Bot-Secret")
@@ -332,7 +325,7 @@ func (h *AuthHandler) CompleteTelegramQRSession(c *gin.Context) {
 		return
 	}
 
-	_, _, _, err := services.CompleteTelegramLoginDirect(
+	_, err := services.CompleteTelegramLinkDirect(
 		h.db,
 		req.SessionID,
 		req.ID,
@@ -341,9 +334,9 @@ func (h *AuthHandler) CompleteTelegramQRSession(c *gin.Context) {
 		req.Username,
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Telegram login completed on mobile"})
+	c.JSON(http.StatusOK, gin.H{"message": "Liên kết Telegram thành công"})
 }

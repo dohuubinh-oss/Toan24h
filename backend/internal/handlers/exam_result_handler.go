@@ -42,9 +42,29 @@ func SubmitExam(c *gin.Context) {
 		return
 	}
 
-	var studentID *uuid.UUID
-	if uid, err := utils.GetUserID(c); err == nil {
-		studentID = &uid
+	studentID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	var exam models.Exam
+	if err := config.DB.First(&exam, "id = ?", examID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Exam not found"})
+		return
+	}
+
+	var submission models.Submission
+	var isUpdate bool
+	if err := config.DB.Where("exam_id = ? AND user_id = ?", examID, studentID).First(&submission).Error; err == nil {
+		if exam.Cate == "exam" && (submission.Status == models.StatusGraded || submission.Status == models.StatusInProgress) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  "error",
+				"message": "Bài thi chính thức chỉ được làm và nộp 1 lần. Bạn không thể nộp lại.",
+			})
+			return
+		}
+		isUpdate = true
 	}
 
 	answersMap := make(map[string]models.QuestionAnswer)
@@ -76,7 +96,7 @@ func SubmitExam(c *gin.Context) {
 		return
 	}
 
-	if studentID != nil && config.RedisClient != nil {
+	if config.RedisClient != nil {
 		lockKey := fmt.Sprintf("lock:submit_exam:%s:%s", studentID.String(), examIDStr)
 		ctx := c.Request.Context()
 		acquired, err := config.RedisClient.SetNX(ctx, lockKey, "locked", 15*time.Second).Result()
@@ -91,16 +111,8 @@ func SubmitExam(c *gin.Context) {
 	}
 
 	now := time.Now()
-	var submission models.Submission
-	var isUpdate bool
-	if studentID != nil {
-		if err := config.DB.Where("exam_id = ? AND user_id = ?", examID, studentID).First(&submission).Error; err == nil {
-			isUpdate = true
-		}
-	}
-
 	submission.ExamID = examID
-	submission.UserID = studentID
+	submission.UserID = &studentID
 	submission.Status = models.StatusInProgress
 	submission.AnswersJSON = answersJSONBytes
 	submission.SubmittedAt = &now
@@ -119,8 +131,6 @@ func SubmitExam(c *gin.Context) {
 	}
 
 	// Determine if there are essay questions
-	var exam models.Exam
-	config.DB.First(&exam, "id = ?", examID)
 	var allQuestions []models.Question
 	questionIDSlice := []string(exam.QuestionIDs)
 	if len(questionIDSlice) > 0 {
@@ -135,29 +145,22 @@ func SubmitExam(c *gin.Context) {
 		}
 	}
 
-	if hasEssay {
-		if err := services.QueueGradingJob(submission.ID); err != nil {
-			fmt.Printf("Failed to queue grading job: %v\n", err)
-		}
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "pending",
-			"message": "Nộp bài thành công. AI đang chấm điểm. Chúng tôi sẽ thông báo khi có kết quả.",
-			"data": gin.H{
-				"resultId": submission.ID,
-			},
-		})
-	} else {
-		if err := services.QueueGradingJob(submission.ID); err != nil {
-			fmt.Printf("Failed to queue grading job: %v\n", err)
-		}
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "pending",
-			"message": "Nộp bài thành công. Hệ thống đang xử lý điểm số.",
-			"data": gin.H{
-				"resultId": submission.ID,
-			},
-		})
+	if err := services.QueueGradingJob(submission.ID); err != nil {
+		fmt.Printf("Failed to queue grading job: %v\n", err)
 	}
+
+	msg := "Nộp bài thành công. Hệ thống đang xử lý điểm số."
+	if hasEssay {
+		msg = "Nộp bài thành công. AI đang chấm điểm. Chúng tôi sẽ thông báo khi có kết quả."
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "pending",
+		"message": msg,
+		"data": gin.H{
+			"resultId": submission.ID,
+		},
+	})
 }
 
 // ProcessExamGrading processes the grading for a submission synchronously. 
@@ -321,7 +324,7 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 	if submission.UserID != nil {
 		var exam models.Exam
 		config.DB.First(&exam, "id = ?", submission.ExamID)
-		earnedXP, streakBonus, err := services.AwardExamXP(config.DB, *submission.UserID, submission.ExamID, exam.Cate, submission.TotalScore)
+		earnedXP, streakBonus, err := services.AwardExamXP(config.DB, *submission.UserID, submission.ExamID, submission.ID, exam.Cate, submission.TotalScore)
 		if err != nil {
 			fmt.Printf("Failed to award XP: %v\n", err)
 		} else {
@@ -329,20 +332,18 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 		}
 
 		var user models.User
-		config.DB.First(&user, "id = ?", submission.UserID)
+		if err := config.DB.First(&user, "id = ?", submission.UserID).Error; err == nil {
+			resultURL := fmt.Sprintf("%s/exam/%s/result", config.Env.FrontendURL, submission.ID.String())
+			config.DB.Create(&models.Notification{
+				UserID:  *submission.UserID,
+				Title:   "Chấm điểm hoàn tất",
+				Message: fmt.Sprintf("Bài thi %s của bạn đã được chấm xong. Tổng điểm: %.2f", exam.Title, submission.TotalScore),
+				Link:    "/exam/" + submission.ID.String() + "/result",
+			})
 
-		resultURL := fmt.Sprintf("%s/exam/%s/result", config.Env.FrontendURL, submission.ID.String())
-		config.DB.Create(&models.Notification{
-			UserID:  *submission.UserID,
-			Title:   "Chấm điểm hoàn tất",
-			Message: fmt.Sprintf("Bài thi của bạn đã được AI chấm xong. Xem lời giải tại: %s", resultURL),
-			Link:    "/exam/" + submission.ID.String() + "/result",
-		})
-
-		if user.TelegramID != nil {
 			notifier := services.NewTelegramNotifier()
-			msg := fmt.Sprintf("✅ <b>Chấm điểm hoàn tất</b>\nBài thi của bạn đã được AI chấm xong.\nTổng điểm: %.2f\n\n🔗 Xem lời giải chi tiết: %s", submission.TotalScore, resultURL)
-			go notifier.SendMessage(*user.TelegramID, msg)
+			msg := fmt.Sprintf("✅ <b>Chấm điểm hoàn tất</b>\nBài thi: %s\nTổng điểm: %.2f\n\n🔗 Xem lời giải chi tiết: %s", exam.Title, submission.TotalScore, resultURL)
+			go notifier.SendToUser(&user, msg)
 		}
 	}
 }
@@ -369,6 +370,20 @@ func GetExamResultByID(c *gin.Context) {
 	if err := config.DB.First(&submission, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Result not found"})
 		return
+	}
+
+	// Verify authorization: either submission owner or staff (admin/teacher)
+	role := c.GetString("userRole")
+	currentUID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	if role != "admin" && role != "teacher" {
+		if submission.UserID == nil || *submission.UserID != currentUID {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Bạn không có quyền truy cập kết quả bài thi này"})
+			return
+		}
 	}
 
 	// We also need to attach the exam and questions information for the frontend to render it properly.
@@ -437,9 +452,20 @@ func AppealExamResult(c *gin.Context) {
 		return
 	}
 
+	currentUID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	var submission models.Submission
 	if err := config.DB.First(&submission, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Submission not found"})
+		return
+	}
+
+	if submission.UserID == nil || *submission.UserID != currentUID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Bạn không có quyền gửi kháng cáo cho bài thi này"})
 		return
 	}
 
@@ -572,12 +598,20 @@ func ResolveAppeal(c *gin.Context) {
 	config.DB.Save(&submission)
 
 	if submission.UserID != nil {
+		resultURL := fmt.Sprintf("%s/exam/%s/result", config.Env.FrontendURL, submission.ID.String())
 		config.DB.Create(&models.Notification{
 			UserID:  *submission.UserID,
 			Title:   "Kết quả kháng cáo",
 			Message: fmt.Sprintf("Kháng cáo của bạn đã được giáo viên phản hồi: %s", req.TeacherFeedback),
 			Link:    "/exam/" + submission.ID.String() + "/result",
 		})
+
+		var user models.User
+		if err := config.DB.First(&user, "id = ?", submission.UserID).Error; err == nil {
+			notifier := services.NewTelegramNotifier()
+			msg := fmt.Sprintf("🔔 <b>Kết quả kháng cáo bài thi</b>\nGiáo viên đã phản hồi: %s\nĐiểm cập nhật: %.2f\n\n🔗 Xem chi tiết: %s", req.TeacherFeedback, submission.TotalScore, resultURL)
+			go notifier.SendToUser(&user, msg)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Đã duyệt kháng cáo"})
@@ -694,10 +728,10 @@ func ResolveSubmissionReview(c *gin.Context) {
 		})
 
 		var user models.User
-		if err := config.DB.First(&user, "id = ?", submission.UserID).Error; err == nil && user.TelegramID != nil {
+		if err := config.DB.First(&user, "id = ?", submission.UserID).Error; err == nil {
 			notifier := services.NewTelegramNotifier()
 			msg := fmt.Sprintf("✅ <b>Chấm điểm hoàn tất bởi Giáo viên</b>\nTổng điểm: %.2f\nNhận xét: %s\n\n🔗 Xem chi tiết: %s", submission.TotalScore, msgText, resultURL)
-			go notifier.SendMessage(*user.TelegramID, msg)
+			go notifier.SendToUser(&user, msg)
 		}
 	}
 

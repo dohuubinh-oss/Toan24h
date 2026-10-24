@@ -129,4 +129,29 @@ describe('QuestionEditorSection Component', () => {
     expect(screen.getByText('Lời giải chi tiết')).toBeInTheDocument()
     expect(screen.queryByText('Từng bước (có điểm)')).not.toBeInTheDocument()
   })
+
+  it('renders illustration card above solution guide with shared diagram for group question', () => {
+    const mockQuestion = {
+      id: '1',
+      content: 'Câu 1a',
+      type: 'Tự luận',
+      options: [],
+      solution_guide: 'Lời giải câu a'
+    } as any
+
+    const mockBlock = {
+      is_group: true,
+      diagram_svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" /></svg>',
+      questions: [mockQuestion, { id: '2', content: 'Câu 1b', type: 'Tự luận' }],
+      shared_content: 'Đoạn trích'
+    } as any
+
+    render(<QuestionEditorSection currentQuestion={mockQuestion} currentBlock={mockBlock} />)
+
+    expect(screen.getByText('Hình vẽ minh họa bài toán')).toBeInTheDocument()
+    const img = screen.getByAltText('Hình vẽ minh họa bài toán')
+    expect(img).toBeInTheDocument()
+    expect(img.getAttribute('src')).toContain('data:image/svg+xml;utf8,')
+  })
 })
+

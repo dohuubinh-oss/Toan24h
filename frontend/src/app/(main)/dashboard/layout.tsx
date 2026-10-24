@@ -9,7 +9,8 @@ export default async function DashboardTeacherLayout({
   children: React.ReactNode
 }) {
   const cookieStore = await cookies()
-  const role = (cookieStore.get('userRole')?.value || 'teacher') as SidebarRole
+  const rawRole = cookieStore.get('userRole')?.value
+  const role: SidebarRole = (rawRole === 'admin' || rawRole === 'teacher') ? rawRole : 'student'
 
   return (
     <div className="flex flex-1 max-w-7xl mx-auto w-full gap-4">

@@ -90,14 +90,23 @@ func processLectureImagesAndSerialize(grade string, basicConcept string, example
 			return originalUrl
 		}
 
-		fileName := strings.TrimPrefix(originalUrl, "/uploads/temp/")
+		rawFileName := strings.TrimPrefix(originalUrl, "/uploads/temp/")
+		fileName := filepath.Base(rawFileName)
+		if fileName == "." || fileName == "/" || fileName == ".." {
+			return originalUrl
+		}
+
 		sourcePath := filepath.Join(".", "uploads", "temp", fileName)
 
 		ext := filepath.Ext(fileName)
 		baseName := strings.TrimSuffix(fileName, ext)
 		newFileName := fmt.Sprintf("%s_%s%s", baseName, uuid.New().String()[:8], ext)
 
-		finalDir := filepath.Join(".", "uploads", "lectures", grade)
+		cleanGrade := filepath.Base(filepath.Clean(grade))
+		if cleanGrade == "." || cleanGrade == "/" || cleanGrade == ".." {
+			cleanGrade = "other"
+		}
+		finalDir := filepath.Join(".", "uploads", "lectures", cleanGrade)
 
 		if err := os.MkdirAll(finalDir, os.ModePerm); err != nil {
 			return originalUrl

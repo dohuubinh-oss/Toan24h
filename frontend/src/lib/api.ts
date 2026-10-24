@@ -173,6 +173,27 @@ export async function recognizeHandwriting(file: File | Blob): Promise<string> {
   return res?.text || '';
 }
 
+export interface RefineGeometrySVGParams {
+  content?: string
+  solution_guide?: string
+  current_svg?: string
+  custom_prompt?: string
+}
+
+export async function refineGeometrySVG(params: RefineGeometrySVGParams): Promise<string> {
+  const response = await apiFetch('/questions/refine-diagram-svg', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  })
+
+  if (response.status === 'success' && response.diagram_svg) {
+    return response.diagram_svg
+  }
+
+  throw new Error(response.error || 'Không thể tạo hình vẽ minh họa SVG!')
+}
+
+
 export async function getQuestions(page: number = 1, limit: number = 20, filters?: { ids?: string[], grade?: string, topic?: string, type?: string, difficulty?: string, q?: string, cate?: string }): Promise<{data: Question[], total: number, totalPages?: number}> {
   let url = `/questions?page=${page}&limit=${limit}`
   if (filters) {

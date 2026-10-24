@@ -40,11 +40,6 @@ func (h *VoucherHandler) CreateVoucher(c *gin.Context) {
 		return
 	}
 
-	if role != "admin" && role != "teacher" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Bạn không có quyền tạo mã khuyến mãi"})
-		return
-	}
-
 	var req CreateVoucherRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu không hợp lệ: " + err.Error()})

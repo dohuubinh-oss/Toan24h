@@ -14,11 +14,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/models"
+	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"gorm.io/gorm"
 )
 
-var tempImgRegex = regexp.MustCompile(`src="/uploads/temp/([^"]+)"`)
+var tempImgRegex = regexp.MustCompile(`src=["'](/uploads/temp/[^"']+)["']`)
 
 func isStaffRequester(c *gin.Context) bool {
 	tokenString := ""
@@ -133,7 +134,7 @@ func processHtmlImages(htmlContent string, grade int) string {
 	updatedContent := tempImgRegex.ReplaceAllStringFunc(htmlContent, func(match string) string {
 		parts := tempImgRegex.FindStringSubmatch(match)
 		if len(parts) > 1 {
-			originalUrl := "/uploads/temp/" + parts[1]
+			originalUrl := parts[1]
 			newUrl := processImageUrl(originalUrl, grade)
 			return fmt.Sprintf(`src="%s"`, newUrl)
 		}
@@ -165,6 +166,16 @@ func BulkCreateQuestions(c *gin.Context) {
 	var payload []QuestionGroup
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{Status: "error", Error: err.Error()})
+		return
+	}
+
+	if len(payload) == 0 {
+		c.JSON(http.StatusBadRequest, APIResponse{Status: "error", Error: "Danh sách câu hỏi không được để trống"})
+		return
+	}
+
+	if len(payload) > 100 {
+		c.JSON(http.StatusBadRequest, APIResponse{Status: "error", Error: "Chỉ được tạo tối đa 100 nhóm câu hỏi mỗi lần"})
 		return
 	}
 
@@ -230,6 +241,12 @@ func BulkCreateQuestions(c *gin.Context) {
 				driveVal = detail.BookName
 			}
 
+			resolvedShortAnswer := detail.ShortAnswer
+			if resolvedShortAnswer == "" {
+				resolvedShortAnswer = detail.QuickSolveTips
+			}
+			processedShortAnswer := processHtmlImages(resolvedShortAnswer, detail.Grade)
+
 			childQ := models.Question{
 				ParentID:        parentID,
 				GgDrive:         driveVal,
@@ -248,18 +265,8 @@ func BulkCreateQuestions(c *gin.Context) {
 				CorrectAnswer:   processHtmlImages(detail.CorrectAnswer, detail.Grade),
 				SolutionGuide:   processHtmlImages(stringifySolutionGuide(detail.SolutionGuide), detail.Grade),
 				Hint:            processHtmlImages(detail.Hint, detail.Grade),
-				ShortAnswer:     processHtmlImages(func() string {
-					if detail.ShortAnswer != "" {
-						return detail.ShortAnswer
-					}
-					return detail.QuickSolveTips
-				}(), detail.Grade),
-				QuickSolveTips:  processHtmlImages(func() string {
-					if detail.ShortAnswer != "" {
-						return detail.ShortAnswer
-					}
-					return detail.QuickSolveTips
-				}(), detail.Grade),
+				ShortAnswer:     processedShortAnswer,
+				QuickSolveTips:  processedShortAnswer,
 				GeneralMethod:   processHtmlImages(detail.GeneralMethod, detail.Grade),
 				Mistakes:        processHtmlImages(detail.Mistakes, detail.Grade),
 			}
@@ -493,17 +500,53 @@ func UpdateQuestion(c *gin.Context) {
 	c.JSON(http.StatusOK, APIResponse{Status: "success", Data: updateData})
 }
 
-// DeleteQuestion xử lý xoá câu hỏi (xoá mềm)
+// DeleteQuestion xử lý xoá câu hỏi (xoá mềm câu hỏi và câu con, đồng thời dọn ảnh đĩa nếu không còn tham chiếu)
 func DeleteQuestion(c *gin.Context) {
 	id := c.Param("id")
-	
-	// Soft delete the question
-	if err := config.DB.Delete(&models.Question{}, "id = ?", id).Error; err != nil {
+
+	var targetQuestions []models.Question
+	if err := config.DB.Where("id = ? OR parent_id = ?", id, id).Find(&targetQuestions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, APIResponse{Status: "success"})
+	if len(targetQuestions) == 0 {
+		c.JSON(http.StatusNotFound, APIResponse{Status: "error", Error: "Question not found"})
+		return
+	}
+
+	var deletingIDs []string
+	var candidateImages []string
+	for _, q := range targetQuestions {
+		deletingIDs = append(deletingIDs, q.ID.String())
+		imgs := services.ExtractQuestionImageURLs(
+			q.Content, q.Options, q.SolutionGuide, q.Hint,
+			q.ShortAnswer, q.QuickSolveTips, q.GeneralMethod, q.Mistakes,
+		)
+		candidateImages = append(candidateImages, imgs...)
+	}
+
+	err := config.DB.Transaction(func(tx *gorm.DB) error {
+		return tx.Where("id IN (?)", deletingIDs).Delete(&models.Question{}).Error
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: err.Error()})
+		return
+	}
+
+	// Dọn ảnh vật lý nếu không còn câu hỏi nào khác tham chiếu
+	if len(candidateImages) > 0 {
+		unused := services.FilterUnusedQuestionImages(config.DB, candidateImages, deletingIDs)
+		services.DeletePhysicalImages(unused)
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Status: "success",
+		Data: map[string]interface{}{
+			"deletedCount": len(deletingIDs),
+		},
+	})
 }
 
 // ReportQuestion xử lý khi học sinh báo cáo lỗi đề thi
@@ -539,6 +582,10 @@ func ReportQuestion(c *gin.Context) {
 	if err := config.DB.Save(&q).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: "Failed to save report"})
 		return
+	}
+
+	if !isStaffRequester(c) {
+		sanitizeQuestionForPublic(&q)
 	}
 
 	c.JSON(http.StatusOK, APIResponse{Status: "success", Data: q})
@@ -577,6 +624,12 @@ func ResolveReportQuestion(c *gin.Context) {
 							Message: fmt.Sprintf("Báo lỗi của bạn cho câu hỏi đã được giáo viên phản hồi: %s", req.TeacherFeedback),
 							Link:    "/dashboard", 
 						})
+						var u models.User
+						if err := config.DB.First(&u, "id = ?", uid).Error; err == nil {
+							notifier := services.NewTelegramNotifier()
+							tgMsg := fmt.Sprintf("🔔 <b>Kết quả báo lỗi câu hỏi</b>\nBáo lỗi của bạn đã được giáo viên phản hồi: %s\n\n🔗 Xem chi tiết: %s/dashboard", req.TeacherFeedback, config.Env.FrontendURL)
+							go notifier.SendToUser(&u, tgMsg)
+						}
 					}
 				}
 			}

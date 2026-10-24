@@ -9,9 +9,13 @@ vi.mock('next/navigation', () => ({
   })),
 }))
 
-vi.mock('@/lib/authApi', () => ({
-  login: vi.fn(),
-}))
+vi.mock('@/lib/authApi', async () => {
+  const actual = await vi.importActual<any>('@/lib/authApi')
+  return {
+    ...actual,
+    login: vi.fn(),
+  }
+})
 
 describe('LoginForm Component', () => {
   beforeEach(() => {

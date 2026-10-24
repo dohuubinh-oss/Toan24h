@@ -144,7 +144,7 @@ export default function MobileQrUploadModal({
           Chụp bài làm bằng điện thoại
         </h3>
         <p className="text-xs text-slate-500 mb-4 leading-relaxed">
-          Dùng camera điện thoại hoặc Zalo quét mã QR bên dưới để chụp ảnh lời giải viết tay (hỗ trợ nhiều trang).
+          Dùng camera điện thoại quét mã QR bên dưới để chụp ảnh lời giải viết tay (hỗ trợ nhiều trang).
         </p>
 
         {/* TTL Timer Indicator */}

@@ -90,3 +90,29 @@ func ExtractAIQuestions(c *gin.Context) {
 		"data":   blocks,
 	})
 }
+
+// RefineGeometryDiagram handles on-demand geometry SVG generation or refinement
+func RefineGeometryDiagram(c *gin.Context) {
+	var req services.GeometryVisualizerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu yêu cầu không hợp lệ: " + err.Error()})
+		return
+	}
+
+	if req.Content == "" && req.SolutionGuide == "" && req.CustomPrompt == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng cung cấp nội dung đề bài hoặc lời giải để AI dựng hình"})
+		return
+	}
+
+	svg, err := services.GenerateGeometrySVG(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo hình vẽ minh họa: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":      "success",
+		"diagram_svg": svg,
+	})
+}
+

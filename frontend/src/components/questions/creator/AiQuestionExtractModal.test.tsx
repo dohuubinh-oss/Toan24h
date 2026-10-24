@@ -32,14 +32,14 @@ describe('AiQuestionExtractModal Component', () => {
 
   it('renders modal when isOpen is true and does not render when isOpen is false', () => {
     const { rerender } = renderComponent({ isOpen: true })
-    expect(screen.getByText(/Bóc tách đề thi bằng AI/i)).toBeInTheDocument()
+    expect(screen.getByText(/Bóc tách câu hỏi bằng AI/i)).toBeInTheDocument()
 
     rerender(
       <ToastProvider>
         <AiQuestionExtractModal isOpen={false} onClose={vi.fn()} onExtracted={vi.fn()} />
       </ToastProvider>
     )
-    expect(screen.queryByText(/Bóc tách đề thi bằng AI/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Bóc tách câu hỏi bằng AI/i)).not.toBeInTheDocument()
   })
 
   it('handles image selection and removal', async () => {
@@ -114,6 +114,7 @@ describe('AiQuestionExtractModal Component', () => {
         [
           {
             shared_content: null,
+            diagram_svg: null,
             type_question: 'single',
             questions: [
               expect.objectContaining({
@@ -137,7 +138,7 @@ describe('AiQuestionExtractModal Component', () => {
     })
   })
 
-  it('allows selecting target grade and includes it in extraction form data', async () => {
+  it('includes defaultGrade in extraction form data when provided and does not render grade select dropdown', async () => {
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
       status: 'success',
       data: [
@@ -162,12 +163,8 @@ describe('AiQuestionExtractModal Component', () => {
       defaultGrade: '8',
     })
 
-    const gradeSelect = screen.getByLabelText(/Khối lớp mục tiêu/i) as HTMLSelectElement
-    expect(gradeSelect.value).toBe('8')
-
-    // Change grade to 7
-    fireEvent.change(gradeSelect, { target: { value: '7' } })
-    expect(gradeSelect.value).toBe('7')
+    // Assert that the dropdown is no longer rendered
+    expect(screen.queryByLabelText(/Khối lớp mục tiêu/i)).not.toBeInTheDocument()
 
     const file = new File(['content'], 'test.jpg', { type: 'image/jpeg' })
     const fileInput = screen.getByLabelText(/Chọn ảnh đề thi/i)
@@ -180,7 +177,7 @@ describe('AiQuestionExtractModal Component', () => {
       expect(api.apiFetch).toHaveBeenCalledTimes(1)
       const callArgs = vi.mocked(api.apiFetch).mock.calls[0]
       const formData = callArgs[1]?.body as FormData
-      expect(formData.get('grade')).toBe('7')
+      expect(formData.get('grade')).toBe('8')
     })
   })
 

@@ -24,11 +24,19 @@ func ExtractTextFromImageWithGemini(fileBytes []byte, mimeType string) (*OCRResu
 		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
 	}
 
-	model := os.Getenv("GEMINI_MODEL")
-	if model == "" {
-		model = "gemini-3.5-flash-lite"
+	candidateModels := []string{
+		"gemini-3.8-flash",
+		"gemini-flash-latest",
+		"gemini-3.7-flash",
+		"gemini-3.6-flash",
+		"gemini-3.5-flash",
+		"gemini-3.1-flash-lite",
 	}
-	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
+	if custom := os.Getenv("GEMINI_OCR_MODEL"); custom != "" {
+		candidateModels = append([]string{custom}, candidateModels...)
+	} else if envModel := os.Getenv("GEMINI_MODEL"); envModel != "" {
+		candidateModels = append([]string{envModel}, candidateModels...)
+	}
 
 	prompt := `Bạn là một chuyên gia nhận dạng chữ viết tay và toán học.
 Hãy nhận dạng văn bản và công thức toán học trong bức ảnh này.
@@ -84,52 +92,60 @@ Yêu cầu:
 		return nil, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", url, bytes.NewReader(bodyBytes))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+	client := &http.Client{Timeout: 30 * time.Second}
+	var rawText string
+	var lastErr error
+
+	for _, model := range candidateModels {
+		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
+		req, err := http.NewRequest("POST", url, bytes.NewReader(bodyBytes))
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			respBody, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			lastErr = fmt.Errorf("Gemini API error (%s status %d): %s", model, resp.StatusCode, string(respBody))
+			continue
+		}
+
+		var response struct {
+			Candidates []struct {
+				Content struct {
+					Parts []struct {
+						Text string `json:"text"`
+					} `json:"parts"`
+				} `json:"content"`
+			} `json:"candidates"`
+		}
+
+		decodeErr := json.NewDecoder(resp.Body).Decode(&response)
+		resp.Body.Close()
+		if decodeErr != nil {
+			lastErr = decodeErr
+			continue
+		}
+
+		if len(response.Candidates) > 0 && len(response.Candidates[0].Content.Parts) > 0 {
+			rawText = response.Candidates[0].Content.Parts[0].Text
+			lastErr = nil
+			break
+		}
+		lastErr = fmt.Errorf("empty response from Gemini model %s", model)
 	}
-	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	
-	result, err := utils.AIBreaker.Execute(func() (interface{}, error) {
-		return utils.ExecuteWithRetry(3, 1*time.Second, func() (interface{}, error) {
-			resp, err := client.Do(req)
-			if err != nil {
-				return nil, fmt.Errorf("failed to call Gemini API: %w", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				respBody, _ := io.ReadAll(resp.Body)
-				return nil, fmt.Errorf("Gemini API error: status %d, response: %s", resp.StatusCode, string(respBody))
-			}
-
-			var response struct {
-				Candidates []struct {
-					Content struct {
-						Parts []struct {
-							Text string `json:"text"`
-						} `json:"parts"`
-					} `json:"content"`
-				} `json:"candidates"`
-			}
-
-			if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-				return nil, fmt.Errorf("failed to decode Gemini API response: %w", err)
-			}
-			
-			if len(response.Candidates) > 0 && len(response.Candidates[0].Content.Parts) > 0 {
-				return response.Candidates[0].Content.Parts[0].Text, nil
-			}
-			return nil, fmt.Errorf("empty response from Gemini")
-		})
-	})
-
-	if err != nil {
-		return nil, err
+	if lastErr != nil && rawText == "" {
+		return nil, lastErr
 	}
-	rawText := result.(string)
 	jsonStr := utils.SanitizeJSON(rawText)
 
 	var ocrResult OCRResult

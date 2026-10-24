@@ -21,6 +21,9 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
+// DiagramAlertBadge là dòng chữ thông báo màu đỏ báo hiệu vị trí hình vẽ để giáo viên chèn ảnh chuẩn nét
+const DiagramAlertBadge = `<p class="diagram-placeholder text-rose-600 font-bold my-2" style="color: #e11d48; font-weight: 700;">(Chèn hình ảnh tại đây)</p>`
+
 type DiagramInfo struct {
 	ImageIndex  int       `json:"image_index"`
 	Box2D       []float64 `json:"box_2d"` // [ymin, xmin, ymax, xmax]
@@ -74,6 +77,7 @@ type SolutionGuideStep struct {
 }
 
 type StructuredSolutionGuide struct {
+	DiagramSVG *string             `json:"diagram_svg,omitempty"`
 	Steps      []SolutionGuideStep `json:"steps"`
 	Conclusion string              `json:"conclusion"`
 }
@@ -95,21 +99,25 @@ type ExtractedQuestionItem struct {
 	QuickSolveTips  string      `json:"quick_solve_tips,omitempty"`
 	GeneralMethod   string      `json:"general_method"`
 	Mistakes        string      `json:"mistakes"`
+	DiagramSVG      *string     `json:"diagram_svg,omitempty"`
 }
 
 type rawGeminiQuestion struct {
 	ExtractedQuestionItem
-	Diagrams []DiagramInfo `json:"diagrams,omitempty"`
+	Diagrams   []DiagramInfo `json:"diagrams,omitempty"`
+	DiagramSVG *string       `json:"diagram_svg,omitempty"`
 }
 
 type ExtractedQuestionBlock struct {
 	SharedContent *string                 `json:"shared_content"`
+	DiagramSVG    *string                 `json:"diagram_svg,omitempty"`
 	TypeQuestion  string                  `json:"type_question"`
 	Questions     []ExtractedQuestionItem `json:"questions"`
 }
 
 type rawGeminiBlock struct {
 	SharedContent *string             `json:"shared_content"`
+	DiagramSVG    *string             `json:"diagram_svg,omitempty"`
 	TypeQuestion  string              `json:"type_question"`
 	IsGroup       *bool               `json:"is_group,omitempty"`
 	Point         *FlexibleInt        `json:"point,omitempty"`
@@ -432,10 +440,47 @@ func cleanAndAppendDiagram(text string, placeholder string, imgTag string) strin
 		cleaned = rxSpaces.ReplaceAllString(cleaned, " ")
 	}
 	cleaned = strings.TrimSpace(cleaned)
+	if imgTag == "" {
+		return cleaned
+	}
 	if cleaned == "" {
 		return imgTag
 	}
+	if strings.Contains(cleaned, imgTag) {
+		return cleaned
+	}
 	return cleaned + "\n" + imgTag
+}
+
+// cleanSVG chuẩn hóa mã SVG, hỗ trợ bóc tách khỏi khối mã markdown ```xml ... ``` hoặc ```svg ... ```
+func cleanSVG(s string) string {
+	trimmed := strings.TrimSpace(s)
+	if trimmed == "" || trimmed == "null" {
+		return ""
+	}
+
+	// 1. Cắt lấy chính xác từ <svg đến </svg> nếu tồn tại
+	start := strings.Index(trimmed, "<svg")
+	end := strings.LastIndex(trimmed, "</svg>")
+	if start != -1 && end != -1 && end >= start {
+		return strings.TrimSpace(trimmed[start : end+6])
+	}
+
+	// 2. Dọn dẹp khối mã ```xml hoặc ```svg nếu không tìm thấy cặp thẻ đóng mở chuẩn
+	if strings.Contains(trimmed, "```") {
+		lines := strings.Split(trimmed, "\n")
+		var cleanLines []string
+		for _, line := range lines {
+			tLine := strings.TrimSpace(line)
+			if strings.HasPrefix(tLine, "```") {
+				continue
+			}
+			cleanLines = append(cleanLines, line)
+		}
+		trimmed = strings.TrimSpace(strings.Join(cleanLines, "\n"))
+	}
+
+	return trimmed
 }
 
 // ParseAndProcessExtractedBlocks processes raw JSON from Gemini and crops any diagrams
@@ -659,100 +704,171 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 			allDiagrams = append(allDiagrams, q.Diagrams...)
 		}
 
-		rxDiagPlaceholder := regexp.MustCompile(`\[DIAGRAM_\d+_\d+\]`)
+		rxDiagPlaceholder := regexp.MustCompile(`\[DIAGRAM(?:_\d+_\d+)?\]`)
 
-		for _, diag := range allDiagrams {
-			placeholder := diag.GetPlaceholder()
-			if len(diag.Box2D) < 4 {
-				continue
-			}
-
-			// If placeholder is not explicitly set, auto-match from content
-			if placeholder == "" {
-				if sharedContent != nil {
-					if match := rxDiagPlaceholder.FindString(*sharedContent); match != "" {
-						placeholder = match
+		if sharedContent != nil {
+			// CÂU HỎI CHÙM (GROUP QUESTION):
+			// Hình vẽ của bài toán chùm BẮT BUỘC đặt ở shared_content (Nội dung dẫn chung).
+			// Các câu hỏi con a, b, c tuyệt đối KHÔNG chứa dòng chữ (Chèn hình ảnh tại đây).
+			hasDiagram := len(allDiagrams) > 0 || rxDiagPlaceholder.MatchString(*sharedContent)
+			if !hasDiagram {
+				for _, q := range rb.Questions {
+					if rxDiagPlaceholder.MatchString(q.Content) {
+						hasDiagram = true
+						break
 					}
 				}
-				if placeholder == "" {
-					for _, q := range rb.Questions {
-						if match := rxDiagPlaceholder.FindString(q.Content); match != "" {
-							placeholder = match
-							break
+			}
+
+			if hasDiagram {
+				if rxDiagPlaceholder.MatchString(*sharedContent) {
+					placeholder := rxDiagPlaceholder.FindString(*sharedContent)
+					*sharedContent = cleanAndAppendDiagram(*sharedContent, placeholder, DiagramAlertBadge)
+					*sharedContent = rxDiagPlaceholder.ReplaceAllString(*sharedContent, "")
+				} else if !strings.Contains(*sharedContent, DiagramAlertBadge) {
+					*sharedContent = cleanAndAppendDiagram(*sharedContent, "", DiagramAlertBadge)
+				}
+			} else {
+				// Nếu đề bài trong ảnh không có hình, dọn dẹp mọi placeholder nếu có
+				*sharedContent = rxDiagPlaceholder.ReplaceAllString(*sharedContent, "")
+			}
+			*sharedContent = strings.TrimSpace(*sharedContent)
+
+			// Xóa sạch placeholder hoặc DiagramAlertBadge khỏi các câu hỏi con
+			for qIdx := range rb.Questions {
+				q := &rb.Questions[qIdx]
+				if rxDiagPlaceholder.MatchString(q.Content) {
+					placeholder := rxDiagPlaceholder.FindString(q.Content)
+					q.Content = cleanAndAppendDiagram(q.Content, placeholder, "")
+				}
+				q.Content = rxDiagPlaceholder.ReplaceAllString(q.Content, "")
+				q.Content = strings.ReplaceAll(q.Content, DiagramAlertBadge, "")
+				q.Content = CleanQuestionPrefix(strings.TrimSpace(q.Content))
+
+				if solStr, ok := q.SolutionGuide.(string); ok && rxDiagPlaceholder.MatchString(solStr) {
+					q.SolutionGuide = rxDiagPlaceholder.ReplaceAllString(solStr, "")
+				}
+			}
+		} else {
+			// CÂU HỎI ĐƠN (SINGLE QUESTION):
+			// Chỉ thêm DiagramAlertBadge khi ảnh đề bài gốc thực sự có hình vẽ
+			hasDiagram := len(allDiagrams) > 0
+			if !hasDiagram {
+				for _, q := range rb.Questions {
+					if rxDiagPlaceholder.MatchString(q.Content) {
+						hasDiagram = true
+						break
+					}
+				}
+			}
+
+			if hasDiagram {
+				for _, diag := range allDiagrams {
+					placeholder := diag.GetPlaceholder()
+					if placeholder == "" {
+						for _, q := range rb.Questions {
+							if match := rxDiagPlaceholder.FindString(q.Content); match != "" {
+								placeholder = match
+								break
+							}
 						}
 					}
-				}
-			}
-
-			if placeholder == "" {
-				continue
-			}
-
-			if diag.ImageIndex >= 0 && diag.ImageIndex < len(sourceImages) && sourceImages[diag.ImageIndex] != nil {
-				srcImg := sourceImages[diag.ImageIndex]
-				log.Printf("[CROP DEBUG] ImageIndex=%d Bounds=%+v Box2D=%v", diag.ImageIndex, srcImg.Bounds(), diag.Box2D)
-				croppedUrl, err := utils.CropDiagram(srcImg, diag.Box2D, tempDir)
-				log.Printf("[CROP DEBUG] Result URL=%s Err=%v", croppedUrl, err)
-				if err == nil && croppedUrl != "" {
-					imgTag := fmt.Sprintf(`<img src="%s" alt="Hình vẽ" class="max-w-full md:max-w-[500px] w-auto h-auto mx-auto my-3 rounded-xl border border-slate-200 shadow-sm" />`, croppedUrl)
-
 					applied := false
-					if sharedContent != nil && placeholder != "" && strings.Contains(*sharedContent, placeholder) {
-						updated := cleanAndAppendDiagram(*sharedContent, placeholder, imgTag)
-						sharedContent = &updated
-						applied = true
-					}
-
 					for qIdx := range rb.Questions {
 						q := &rb.Questions[qIdx]
 						if placeholder != "" && strings.Contains(q.Content, placeholder) {
-							q.Content = cleanAndAppendDiagram(q.Content, placeholder, imgTag)
+							q.Content = cleanAndAppendDiagram(q.Content, placeholder, DiagramAlertBadge)
 							applied = true
-						}
-						if solStr, ok := q.SolutionGuide.(string); ok && placeholder != "" && strings.Contains(solStr, placeholder) {
-							q.SolutionGuide = cleanAndAppendDiagram(solStr, placeholder, imgTag)
-							applied = true
-						} else if solMap, ok := q.SolutionGuide.(map[string]interface{}); ok {
-							if conclusion, ok := solMap["conclusion"].(string); ok && placeholder != "" && strings.Contains(conclusion, placeholder) {
-								solMap["conclusion"] = cleanAndAppendDiagram(conclusion, placeholder, imgTag)
-								applied = true
-							}
-							if steps, ok := solMap["steps"].([]interface{}); ok {
-								for _, stepItem := range steps {
-									if stepMap, ok := stepItem.(map[string]interface{}); ok {
-										if content, ok := stepMap["content"].(string); ok && placeholder != "" && strings.Contains(content, placeholder) {
-											stepMap["content"] = cleanAndAppendDiagram(content, placeholder, imgTag)
-											applied = true
-										}
-										if formula, ok := stepMap["formula"].(string); ok && placeholder != "" && strings.Contains(formula, placeholder) {
-											stepMap["formula"] = cleanAndAppendDiagram(formula, placeholder, imgTag)
-											applied = true
-										}
-									}
-								}
-							}
 						}
 					}
-
-					// Fallback: nếu không tìm thấy placeholder trong nội dung nhưng câu hỏi thuộc dạng đơn lẻ
 					if !applied && len(rb.Questions) == 1 {
-						rb.Questions[0].Content = cleanAndAppendDiagram(rb.Questions[0].Content, "", imgTag)
+						rb.Questions[0].Content = cleanAndAppendDiagram(rb.Questions[0].Content, "", DiagramAlertBadge)
 					}
+				}
+
+				// Thay thế placeholder còn sót lại thành DiagramAlertBadge
+				for qIdx := range rb.Questions {
+					q := &rb.Questions[qIdx]
+					if rxDiagPlaceholder.MatchString(q.Content) {
+						q.Content = rxDiagPlaceholder.ReplaceAllString(q.Content, "\n"+DiagramAlertBadge)
+					}
+					q.Content = CleanQuestionPrefix(strings.TrimSpace(q.Content))
+				}
+			} else {
+				// Không có hình vẽ trong đề gốc: chỉ dọn dẹp các thẻ placeholder orphan
+				for qIdx := range rb.Questions {
+					q := &rb.Questions[qIdx]
+					if rxDiagPlaceholder.MatchString(q.Content) {
+						placeholder := rxDiagPlaceholder.FindString(q.Content)
+						q.Content = cleanAndAppendDiagram(q.Content, placeholder, "")
+					}
+					q.Content = rxDiagPlaceholder.ReplaceAllString(q.Content, "")
+					q.Content = CleanQuestionPrefix(strings.TrimSpace(q.Content))
+				}
+			}
+
+			for qIdx := range rb.Questions {
+				q := &rb.Questions[qIdx]
+				if solStr, ok := q.SolutionGuide.(string); ok && rxDiagPlaceholder.MatchString(solStr) {
+					q.SolutionGuide = rxDiagPlaceholder.ReplaceAllString(solStr, "")
 				}
 			}
 		}
 
-		// Dọn dẹp bất kỳ placeholder mồ côi nào còn sót lại (orphan cleanup)
-		rxOrphanDiagram := regexp.MustCompile(`\s*\[DIAGRAM_\d+_\d+\]\s*`)
-		if sharedContent != nil {
-			updated := strings.TrimSpace(rxOrphanDiagram.ReplaceAllString(*sharedContent, " "))
-			sharedContent = &updated
-		}
+		// 1. Chuẩn hóa diagram_svg của từng câu hỏi
 		for qIdx := range rb.Questions {
 			q := &rb.Questions[qIdx]
-			q.Content = CleanQuestionPrefix(strings.TrimSpace(rxOrphanDiagram.ReplaceAllString(q.Content, " ")))
-			if solStr, ok := q.SolutionGuide.(string); ok {
-				q.SolutionGuide = strings.TrimSpace(rxOrphanDiagram.ReplaceAllString(solStr, " "))
+			if solMap, ok := q.SolutionGuide.(map[string]interface{}); ok {
+				if dSvg, ok := solMap["diagram_svg"].(string); ok && strings.TrimSpace(dSvg) != "" {
+					cleaned := cleanSVG(dSvg)
+					if cleaned != "" {
+						solMap["diagram_svg"] = cleaned
+						q.DiagramSVG = &cleaned
+					} else {
+						solMap["diagram_svg"] = nil
+					}
+				}
+			}
+			if q.DiagramSVG == nil && q.ExtractedQuestionItem.DiagramSVG != nil {
+				cleaned := cleanSVG(*q.ExtractedQuestionItem.DiagramSVG)
+				if cleaned != "" {
+					q.DiagramSVG = &cleaned
+				}
+			}
+		}
+
+		// 2. Xác định diagram_svg chung của block:
+		// Ưu tiên diagram_svg trên block -> nếu không có thì lấy hình vẽ đầy đủ nhất từ câu hỏi con cuối cùng -> câu đầu tiên
+		var blockDiagramSVG *string = rb.DiagramSVG
+		if blockDiagramSVG != nil {
+			cleaned := cleanSVG(*blockDiagramSVG)
+			if cleaned != "" {
+				blockDiagramSVG = &cleaned
+			} else {
+				blockDiagramSVG = nil
+			}
+		}
+
+		if blockDiagramSVG == nil || *blockDiagramSVG == "" {
+			for i := len(rb.Questions) - 1; i >= 0; i-- {
+				if rb.Questions[i].DiagramSVG != nil && *rb.Questions[i].DiagramSVG != "" {
+					blockDiagramSVG = rb.Questions[i].DiagramSVG
+					break
+				}
+			}
+		}
+
+		// 3. Toàn bộ các câu con trong block dùng chung 1 hình bao quát duy nhất:
+		for qIdx := range rb.Questions {
+			q := &rb.Questions[qIdx]
+			if blockDiagramSVG != nil {
+				q.DiagramSVG = blockDiagramSVG
+				if solMap, ok := q.SolutionGuide.(map[string]interface{}); ok {
+					solMap["diagram_svg"] = *blockDiagramSVG
+				}
+			}
+			if q.DiagramSVG != nil {
+				q.ExtractedQuestionItem.DiagramSVG = q.DiagramSVG
 			}
 		}
 
@@ -763,6 +879,7 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 
 		blocks[bIdx] = ExtractedQuestionBlock{
 			SharedContent: sharedContent,
+			DiagramSVG:    blockDiagramSVG,
 			TypeQuestion:  tq,
 			Questions:     finalQuestions,
 		}
@@ -787,16 +904,17 @@ func ExtractQuestionsFromImages(files [][]byte, mimeTypes []string, targetGradeS
 
 	primaryModel := os.Getenv("GEMINI_MODEL")
 	if primaryModel == "" {
-		primaryModel = "gemini-3.5-flash-lite"
+		primaryModel = "gemini-3.8-flash"
 	}
 
 	validModels := []string{
-		"gemini-3.5-flash-lite",
-		"gemini-3.5-flash",
+		"gemini-3.8-flash",
 		"gemini-flash-latest",
-		"gemini-2.5-flash",
-		"gemini-3.6-flash",
 		"gemini-3.7-flash",
+		"gemini-3.6-flash",
+		"gemini-3.5-flash",
+		"gemini-3.1-pro-preview",
+		"gemini-pro-latest",
 	}
 
 	candidateModels := []string{}
@@ -875,6 +993,7 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
     - Với Trắc nghiệm: BẮT BUỘC điền nội dung phương án đúng khớp chính xác với 1 trong 4 phương án trong "options" (ví dụ: "$x = 2$"). Biểu thức toán phải ở dạng LaTeX chuẩn ($...$).
     - Với Tự luận: BẮT BUỘC điền kết quả / đáp số cuối cùng của bài toán dưới dạng LaTeX chuẩn ($...$, ví dụ: "$x = 3$").
 14. "solution_guide": Cấu trúc object chi tiết từng bước:
+    - "diagram_svg": Luôn gán null (tuyệt đối KHÔNG sinh mã SVG trong quá trình bóc tách đề thi để tối ưu tốc độ và tiết kiệm token; hình minh họa bài toán sẽ được tạo riêng khi người dùng yêu cầu).
     - "steps": Mảng các bước giải, mỗi bước có:
       + "step": int (1, 2, 3...)
       + "title": string (Tên bước thực hiện ngắn gọn)
@@ -891,31 +1010,15 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
 17. "general_method": Công thức tổng quát hóa cho dạng bài toán này.
 18. "mistakes": Các lỗi sai học sinh thường vấp phải.
 19. Bảng biến thiên, Bảng xét dấu hoặc Bảng số liệu: HÃY chuyển đổi trực tiếp thành bảng HTML (thẻ <table>, <tr>, <td>) hoặc bảng Markdown rõ ràng, KHÔNG cắt thành ảnh.
-20. Với Hình vẽ hình học (hình học phẳng, hình không gian) và Đồ thị hàm số trên hệ trục Oxy:
-    - BẮT BUỘC đặt placeholder dạng [DIAGRAM_0_0] (0 là chỉ số trang ảnh 0-indexed, 0 là số thứ tự hình) ở CUỐI CÙNG của "content" hoặc "shared_content" (sau khi đã hết toàn bộ câu hỏi và dấu câu), TUYỆT ĐỐI KHÔNG chèn vào giữa các câu văn hoặc giữa đề bài.
-    - KHI VÀ CHỈ KHI bạn xác định được tọa độ hình vẽ và khai báo vào mảng "diagrams".
-    - Mảng "diagrams" (đặt ở cấp block hoặc cấp question) BẮT BUỘC có cấu trúc:
-      "diagrams": [
-        {
-          "placeholder": "[DIAGRAM_0_0]",
-          "image_index": 0,
-          "box_2d": [ymin, xmin, ymax, xmax]
-        }
-      ]
-      Trong đó box_2d là tọa độ hộp bao quanh hình vẽ chuẩn hóa [ymin, xmin, ymax, xmax] (thang đo 0-1000).
-    - QUY TẮC CẮT HỘP TOẠ ĐỘ box_2d CHÍNH XÁC (RẤT QUAN TRỌNG - TRÁNH CẮT THỪA / CẮT THIẾU):
-      + BẮT BUỘC CẮT TRỌN VẸN HÌNH VÀ TẤT CẢ CHỮ/SỐ/KÝ HIỆU MINH HOẠ CỦA HÌNH ĐÓ:
-        * Bao gồm toàn bộ nét vẽ của hình, tên các đỉnh (A, B, C, D...), ký hiệu góc vuông, số đo góc.
-        * BẮT BUỘC BAO GỒM TẤT CẢ CÁC ĐƯỜNG GIÓNG KÍCH THƯỚC, MŨI TÊN KÍCH THƯỚC VÀ CHỮ SỐ/KÝ HIỆU KÍCH THƯỚC Ở TẤT CẢ CÁC PHÍA (ví dụ các mũi tên đỏ và nhãn kích thước "6 (cm)", "8 (cm)", "x (cm)", "y (cm)").
-        * TỌA ĐỘ xmin (mép trái): BẮT BUỘC PHẢI MỞ RỘNG ĐỦ SANG BÊN TRÁI (thường xmin < 120 trên thang 1000) để BAO TRỌN 100%% tất cả các nhãn chữ/số và mũi tên đo đạc bên trái hình (như nhãn "y (cm)", "x (cm)", "6 (cm)"). TUYỆT ĐỐI KHÔNG ĐƯỢC đặt xmin sát vào cạnh đứng của hình làm cắt mất chữ 'x' hoặc số '6'!
-        * TỌA ĐỘ ymin (mép trên): BẮT BUỘC PHẢI BẮT ĐẦU TỪ KHOẢNG TRẮNG NGAY TRÊN ĐỈNH CAO NHẤT CỦA HÌNH VẼ HOẶC MŨI TÊN TRÊN CÙNG.
-          TUYỆT ĐỐI KHÔNG LẤY LÊN TRÊN VÀO KHỐI VĂN BẢN ĐỀ BÀI HOẶC KHUNG NỀN BO GÓC CỦA ĐỀ BÀI (kể cả chữ '(như hình vẽ)' hay 'Đa thức biểu thị diện tích...'). Nếu đề bài nằm trong khung màu bo góc, ymin PHẢI BẮT ĐẦU HOÀN TOÀN BÊN DƯỚI ĐÁY KHUNG NỀN ĐÓ!
-        * TỌA ĐỘ xmax (mép phải): PHẢI bao trọn đỉnh và mũi tên/nhãn xa nhất bên phải của hình.
-        * TỌA ĐỘ ymax (mép dưới): DỪNG LẠI NGAY DƯỚI mũi tên hoặc nhãn số đo ở đáy hình (ví dụ ngay dưới "8 (cm)", "y (cm)"). TUYỆT ĐỐI KHÔNG kéo xuống dính vào các phương án A, B, C, D!
-      + TUYỆT ĐỐI LOẠI TRỪ (KHÔNG ĐƯỢC ĐỂ DÍNH VÀO ẢNH CẮT):
-        * TUYỆT ĐỐI KHÔNG CHỨA VĂN BẢN ĐỀ BÀI HOẶC VIỀN KHUNG ĐỀ BÀI.
-        * TUYỆT ĐỐI KHÔNG CHỨA CÁC PHƯƠNG ÁN TRẮC NGHIỆM A, B, C, D (hoặc các khối đáp án nằm bên dưới hình vẽ): Các công thức toán học có tiền tố A, B, C, D bên dưới hình là các phương án lựa chọn, ĐÃ ĐƯỢC BÓC TÁCH VÀO "options", KHÔNG PHẢI là chú thích của hình vẽ.
-    - TUYỆT ĐỐI KHÔNG tự chèn [DIAGRAM_X_Y] vào đề bài nếu không có tọa độ box_2d tương ứng trong "diagrams".
+20. QUY TẮC PHÁT HIỆN HÌNH VẼ CỦA ĐỀ BÀI (HÌNH CÓ SẴN TRONG ẢNH TẢI LÊN):
+    - CHỈ KHI TRONG ẢNH ĐỀ BÀI GỐC CÓ IN SẴN HÌNH VẼ, HÌNH HỌC, ĐỒ THỊ HOẶC BẢNG MINH HỌA ĐI KÈM ĐỀ:
+      + Mới được đặt placeholder [DIAGRAM] và khai báo trong mảng "diagrams": [{"placeholder": "[DIAGRAM]"}].
+      + VỚI CÂU HỎI CHÙM ('group'): BẮT BUỘC đặt [DIAGRAM] ở CUỐI CÙNG của "shared_content" (Nội dung dẫn chung). TUYỆT ĐỐI KHÔNG đặt [DIAGRAM] trong "content" của các câu hỏi con a, b, c... (vì toàn bộ các câu hỏi con đều dùng chung hình ảnh đặt tại phần dẫn chung).
+      + VỚI CÂU HỎI ĐƠN ('single'): Đặt [DIAGRAM] ở CUỐI CÙNG của trường "content".
+    - NẾU ĐỀ BÀI TRONG ẢNH LÀ DẠNG THUẦN CHỮ (bài toán mô tả bằng lời văn, KHÔNG có in sẵn hình vẽ trong ảnh đề bài):
+      + TUYỆT ĐỐI KHÔNG ĐƯỢC chèn [DIAGRAM] vào "content" hay "shared_content"!
+      + TUYỆT ĐỐI KHÔNG khai báo mảng "diagrams" (để mảng rỗng [] hoặc bỏ qua)!
+      + Hệ thống sẽ KHÔNG chèn dòng chữ '(Chèn hình ảnh tại đây)' nếu đề bài gốc không có in sẵn hình.
 21. CẤU TRÚC ĐẦU RA JSON MẪU (OUTPUT SCHEMA - TUYỆT ĐỐI KHÔNG CÓ TRƯỜNG "is_group"):
 [
   {
@@ -923,14 +1026,12 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
     "type_question": "single",
     "diagrams": [
       {
-        "placeholder": "[DIAGRAM_0_0]",
-        "image_index": 0,
-        "box_2d": [20, 600, 260, 920]
+        "placeholder": "[DIAGRAM]"
       }
     ],
     "questions": [
       {
-        "content": "Nhà bạn An (vị trí A trên hình vẽ) cách nhà bạn Châu 600m và cách nhà bạn Bình 450m. Biết rằng 3 vị trí... Khoảng cách từ nhà Bình đến nhà Châu bằng:\n[DIAGRAM_0_0]",
+        "content": "Nhà bạn An (vị trí A trên hình vẽ) cách nhà bạn Châu 600m và cách nhà bạn Bình 450m. Biết rằng 3 vị trí... Khoảng cách từ nhà Bình đến nhà Châu bằng:\n[DIAGRAM]",
         "type": "Trắc nghiệm",
         "grade": 8,
         "topic": "Định lý Pythagore",
@@ -941,6 +1042,7 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
         "options": ["$725\\text{m}$", "$705\\text{m}$", "$750\\text{m}$", "$725$"],
         "correct_answer": "$750\\text{m}$",
         "solution_guide": {
+          "diagram_svg": null,
           "steps": [
             {
               "step": 1,
@@ -960,8 +1062,13 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
     ]
   },
   {
-    "shared_content": "Cho tam giác $ABC$ vuông tại $A$, đường cao $AH$. Biết $AB = 6\\text{ cm}$, $AC = 8\\text{ cm}$.",
+    "shared_content": "Cho tam giác $ABC$ vuông tại $A$, đường cao $AH$. Biết $AB = 6\\text{ cm}$, $AC = 8\\text{ cm}$.\n[DIAGRAM]",
     "type_question": "group",
+    "diagrams": [
+      {
+        "placeholder": "[DIAGRAM]"
+      }
+    ],
     "questions": [
       {
         "content": "Tính độ dài cạnh huyền $BC$.",
@@ -975,6 +1082,7 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
         "options": [],
         "correct_answer": "$BC = 10\\text{ cm}$",
         "solution_guide": {
+          "diagram_svg": null,
           "steps": [
             {
               "step": 1,
@@ -1002,6 +1110,7 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
         "options": [],
         "correct_answer": "$AH = 4.8\\text{ cm}$",
         "solution_guide": {
+          "diagram_svg": null,
           "steps": [
             {
               "step": 1,

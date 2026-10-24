@@ -1,21 +1,34 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { updateGrade } from '@/lib/authApi'
 import { Button } from '../ui/Button'
 import { toast } from '@/components/ui/ToastProvider'
 
-const GRADES = ['5', '6', '7', '8', '9']
+export interface GradeSelectionModalProps {
+  show?: boolean
+}
 
-export default function GradeSelectionModal() {
+const GRADES = [
+  { id: '5', label: 'Khối 5' },
+  { id: '6', label: 'Khối 6' },
+  { id: '7', label: 'Khối 7' },
+  { id: '8', label: 'Khối 8' },
+  { id: '9', label: 'Khối 9' },
+  { id: 'chuyen', label: 'Thi chuyên' },
+]
+
+export default function GradeSelectionModal({ show }: GradeSelectionModalProps = {}) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedGrade, setSelectedGrade] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
 
   useEffect(() => {
-    // Check cookies
+    if (show !== undefined) {
+      setIsOpen(show)
+      return
+    }
+
     if (typeof document !== 'undefined') {
       const getCookie = (name: string) => {
         const value = `; ${document.cookie}`
@@ -23,11 +36,11 @@ export default function GradeSelectionModal() {
         if (parts.length === 2) return parts.pop()?.split(';').shift()
         return ''
       }
-      
+
       const role = getCookie('userRole')
       const grade = getCookie('userGrade')
-      
-      // Admin and teacher NEVER need to select a grade.
+
+      // Admin and teacher never need to select a grade.
       // Only student without a grade needs to select a grade.
       if (role === 'student' && (!grade || grade.trim() === '')) {
         setIsOpen(true)
@@ -35,7 +48,7 @@ export default function GradeSelectionModal() {
         setIsOpen(false)
       }
     }
-  }, [])
+  }, [show])
 
   if (!isOpen) return null
 
@@ -45,10 +58,10 @@ export default function GradeSelectionModal() {
     setIsLoading(true)
     try {
       const res = await updateGrade(selectedGrade)
-      
-      const updatedGrade = res.grade || selectedGrade
+
+      const updatedGrade = res?.grade || selectedGrade
       document.cookie = `userGrade=${updatedGrade}; path=/; max-age=86400`
-      
+
       const userStr = localStorage.getItem('user')
       if (userStr) {
         try {
@@ -57,7 +70,7 @@ export default function GradeSelectionModal() {
           localStorage.setItem('user', JSON.stringify(user))
         } catch (e) {}
       }
-      
+
       setIsOpen(false)
       window.location.href = `/lectures/lop/${updatedGrade}`
     } catch (error) {
@@ -76,25 +89,25 @@ export default function GradeSelectionModal() {
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Chào mừng bạn! 🎉</h2>
             <p className="text-slate-500">Vui lòng chọn khối lớp của bạn để chúng tôi có thể cá nhân hóa bài học phù hợp nhất.</p>
           </div>
-          
+
           <div className="grid grid-cols-3 gap-3 mb-8">
             {GRADES.map((g) => (
               <button
-                key={g}
-                onClick={() => setSelectedGrade(g)}
+                key={g.id}
+                onClick={() => setSelectedGrade(g.id)}
                 className={`py-3 px-4 rounded-xl border-2 font-bold transition-all ${
-                  selectedGrade === g 
-                    ? 'border-primary bg-primary/10 text-primary scale-105 shadow-sm' 
+                  selectedGrade === g.id
+                    ? 'border-primary bg-primary/10 text-primary scale-105 shadow-sm'
                     : 'border-slate-200 text-slate-600 hover:border-primary/50 hover:bg-slate-50'
                 }`}
               >
-                Khối {g}
+                {g.label}
               </button>
             ))}
           </div>
-          
-          <Button 
-            className="w-full text-lg h-12" 
+
+          <Button
+            className="w-full text-lg h-12"
             disabled={!selectedGrade || isLoading}
             isLoading={isLoading}
             onClick={handleSubmit}

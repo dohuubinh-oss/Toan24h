@@ -33,7 +33,8 @@ func setupWebhookTestDB(t *testing.T) (*gorm.DB, func()) {
 		),
 	)
 	if err != nil {
-		t.Fatalf("Failed to start postgres container: %v", err)
+		t.Skipf("Skipping postgres container test: docker daemon not accessible (%v)", err)
+		return nil, func() {}
 	}
 
 	connStr, err := pgContainer.ConnectionString(ctx, "sslmode=disable")
@@ -58,76 +59,6 @@ func setupWebhookTestDB(t *testing.T) (*gorm.DB, func()) {
 	}
 
 	return db, cleanup
-}
-
-func TestHandleSePayWebhook(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-	db, cleanup := setupWebhookTestDB(t)
-	defer cleanup()
-
-	// Setup data
-	u := models.User{
-		Email:        "student@example.com",
-		PasswordHash: "hashed",
-		FullName:     "Student",
-		ExpiresAt:    nil, // not subscribed yet
-	}
-	db.Create(&u)
-
-	tx := models.Transaction{
-		UserID: u.ID,
-		Amount: 450000,
-		Plan:   "3_months",
-		Status: "pending",
-	}
-	db.Create(&tx)
-
-	// Setup handler and router
-	webhookHandler := handlers.NewWebhookHandler(db)
-	router := gin.Default()
-	router.POST("/webhooks/sepay", webhookHandler.HandleSePayWebhook)
-
-	// Create payload
-	payload := handlers.SePayWebhookPayload{
-		ID:             1,
-		Gateway:        "Sepay",
-		TransferAmount: 450000,
-		TransferType:   "in",
-		Content:        "T24H " + tx.ID.String(),
-	}
-
-	payloadBytes, _ := json.Marshal(payload)
-	req, _ := http.NewRequest("POST", "/webhooks/sepay", bytes.NewBuffer(payloadBytes))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-
-	// Perform request
-	router.ServeHTTP(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Fatalf("Expected status 200, got %v. Body: %v", w.Code, w.Body.String())
-	}
-
-	// Verify Transaction Status
-	var updatedTx models.Transaction
-	db.First(&updatedTx, "id = ?", tx.ID)
-	if updatedTx.Status != "completed" {
-		t.Errorf("Expected transaction status to be completed, got %v", updatedTx.Status)
-	}
-
-	// Verify User ExpiresAt
-	var updatedUser models.User
-	db.First(&updatedUser, "id = ?", u.ID)
-	if updatedUser.ExpiresAt == nil {
-		t.Fatalf("Expected user ExpiresAt to be updated, got nil")
-	}
-
-	// Should be around 3 months from now
-	expectedEnd := time.Now().AddDate(0, 3, 0)
-	diff := updatedUser.ExpiresAt.Sub(expectedEnd)
-	if diff < -time.Minute || diff > time.Minute {
-		t.Errorf("Expected expires at ~%v, got %v", expectedEnd, updatedUser.ExpiresAt)
-	}
 }
 
 func TestHandlePayOSWebhook(t *testing.T) {
@@ -163,7 +94,7 @@ func TestHandlePayOSWebhook(t *testing.T) {
 	webhookData := handlers.PayOSWebhookData{
 		OrderCode:           orderCode,
 		Amount:              1080000,
-		Description:         "T24H 1710999888777",
+		Description:         "TOAN6789 1710999888777",
 		AccountNumber:       "1234567890",
 		Reference:           "FT_PAYOS_123",
 		TransactionDateTime: "2026-03-20 15:30:00",
@@ -212,5 +143,64 @@ func TestHandlePayOSWebhook(t *testing.T) {
 	if diff < -time.Minute || diff > time.Minute {
 		t.Errorf("Expected expires at ~%v, got %v", expectedEnd, updatedUser.ExpiresAt)
 	}
+}
+
+func TestHandlePayOSWebhook_SignatureValidation(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	checksumKey := "0d54020a13ee42a8b9f71c4c8d55a7ee"
+	payosService := handlers.NewPayOSService("client_id", "api_key", checksumKey)
+	webhookHandler := handlers.NewWebhookHandler(nil, payosService)
+	router := gin.New()
+	router.POST("/api/webhook/payos", webhookHandler.HandlePayOSWebhook)
+
+	t.Run("InvalidSignature_Returns401", func(t *testing.T) {
+		payload := map[string]interface{}{
+			"code": "00",
+			"desc": "success",
+			"data": map[string]interface{}{
+				"orderCode": 123,
+				"amount":    3000,
+			},
+			"signature": "invalid_sig",
+		}
+		bodyBytes, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", "/api/webhook/payos", bytes.NewBuffer(bodyBytes))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("Expected status 401, got %d", w.Code)
+		}
+	})
+
+	t.Run("IgnoredNonSuccess_Returns200WithPayOSFormat", func(t *testing.T) {
+		data := map[string]interface{}{
+			"orderCode": 123,
+			"amount":    3000,
+			"code":      "01",
+		}
+		sig := payosService.GenerateWebhookSignatureFromMap(data)
+		payload := map[string]interface{}{
+			"code":      "01",
+			"desc":      "cancelled",
+			"data":      data,
+			"signature": sig,
+		}
+		bodyBytes, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", "/api/webhook/payos", bytes.NewBuffer(bodyBytes))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status 200, got %d", w.Code)
+		}
+		var resp map[string]interface{}
+		_ = json.Unmarshal(w.Body.Bytes(), &resp)
+		if resp["error"] != float64(0) {
+			t.Errorf("Expected error to be 0, got %v", resp["error"])
+		}
+	})
 }
 

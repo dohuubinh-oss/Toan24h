@@ -40,7 +40,7 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 }
 
 type RegisterRequest struct {
-	Email       string `json:"email" binding:"required"`
+	Email       string `json:"email" binding:"required,email"`
 	Password    string `json:"password" binding:"required,min=6"`
 	FullName    string `json:"fullName" binding:"required"`
 	Role        string `json:"role"`
@@ -54,6 +54,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 
 	// Check if user already exists
 	var existingUser models.User
@@ -150,25 +152,23 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+
 	var user models.User
-	if err := h.db.Where("LOWER(TRIM(email)) = LOWER(TRIM(?))", req.Email).First(&user).Error; err != nil {
-		fmt.Printf("[AUTH_LOGIN] Email not found: '%s'\n", req.Email)
+	if err := h.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
 	if user.Status == "locked" {
-		fmt.Printf("[AUTH_LOGIN] Account locked: '%s'\n", req.Email)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Account is locked"})
 		return
 	}
 
 	if err := utils.CheckPasswordHash(req.Password, user.PasswordHash); err != nil {
-		fmt.Printf("[AUTH_LOGIN] Password mismatch for email: '%s', provided password length: %d\n", req.Email, len(req.Password))
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
-	fmt.Printf("[AUTH_LOGIN] Login SUCCESS for user: %s (role: %s)\n", user.Email, user.Role)
 
 	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role, user.Grade)
 	if err != nil {
@@ -209,7 +209,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	claims, err := utils.ValidateToken(refreshToken)
+	claims, err := utils.ValidateRefreshToken(refreshToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
 		return
@@ -218,6 +218,12 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	var user models.User
 	if err := h.db.Where("id = ?", claims.UserID).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	if user.Status == "locked" {
+		clearAuthCookies(c)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Account is locked"})
 		return
 	}
 
@@ -352,6 +358,8 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 		return
 	}
 
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+
 	// Check if user exists
 	var user models.User
 	if err := h.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
@@ -396,6 +404,8 @@ func (h *AuthHandler) VerifyOTP(c *gin.Context) {
 		return
 	}
 
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+
 	if !h.otpService.VerifyOTP(req.Email, req.OTP) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã OTP không đúng hoặc đã hết hạn"})
 		return
@@ -418,6 +428,8 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Thông tin mật khẩu mới không hợp lệ"})
 		return
 	}
+
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 
 	if !h.otpService.VerifyOTP(req.Email, req.OTP) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã OTP không đúng hoặc đã hết hạn"})
@@ -477,8 +489,12 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	// If current password was provided, verify it
-	if req.CurrentPassword != "" && user.PasswordHash != "" {
+	// If user already has a password, current password is required and must match
+	if user.PasswordHash != "" {
+		if req.CurrentPassword == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập mật khẩu hiện tại"})
+			return
+		}
 		if err := utils.CheckPasswordHash(req.CurrentPassword, user.PasswordHash); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Mật khẩu hiện tại không chính xác"})
 			return

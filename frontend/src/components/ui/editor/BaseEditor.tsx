@@ -47,6 +47,14 @@ export const ClassExtension = Extension.create({
               return { class: attributes.class }
             },
           },
+          style: {
+            default: null,
+            parseHTML: element => element.getAttribute('style'),
+            renderHTML: attributes => {
+              if (!attributes.style) return {}
+              return { style: attributes.style }
+            },
+          },
         },
       },
     ]
@@ -378,6 +386,7 @@ export function BaseEditor({
   }, []);
 
   const editor = useEditor({
+    immediatelyRender: false,
     editable: !readOnly,
     extensions: [
       StarterKit,

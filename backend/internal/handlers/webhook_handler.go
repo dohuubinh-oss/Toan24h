@@ -1,13 +1,13 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"net/http"
-	"os"
-	"regexp"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/services"
 	"gorm.io/gorm"
@@ -40,42 +40,55 @@ func NewPayOSService(clientID, apiKey, checksumKey string) *services.PayOSServic
 	return services.NewPayOSService(clientID, apiKey, checksumKey)
 }
 
-type SePayWebhookPayload struct {
-	ID             int    `json:"id"`
-	Gateway        string `json:"gateway"`
-	TransactionDate string `json:"transactionDate"`
-	AccountNumber  string `json:"accountNumber"`
-	Code           string `json:"code"`
-	Content        string `json:"content"`
-	TransferType   string `json:"transferType"`
-	TransferAmount int    `json:"transferAmount"`
-	Accumulated    int    `json:"accumulated"`
-	SubAccount     string `json:"subAccount"`
-	ReferenceCode  string `json:"referenceCode"`
-	Description    string `json:"description"`
-}
-
 func (h *WebhookHandler) HandlePayOSWebhook(c *gin.Context) {
-	var payload services.PayOSWebhookBody
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid payload: " + err.Error()})
+	bodyBytes, err := c.GetRawData()
+	if err != nil {
+		c.JSON(400, gin.H{"error": -1, "message": "Failed to read request body", "data": nil})
 		return
 	}
 
-	// Verify PayOS Webhook signature
-	if h.PayOSService != nil && !h.PayOSService.VerifyWebhookSignature(payload.Data, payload.Signature) {
-		c.JSON(401, gin.H{"error": "Invalid webhook signature"})
+	var rawPayload struct {
+		Code      string                 `json:"code"`
+		Desc      string                 `json:"desc"`
+		Data      map[string]interface{} `json:"data"`
+		Signature string                 `json:"signature"`
+	}
+
+	d := json.NewDecoder(bytes.NewReader(bodyBytes))
+	d.UseNumber()
+	if err := d.Decode(&rawPayload); err != nil {
+		c.JSON(400, gin.H{"error": -1, "message": "Invalid JSON payload: " + err.Error(), "data": nil})
 		return
+	}
+
+	var payload services.PayOSWebhookBody
+	if err := json.Unmarshal(bodyBytes, &payload); err != nil {
+		c.JSON(400, gin.H{"error": -1, "message": "Invalid payload format: " + err.Error(), "data": nil})
+		return
+	}
+
+	// Verify PayOS Webhook signature: Check dynamic map first, then fallback to struct
+	if h.PayOSService != nil {
+		valid := h.PayOSService.VerifyWebhookSignatureFromMap(rawPayload.Data, rawPayload.Signature)
+		if !valid {
+			valid = h.PayOSService.VerifyWebhookSignature(payload.Data, payload.Signature)
+		}
+		if !valid {
+			c.JSON(401, gin.H{"error": -1, "message": "Invalid webhook signature", "data": nil})
+			return
+		}
 	}
 
 	// Only process successful payment
 	if payload.Data.Code != "00" && payload.Code != "00" {
-		c.JSON(200, gin.H{"message": "Ignored non-success status"})
+		c.JSON(200, gin.H{"error": 0, "message": "Ignored non-success status", "data": nil})
 		return
 	}
 
 	// Wrap in DB Transaction to prevent race conditions
-	err := h.DB.Transaction(func(db *gorm.DB) error {
+	var updatedUser models.User
+	var updatedPlan string
+	err = h.DB.Transaction(func(db *gorm.DB) error {
 		var tx models.Transaction
 		if err := db.Set("gorm:query_option", "FOR UPDATE").First(&tx, "order_code = ?", payload.Data.OrderCode).Error; err != nil {
 			return fmt.Errorf("transaction not found for orderCode %d: %w", payload.Data.OrderCode, err)
@@ -96,136 +109,77 @@ func (h *WebhookHandler) HandlePayOSWebhook(c *gin.Context) {
 			return err
 		}
 
-		// Update User ExpiresAt
-		var user models.User
-		if err := db.First(&user, "id = ?", tx.UserID).Error; err == nil {
-			now := time.Now()
-			monthsToAdd := 3
-			switch tx.Plan {
-			case "1_month":
-				monthsToAdd = 1
-			case "3_months":
-				monthsToAdd = 3
-			case "9_months":
-				monthsToAdd = 9
-			case "1_year", "12_months":
-				monthsToAdd = 12
-			}
-
-			if user.ExpiresAt != nil && user.ExpiresAt.After(now) {
-				newTime := user.ExpiresAt.AddDate(0, monthsToAdd, 0)
-				user.ExpiresAt = &newTime
-			} else {
-				newTime := now.AddDate(0, monthsToAdd, 0)
-				user.ExpiresAt = &newTime
-			}
-			if err := db.Save(&user).Error; err != nil {
-				return err
-			}
+		// Update User ExpiresAt (Do not swallow error)
+		if err := db.First(&updatedUser, "id = ?", tx.UserID).Error; err != nil {
+			return fmt.Errorf("user not found for transaction: %w", err)
 		}
 
+		now := time.Now()
+		monthsToAdd := 3
+		switch tx.Plan {
+		case "1_month":
+			monthsToAdd = 1
+		case "3_months":
+			monthsToAdd = 3
+		case "9_months":
+			monthsToAdd = 9
+		case "1_year", "12_months":
+			monthsToAdd = 12
+		}
+
+		if updatedUser.ExpiresAt != nil && updatedUser.ExpiresAt.After(now) {
+			newTime := updatedUser.ExpiresAt.AddDate(0, monthsToAdd, 0)
+			updatedUser.ExpiresAt = &newTime
+		} else {
+			newTime := now.AddDate(0, monthsToAdd, 0)
+			updatedUser.ExpiresAt = &newTime
+		}
+		if err := db.Save(&updatedUser).Error; err != nil {
+			return err
+		}
+
+		updatedPlan = tx.Plan
 		return nil
 	})
 
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, gin.H{"error": -1, "message": err.Error(), "data": nil})
 		return
 	}
 
-	c.JSON(200, gin.H{"success": true})
-}
-
-func (h *WebhookHandler) HandleSePayWebhook(c *gin.Context) {
-	// Verify SePay Webhook Authorization Token
-	expectedToken := os.Getenv("SEPAY_WEBHOOK_TOKEN")
-	if os.Getenv("GIN_MODE") == "release" || expectedToken != "" {
-		if expectedToken == "" {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "SEPAY_WEBHOOK_TOKEN is not configured"})
-			return
-		}
-		authHeader := c.GetHeader("Authorization")
-		secretHeader := c.GetHeader("X-SePay-Secret")
-		if authHeader != "Bearer "+expectedToken && secretHeader != expectedToken {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized webhook request"})
-			return
-		}
-	}
-
-	var payload SePayWebhookPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid payload"})
-		return
-	}
-
-	if payload.TransferType != "in" {
-		c.JSON(200, gin.H{"message": "Ignored non-incoming transfer"})
-		return
-	}
-
-	// Extract UUID using regex
-	re := regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
-	match := re.FindString(payload.Content)
-	if match == "" {
-		c.JSON(200, gin.H{"message": "No transaction ID found in content"})
-		return
-	}
-
-	// Wrap in DB Transaction to prevent race conditions (double redeem)
-	err := h.DB.Transaction(func(db *gorm.DB) error {
-		var tx models.Transaction
-		if err := db.Set("gorm:query_option", "FOR UPDATE").First(&tx, "id = ?", match).Error; err != nil {
-			return err
-		}
-
-		if tx.Status == "completed" {
-			return fmt.Errorf("transaction already completed")
-		}
-
-		if tx.Amount != payload.TransferAmount {
-			return fmt.Errorf("amount mismatch")
-		}
-
-		// Update Transaction Status
-		tx.Status = "completed"
-		if err := db.Save(&tx).Error; err != nil {
-			return err
-		}
-
-		// Update User ExpiresAt
-		var user models.User
-		if err := db.First(&user, "id = ?", tx.UserID).Error; err == nil {
-			now := time.Now()
-			monthsToAdd := 3
-			switch tx.Plan {
+	// Send Telegram notification if user has linked Telegram (Slot 1 or Slot 2)
+	if updatedUser.ID != uuid.Nil && updatedUser.ExpiresAt != nil {
+		go func(u models.User, plan string) {
+			notifier := services.NewTelegramNotifier()
+			planName := plan
+			switch plan {
 			case "1_month":
-				monthsToAdd = 1
+				planName = "1 Tháng"
 			case "3_months":
-				monthsToAdd = 3
+				planName = "3 Tháng"
 			case "9_months":
-				monthsToAdd = 9
+				planName = "9 Tháng"
 			case "1_year", "12_months":
-				monthsToAdd = 12
+				planName = "1 Năm (12 Tháng)"
 			}
 
-			if user.ExpiresAt != nil && user.ExpiresAt.After(now) {
-				newTime := user.ExpiresAt.AddDate(0, monthsToAdd, 0)
-				user.ExpiresAt = &newTime
-			} else {
-				newTime := now.AddDate(0, monthsToAdd, 0)
-				user.ExpiresAt = &newTime
-			}
-			if err := db.Save(&user).Error; err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		c.JSON(200, gin.H{"message": err.Error()})
-		return
+			msg := fmt.Sprintf(
+				"🎉 <b>Thanh toán thành công!</b>\n\n"+
+					"Gói học VIP <b>%s</b> đã được kích hoạt thành công cho tài khoản <b>%s</b>.\n"+
+					"📅 <b>Hạn sử dụng VIP:</b> Đến ngày <b>%s</b>.\n\n"+
+					"Chúc bạn học tập thật tốt trên <b>toan6789.vn</b>! 🚀",
+				planName,
+				u.FullName,
+				u.ExpiresAt.Format("02/01/2006"),
+			)
+			_ = notifier.SendToUser(&u, msg)
+		}(updatedUser, updatedPlan)
 	}
 
-	c.JSON(200, gin.H{"success": true})
+	// PayOS standard webhook response format
+	c.JSON(200, gin.H{
+		"error":   0,
+		"message": "success",
+		"data":    nil,
+	})
 }

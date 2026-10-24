@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/services"
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
 type OCRController struct{}
@@ -36,15 +37,20 @@ func (ctrl *OCRController) ExtractText(c *gin.Context) {
 		return
 	}
 
-	mimeType := header.Header.Get("Content-Type")
-	if mimeType == "" {
-		mimeType = "image/jpeg" // Fallback
+	// Validate actual binary magic bytes
+	if err := utils.ValidateImageBytes(fileBytes, utils.MobileImageValidationOptions); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Định dạng file không hợp lệ hoặc bị hỏng (chỉ chấp nhận ảnh PNG/JPEG/WEBP): " + err.Error()})
+		return
+	}
+
+	mimeType := http.DetectContentType(fileBytes)
+	if mimeType == "application/octet-stream" && len(fileBytes) >= 12 && string(fileBytes[0:4]) == "RIFF" && string(fileBytes[8:12]) == "WEBP" {
+		mimeType = "image/webp"
 	}
 
 	// Call OCR Service
 	result, err := services.ExtractTextFromImageWithGemini(fileBytes, mimeType)
 	if err != nil {
-		// Log the error in reality
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Đã xảy ra lỗi trong quá trình nhận dạng ảnh"})
 		return
 	}

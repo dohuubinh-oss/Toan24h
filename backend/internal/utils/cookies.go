@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -23,6 +24,7 @@ func FormatExpiresAt(t *time.Time) string {
 
 // SetAuthCookies sets access and refresh tokens, user role, grade and expiration cookies
 func SetAuthCookies(c *gin.Context, accessToken, refreshToken, role, grade, expiresAt string) {
+	c.SetSameSite(http.SameSiteLaxMode)
 	domain := ""
 	secure := false
 	host := c.Request.Host
@@ -46,6 +48,7 @@ func SetAuthCookies(c *gin.Context, accessToken, refreshToken, role, grade, expi
 
 // ClearAuthCookies clears all authentication cookies
 func ClearAuthCookies(c *gin.Context) {
+	c.SetSameSite(http.SameSiteLaxMode)
 	domain := ""
 	secure := false
 	host := c.Request.Host

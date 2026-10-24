@@ -37,6 +37,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   const [showCheatModal, setShowCheatModal] = useState(false)
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
   const [isRestored, setIsRestored] = useState(false)
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
 
   const toast = useToast()
   const router = useRouter()
@@ -70,8 +71,9 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
     // Check penalty ngay khi quay lại nếu đã vi phạm từ trang bài giảng hoặc trước đó
     if (restoredCheatCount >= 3 || restoredTotalTime > 300000) {
         import('@/lib/api').then(mod => mod.sendCheatWarning(id, 3));
-        toast.error("Bài làm đã bị thu hồi và HỦY KẾT QUẢ do vi phạm quy chế thi. (Đã gửi cảnh báo Zalo cho phụ huynh)");
+        toast.error("Bài làm đã bị thu hồi và HỦY KẾT QUẢ do vi phạm quy chế thi. (Đã gửi cảnh báo qua Telegram đã liên kết)");
         sessionStorage.removeItem(`exam_state_${id}`);
+        sessionStorage.removeItem(`exam_end_time_${id}`);
         router.back();
     } else if (restoredCheatCount > 0) {
         setShowCheatModal(true)
@@ -156,9 +158,10 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
       if (count >= 3 || totalTime > 300000) {
         if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
         import('@/lib/api').then(mod => mod.sendCheatWarning(id, 3));
-        toast.error("Bài làm đã bị thu hồi và HỦY KẾT QUẢ do vi phạm quy chế thi. (Đã gửi cảnh báo Zalo cho phụ huynh)");
+        toast.error("Bài làm đã bị thu hồi và HỦY KẾT QUẢ do vi phạm quy chế thi. (Đã gửi cảnh báo qua Telegram đã liên kết)");
         
         sessionStorage.removeItem(`exam_state_${id}`);
+        sessionStorage.removeItem(`exam_end_time_${id}`);
         router.back();
         return true; // was handled
       }
@@ -286,7 +289,12 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
     return !!answers[q.id] && String(answers[q.id]).trim() !== ''
   }).length
 
+  const isSubmittingRef = React.useRef(false)
+  const handleSubmitRef = React.useRef<() => void>(() => {})
+
   const handleSubmit = async () => {
+    if (isSubmittingRef.current) return
+    isSubmittingRef.current = true
     try {
       const answersList = questions.flatMap(q => {
         if (q.type_question === 'group' && q.subQuestions) {
@@ -308,6 +316,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
       const res = await import('@/lib/api').then(mod => mod.submitExam(id, answersList))
       if (res && (res.status === 'pending' || res.status === 'graded')) {
         sessionStorage.removeItem(`exam_state_${id}`);
+        sessionStorage.removeItem(`exam_end_time_${id}`);
         toast.success("Nộp bài thành công!");
 
         const prevUrl = exam.cate === 'practice' && exam.lectureId
@@ -320,13 +329,59 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           router.push(prevUrl);
         }, 800);
       } else {
+        isSubmittingRef.current = false
         toast.error(res?.message || "Nộp bài thất bại")
       }
     } catch (e: any) {
+      isSubmittingRef.current = false
       console.error(e)
-      toast.error(e?.message || "Lỗi khi nộp bài")
+      toast.error(e?.response?.data?.message || e?.message || "Lỗi khi nộp bài")
     }
   }
+
+  handleSubmitRef.current = handleSubmit
+
+  // Countdown timer logic
+  useEffect(() => {
+    if (!exam) return
+
+    const durationMinutes = exam.duration && exam.duration > 0 ? Number(exam.duration) : 45
+    const durationMs = durationMinutes * 60 * 1000
+
+    let endTime: number
+    const savedEndTime = sessionStorage.getItem(`exam_end_time_${id}`)
+    if (savedEndTime) {
+      endTime = parseInt(savedEndTime, 10)
+    } else {
+      endTime = Date.now() + durationMs
+      sessionStorage.setItem(`exam_end_time_${id}`, endTime.toString())
+    }
+
+    const checkTime = () => {
+      const remainingMs = endTime - Date.now()
+      const remainingSec = Math.max(0, Math.floor(remainingMs / 1000))
+      setSecondsLeft(remainingSec)
+
+      if (remainingSec <= 0) {
+        if (!isSubmittingRef.current) {
+          toast.error("Đã hết thời gian làm bài! Hệ thống đang tự động nộp bài...")
+          handleSubmitRef.current()
+        }
+      }
+    }
+
+    checkTime()
+    const timerInterval = setInterval(checkTime, 1000)
+
+    return () => clearInterval(timerInterval)
+  }, [exam, id, toast])
+
+  const timeLeftStr = React.useMemo(() => {
+    if (secondsLeft === null) return "00:00"
+    const m = Math.floor(secondsLeft / 60)
+    const s = secondsLeft % 60
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }, [secondsLeft])
 
   const handleBack = () => {
     if (exam.cate === 'practice' && exam.lectureId) {
@@ -335,10 +390,6 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
       router.push(`/student`)
     }
   }
-
-  // Timer logic for 'test'
-  // Currently mocked. In a real app we would use setInterval.
-  const timeLeftStr = "45:00"
 
   const toggleAiHint = (questionId: string) => {
     if (exam.cate === 'exam') {
@@ -513,7 +564,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         description={
           cheatCount === 1 
             ? "Bạn vừa rời khỏi màn hình làm bài. Vui lòng tập trung! Nếu vi phạm quá 2 lần, hệ thống sẽ tự động thu bài."
-            : "Đây là lần vi phạm cuối cùng! Nếu bạn rời khỏi màn hình một lần nữa, hệ thống sẽ tự động thu bài và gửi cảnh báo Zalo cho phụ huynh."
+            : "Đây là lần vi phạm cuối cùng! Nếu bạn rời khỏi màn hình một lần nữa, hệ thống sẽ tự động thu bài và gửi cảnh báo qua Telegram cho phụ huynh."
         }
         confirmText="Tôi đã hiểu"
         hideCancel={true}

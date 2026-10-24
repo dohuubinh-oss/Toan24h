@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import {
-  AlignLeft, Bold, Italic, ImagePlus, FileQuestion,
-  CheckCircle2, FileText, Info, Lightbulb, Rocket, Brain, Plus, AlertCircle, Zap
+  AlignLeft, FileQuestion, CheckCircle2, FileText,
+  Info, Lightbulb, Brain, AlertCircle, Zap
 } from 'lucide-react'
 import { Question, QuestionBlock } from '../../../types/question'
 
@@ -13,6 +13,7 @@ interface QuestionEditorSectionProps {
 }
 
 import SharedEditorCard from './editor/SharedEditorCard'
+import SharedIllustrationCard from './editor/SharedIllustrationCard'
 import RichTextEditor from './editor/RichTextEditor'
 import { formatSolutionGuide } from './utils/questionTextFormatter'
 
@@ -100,6 +101,46 @@ function QuestionEditorSection({
     // If this option was selected as the correct answer, keep correct_answer in sync
     if (wasSelected) {
       updateQuestion('correct_answer', cleanVal.trim() !== '' ? cleanVal : optLetter);
+    }
+  };
+
+  const activeDiagramSvg = isGroup
+    ? (currentBlock?.diagram_svg ||
+       currentQuestion?.diagram_svg ||
+       (typeof currentQuestion?.solution_guide === 'object' && currentQuestion?.solution_guide?.diagram_svg) ||
+       null)
+    : (currentQuestion?.diagram_svg ||
+       currentBlock?.diagram_svg ||
+       (typeof currentQuestion?.solution_guide === 'object' && currentQuestion?.solution_guide?.diagram_svg) ||
+       null);
+
+  const handleUpdateDiagram = (val: string | null) => {
+    if (isGroup) {
+      if (updateBlock) {
+        updateBlock('diagram_svg', val);
+      }
+      if (updateQuestion) {
+        updateQuestion('diagram_svg', val);
+        if (currentQuestion?.solution_guide && typeof currentQuestion.solution_guide === 'object') {
+          updateQuestion('solution_guide', {
+            ...currentQuestion.solution_guide,
+            diagram_svg: val,
+          });
+        }
+      }
+    } else {
+      if (updateQuestion) {
+        updateQuestion('diagram_svg', val);
+        if (currentQuestion?.solution_guide && typeof currentQuestion.solution_guide === 'object') {
+          updateQuestion('solution_guide', {
+            ...currentQuestion.solution_guide,
+            diagram_svg: val,
+          });
+        }
+      }
+      if (updateBlock) {
+        updateBlock('diagram_svg', val);
+      }
     }
   };
 
@@ -210,11 +251,40 @@ function QuestionEditorSection({
         )}
       </div>
 
+      {/* Illustration Image Section - Luôn hiển thị phía trên Lời giải chi tiết */}
+      <SharedIllustrationCard
+        diagramSvg={activeDiagramSvg}
+        isGroup={isGroup}
+        questionContent={
+          isGroup
+            ? [
+                currentBlock?.shared_content,
+                ...(currentBlock?.questions || []).map((q, idx) => `Câu ${idx + 1}: ${q.content}`)
+              ].filter(Boolean).join('\n\n')
+            : [currentBlock?.shared_content, currentQuestion?.content].filter(Boolean).join('\n\n')
+        }
+        solutionContent={
+          isGroup
+            ? (currentBlock?.questions || []).map((q, idx) => {
+                const sol = typeof q.solution_guide === 'object' ? formatSolutionGuide(q.solution_guide) : (q.solution_guide || '');
+                return `Lời giải câu ${idx + 1}:\n${sol}`;
+              }).filter(Boolean).join('\n\n')
+            : (typeof currentQuestion?.solution_guide === 'object'
+                ? formatSolutionGuide(currentQuestion?.solution_guide)
+                : (currentQuestion?.solution_guide || ''))
+        }
+        onUpdateDiagram={handleUpdateDiagram}
+      />
+
       {/* Solution Section */}
       <SharedEditorCard
         title="Lời giải chi tiết"
         icon={<FileText className="text-primary w-5 h-5" />}
-        content={typeof currentQuestion?.solution_guide === 'object' ? formatSolutionGuide(currentQuestion?.solution_guide) : (currentQuestion?.solution_guide || '')}
+        content={
+          typeof currentQuestion?.solution_guide === 'object'
+            ? formatSolutionGuide({ ...currentQuestion?.solution_guide, diagram_svg: null })
+            : (currentQuestion?.solution_guide || '')
+        }
         onContentChange={(val) => updateQuestion('solution_guide', val)}
         placeholder="Nhập lời giải chi tiết..."
       />

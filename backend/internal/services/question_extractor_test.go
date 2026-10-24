@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -55,9 +56,9 @@ func TestParseAndProcessExtractedBlocks(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, blocks, 1)
 
-	// Verify placeholder was replaced by an <img> tag with /uploads/temp/ URL
+	// Verify placeholder was replaced by DiagramAlertBadge
 	assert.NotNil(t, blocks[0].SharedContent)
-	assert.True(t, strings.Contains(*blocks[0].SharedContent, `<img src="/uploads/temp/`))
+	assert.True(t, strings.Contains(*blocks[0].SharedContent, "diagram-placeholder"))
 	assert.False(t, strings.Contains(*blocks[0].SharedContent, `[DIAGRAM_0_1]`))
 	assert.Equal(t, "group", blocks[0].TypeQuestion)
 	assert.Len(t, blocks[0].Questions, 2)
@@ -107,7 +108,7 @@ func TestParseAndProcessExtractedBlocks_SingleQuestionWithSharedContentConverted
 	qContent := blocks[0].Questions[0].Content
 	assert.Contains(t, qContent, "Bạn An dự định cắt một miếng bìa")
 	assert.Contains(t, qContent, "Đa thức biểu thị diện tích")
-	assert.Contains(t, qContent, `<img src="/uploads/temp/`)
+	assert.Contains(t, qContent, "diagram-placeholder")
 	assert.False(t, strings.Contains(qContent, `[DIAGRAM_0_0]`))
 }
 
@@ -626,8 +627,8 @@ func TestParseAndProcessExtractedBlocks_DiagramInQuestion(t *testing.T) {
 	assert.Len(t, blocks, 1)
 	assert.Len(t, blocks[0].Questions, 1)
 
-	// Diagram inside question should be cropped and replaced with <img> tag
-	assert.True(t, strings.Contains(blocks[0].Questions[0].Content, `<img src="/uploads/temp/`))
+	// Diagram inside question should be replaced with DiagramAlertBadge
+	assert.True(t, strings.Contains(blocks[0].Questions[0].Content, "diagram-placeholder"))
 	assert.False(t, strings.Contains(blocks[0].Questions[0].Content, `[DIAGRAM_0_0]`))
 }
 
@@ -665,14 +666,13 @@ func TestParseAndProcessExtractedBlocks_DiagramFlexibleID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, blocks, 1)
 
-	// "id" field should be recognized as placeholder, cropped, and replaced AFTER the question content
+	// "id" field should be recognized as placeholder and replaced with DiagramAlertBadge AFTER the question content
 	content := blocks[0].Questions[0].Content
-	assert.True(t, strings.Contains(content, `<img src="/uploads/temp/`))
-	assert.True(t, strings.Contains(content, `md:max-w-[500px]`))
+	assert.True(t, strings.Contains(content, "diagram-placeholder"))
 	assert.False(t, strings.Contains(content, `[DIAGRAM_0_1]`))
-	// Verify image is placed after the text, not inserted in the middle of sentences
+	// Verify alert badge is placed after the text, not inserted in the middle of sentences
 	assert.True(t, strings.HasPrefix(content, "Tứ giác ABCD trong hình vẽ là hình gì?"))
-	assert.True(t, strings.HasSuffix(strings.TrimSpace(content), `/>`))
+	assert.True(t, strings.HasSuffix(strings.TrimSpace(content), `</p>`))
 }
 
 func TestParseAndProcessExtractedBlocks_DiagramAppendedAfterContent(t *testing.T) {
@@ -713,10 +713,9 @@ func TestParseAndProcessExtractedBlocks_DiagramAppendedAfterContent(t *testing.T
 	content := blocks[0].Questions[0].Content
 	// Sentence should be continuous without placeholder
 	assert.True(t, strings.HasPrefix(content, "Nhà bạn An cách nhà bạn Châu 600m. Khoảng cách từ nhà Bình đến nhà Châu bằng bao nhiêu?"))
-	// Image tag must be at the end, after the question
-	assert.True(t, strings.Contains(content, `<img src="/uploads/temp/`))
-	assert.True(t, strings.Contains(content, `md:max-w-[500px]`))
-	assert.True(t, strings.HasSuffix(strings.TrimSpace(content), `/>`))
+	// Red alert badge must be at the end, after the question
+	assert.True(t, strings.Contains(content, "diagram-placeholder"))
+	assert.True(t, strings.HasSuffix(strings.TrimSpace(content), `</p>`))
 }
 
 func TestParseAndProcessExtractedBlocks_OrphanDiagramCleanedUp(t *testing.T) {
@@ -850,4 +849,188 @@ func TestParseAndProcessExtractedBlocks_CleansQuestionPrefix(t *testing.T) {
 	assert.True(t, strings.Contains(blocks[0].Questions[0].Content, "Rút gọn biểu thức sau:"))
 	assert.Equal(t, "Khai triển hằng đẳng thức $(a+b)^2$: $A = x^2 + 2x + 1$.", blocks[0].Questions[0].ShortAnswer)
 }
+
+func TestParseAndProcessExtractedBlocks_SolutionGuideDiagramSVG(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	rawJSON := `[
+		{
+			"shared_content": null,
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Cho tam giác ABC vuông tại A. Tính cạnh BC.",
+					"type": "Tự luận",
+					"grade": 9,
+					"topic": "Hệ thức lượng",
+					"correct_answer": "$BC = 10$",
+					"solution_guide": {
+						"diagram_svg": "<svg viewBox=\"0 0 400 240\"><polygon points=\"50,200 350,200 50,50\" stroke=\"#2563eb\" /></svg>",
+						"steps": [
+							{
+								"step": 1,
+								"title": "Áp dụng định lý Pythagore",
+								"content": "Trong tam giác vuông ABC vuông tại A",
+								"formula": "$BC^2 = AB^2 + AC^2$",
+								"point": 1.0
+							}
+						],
+						"conclusion": "Vậy $BC = 10$"
+					}
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+
+	solMap, ok := blocks[0].Questions[0].SolutionGuide.(map[string]interface{})
+	assert.True(t, ok)
+	assert.NotNil(t, solMap["diagram_svg"])
+	svgStr, ok := solMap["diagram_svg"].(string)
+	assert.True(t, ok)
+	assert.Contains(t, svgStr, "<svg viewBox=\"0 0 400 240\">")
+	assert.Contains(t, svgStr, "<polygon points=")
+}
+
+func TestParseAndProcessExtractedBlocks_GroupQuestionDiagramOnlyInSharedContent(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	rawJSON := `[
+		{
+			"shared_content": "Cho tam giác ABC vuông tại A có AB = 6cm, AC = 8cm. [DIAGRAM]",
+			"type_question": "group",
+			"diagrams": [
+				{
+					"placeholder": "[DIAGRAM]"
+				}
+			],
+			"questions": [
+				{
+					"content": "a) Tính độ dài cạnh BC [DIAGRAM].",
+					"type": "Tự luận",
+					"correct_answer": "$BC = 10\\text{ cm}$"
+				},
+				{
+					"content": "b) Tính diện tích tam giác ABC.",
+					"type": "Tự luận",
+					"correct_answer": "$S = 24\\text{ cm}^2$"
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+
+	// SharedContent MUST contain the diagram placeholder badge
+	assert.NotNil(t, blocks[0].SharedContent)
+	assert.Contains(t, *blocks[0].SharedContent, "diagram-placeholder")
+	assert.Contains(t, *blocks[0].SharedContent, "(Chèn hình ảnh tại đây)")
+	assert.False(t, strings.Contains(*blocks[0].SharedContent, "[DIAGRAM]"))
+
+	// Sub-questions MUST NOT contain diagram-placeholder or [DIAGRAM]
+	for idx, q := range blocks[0].Questions {
+		assert.False(t, strings.Contains(q.Content, "diagram-placeholder"), "Question %d must not contain diagram badge", idx)
+		assert.False(t, strings.Contains(q.Content, "(Chèn hình ảnh tại đây)"), "Question %d must not contain diagram text", idx)
+		assert.False(t, strings.Contains(q.Content, "[DIAGRAM]"), "Question %d must not contain raw placeholder", idx)
+	}
+}
+
+func TestParseAndProcessExtractedBlocks_PureTextNoDiagramBadge(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	rawJSON := `[
+		{
+			"shared_content": null,
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Giải phương trình bậc hai: $x^2 - 5x + 6 = 0$.",
+					"type": "Tự luận",
+					"correct_answer": "$x = 2; x = 3$"
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+
+	// Question content must NOT have diagram-placeholder
+	assert.False(t, strings.Contains(blocks[0].Questions[0].Content, "diagram-placeholder"))
+	assert.False(t, strings.Contains(blocks[0].Questions[0].Content, "(Chèn hình ảnh tại đây)"))
+}
+
+func TestCleanSVG(t *testing.T) {
+	// Case 1: Plain SVG
+	plain := `<svg viewBox="0 0 600 600"><polygon points="0,0 100,100" /></svg>`
+	assert.Equal(t, plain, cleanSVG(plain))
+
+	// Case 2: Wrapped in ```xml ... ```
+	wrappedXML := "```xml\n<svg viewBox=\"0 0 600 600\"><circle cx=\"50\" cy=\"50\" r=\"40\" /></svg>\n```"
+	assert.Equal(t, `<svg viewBox="0 0 600 600"><circle cx="50" cy="50" r="40" /></svg>`, cleanSVG(wrappedXML))
+
+	// Case 3: Wrapped in ```svg ... ```
+	wrappedSVG := "```svg\n<svg viewBox=\"0 0 600 600\"></svg>\n```"
+	assert.Equal(t, `<svg viewBox="0 0 600 600"></svg>`, cleanSVG(wrappedSVG))
+}
+
+func TestParseAndProcessExtractedBlocks_GroupQuestionSubQuestionsRetainOwnDiagramSVG(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	svgQ1 := `<svg viewBox="0 0 600 600" id="step1"><polygon points="0,0 10,10" /></svg>`
+	svgQ2 := `<svg viewBox="0 0 600 600" id="step2"><polygon points="0,0 10,10" /><line x1="0" y1="0" x2="5" y2="5" /></svg>`
+
+	rawJSON := fmt.Sprintf(`[
+		{
+			"shared_content": "Cho tam giác ABC...",
+			"type_question": "group",
+			"questions": [
+				{
+					"content": "a) Tính BC.",
+					"type": "Tự luận",
+					"solution_guide": {
+						"diagram_svg": %q,
+						"steps": []
+					}
+				},
+				{
+					"content": "b) Kẻ đường cao AH. Tính AH.",
+					"type": "Tự luận",
+					"solution_guide": {
+						"diagram_svg": %q,
+						"steps": []
+					}
+				}
+			]
+		}
+	]`, svgQ1, svgQ2)
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, nil, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+
+	// Block diagram_svg should be the latest/most complete SVG (step 2)
+	assert.NotNil(t, blocks[0].DiagramSVG)
+	assert.Equal(t, svgQ2, *blocks[0].DiagramSVG)
+
+	// All subquestions share the single comprehensive diagram covering the whole problem
+	sol1, ok := blocks[0].Questions[0].SolutionGuide.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, svgQ2, sol1["diagram_svg"])
+
+	sol2, ok := blocks[0].Questions[1].SolutionGuide.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, svgQ2, sol2["diagram_svg"])
+}
+
 

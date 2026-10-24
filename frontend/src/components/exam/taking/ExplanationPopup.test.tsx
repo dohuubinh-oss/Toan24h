@@ -25,9 +25,9 @@ describe('ExplanationPopup Component', () => {
       />
     )
     
-    expect(screen.getByText('Giải thích đáp án')).toBeInTheDocument()
+    expect(screen.getByText('Nhập lời giải thích')).toBeInTheDocument()
     expect(screen.getByTestId('mock-rich-text-editor')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Xác nhận/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Lưu/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Hủy/i })).toBeInTheDocument()
   })
 
@@ -40,13 +40,13 @@ describe('ExplanationPopup Component', () => {
       />
     )
     
-    expect(screen.queryByText('Giải thích đáp án')).not.toBeInTheDocument()
+    expect(screen.queryByText('Nhập lời giải thích')).not.toBeInTheDocument()
   })
 
   it('disables submit button when explanation is empty', async () => {
     render(<ExplanationPopup isOpen={true} onClose={vi.fn()} onSubmit={vi.fn()} />)
     
-    const submitBtn = screen.getByRole('button', { name: /Xác nhận/i })
+    const submitBtn = screen.getByRole('button', { name: /Lưu/i })
     expect(submitBtn).toBeDisabled()
   })
 
@@ -63,7 +63,7 @@ describe('ExplanationPopup Component', () => {
     const editor = screen.getByTestId('mock-rich-text-editor')
     await userEvent.type(editor, 'Biết ngay mà')
     
-    const submitBtn = screen.getByRole('button', { name: /Xác nhận/i })
+    const submitBtn = screen.getByRole('button', { name: /Lưu/i })
     expect(submitBtn).not.toBeDisabled()
     
     await userEvent.click(submitBtn)
