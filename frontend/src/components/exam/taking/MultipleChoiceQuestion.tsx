@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { Sparkles, CheckCircle2, Flag, BookOpen, AlertTriangle, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
+import DOMPurify from 'dompurify'
 import MathText from '@/components/ui/MathText'
 import ExplanationPopup from './ExplanationPopup'
-import { useToast } from '@/components/ui/ToastProvider'
+import { toast } from '@/components/ui/ToastProvider'
 import { reportQuestion, submitAppeal } from '@/lib/api'
 
 export interface MultipleChoiceOption {
@@ -17,6 +18,8 @@ interface MultipleChoiceQuestionProps {
   questionId: string | number
   index: number
   topic?: string
+  diagram_svg?: string | null
+  diagramSvg?: string | null
   content: string
   options: MultipleChoiceOption[]
   selectedOptionId: string | null
@@ -54,6 +57,8 @@ export default function MultipleChoiceQuestion({
   resultId,
   questionId,
   index,
+  diagram_svg,
+  diagramSvg,
   content,
   options,
   selectedOptionId,
@@ -73,7 +78,6 @@ export default function MultipleChoiceQuestion({
 }: MultipleChoiceQuestionProps) {
   const [pendingOptionId, setPendingOptionId] = useState<string | null>(null)
   
-  const toast = useToast()
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [reportMessage, setReportMessage] = useState('')
   const [isSubmittingReport, setIsSubmittingReport] = useState(false)
@@ -179,6 +183,64 @@ export default function MultipleChoiceQuestion({
               </div>
             </div>
             
+            {/* Illustration diagram */}
+            {(() => {
+              const rawDiagram = diagram_svg || diagramSvg;
+              if (!rawDiagram || typeof rawDiagram !== 'string') return null;
+              const diagram = rawDiagram.trim();
+              if (!diagram || diagram === 'null' || diagram === 'undefined' || diagram === 'none' || diagram === '[]' || diagram === '{}') {
+                return null;
+              }
+              let clean = diagram;
+              if (clean.includes('```')) {
+                const match = clean.match(/```(?:xml|svg)?\s*([\s\S]*?)\s*```/i);
+                if (match && match[1]) clean = match[1].trim();
+              }
+              const svgStart = clean.indexOf('<svg');
+              const svgEnd = clean.lastIndexOf('</svg>');
+              const isSvg = svgStart !== -1 && svgEnd !== -1 && svgEnd >= svgStart;
+
+              const isImageUrl = !isSvg && (
+                clean.startsWith('http://') || 
+                clean.startsWith('https://') || 
+                clean.startsWith('/') || 
+                clean.startsWith('uploads/') || 
+                clean.startsWith('data:image/')
+              );
+
+              if (!isSvg && !isImageUrl) {
+                return null;
+              }
+
+              const finalSvg = isSvg ? clean.substring(svgStart, svgEnd + 6) : '';
+              let imgSrc = clean;
+              if (!isSvg && clean.startsWith('uploads/')) {
+                imgSrc = `/${clean}`;
+              }
+              return (
+                <div className="my-4 flex justify-center" data-testid="question-illustration">
+                  <div className="max-w-[540px] w-full flex items-center justify-center overflow-hidden py-1">
+                    {isSvg ? (
+                      <div 
+                        className="w-full flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-[380px] [&>svg]:h-auto [&>svg]:w-auto [&>svg]:mx-auto [&>svg>rect:first-child]:fill-transparent [&>svg>rect:first-child]:stroke-none"
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(finalSvg) }} 
+                      />
+                    ) : (
+                      <img 
+                        src={imgSrc} 
+                        alt="Hình vẽ minh họa bài toán" 
+                        onError={(e) => {
+                          const container = e.currentTarget.closest('[data-testid="question-illustration"]');
+                          if (container) (container as HTMLElement).style.display = 'none';
+                        }}
+                        className="max-w-full max-h-[380px] h-auto w-auto object-contain mx-auto"
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="text-xl font-medium text-slate-800 leading-relaxed">
               <MathText content={content} />
             </div>
@@ -217,7 +279,7 @@ export default function MultipleChoiceQuestion({
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${
                     isSelected ? 'bg-primary text-white' : 'bg-slate-100  text-slate-600 '
                   }`}>
-                    {option.label}
+                    {option.label || option.id}
                   </div>
                   <span className="text-base text-slate-700 font-medium flex-1">
                     <MathText content={option.text} />

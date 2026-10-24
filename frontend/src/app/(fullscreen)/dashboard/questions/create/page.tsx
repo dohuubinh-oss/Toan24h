@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button'
 import { QuestionBlock, Question } from '@/types/question'
 import { apiFetch } from '@/lib/api'
 import { getQuestion, updateQuestion as apiUpdateQuestion } from '@/lib/api'
+import { extractDiagramSvg } from '@/lib/diagram-utils'
 import { Suspense, useEffect } from 'react'
 import { toast } from '@/components/ui/ToastProvider'
 
@@ -41,17 +42,26 @@ function CreateQuestionContent() {
       setEditId(id)
       getQuestion(id).then(q => {
         if (q) {
+          const diagram = extractDiagramSvg(q.diagram_svg, q.solution_guide);
           // Wrap in QuestionBlock for compatibility with the editor format
           if (q.type_question === 'group' && q.subQuestions) {
             setQuestionBlocks([{
               shared_content: q.content,
-              questions: q.subQuestions,
+              diagram_svg: diagram,
+              questions: q.subQuestions.map(sub => ({
+                ...sub,
+                diagram_svg: null
+              })),
               is_group: true
             }])
           } else {
             setQuestionBlocks([{
               shared_content: '',
-              questions: [q],
+              diagram_svg: diagram,
+              questions: [{
+                ...q,
+                diagram_svg: diagram
+              }],
               is_group: false
             }])
           }
@@ -163,6 +173,42 @@ function CreateQuestionContent() {
     toast.success("Đã xóa câu hỏi");
   }, [questionBlocks, currentBlockIndex, currentQuestionIndex]);
 
+  const handleAddSubQuestion = useCallback(() => {
+    setQuestionBlocks(prev => {
+      const currentBlock = prev[currentBlockIndex];
+      if (!currentBlock) return prev;
+
+      const templateQuestion: Question = {
+        type_question: 'group',
+        content: '',
+        type: 'Trắc nghiệm',
+        grade: currentBlock.questions[0]?.grade || 9,
+        topic: currentBlock.questions[0]?.topic || '',
+        difficulty_level: 'Thông hiểu',
+        difficulty_point: 5.0,
+        point: 1,
+        tags: currentBlock.questions[0]?.tags || [],
+        options: ['', '', '', ''],
+        correct_answer: '',
+        solution_guide: '',
+      };
+
+      const newQuestions = [...currentBlock.questions, templateQuestion];
+      const newBlocks = [...prev];
+      newBlocks[currentBlockIndex] = {
+        ...currentBlock,
+        is_group: true,
+        questions: newQuestions,
+      };
+      return newBlocks;
+    });
+    const block = questionBlocks[currentBlockIndex];
+    if (block) {
+      setCurrentQuestionIndex(block.questions.length);
+    }
+    toast.success("Đã thêm câu hỏi con mới");
+  }, [currentBlockIndex, questionBlocks]);
+
   const updateQuestion = useCallback((field: keyof Question, value: any) => {
     setQuestionBlocks(prev => {
       const currentBlock = prev[currentBlockIndex];
@@ -229,6 +275,27 @@ function CreateQuestionContent() {
       return;
     }
 
+    // Yêu cầu: Đảm bảo Link Drive phải có trước khi lưu vào ngân hàng
+    const driveLink = (
+      questionBlocks[0]?.questions?.[0]?.gg_drive || 
+      questionBlocks[0]?.questions?.[0]?.book_name || 
+      (questionBlocks[0] as any)?.gg_drive || 
+      ''
+    ).trim();
+
+    if (!driveLink) {
+      toast.error("Vui lòng nhập Link Drive trước khi lưu vào ngân hàng!");
+      return;
+    }
+
+    // Đảm bảo tất cả các câu hỏi đều mang link drive này
+    questionBlocks.forEach(b => {
+      b.questions.forEach(q => {
+        if (!q.gg_drive?.trim()) q.gg_drive = driveLink;
+        if (!q.book_name?.trim()) q.book_name = driveLink;
+      });
+    });
+
     try {
       setIsSaving(true);
 
@@ -243,18 +310,32 @@ function CreateQuestionContent() {
         let payload: Partial<Question>;
         if (isGroup) {
           const firstSub = block.questions.length > 0 ? block.questions[0] : null;
+          const groupDiagram = extractDiagramSvg(block.diagram_svg || firstSub?.diagram_svg, firstSub?.solution_guide) || null;
           payload = {
             id: editId,
             type_question: 'group',
             content: block.shared_content,
+            diagram_svg: groupDiagram,
             grade: firstSub?.grade || 0,
             topic: firstSub?.topic || '',
             difficulty_level: firstSub?.difficulty_level || 'Nhận biết',
-            subQuestions: block.questions
+            subQuestions: block.questions.map(q => {
+              let cleanSol = q.solution_guide;
+              if (cleanSol && typeof cleanSol === 'object') {
+                cleanSol = { ...cleanSol, diagram_svg: null };
+              }
+              return {
+                ...q,
+                diagram_svg: null,
+                solution_guide: cleanSol
+              };
+            })
           };
         } else {
+          const singleDiagram = extractDiagramSvg(block.questions[0]?.diagram_svg || block.diagram_svg, block.questions[0]?.solution_guide) || null;
           payload = {
             ...block.questions[0],
+            diagram_svg: singleDiagram,
             id: editId,
             type_question: 'single'
           };
@@ -273,14 +354,44 @@ function CreateQuestionContent() {
             (!!block.shared_content && block.shared_content.trim() !== '')) && 
             (block.questions && block.questions.length > 1);
 
+          if (isGroup) {
+            const groupDiagram = extractDiagramSvg(block.diagram_svg || block.questions[0]?.diagram_svg, block.questions[0]?.solution_guide) || null;
+            return {
+              shared_content: block.shared_content,
+              diagram_svg: groupDiagram,
+              type_question: 'group' as const,
+              is_group: true,
+              point: block.point || block.questions.length || 1,
+              questions: block.questions.map(q => {
+                let cleanSol = q.solution_guide;
+                if (cleanSol && typeof cleanSol === 'object') {
+                  cleanSol = { ...cleanSol, diagram_svg: null };
+                }
+                return {
+                  ...q,
+                  type_question: 'group' as const,
+                  diagram_svg: null,
+                  solution_guide: cleanSol,
+                  grade: typeof q.grade === 'string' ? parseInt(q.grade) : (q.grade || 0),
+                  difficulty_point: q.difficulty_point || 0,
+                  point: q.point || 1,
+                };
+              })
+            };
+          }
+
+          // Câu hỏi đơn
+          const singleDiagram = extractDiagramSvg(block.questions[0]?.diagram_svg || block.diagram_svg, block.questions[0]?.solution_guide) || null;
           return {
-            shared_content: isGroup ? block.shared_content : null,
-            type_question: (isGroup ? 'group' : 'single') as 'group' | 'single',
-            is_group: isGroup,
-            point: block.point || (isGroup ? block.questions.length : 1),
+            shared_content: null,
+            diagram_svg: singleDiagram,
+            type_question: 'single' as const,
+            is_group: false,
+            point: block.point || 1,
             questions: block.questions.map(q => ({
               ...q,
-              type_question: isGroup ? 'group' : 'single',
+              type_question: 'single' as const,
+              diagram_svg: extractDiagramSvg(q.diagram_svg || block.diagram_svg, q.solution_guide) || singleDiagram,
               grade: typeof q.grade === 'string' ? parseInt(q.grade) : (q.grade || 0),
               difficulty_point: q.difficulty_point || 0,
               point: q.point || 1,
@@ -361,6 +472,9 @@ function CreateQuestionContent() {
                 currentQuestion={currentQuestion}
                 updateBlock={updateBlock}
                 updateQuestion={updateQuestion}
+                currentQuestionIndex={currentQuestionIndex}
+                onSelectSubQuestion={(idx) => setCurrentQuestionIndex(idx)}
+                onAddSubQuestion={handleAddSubQuestion}
               />
             </div>
           </div>

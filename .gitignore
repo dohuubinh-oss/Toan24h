@@ -37,6 +37,7 @@ Thumbs.db
 .agent/
 .claude/
 .gemini/
+.archify/
 
 # Docs and Examples
 docs/*

@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"io"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/services"
@@ -95,18 +97,33 @@ func ExtractAIQuestions(c *gin.Context) {
 func RefineGeometryDiagram(c *gin.Context) {
 	var req services.GeometryVisualizerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu yêu cầu không hợp lệ: " + err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "error": "Dữ liệu yêu cầu không hợp lệ. Thầy cô vui lòng kiểm tra lại nội dung."})
 		return
 	}
 
 	if req.Content == "" && req.SolutionGuide == "" && req.CustomPrompt == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng cung cấp nội dung đề bài hoặc lời giải để AI dựng hình"})
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "error": "Vui lòng cung cấp nội dung đề bài hoặc lời giải để AI dựng hình"})
 		return
 	}
 
 	svg, err := services.GenerateGeometrySVG(req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo hình vẽ minh họa: " + err.Error()})
+		log.Printf("[Geometry Visualizer] Generation error: %v", err)
+
+		errMsg := "Chưa thể dựng hình vẽ minh họa tự động từ bài toán này."
+		errStr := strings.ToLower(err.Error())
+		if strings.Contains(errStr, "quota") || strings.Contains(errStr, "429") || strings.Contains(errStr, "resource_exhausted") {
+			errMsg = "Hệ thống AI đang tiếp nhận lượng yêu cầu lớn. Thầy cô vui lòng thử lại sau giây lát hoặc dán ảnh chụp từ GeoGebra."
+		} else if strings.Contains(errStr, "deadline") || strings.Contains(errStr, "timeout") {
+			errMsg = "Quá thời gian phản hồi từ máy chủ AI. Thầy cô vui lòng bấm 'Thử lại' hoặc bổ sung chỉ dẫn ngắn gọn."
+		} else if strings.Contains(errStr, "no points") || strings.Contains(errStr, "valid geometry model") {
+			errMsg = "AI chưa nhận diện đủ các đỉnh và đoạn thẳng của bài toán. Thầy cô vui lòng ghi rõ thêm hình dạng tại ô 'Chỉ dẫn bổ sung' (ví dụ: 'Tam giác ABC vuông tại A, đường cao AH')."
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "error",
+			"error":  errMsg,
+		})
 		return
 	}
 

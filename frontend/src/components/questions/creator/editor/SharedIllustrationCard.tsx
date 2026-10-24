@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
+import DOMPurify from 'dompurify'
 import {
   Shapes,
   Upload,
@@ -9,7 +10,8 @@ import {
   Copy,
   Check,
   X,
-  ClipboardPaste
+  ClipboardPaste,
+  AlertCircle
 } from 'lucide-react'
 import { uploadTempImage, refineGeometrySVG } from '@/lib/api'
 import { toast } from '@/components/ui/ToastProvider'
@@ -34,6 +36,7 @@ export default function SharedIllustrationCard({
   const [isAiGenerating, setIsAiGenerating] = useState(false)
   const [showAiModal, setShowAiModal] = useState(false)
   const [customPrompt, setCustomPrompt] = useState('')
+  const [aiError, setAiError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -155,11 +158,12 @@ export default function SharedIllustrationCard({
   // Handle AI Geometry Generation / Refinement
   const handleGenerateAiSvg = async () => {
     if (!questionContent.trim() && !solutionContent.trim() && !customPrompt.trim()) {
-      toast.error('Cần có nội dung đề bài hoặc lời giải để AI dựng hình vẽ!')
+      toast.error('Thầy cô vui lòng cung cấp nội dung đề bài hoặc lời giải để AI dựng hình vẽ!')
       return
     }
 
     setIsAiGenerating(true)
+    setAiError(null)
     try {
       const generatedSvg = await refineGeometrySVG({
         content: fullQuestionPreview || questionContent,
@@ -171,10 +175,13 @@ export default function SharedIllustrationCard({
       onUpdateDiagram(generatedSvg)
       setShowAiModal(false)
       setCustomPrompt('')
+      setAiError(null)
       toast.success('✨ Đã dựng hoàn chỉnh hình vẽ minh họa bài toán bằng AI!')
     } catch (err: any) {
       console.error('Lỗi khi AI dựng hình:', err)
-      toast.error(err?.message || 'Không thể tạo hình vẽ AI. Vui lòng thử lại!')
+      const errorMsg = err?.message || 'Chưa thể tạo hình vẽ AI. Thầy cô vui lòng kiểm tra lại chỉ dẫn hoặc dán ảnh chụp từ GeoGebra.'
+      setAiError(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsAiGenerating(false)
     }
@@ -196,11 +203,15 @@ export default function SharedIllustrationCard({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  // Chuẩn hóa hiển thị: nếu là chuỗi SVG thì encode data-uri, nếu là URL ảnh thì dùng trực tiếp
+  // Chuẩn hóa hiển thị: nếu là chuỗi SVG thì render trực tiếp an toàn, nếu là URL ảnh thì dùng thẻ img
   let imgSrc: string | null = null
   let isSvgDiagram = false
+  let rawSvgContent = ''
   if (diagramSvg && typeof diagramSvg === 'string' && diagramSvg.trim() !== '') {
     let cleanSvg = diagramSvg.trim()
+    if (cleanSvg === 'null' || cleanSvg === 'undefined' || cleanSvg === 'none' || cleanSvg === '[]' || cleanSvg === '{}') {
+      cleanSvg = ''
+    }
     // Hỗ trợ trường hợp AI bọc mã trong block ```xml ... ``` hoặc ```svg ... ```
     if (cleanSvg.includes('```')) {
       const match = cleanSvg.match(/```(?:xml|svg)?\s*([\s\S]*?)\s*```/i)
@@ -211,11 +222,14 @@ export default function SharedIllustrationCard({
     const svgStart = cleanSvg.indexOf('<svg')
     const svgEnd = cleanSvg.lastIndexOf('</svg>')
     if (svgStart !== -1 && svgEnd !== -1 && svgEnd >= svgStart) {
-      cleanSvg = cleanSvg.substring(svgStart, svgEnd + 6)
-      imgSrc = `data:image/svg+xml;utf8,${encodeURIComponent(cleanSvg)}`
+      rawSvgContent = cleanSvg.substring(svgStart, svgEnd + 6)
+      imgSrc = `data:image/svg+xml;utf8,${encodeURIComponent(rawSvgContent)}`
       isSvgDiagram = true
-    } else if (cleanSvg.startsWith('http') || cleanSvg.startsWith('/')) {
+    } else if (cleanSvg.startsWith('http://') || cleanSvg.startsWith('https://') || cleanSvg.startsWith('/') || cleanSvg.startsWith('data:image/')) {
       imgSrc = cleanSvg
+      isSvgDiagram = false
+    } else if (cleanSvg.startsWith('uploads/')) {
+      imgSrc = `/${cleanSvg}`
       isSvgDiagram = false
     }
   }
@@ -245,7 +259,10 @@ export default function SharedIllustrationCard({
           {imgSrc && (
             <button
               type="button"
-              onClick={() => setShowAiModal(true)}
+              onClick={() => {
+                setAiError(null)
+                setShowAiModal(true)
+              }}
               disabled={isAiGenerating}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer shadow-xs disabled:opacity-50"
               title="Sử dụng AI tính toán tọa độ và sửa hình vẽ"
@@ -316,12 +333,23 @@ export default function SharedIllustrationCard({
       <div className="p-6">
         {imgSrc ? (
           <div className="flex flex-col items-center justify-center">
-            <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 w-full flex flex-col items-center justify-center shadow-xs">
-              <img
-                src={imgSrc}
-                alt="Hình vẽ minh họa bài toán"
-                className="max-w-[520px] max-h-[380px] w-auto h-auto object-contain rounded-xl mx-auto shadow-xs bg-white p-2 border border-slate-200/60"
-              />
+            <div className="w-full flex flex-col items-center justify-center py-1">
+              {isSvgDiagram && rawSvgContent ? (
+                <div 
+                  data-testid="illustration-svg"
+                  className="w-full flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-[380px] [&>svg]:h-auto [&>svg]:w-auto [&>svg]:mx-auto [&>svg>rect:first-child]:fill-transparent [&>svg>rect:first-child]:stroke-none"
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(rawSvgContent) }} 
+                />
+              ) : (
+                <img
+                  src={imgSrc}
+                  alt="Hình vẽ minh họa bài toán"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                  className="max-w-[520px] max-h-[380px] w-auto h-auto object-contain mx-auto"
+                />
+              )}
             </div>
           </div>
         ) : (
@@ -340,6 +368,7 @@ export default function SharedIllustrationCard({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation()
+                  setAiError(null)
                   setShowAiModal(true)
                 }}
                 className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-amber-800 bg-amber-100/80 hover:bg-amber-200/80 rounded-xl transition-all shadow-xs cursor-pointer"
@@ -431,6 +460,29 @@ export default function SharedIllustrationCard({
                   className="w-full text-xs rounded-xl border border-slate-200 p-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-slate-400 resize-none font-sans"
                 />
               </div>
+
+              {/* In-Modal Alert Banner khi xảy ra lỗi */}
+              {aiError && (
+                <div className="bg-amber-50/95 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200 shadow-xs">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="font-bold text-amber-950 flex items-center gap-1.5">
+                      <span>{aiError}</span>
+                    </div>
+                    <div className="text-[11px] text-amber-800 leading-relaxed bg-white/70 p-2.5 rounded-lg border border-amber-200/60">
+                      💡 <strong>Gợi ý khắc phục:</strong> Thầy cô có thể nhập rõ thêm hình dạng và các đỉnh tại ô <em>"Chỉ dẫn bổ sung"</em> phía trên (ví dụ: <code>Đáy BC nằm ngang dài 8cm, đỉnh A(3, 6), kẻ AH vuông góc BC</code>), hoặc ấn <strong>Ctrl+V</strong> để dán trực tiếp ảnh chụp từ GeoGebra / sách bài tập.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAiError(null)}
+                    className="text-amber-500 hover:text-amber-700 p-1 rounded-lg hover:bg-amber-100/60 transition-colors cursor-pointer"
+                    title="Đóng thông báo"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Modal Actions */}

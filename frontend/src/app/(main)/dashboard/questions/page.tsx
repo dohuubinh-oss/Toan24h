@@ -10,6 +10,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { ChevronRight, Search, Plus, RefreshCw, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { getQuestions, deleteQuestion } from '@/lib/api';
+import { extractDiagramSvg } from '@/lib/diagram-utils';
 import { Question } from '@/types/question';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 export default function QuestionsPage() {
@@ -219,6 +220,11 @@ function QuestionsPageContent() {
                         </div>
                       )}
                       <ContentQuestion 
+                        type_question={q.type_question}
+                        diagram_svg={extractDiagramSvg(
+                          q.diagram_svg || (q as any).diagramSvg || (q.type_question === 'group' ? q.subQuestions?.[0]?.diagram_svg : null),
+                          q.solution_guide || (q.type_question === 'group' ? q.subQuestions?.[0]?.solution_guide : null)
+                        )}
                         content={q.type_question === 'single' && !(q as any).shared_content ? q.content : (q.type_question === 'single' ? q.content : undefined)}
                         sharedContext={q.type_question === 'group' || (q as any).shared_content ? ((q as any).shared_content || q.content) : undefined}
                         options={q.options?.length > 0 ? q.options : undefined}

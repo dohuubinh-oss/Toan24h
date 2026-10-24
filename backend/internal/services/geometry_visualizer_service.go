@@ -104,11 +104,12 @@ func GenerateGeometrySVG(req GeometryVisualizerRequest) (string, error) {
 	validModels := []string{
 		"gemini-3.8-flash",
 		"gemini-flash-latest",
+		"gemini-flash-lite-latest",
+		"gemini-2.5-flash",
+		"gemini-2.0-flash",
 		"gemini-3.7-flash",
 		"gemini-3.6-flash",
 		"gemini-3.5-flash",
-		"gemini-3.1-pro-preview",
-		"gemini-pro-latest",
 	}
 
 	candidateModels := []string{}
@@ -128,125 +129,115 @@ func GenerateGeometrySVG(req GeometryVisualizerRequest) (string, error) {
 		}
 	}
 
-	prompt := `Bạn là chuyên gia sư phạm toán học hình học và kỹ sư đồ họa vector SVG cấp cao (Senior Mathematical Geometry & SVG Visualizer Specialist).
-Nhiệm vụ của bạn: Dựa vào đề bài toán học, lời giải chi tiết và chỉ dẫn bổ sung của giáo viên (nếu có), hãy tạo ra DUY NHẤT MỘT HÌNH VẼ SVG HOÀN CHỈNH, CHUẨN XÁC 100% VỀ GIẢI TÍCH HÌNH HỌC, ĐẸP MẮT VÀ BAO QUÁT TOÀN BỘ BÀI TOÁN theo đúng chuẩn mực sách giáo khoa Toán học Việt Nam.
+	prompt := `Bạn là chuyên gia sư phạm toán học hình học và kỹ sư đồ họa vector cấp cao (Senior Mathematical Geometry Specialist).
+Nhiệm vụ của bạn: Đọc kỹ ĐỀ BÀI và LỜI GIẢI CHI TIẾT (cùng chỉ dẫn bổ sung của giáo viên nếu có), hãy xây dựng MÔ HÌNH HÌNH HỌC CARTESIAN OXY (GeometryModel JSON) CHUẨN XÁC 100% VỀ GIẢI TÍCH TOÁN HỌC để phục vụ việc hiểu đề bài và các bước giải theo sách giáo khoa Toán học Việt Nam.
+
+Engine nội bộ của hệ thống sẽ tự động chuyển đổi mô hình Oxy của bạn thành hình vẽ vector SVG, căn giữa khung hình, tính Bounding Box, vẽ ký hiệu góc vuông, chấm điểm và gắn nhãn chữ cái tự động.
 
 ══════════════════════════════════════════════════════════════════════════
-★ QUY TẮC DỰNG HÌNH: PHƯƠNG PHÁP ĐỘ LỆCH SỐ NGUYÊN (LOCAL DELTA Oxy)
+★ QUY TẮC BẮT BUỘC VỀ HỆ TỌA ĐỘ DESCARTES OXY (TOÁN HỌC PHỔ THÔNG)
 ══════════════════════════════════════════════════════════════════════════
-Để dựng hình chuẩn mực sách giáo khoa mà KHÔNG BAO GIỜ bị tính nhầm tọa độ hay méo hình:
-1. KHUNG VẼ VÀ GỐC TỌA ĐỘ CỐ ĐỊNH TRÊN SVG 600 x 500:
-   - Với hình học phẳng (tam giác, tứ giác): Chọn GỐC TỌA ĐỘ O_gốc = (140, 400) ở góc dưới bên trái.
-   - Với hình tròn / hình đối xứng: Chọn GỐC TỌA ĐỘ O_gốc = (300, 250) ở chính giữa khung vẽ.
-   - Hệ số tỉ lệ chuẩn: k = 40 (nghĩa là 1 đơn vị toán học = 40 pixel trên màn hình).
+1. Mọi điểm M được biểu diễn bằng cặp số thực [x, y] trong mặt phẳng Oxy:
+   - Trục hoành Ox hướng SANG PHẢI (x tăng).
+   - Trục tung Oy hướng LÊN TRÊN (y tăng, chuẩn toán học, KHÔNG PHẢI tọa độ màn hình).
+   - Đặt tọa độ trong khoảng số đẹp từ 0 đến 10 để hình vẽ cân đối.
 
-2. CÔNG THỨC DUY NHẤT ĐỂ TÍNH TỌA ĐỘ MỌI ĐIỂM M(x, y) TRONG Oxy:
-   Mọi điểm M(x, y) trong hệ Descartes Oxy (y hướng lên trên) được chuyển thành tọa độ SVG như sau:
-   👉 X_svg = X_gốc + 40 * x    (Đi sang phải x đơn vị thì CỘNG vào X)
-   👉 Y_svg = Y_gốc - 40 * y    (Đi LÊN TRÊN y đơn vị thì TRỪ đi ở Y)
-
-3. CÁC MẪU HÌNH HỌC KINH ĐIỂN THEO CHUẨN ĐỘ LỆCH SỐ NGUYÊN:
-
-   ➤ MẪU 1: TAM GIÁC VUÔNG TẠI A (ĐẶC BIỆT LƯU Ý - GÓC VUÔNG BẮT BUỘC Ở ĐỈNH A):
-     - Đặt đỉnh vuông A ngay tại gốc: A = (140, 400) [tương ứng A(0, 0)].
-     - Cạnh góc vuông AC nằm ngang sang phải 8 đơn vị:
-       C = (140 + 40*8, 400) = (460, 400).
-     - Cạnh góc vuông AB thẳng đứng HƯỚNG LÊN TRÊN 6 đơn vị:
-       B = (140, 400 - 40*6) = (140, 160).
-     - Cạnh huyền BC là đường chéo nối B(140, 160) với C(460, 400).
-     - Ký hiệu góc vuông tại A:
-       <path d="M 140 380 L 160 380 L 160 400" fill="none" stroke="#0f172a" stroke-width="1.5"/>
-     => GÓC VUÔNG CHẮC CHẮN 100% NẰM Ở ĐỈNH A! Nhãn A ở góc vuông, B ở trên cao, C ở bên phải!
-
-   ➤ MẪU 2: TAM GIÁC VUÔNG CÓ ĐƯỜNG CAO AH HẠ XUỐNG CẠNH HUYỀN BC NẰM NGANG Ở ĐÁY:
-     - Gốc O_gốc = (300, 400) là trung điểm cạnh huyền BC. Bán kính nửa đường tròn R = 200.
-     - Đỉnh B ở bên trái: B = (300 - 200, 400) = (100, 400).
-     - Đỉnh C ở bên phải: C = (300 + 200, 400) = (500, 400).
-     - Đỉnh vuông A ở trên cao: Chọn lệch sang trái 100px => A = (200, 227).
-       (Vì 200^2 - 100^2 = 30000 => sqrt(30000) ≈ 173 => 400 - 173 = 227).
-     - Chân đường cao AH: H = (200, 400). Đoạn AH thẳng đứng nối từ A(200, 227) xuống H(200, 400).
-     - Ký hiệu góc vuông chân đường cao H:
-       <path d="M 186 400 L 186 386 L 200 386" fill="none" stroke="#0f172a" stroke-width="1.5"/>
-
-   ➤ MẪU 3: ĐƯỜNG TRÒN TÂM O VÀ TAM GIÁC NỘI TIẾP / TIẾP TUYẾN:
-     - Tâm đường tròn: O = (300, 250), bán kính R = 140.
-     - Tọa độ điểm M trên đường tròn góc alpha (alpha tính theo độ ngược chiều kim đồng hồ):
-       X_M = 300 + 140 * cos(alpha)
-       Y_M = 250 - 140 * sin(alpha)   (trừ sin để góc quay ngược chiều kim đồng hồ chuẩn toán học).
-     - Tiếp tuyến tại M: Tiếp tuyến vuông góc với bán kính OM tại điểm M.
-
-   ➤ MẪU 4: HÌNH HỌC KHÔNG GIAN (Hình chóp S.ABC, S.ABCD, lăng trụ...):
-     - Mặt đáy vẽ dạng phối cảnh hình bình hành.
-     - Nét khuất (cạnh bị che lấp ở mặt sau hoặc bên trong): BẮT BUỘC vẽ nét đứt (stroke-dasharray="5,4").
-     - Nét thấy: Vẽ nét liền.
+2. PHÂN BIỆT RÕ RÀNG GIỮA "NÉT VẼ ĐỀ BÀI" VÀ "NÉT VẼ LỜI GIẢI":
+   - Các điểm và đoạn thẳng thuộc ĐỀ BÀI GỐC:
+     👉 BẮT BUỘC đặt "style": "solid", "color": "#0f172a" (nét liền màu xanh than).
+   - Các điểm phụ và đường dựng thêm trong LỜI GIẢI (như kẻ đường cao, phân giác, nối trung điểm, kẻ tiếp tuyến...):
+     👉 BẮT BUỘC đặt "style": "dashed", "color": "#2563eb" (nét đứt màu xanh dương hoàng gia).
+     Giúp học sinh và giáo viên nhìn vào hình nhận biết ngay đâu là giả thiết đề bài, đâu là đường phụ do lời giải vẽ thêm!
+   - Đoạn thẳng có độ dài cho trước trong đề (ví dụ 6 cm, 8 cm, a):
+     👉 Đặt thêm trường "label": "6 cm" (nếu có).
 
 ══════════════════════════════════════════════════════════════════════════
-★ QUY TẮC HIỂN THỊ HỆ TRỤC Oxy
+★ CẨM NANG CÔNG THỨC TỌA ĐỘ TOÁN HỌC KINH ĐIỂN (CHUẨN 100% TUYỆT ĐỐI)
 ══════════════════════════════════════════════════════════════════════════
-1. VỚI BÀI TOÁN HÌNH HỌC PHẲNG / KHÔNG GIAN THUẦN TÚY (Tam giác, tứ giác, đường tròn, hình chóp...):
-   - KHÔNG VẼ TRỤC TỌA ĐỘ Ox, Oy LÊN HÌNH. Hệ trục Oxy chỉ dùng trong pha tư duy toán học để tính tọa độ.
-   - Giữ hình vẽ sạch sẽ, trực quan theo đúng quy chuẩn sách giáo khoa Toán học.
-2. VỚI BÀI TOÁN ĐỒ THỊ / TỌA ĐỘ Oxy (Đại số 9, 10, 11, 12, Parabol, hàm số bậc nhất, tọa độ Vectơ Oxy):
-   - BẮT BUỘC vẽ đầy đủ 2 trục Ox, Oy có mũi tên nhọn ở đầu trục, nhãn chữ 'x', 'y', gốc 'O', và các vạch chia đơn vị (ticks).
+Hãy áp dụng chính xác các công thức giải tích tọa độ sau đây để hình vẽ không bao giờ bị sai hay lệch:
+
+➤ 1. TAM GIÁC VUÔNG TẠI A (AB = c, AC = b):
+   - Đỉnh vuông A đặt tại gốc: A = [0, 0]
+   - Cạnh góc vuông AC nằm ngang sang phải: C = [b, 0] (ví dụ AC = 8 => C = [8, 0])
+   - Cạnh góc vuông AB thẳng đứng lên trên: B = [0, c] (ví dụ AB = 6 => B = [0, 6])
+   - Cạnh huyền BC nối B và C.
+   - Góc vuông tại A: {"vertex": "A", "arm1": "B", "arm2": "C"}
+   - CHÂN ĐƯỜNG CAO AH HẠ TỪ A XUỐNG CẠNH HUYỀN BC:
+     Tọa độ điểm H trên đoạn BC tính theo công thức hình chiếu chuẩn xác:
+     x_H = (b * c^2) / (b^2 + c^2)
+     y_H = (b^2 * c) / (b^2 + c^2)
+     Ví dụ: b = 8, c = 6 => b^2 + c^2 = 100 => x_H = 8*36/100 = 2.88, y_H = 64*6/100 = 3.84
+     => H = [2.88, 3.84] (TUYỆT ĐỐI KHÔNG ĐỂ H = [0, 0]!)
+     Góc vuông tại H: {"vertex": "H", "arm1": "A", "arm2": "C"}
+   - TRUNG ĐIỂM M CỦA CẠNH HUYỀN BC: M = [b/2, c/2] = [4, 3]
+
+➤ 2. TAM GIÁC NHỌN ABC (Cạnh đáy BC nằm ngang):
+   - Đỉnh B = [0, 0]
+   - Đỉnh C = [8, 0]
+   - Đỉnh A = [2.5, 6] (chọn đỉnh cao 6 đơn vị, lệch nhẹ sang trái tạo tam giác nhọn đẹp)
+   - Đường cao AH hạ xuống BC: H = [2.5, 0] (cùng hoành độ với A, tung độ = 0 trên BC)
+     Góc vuông tại H: {"vertex": "H", "arm1": "A", "arm2": "C"}
+   - Trung điểm M của BC: M = [4, 0]
+
+➤ 3. ĐƯỜNG TRÒN TÂM O VÀ TIẾP TUYẾN / CÁT TUYẾN:
+   - Tâm đường tròn: O = [0, 0], bán kính R = 3: {"center": "O", "radius": 3, "style": "solid"}
+   - Điểm M nằm ngoài đường tròn: M = [6, 0] (cách tâm d = 6)
+   - Hai tiếp điểm A, B của tiếp tuyến MA, MB kẻ từ M:
+     cos(alpha) = R / d = 3 / 6 = 0.5 => alpha = 60 độ
+     A = [R * cos(60°), R * sin(60°)] = [3 * 0.5, 3 * 0.866] = [1.5, 2.6]
+     B = [R * cos(-60°), R * sin(-60°)] = [1.5, -2.6]
+     Tiếp tuyến MA, MB nối từ M(6, 0) đến A và B.
+     Góc vuông tiếp tuyến: {"vertex": "A", "arm1": "M", "arm2": "O"} và {"vertex": "B", "arm1": "M", "arm2": "O"}
+
+➤ 4. TAM GIÁC ABC NỘI TIẾP ĐƯỜNG TRÒN TÂM O:
+   - Tâm O = [0, 0], bán kính R = 4: {"center": "O", "radius": 4, "style": "solid"}
+   - Đỉnh A ở trên cao nhất: A = [0, 4]
+   - Đỉnh B ở góc 210°: B = [-3.46, -2]
+   - Đỉnh C ở góc 330°: C = [3.46, -2]
+   - Cạnh đáy BC nằm ngang y = -2, tam giác ABC cân hoặc nhọn nội tiếp đẹp chuẩn mực.
+
+➤ 5. TỨ GIÁC, HÌNH THANG, HÌNH BÌNH HÀNH:
+   - Hình chữ nhật: A = [0, 0], B = [8, 0], C = [8, 5], D = [0, 5]
+   - Hình bình hành: A = [0, 0], B = [7, 0], C = [9, 4], D = [2, 4]
+   - Hình thang vuông tại A và D: A = [0, 0], D = [0, 4], C = [5, 4], B = [8, 0]
+
+➤ 6. HÌNH HỌC KHÔNG GIAN 3D (Hình chóp S.ABC, S.ABCD):
+   - Đáy hình bình hành vẽ phối cảnh nghiêng:
+     A = [1, 1], B = [6, 1], C = [8, 3], D = [3, 3]
+   - Cạnh khuất (bên trong/sau): AD, CD, SA đặt "style": "dashed", "color": "#64748b"
+   - Cạnh thấy: AB, BC, SB, SC, SD đặt "style": "solid"
+   - Đỉnh chóp S ở trên cao: S = [3, 7]
 
 ══════════════════════════════════════════════════════════════════════════
-★ QUY TẮC ƯU TIÊN TUYỆT ĐỐI CHO "CHỈ DẪN BỔ SUNG CỦA GIÁO VIÊN"
+★ ĐỊNH DẠNG ĐẦU RA JSON BẮT BUỘC (OUTPUT SCHEMA)
 ══════════════════════════════════════════════════════════════════════════
-- Khi giáo viên nói "hình vẽ sai rồi", "sai rồi", "vẽ lại", hoặc chỉ ra lỗi sai:
-  + ĐÂY LÀ MỆNH LỆNH SỬA SAI ƯU TIÊN CAO NHẤT.
-  + HỦY BỎ HOÀN TOÀN hệ tọa độ cũ. Mã SVG cũ chỉ là tham khảo lỗi sai để tránh lặp lại.
-  + Dừng lại, áp dụng lại QUY TRÌNH 2 PHA (Descartes Oxy -> Ánh xạ SVG) từ đầu thật cẩn thận để khắc phục triệt để lỗi giáo viên đã chỉ ra.
-
-══════════════════════════════════════════════════════════════════════════
-★ THỨ BẬC NÉT VẼ, KÝ HIỆU SƯ PHẠM VÀ NHÃN CHỮ
-══════════════════════════════════════════════════════════════════════════
-1. Thứ bậc nét vẽ:
-   - Hình gốc của đề bài: Nét liền màu xanh than (#0f172a), stroke-width="2.5", fill="none".
-   - TẤT CẢ đường phụ / đường dựng thêm của lời giải: Nét đứt (stroke-dasharray="6,4") màu xanh dương hoàng gia (#2563eb) hoặc xanh ngọc (#059669), stroke-width="2".
-   - Hình không gian: Nét khuất (bị che lấp bên trong/sau) BẮT BUỘC vẽ nét đứt (stroke-dasharray="5,4").
-2. Ký hiệu góc vuông (~14x14px): BẮT BUỘC vẽ tại tất cả các góc vuông bằng thẻ <path ... />.
-3. Điểm: Mỗi điểm vẽ <circle cx="..." cy="..." r="3.5" fill="#0f172a"/>.
-4. Nhãn chữ cái: Sử dụng thẻ <text x="..." y="..." font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="bold" fill="#0f172a" text-anchor="...">A</text>.
-   Đặt nhãn cách điểm 12-15px về phía ngoài góc đa giác để không đè lên nét vẽ.
-
-══════════════════════════════════════════════════════════════════════════
-★ ĐỊNH DẠNG ĐẦU RA (OUTPUT FORMAT) - HỖ TRỢ 2 HÌNH THỨC
-══════════════════════════════════════════════════════════════════════════
-Bạn hãy trả về DUY NHẤT một đối tượng JSON thuộc một trong hai hình thức sau (ƯU TIÊN HÌNH THỨC 1):
-
-👉 HÌNH THỨC 1 (KHUYẾN NGHỊ CAO NHẤT - MÔ HÌNH HÌNH HỌC OXY CHUẨN XÁC 100%):
-Khai báo trực tiếp các điểm theo hệ tọa độ Oxy chuẩn toán học phổ thông (y hướng lên trên), Engine nội bộ của hệ thống sẽ tự động chuyển đổi sang SVG, căn giữa, tính Bounding Box và vẽ ký hiệu góc vuông tự động:
+Bạn hãy trả về DUY NHẤT một chuỗi JSON thuần tuý (không bọc markdown, không thêm bất kỳ văn bản nào ngoài JSON) theo đúng cấu trúc sau:
 {
   "points": {
     "A": [0, 0],
     "B": [0, 6],
     "C": [8, 0],
-    "H": [0, 0]
+    "H": [2.88, 3.84]
   },
   "segments": [
-    {"from": "A", "to": "B", "style": "solid"},
+    {"from": "A", "to": "B", "style": "solid", "label": "6 cm"},
     {"from": "B", "to": "C", "style": "solid"},
-    {"from": "C", "to": "A", "style": "solid"},
+    {"from": "C", "to": "A", "style": "solid", "label": "8 cm"},
     {"from": "A", "to": "H", "style": "dashed", "color": "#2563eb"}
   ],
   "right_angles": [
-    {"vertex": "A", "arm1": "B", "arm2": "C"}
+    {"vertex": "A", "arm1": "B", "arm2": "C"},
+    {"vertex": "H", "arm1": "A", "arm2": "C"}
   ],
-  "circles": [
-    {"center": "O", "radius": 4, "style": "solid"}
-  ],
+  "circles": [],
   "directions": {
     "A": "bottom-left",
     "B": "top",
-    "C": "bottom-right"
+    "C": "bottom-right",
+    "H": "top-right"
   },
   "show_axes": false
-}
-
-👉 HÌNH THỨC 2: Trả về trực tiếp chuỗi SVG hoàn chỉnh:
-{"diagram_svg": "<svg viewBox=\"0 0 600 500\" width=\"100%\" height=\"auto\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"600\" height=\"500\" fill=\"#ffffff\" rx=\"12\"/>...</svg>"}
-
-- Tuyệt đối không bọc markdown hay thêm bất kỳ chữ nào ngoài chuỗi JSON.`
+}`
 
 	contextText := BuildGeometryContext(req)
 
@@ -272,7 +263,7 @@ Khai báo trực tiếp các điểm theo hệ tọa độ Oxy chuẩn toán h�
 		return "", fmt.Errorf("failed to marshal geometry request: %w", err)
 	}
 
-	client := &http.Client{Timeout: 60 * time.Second}
+	client := &http.Client{Timeout: 15 * time.Second}
 	var lastErr error
 
 	for _, currentModel := range candidateModels {

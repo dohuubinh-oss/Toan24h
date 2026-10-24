@@ -9,7 +9,7 @@ import ConfirmDeleteOrphanModal, { OrphanQuestion } from '@/components/exams/Con
 import { Grid, UploadCloud } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Exam } from '@/types/exam'
-import { validateExamConfig, calculateExamDifficulty } from '@/lib/exam-utils'
+import { validateExamConfig, calculateExamDifficulty, sortExamQuestions } from '@/lib/exam-utils'
 import { toast } from '@/components/ui/ToastProvider'
 import { apiFetch } from '@/lib/api'
 
@@ -70,7 +70,8 @@ function CreateExamPageContent() {
             if (ids.length > 0) {
               getQuestions(1, 1000, { ids }).then(res => {
                 if (res.data) {
-                  setExam(prev => ({ ...prev, questions: res.data }));
+                  const sorted = sortExamQuestions(res.data);
+                  setExam(prev => ({ ...prev, questions: sorted }));
                 }
               }).catch(err => console.error("Failed to fetch questions for exam:", err));
             }
@@ -83,7 +84,8 @@ function CreateExamPageContent() {
         import('@/lib/api').then(({ getQuestions }) => {
           getQuestions(1, 1000, { ids }).then(res => {
             if (res.data) {
-              setExam(prev => ({ ...prev, questions: res.data }));
+              const sorted = sortExamQuestions(res.data);
+              setExam(prev => ({ ...prev, questions: sorted }));
             }
           }).catch(err => console.error("Failed to fetch questions for exam:", err));
         });
@@ -175,8 +177,9 @@ function CreateExamPageContent() {
     }
 
     const getExamPayload = () => {
-      const { diffScore } = calculateExamDifficulty(exam.questions);
-      const questionIds = exam.questions.map(q => q.id).filter(Boolean);
+      const sortedQuestions = sortExamQuestions(exam.questions);
+      const { diffScore } = calculateExamDifficulty(sortedQuestions);
+      const questionIds = sortedQuestions.map(q => q.id).filter(Boolean);
       return {
         payload: {
           title: exam.title,
@@ -224,8 +227,9 @@ function CreateExamPageContent() {
 
   const handleConfirmDeleteOrphans = async (selectedIds: string[]) => {
     setShowOrphanModal(false);
-    const { diffScore } = calculateExamDifficulty(exam.questions);
-    const questionIds = exam.questions.map(q => q.id).filter(Boolean);
+    const sortedQuestions = sortExamQuestions(exam.questions);
+    const { diffScore } = calculateExamDifficulty(sortedQuestions);
+    const questionIds = sortedQuestions.map(q => q.id).filter(Boolean);
     await executeSave({
       title: exam.title,
       examCode: exam.examCode,
@@ -241,8 +245,9 @@ function CreateExamPageContent() {
 
   const handleKeepOrphans = async () => {
     setShowOrphanModal(false);
-    const { diffScore } = calculateExamDifficulty(exam.questions);
-    const questionIds = exam.questions.map(q => q.id).filter(Boolean);
+    const sortedQuestions = sortExamQuestions(exam.questions);
+    const { diffScore } = calculateExamDifficulty(sortedQuestions);
+    const questionIds = sortedQuestions.map(q => q.id).filter(Boolean);
     await executeSave({
       title: exam.title,
       examCode: exam.examCode,

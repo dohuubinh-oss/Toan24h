@@ -82,11 +82,13 @@ type QuestionDetail struct {
 	QuickSolveTips  string   `json:"quick_solve_tips"`
 	GeneralMethod   string   `json:"general_method"`
 	Mistakes        string   `json:"mistakes"`
+	DiagramSvg      string   `json:"diagram_svg"`
 }
 
 // QuestionGroup DTO cho nhóm câu hỏi
 type QuestionGroup struct {
 	SharedContent *string          `json:"shared_content"`
+	DiagramSvg    string           `json:"diagram_svg"`
 	TypeQuestion  string           `json:"type_question"`
 	IsGroup       bool             `json:"is_group"`
 	Point         float32          `json:"point"`
@@ -95,11 +97,18 @@ type QuestionGroup struct {
 
 // processImageUrl checks if an image is in the temp folder, moves it to the final folder, and returns the new URL
 func processImageUrl(originalUrl string, grade int) string {
-	if !strings.HasPrefix(originalUrl, "/uploads/temp/") {
+	if originalUrl == "" {
+		return ""
+	}
+	cleanUrl := strings.TrimSpace(originalUrl)
+	if strings.HasPrefix(cleanUrl, "uploads/temp/") {
+		cleanUrl = "/" + cleanUrl
+	}
+	if !strings.HasPrefix(cleanUrl, "/uploads/temp/") {
 		return originalUrl
 	}
 
-	rawFileName := strings.TrimPrefix(originalUrl, "/uploads/temp/")
+	rawFileName := strings.TrimPrefix(cleanUrl, "/uploads/temp/")
 	// Sanitize fileName using filepath.Base to prevent path traversal (e.g., ../)
 	fileName := filepath.Base(rawFileName)
 	if fileName == "." || fileName == "/" || fileName == ".." {
@@ -110,6 +119,9 @@ func processImageUrl(originalUrl string, grade int) string {
 
 	// Thư mục đích: uploads/questions/{grade}
 	folderName := fmt.Sprintf("%d", grade)
+	if grade <= 0 {
+		folderName = "9"
+	}
 	finalDir := filepath.Join(".", "uploads", "questions", folderName)
 
 	if err := os.MkdirAll(finalDir, os.ModePerm); err != nil {
@@ -201,9 +213,20 @@ func BulkCreateQuestions(c *gin.Context) {
 			if group.Point > 0 {
 				groupPoint = group.Point
 			}
+			groupDiagram := group.DiagramSvg
+			if groupDiagram == "" && len(group.Questions) > 0 {
+				groupDiagram = group.Questions[0].DiagramSvg
+			}
+			groupGrade := 9
+			if len(group.Questions) > 0 && group.Questions[0].Grade > 0 {
+				groupGrade = group.Questions[0].Grade
+			}
+			groupDiagram = processImageUrl(groupDiagram, groupGrade)
+
 			parentQ := models.Question{
 				TypeQuestion: "group",
-				Content:      processHtmlImages(sharedText, group.Questions[0].Grade), // Dùng grade của câu hỏi đầu tiên
+				Content:      processHtmlImages(sharedText, groupGrade),
+				DiagramSvg:   groupDiagram,
 				Point:        groupPoint,
 				Tags:         "[]",
 				Options:      "[]",
@@ -247,6 +270,21 @@ func BulkCreateQuestions(c *gin.Context) {
 			}
 			processedShortAnswer := processHtmlImages(resolvedShortAnswer, detail.Grade)
 
+			childDiagram := detail.DiagramSvg
+			if childDiagram == "" && !isGroup && group.DiagramSvg != "" {
+				childDiagram = group.DiagramSvg
+			}
+			if isGroup {
+				// Với câu hỏi chùm, câu hỏi con tuyệt đối không lưu hình minh họa riêng
+				childDiagram = ""
+			} else {
+				childGrade := detail.Grade
+				if childGrade <= 0 {
+					childGrade = 9
+				}
+				childDiagram = processImageUrl(childDiagram, childGrade)
+			}
+
 			childQ := models.Question{
 				ParentID:        parentID,
 				GgDrive:         driveVal,
@@ -254,6 +292,7 @@ func BulkCreateQuestions(c *gin.Context) {
 				Cate:            cate,
 				TypeQuestion:    "single",
 				Content:         processHtmlImages(detail.Content, detail.Grade),
+				DiagramSvg:      childDiagram,
 				Type:            detail.Type,
 				Grade:           detail.Grade,
 				Topic:           detail.Topic,
@@ -456,17 +495,46 @@ func UpdateQuestion(c *gin.Context) {
 
 	// Update SubQuestions if it's a group question
 	if updateData.TypeQuestion == "group" {
-		// Ensure all subquestions have the ParentID set correctly
+		targetGrade := updateData.Grade
+		if targetGrade <= 0 && len(updateData.SubQuestions) > 0 {
+			targetGrade = updateData.SubQuestions[0].Grade
+		}
+		if targetGrade <= 0 {
+			targetGrade = 9
+		}
+		updateData.DiagramSvg = processImageUrl(updateData.DiagramSvg, targetGrade)
+		updateData.Content = processHtmlImages(updateData.Content, targetGrade)
+
+		// Ensure all subquestions have the ParentID set correctly and do not have individual diagram
 		for i := range updateData.SubQuestions {
 			updateData.SubQuestions[i].ParentID = &q.ID
+			subGrade := updateData.SubQuestions[i].Grade
+			if subGrade <= 0 {
+				subGrade = targetGrade
+			}
+			updateData.SubQuestions[i].DiagramSvg = ""
+			updateData.SubQuestions[i].Content = processHtmlImages(updateData.SubQuestions[i].Content, subGrade)
+			updateData.SubQuestions[i].CorrectAnswer = processHtmlImages(updateData.SubQuestions[i].CorrectAnswer, subGrade)
+			updateData.SubQuestions[i].SolutionGuide = processHtmlImages(updateData.SubQuestions[i].SolutionGuide, subGrade)
 		}
 		if err := config.DB.Model(&q).Association("SubQuestions").Replace(updateData.SubQuestions); err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: "Failed to sync subquestions"})
 			return
 		}
-	} else if q.TypeQuestion == "group" && updateData.TypeQuestion != "group" {
-		// If changed from group to single, clear subquestions
-		config.DB.Model(&q).Association("SubQuestions").Clear()
+	} else {
+		targetGrade := updateData.Grade
+		if targetGrade <= 0 {
+			targetGrade = 9
+		}
+		updateData.DiagramSvg = processImageUrl(updateData.DiagramSvg, targetGrade)
+		updateData.Content = processHtmlImages(updateData.Content, targetGrade)
+		updateData.CorrectAnswer = processHtmlImages(updateData.CorrectAnswer, targetGrade)
+		updateData.SolutionGuide = processHtmlImages(updateData.SolutionGuide, targetGrade)
+
+		if q.TypeQuestion == "group" && updateData.TypeQuestion != "group" {
+			// If changed from group to single, clear subquestions
+			config.DB.Model(&q).Association("SubQuestions").Clear()
+		}
 	}
 
 	// Preserve crucial fields
@@ -523,6 +591,9 @@ func DeleteQuestion(c *gin.Context) {
 			q.Content, q.Options, q.SolutionGuide, q.Hint,
 			q.ShortAnswer, q.QuickSolveTips, q.GeneralMethod, q.Mistakes,
 		)
+		if strings.HasPrefix(q.DiagramSvg, "/uploads/questions/") {
+			imgs = append(imgs, q.DiagramSvg)
+		}
 		candidateImages = append(candidateImages, imgs...)
 	}
 

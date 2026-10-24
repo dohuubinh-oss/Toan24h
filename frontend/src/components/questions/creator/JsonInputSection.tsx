@@ -7,6 +7,7 @@ import {
   formatSolutionGuide,
   ensureMathDelimiters
 } from './utils/questionTextFormatter'
+import { extractDiagramSvg } from '@/lib/diagram-utils'
 
 interface JsonInputSectionProps {
   onProcessJson?: (blocks: QuestionBlock[]) => void;
@@ -182,23 +183,39 @@ export default function JsonInputSection({
     
     const processedBlocks = parsed.map(block => {
       const hasShared = block.shared_content !== null && block.shared_content !== undefined && block.shared_content.trim() !== '';
-      const questionsList = block.questions || [];
+      const rawQuestions = block.questions || (block as any).questionList;
+      const questionsList = (Array.isArray(rawQuestions) && rawQuestions.length > 0)
+        ? rawQuestions
+        : ((block as any).content ? [block as unknown as Question] : []);
       const isGroup = (block.is_group === true || 
         block.type_question?.toLowerCase() === 'group' ||
-        block.questions?.some(q => q.type_question?.toString().toLowerCase() === 'group') ||
+        questionsList.some(q => q.type_question?.toString().toLowerCase() === 'group') ||
         hasShared) && questionsList.length > 1;
 
       const formattedShared = hasShared ? formatTextToHtml(block.shared_content) : null;
       const groupPoint = isGroup ? (block.point || questionsList.length || 1) : (block.point || 1);
 
+      const blockDiagram = extractDiagramSvg(
+        block.diagram_svg || (block as any).diagramSvg || questionsList[0]?.diagram_svg || (questionsList[0] as any)?.diagramSvg,
+        (questionsList[0] as any)?.solution_guide
+      );
+
       return {
         ...block,
         shared_content: formattedShared,
+        diagram_svg: blockDiagram,
         type_question: (isGroup ? 'group' : 'single') as 'group' | 'single',
         is_group: isGroup,
         point: groupPoint,
         questions: questionsList.map(q => {
           const processedQ = { ...q };
+
+          // Chuẩn hóa diagram_svg: Câu hỏi đơn có 1 ảnh, câu hỏi chùm chỉ có 1 ảnh bao quát ở block (câu con không có ảnh riêng)
+          const qDiagram = extractDiagramSvg(
+            processedQ.diagram_svg || (processedQ as any).diagramSvg,
+            processedQ.solution_guide
+          );
+          processedQ.diagram_svg = isGroup ? null : (qDiagram || blockDiagram);
 
           // Chuẩn hóa type_question
           processedQ.type_question = isGroup ? 'group' : 'single';

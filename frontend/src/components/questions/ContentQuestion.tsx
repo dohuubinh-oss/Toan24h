@@ -1,9 +1,12 @@
 import React from 'react';
 import { CheckCircle } from 'lucide-react';
+import DOMPurify from 'isomorphic-dompurify';
 import MathText from '../ui/MathText';
 
 export interface SubQuestion {
   content: string;
+  diagram_svg?: string | null;
+  diagramSvg?: string | null;
   options?: string[];
   correctAnswer?: string;
   solution?: string;
@@ -14,6 +17,9 @@ interface ContentQuestionProps {
   sharedContext?: string | null;
   shared_content?: string | null;
   sharedContent?: string | null;
+  diagram_svg?: string | null;
+  diagramSvg?: string | null;
+  type_question?: 'group' | 'single' | string;
   
   // Single Question Props
   content?: string;
@@ -35,6 +41,9 @@ export default function ContentQuestion({
   sharedContext,
   shared_content,
   sharedContent,
+  diagram_svg,
+  diagramSvg,
+  type_question,
   content,
   options,
   correctAnswer,
@@ -46,6 +55,72 @@ export default function ContentQuestion({
   showCorrectBadge = true
 }: ContentQuestionProps) {
   const effectiveSharedContext = sharedContext || shared_content || sharedContent;
+  const effectiveDiagram = diagram_svg || diagramSvg;
+  const isGroupQuestion = (subQuestions && subQuestions.length > 0) || type_question === 'group' || Boolean(effectiveSharedContext);
+
+  const renderIllustration = (diagram?: string | null) => {
+    if (!diagram || typeof diagram !== 'string') return null;
+    const trimmed = diagram.trim();
+    if (!trimmed || trimmed === 'null' || trimmed === 'undefined' || trimmed === 'none' || trimmed === '[]' || trimmed === '{}') {
+      return null;
+    }
+
+    let clean = trimmed;
+    if (clean.includes('```')) {
+      const match = clean.match(/```(?:xml|svg)?\s*([\s\S]*?)\s*```/i);
+      if (match && match[1]) {
+        clean = match[1].trim();
+      }
+    }
+    const svgStart = clean.indexOf('<svg');
+    const svgEnd = clean.lastIndexOf('</svg>');
+    const isSvg = svgStart !== -1 && svgEnd !== -1 && svgEnd >= svgStart;
+
+    // Nếu không phải SVG, kiểm tra xem có phải URL ảnh hợp lệ không
+    const isImageUrl = !isSvg && (
+      clean.startsWith('http://') || 
+      clean.startsWith('https://') || 
+      clean.startsWith('/') || 
+      clean.startsWith('uploads/') || 
+      clean.startsWith('data:image/')
+    );
+
+    // Tuyệt đối không render nếu không phải SVG và không phải URL ảnh hợp lệ
+    if (!isSvg && !isImageUrl) {
+      return null;
+    }
+
+    const finalSvg = isSvg ? clean.substring(svgStart, svgEnd + 6) : '';
+    
+    let imgSrc = clean;
+    if (!isSvg && clean.startsWith('uploads/')) {
+      imgSrc = `/${clean}`;
+    }
+
+    return (
+      <div className="my-3 flex justify-center" data-testid="question-illustration">
+        <div className="max-w-[540px] w-full flex items-center justify-center overflow-hidden py-1">
+          {isSvg ? (
+            <div 
+              className="w-full flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-[380px] [&>svg]:h-auto [&>svg]:w-auto [&>svg]:mx-auto [&>svg>rect:first-child]:fill-transparent [&>svg>rect:first-child]:stroke-none"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(finalSvg) }} 
+            />
+          ) : (
+            <img 
+              src={imgSrc} 
+              alt="Hình vẽ minh họa bài toán" 
+              onError={(e) => {
+                // Tự động ẩn container nếu ảnh bị lỗi 404
+                const container = e.currentTarget.closest('[data-testid="question-illustration"]');
+                if (container) (container as HTMLElement).style.display = 'none';
+              }}
+              className="max-w-full max-h-[380px] h-auto w-auto object-contain mx-auto"
+            />
+          )}
+        </div>
+      </div>
+    );
+  };
   
   // Helper to render a single question's body (either standalone or sub-question)
   const renderQuestionBody = (
@@ -128,11 +203,25 @@ export default function ContentQuestion({
 
   return (
     <>
+      {/* Hiển thị hình vẽ minh hoạ ở đầu (ngay trước nội dung câu hỏi) nếu là câu hỏi đơn */}
+      {!isGroupQuestion && effectiveDiagram && (
+        <div className="mb-5">
+          {renderIllustration(effectiveDiagram)}
+        </div>
+      )}
+
       {/* Shared Context for Group Questions */}
       {effectiveSharedContext && (
-        <div className="pl-4 border-l-[3px] border-primary mb-8 ml-2">
+        <div className="pl-4 border-l-[3px] border-primary mb-4 ml-2">
           <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Nội dung dẫn chung</h4>
           <MathText content={effectiveSharedContext} className="text-lg font-bold text-slate-800 leading-relaxed" />
+        </div>
+      )}
+
+      {/* Hiển thị hình vẽ minh hoạ dưới component Nội dung dẫn chung nếu là câu hỏi chùm */}
+      {isGroupQuestion && effectiveDiagram && (
+        <div className="mb-6 ml-2">
+          {renderIllustration(effectiveDiagram)}
         </div>
       )}
 
@@ -140,7 +229,14 @@ export default function ContentQuestion({
       {subQuestions && subQuestions.length > 0 ? (
         <div className="space-y-2">
           {subQuestions.map((sq, idx) => 
-            renderQuestionBody(sq.content, sq.options, sq.correctAnswer, sq.solution, sq.isEssay, idx)
+            renderQuestionBody(
+              sq.content, 
+              sq.options, 
+              sq.correctAnswer, 
+              sq.solution, 
+              sq.isEssay, 
+              idx
+            )
           )}
         </div>
       ) : (

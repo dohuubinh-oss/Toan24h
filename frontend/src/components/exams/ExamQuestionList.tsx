@@ -3,6 +3,8 @@ import { ListOrdered, CheckCircle2 } from 'lucide-react'
 import { Question } from '../../types/question'
 import QuestionCard from '../questions/QuestionCard'
 import ContentQuestion from '../questions/ContentQuestion'
+import { getQuestionDifficultyWeight, isEssayOrGroupQuestion } from '@/lib/exam-utils'
+import { extractDiagramSvg } from '@/lib/diagram-utils'
 
 interface ExamQuestionListProps {
   questions: Question[];
@@ -11,25 +13,21 @@ interface ExamQuestionListProps {
 }
 
 export default function ExamQuestionList({ questions, onRemoveQuestion, onSwapQuestion }: ExamQuestionListProps) {
-  const difficultyWeight: Record<string, number> = {
-    'Nhận biết': 1,
-    'Thông hiểu': 2,
-    'Vận dụng': 3,
-    'Vận dụng cao': 4
-  };
-
   const sortByDifficulty = (a: Question, b: Question) => {
-    const wA = difficultyWeight[a.difficulty_level || 'Nhận biết'] || 1;
-    const wB = difficultyWeight[b.difficulty_level || 'Nhận biết'] || 1;
-    return wA - wB;
+    const wA = getQuestionDifficultyWeight(a);
+    const wB = getQuestionDifficultyWeight(b);
+    if (wA !== wB) return wA - wB;
+    const pointA = a.difficulty_point ?? 0;
+    const pointB = b.difficulty_point ?? 0;
+    return pointA - pointB;
   };
 
   const multipleChoiceQuestions = questions
-    .filter(q => q.type !== 'Tự luận' && q.type_question !== 'group')
+    .filter(q => !isEssayOrGroupQuestion(q))
     .sort(sortByDifficulty);
     
   const essayQuestions = questions
-    .filter(q => q.type === 'Tự luận' || q.type_question === 'group')
+    .filter(q => isEssayOrGroupQuestion(q))
     .sort(sortByDifficulty);
 
   return (
@@ -47,26 +45,31 @@ export default function ExamQuestionList({ questions, onRemoveQuestion, onSwapQu
             <h3 className="text-lg font-extrabold uppercase tracking-tight">Phần 1: Trắc nghiệm</h3>
             <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{multipleChoiceQuestions.length} câu</span>
           </div>
-          {multipleChoiceQuestions.map((q, idx) => (
-            <QuestionCard 
-              key={`mcq-${idx}`} 
-              id={q.id || `Q-${idx}`}
-              grade={q.grade || 12}
-              topic={q.topic || 'Chưa phân loại'}
-              difficulty={q.difficulty_level || 'Nhận biết'}
-              index={idx}
-              onSwap={onSwapQuestion && q.id ? () => onSwapQuestion(q.id) : undefined}
-              onDelete={onRemoveQuestion ? () => onRemoveQuestion(q.id) : undefined}
-            >
-              <ContentQuestion
-                content={q.content}
-                options={q.options}
-                correctAnswer={q.correct_answer}
-                solution={q.solution_guide || ''}
-                isEssay={false}
-              />
-            </QuestionCard>
-          ))}
+          {multipleChoiceQuestions.map((q, idx) => {
+            const diagram = extractDiagramSvg(q.diagram_svg || (q as any).diagramSvg, q.solution_guide);
+            return (
+              <QuestionCard 
+                key={`mcq-${idx}`} 
+                id={q.id || `Q-${idx}`}
+                grade={q.grade || 12}
+                topic={q.topic || 'Chưa phân loại'}
+                difficulty={q.difficulty_level || 'Nhận biết'}
+                index={idx}
+                onSwap={onSwapQuestion && q.id ? () => onSwapQuestion(q.id) : undefined}
+                onDelete={onRemoveQuestion ? () => onRemoveQuestion(q.id) : undefined}
+              >
+                <ContentQuestion
+                  type_question="single"
+                  diagram_svg={diagram}
+                  content={q.content}
+                  options={q.options}
+                  correctAnswer={q.correct_answer}
+                  solution={q.solution_guide || ''}
+                  isEssay={false}
+                />
+              </QuestionCard>
+            );
+          })}
         </div>
       )}
 
@@ -76,40 +79,49 @@ export default function ExamQuestionList({ questions, onRemoveQuestion, onSwapQu
             <h3 className="text-lg font-extrabold uppercase tracking-tight">Phần 2: Tự luận</h3>
             <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{essayQuestions.length} câu</span>
           </div>
-          {essayQuestions.map((q, idx) => (
-            <QuestionCard 
-              key={`essay-${idx}`} 
-              id={q.id || `Q-E${idx}`}
-              grade={q.grade || (q.type_question === 'group' && q.subQuestions?.[0]?.grade ? Number(q.subQuestions[0].grade) : 12)}
-              topic={q.topic || (q.type_question === 'group' && q.subQuestions?.[0]?.topic) || 'Chưa phân loại'}
-              difficulty={q.difficulty_level || (q.type_question === 'group' && q.subQuestions?.[0]?.difficulty_level) || 'Vận dụng'}
-              typeQuestion={q.type_question}
-              type={q.type || (q.type_question === 'group' && q.subQuestions?.[0]?.type) || ''}
-              index={multipleChoiceQuestions.length + idx}
-              onSwap={onSwapQuestion && q.id ? () => onSwapQuestion(q.id) : undefined}
-              onDelete={onRemoveQuestion ? () => onRemoveQuestion(q.id) : undefined}
-            >
-              <ContentQuestion
-                content={q.type_question === 'single' ? q.content : undefined}
-                sharedContext={q.type_question === 'group' || (q as any).shared_content ? ((q as any).shared_content || q.content) : undefined}
-                options={q.options?.length > 0 ? q.options : undefined}
-                correctAnswer={q.correct_answer}
-                solution={q.solution_guide || ''}
-                isEssay={q.type === 'Tự luận'}
-                subQuestions={
-                  q.type_question === 'group' && q.subQuestions
-                    ? q.subQuestions.map(sub => ({
-                        content: sub.content,
-                        options: sub.options?.length > 0 ? sub.options : undefined,
-                        correctAnswer: sub.correct_answer,
-                        solution: sub.solution_guide,
-                        isEssay: sub.type === 'Tự luận'
-                      }))
-                    : undefined
-                }
-              />
-            </QuestionCard>
-          ))}
+          {essayQuestions.map((q, idx) => {
+            const isGroup = q.type_question === 'group' || (q.subQuestions && q.subQuestions.length > 0);
+            const diagram = extractDiagramSvg(
+              q.diagram_svg || (q as any).diagramSvg || (isGroup ? q.subQuestions?.[0]?.diagram_svg : null),
+              q.solution_guide || (isGroup ? q.subQuestions?.[0]?.solution_guide : null)
+            );
+            return (
+              <QuestionCard 
+                key={`essay-${idx}`} 
+                id={q.id || `Q-E${idx}`}
+                grade={q.grade || (q.type_question === 'group' && q.subQuestions?.[0]?.grade ? Number(q.subQuestions[0].grade) : 12)}
+                topic={q.topic || (q.type_question === 'group' && q.subQuestions?.[0]?.topic) || 'Chưa phân loại'}
+                difficulty={q.difficulty_level || (q.type_question === 'group' && q.subQuestions?.[0]?.difficulty_level) || 'Vận dụng'}
+                typeQuestion={q.type_question}
+                type={q.type || (q.type_question === 'group' && q.subQuestions?.[0]?.type) || ''}
+                index={multipleChoiceQuestions.length + idx}
+                onSwap={onSwapQuestion && q.id ? () => onSwapQuestion(q.id) : undefined}
+                onDelete={onRemoveQuestion ? () => onRemoveQuestion(q.id) : undefined}
+              >
+                <ContentQuestion
+                  type_question={q.type_question}
+                  content={!isGroup ? q.content : undefined}
+                  sharedContext={isGroup ? ((q as any).shared_content || q.content) : undefined}
+                  diagram_svg={diagram}
+                  options={q.options?.length > 0 ? q.options : undefined}
+                  correctAnswer={q.correct_answer}
+                  solution={q.solution_guide || ''}
+                  isEssay={q.type === 'Tự luận'}
+                  subQuestions={
+                    isGroup && q.subQuestions
+                      ? q.subQuestions.map(sub => ({
+                          content: sub.content,
+                          options: sub.options?.length > 0 ? sub.options : undefined,
+                          correctAnswer: sub.correct_answer,
+                          solution: sub.solution_guide,
+                          isEssay: sub.type === 'Tự luận'
+                        }))
+                      : undefined
+                  }
+                />
+              </QuestionCard>
+            );
+          })}
         </div>
       )}
     </div>

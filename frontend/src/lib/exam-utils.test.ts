@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateExamDifficulty, validateExamConfig } from './exam-utils';
+import { calculateExamDifficulty, validateExamConfig, sortExamQuestions } from './exam-utils';
 import { Question } from '../types/question';
 
 describe('exam-utils', () => {
@@ -74,6 +74,47 @@ describe('exam-utils', () => {
       expect(errors.examCode).toBeDefined();
       expect(errors.grade).toBeDefined();
       expect(errors.duration).toBeDefined();
+    });
+  });
+
+  describe('sortExamQuestions', () => {
+    it('sorts multiple choice questions first and essay questions last', () => {
+      const questions: Partial<Question>[] = [
+        { id: '1', type: 'Tự luận', difficulty_level: 'Nhận biết' },
+        { id: '2', type: 'Trắc nghiệm', difficulty_level: 'Thông hiểu' },
+        { id: '3', type: 'Tự luận', difficulty_level: 'Vận dụng' },
+        { id: '4', type: 'Trắc nghiệm', difficulty_level: 'Nhận biết' },
+      ];
+
+      const sorted = (sortExamQuestions as any)(questions as Question[]);
+      expect(sorted.map((q: any) => q.id)).toEqual(['4', '2', '1', '3']);
+    });
+
+    it('sorts group questions as essay questions at the bottom, ordered by difficulty', () => {
+      const questions: Partial<Question>[] = [
+        { id: 'g1', type_question: 'group', difficulty_level: 'Vận dụng' },
+        { id: 'mc1', type_question: 'single', type: 'Trắc nghiệm', difficulty_level: 'Vận dụng cao' },
+        { id: 'mc2', type_question: 'single', type: 'Trắc nghiệm', difficulty_level: 'Nhận biết' },
+        { id: 'es1', type_question: 'single', type: 'Tự luận', difficulty_level: 'Nhận biết' },
+      ];
+
+      const sorted = (sortExamQuestions as any)(questions as Question[]);
+      expect(sorted.map((q: any) => q.id)).toEqual(['mc2', 'mc1', 'es1', 'g1']);
+    });
+
+    it('sorts questions with the same difficulty level by difficulty_point ascending', () => {
+      const questions: Partial<Question>[] = [
+        { id: 'mc2', type: 'Trắc nghiệm', difficulty_level: 'Thông hiểu', difficulty_point: 6.0 },
+        { id: 'mc1', type: 'Trắc nghiệm', difficulty_level: 'Thông hiểu', difficulty_point: 4.5 },
+      ];
+
+      const sorted = (sortExamQuestions as any)(questions as Question[]);
+      expect(sorted.map((q: any) => q.id)).toEqual(['mc1', 'mc2']);
+    });
+
+    it('returns empty array when given empty or null questions', () => {
+      expect((sortExamQuestions as any)([])).toEqual([]);
+      expect((sortExamQuestions as any)(null)).toEqual([]);
     });
   });
 });

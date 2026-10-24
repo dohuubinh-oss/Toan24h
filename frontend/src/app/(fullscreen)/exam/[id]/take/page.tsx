@@ -11,6 +11,7 @@ import AIHintPanel from '@/components/exam/taking/AIHintPanel'
 import { getExamById, getQuestions } from '@/lib/api'
 import { deductPoints, getUserProfile } from '@/lib/authApi'
 import { Question } from '@/types/question'
+import { sortExamQuestions } from '@/lib/exam-utils'
 import { useToast } from '@/components/ui/ToastProvider'
 import { useRouter } from 'next/navigation'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
@@ -127,11 +128,8 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           // Fetch questions
           if (examData.questionIds && examData.questionIds.length > 0) {
             const qRes = await getQuestions(1, 1000, { ids: examData.questionIds })
-            // Need to sort questions to match the order of questionIds
-            const qMap = new Map(qRes.data.map(q => [q.id, q]))
-            const sortedQuestions = examData.questionIds
-              .map((qid: string) => qMap.get(qid))
-              .filter(Boolean) as Question[]
+            // Sắp xếp chuẩn hóa: Trắc nghiệm trước, Tự luận sau; Dễ trước, Khó sau
+            const sortedQuestions = sortExamQuestions(qRes.data as Question[])
             setQuestions(sortedQuestions)
           }
         }
@@ -233,62 +231,6 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
     };
   }, [exam, id, router, toast, cheatCount, answers]);
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen bg-slate-50">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-    </div>
-  }
-
-  if (!exam || questions.length === 0) {
-    return <div className="flex items-center justify-center min-h-screen bg-slate-50 text-slate-500">
-      Không tìm thấy dữ liệu đề thi.
-    </div>
-  }
-
-  const currentQuestion = questions[currentQuestionIndex]
-
-  let lectureUrl = undefined
-  if (exam?.cate === 'practice') {
-    const gradeStr = exam?.grade || '8'
-    const returnUrl = encodeURIComponent(`/exam/${id}/take`)
-    lectureUrl = `/lectures/lop/${gradeStr}?returnUrl=${returnUrl}&examId=${id}`
-  }
-
-  const handleAnswerSelect = (questionId: string, answer: string, explanation?: string) => {
-    setAnswers(prev => ({ ...prev, [questionId]: answer }))
-    if (explanation) {
-      setExplanations(prev => ({ ...prev, [questionId]: explanation }))
-    }
-  }
-
-  const handleToggleFlag = (questionId: string) => {
-    setFlaggedQuestions(prev => ({ ...prev, [questionId]: !prev[questionId] }))
-  }
-
-  const mapQuestions = questions.map((q, idx) => {
-    const isAnswered = !!answers[q.id] || (q.type_question === 'group' && q.subQuestions?.some(sub => !!answers[sub.id]))
-    const isCurrent = idx === currentQuestionIndex
-    let status: 'done' | 'current' | 'unfinished' = 'unfinished'
-    if (isCurrent) status = 'current'
-    else if (isAnswered) status = 'done'
-    
-    const isFlagged = !!flaggedQuestions[q.id] || (q.type_question === 'group' && q.subQuestions?.some(sub => !!flaggedQuestions[sub.id]))
-
-    return {
-      id: q.id,
-      index: idx,
-      status,
-      isFlagged
-    }
-  })
-
-  const answeredQuestionsCount = questions.filter(q => {
-    if (q.type_question === 'group' && q.subQuestions && q.subQuestions.length > 0) {
-      return q.subQuestions.some(sub => !!answers[sub.id] && String(answers[sub.id]).trim() !== '')
-    }
-    return !!answers[q.id] && String(answers[q.id]).trim() !== ''
-  }).length
-
   const isSubmittingRef = React.useRef(false)
   const handleSubmitRef = React.useRef<() => void>(() => {})
 
@@ -319,11 +261,11 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         sessionStorage.removeItem(`exam_end_time_${id}`);
         toast.success("Nộp bài thành công!");
 
-        const prevUrl = exam.cate === 'practice' && exam.lectureId
-          ? `/lectures/lop/${exam.grade || 12}/${exam.lectureId}`
-          : exam.cate === 'exam'
-            ? (exam.grade ? `/exams/lop/${exam.grade}` : '/student')
-            : (exam.grade ? `/practices/lop/${exam.grade}` : '/student');
+        const prevUrl = exam?.cate === 'practice' && exam?.lectureId
+          ? `/lectures/lop/${exam?.grade || 12}/${exam?.lectureId}`
+          : exam?.cate === 'exam'
+            ? (exam?.grade ? `/exams/lop/${exam?.grade}` : '/student')
+            : (exam?.grade ? `/practices/lop/${exam?.grade}` : '/student');
 
         setTimeout(() => {
           router.push(prevUrl);
@@ -382,6 +324,62 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
     const s = secondsLeft % 60
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }, [secondsLeft])
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+    </div>
+  }
+
+  if (!exam || questions.length === 0) {
+    return <div className="flex items-center justify-center min-h-screen bg-slate-50 text-slate-500">
+      Không tìm thấy dữ liệu đề thi.
+    </div>
+  }
+
+  const currentQuestion = questions[currentQuestionIndex]
+
+  let lectureUrl = undefined
+  if (exam?.cate === 'practice') {
+    const gradeStr = exam?.grade || '8'
+    const returnUrl = encodeURIComponent(`/exam/${id}/take`)
+    lectureUrl = `/lectures/lop/${gradeStr}?returnUrl=${returnUrl}&examId=${id}`
+  }
+
+  const handleAnswerSelect = (questionId: string, answer: string, explanation?: string) => {
+    setAnswers(prev => ({ ...prev, [questionId]: answer }))
+    if (explanation) {
+      setExplanations(prev => ({ ...prev, [questionId]: explanation }))
+    }
+  }
+
+  const handleToggleFlag = (questionId: string) => {
+    setFlaggedQuestions(prev => ({ ...prev, [questionId]: !prev[questionId] }))
+  }
+
+  const mapQuestions = questions.map((q, idx) => {
+    const isAnswered = !!answers[q.id] || (q.type_question === 'group' && q.subQuestions?.some(sub => !!answers[sub.id]))
+    const isCurrent = idx === currentQuestionIndex
+    let status: 'done' | 'current' | 'unfinished' = 'unfinished'
+    if (isCurrent) status = 'current'
+    else if (isAnswered) status = 'done'
+    
+    const isFlagged = !!flaggedQuestions[q.id] || (q.type_question === 'group' && q.subQuestions?.some(sub => !!flaggedQuestions[sub.id]))
+
+    return {
+      id: q.id,
+      index: idx,
+      status,
+      isFlagged
+    }
+  })
+
+  const answeredQuestionsCount = questions.filter(q => {
+    if (q.type_question === 'group' && q.subQuestions && q.subQuestions.length > 0) {
+      return q.subQuestions.some(sub => !!answers[sub.id] && String(answers[sub.id]).trim() !== '')
+    }
+    return !!answers[q.id] && String(answers[q.id]).trim() !== ''
+  }).length
 
   const handleBack = () => {
     if (exam.cate === 'practice' && exam.lectureId) {
@@ -489,6 +487,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
             questionId={currentQuestion.id}
             index={currentQuestionIndex}
             topic={currentQuestion.topic || ""}
+            diagram_svg={currentQuestion.diagram_svg || (currentQuestion as any).diagramSvg}
             content={currentQuestion.content}
             options={currentQuestion.options.map((opt, i) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt }))}
             selectedOptionId={answers[currentQuestion.id] || null}
@@ -505,11 +504,13 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           <EssayQuestion 
             questionId={currentQuestion.id}
             index={currentQuestionIndex}
+            diagram_svg={currentQuestion.diagram_svg || (currentQuestion as any).diagramSvg}
             content={currentQuestion.content}
             sharedContext={currentQuestion.content}
             subQuestions={currentQuestion.subQuestions?.map(sq => ({
               id: sq.id,
               type: sq.type === 'Trắc nghiệm' ? 'mc' : 'essay',
+              diagram_svg: sq.diagram_svg || (sq as any).diagramSvg,
               content: sq.content,
               options: sq.options ? sq.options.map((opt, i) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt })) : undefined
             })) || []}

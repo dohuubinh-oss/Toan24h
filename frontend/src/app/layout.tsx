@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Lexend } from 'next/font/google'
+import Script from 'next/script'
 import GradeSelectionModal from '@/components/auth/GradeSelectionModal'
 import { ToastProvider } from '@/components/ui/ToastProvider'
 
@@ -26,8 +27,27 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-      <html lang="vi" suppressHydrationWarning className={`${lexend.variable}`}>
+    <html lang="vi" suppressHydrationWarning className={`${lexend.variable}`}>
       <head>
+        <Script id="performance-measure-patch" strategy="beforeInteractive">
+          {`
+            if (typeof window !== 'undefined' && window.performance && window.performance.measure) {
+              (function() {
+                var origMeasure = window.performance.measure.bind(window.performance);
+                window.performance.measure = function() {
+                  try {
+                    return origMeasure.apply(this, arguments);
+                  } catch (e) {
+                    if (e && e.message && e.message.indexOf('negative time stamp') !== -1) {
+                      return undefined;
+                    }
+                    throw e;
+                  }
+                };
+              })();
+            }
+          `}
+        </Script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />

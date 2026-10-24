@@ -120,8 +120,6 @@ func gradeEssayChunk(input EssayBatchInput) (*EssayBatchResponse, error) {
 		"gemini-3.7-flash",
 		"gemini-3.6-flash",
 		"gemini-3.5-flash",
-		"gemini-3.1-pro-preview",
-		"gemini-pro-latest",
 	}
 	candidateModels := []string{primaryModel}
 	for _, m := range validModels {
@@ -416,8 +414,6 @@ func evaluateReasoningChunk(input ReasoningBatchInput) (*ReasoningBatchResponse,
 		"gemini-3.7-flash",
 		"gemini-3.6-flash",
 		"gemini-3.5-flash",
-		"gemini-3.1-pro-preview",
-		"gemini-pro-latest",
 	}
 	candidateModels := []string{primaryModel}
 	for _, m := range validModels {

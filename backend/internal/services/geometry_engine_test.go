@@ -182,3 +182,56 @@ func TestParseAndRenderGeometryJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestRenderGeometryModelToSVG_ProblemAndSolutionElements(t *testing.T) {
+	// Tam giác vuông ABC có đường cao AH dựng thêm trong lời giải
+	rawJson := `{
+		"points": {
+			"A": [0, 0],
+			"B": [0, 6],
+			"C": [8, 0],
+			"H": [2.88, 3.84]
+		},
+		"segments": [
+			{"from": "A", "to": "B", "style": "solid", "label": "6 cm", "color": "#0f172a"},
+			{"from": "B", "to": "C", "style": "solid", "color": "#0f172a"},
+			{"from": "C", "to": "A", "style": "solid", "label": "8 cm", "color": "#0f172a"},
+			{"from": "A", "to": "H", "style": "dashed", "color": "#2563eb", "label": "h"}
+		],
+		"right_angles": [
+			{"vertex": "A", "arm1": "B", "arm2": "C"},
+			{"vertex": "H", "arm1": "A", "arm2": "C"}
+		]
+	}`
+
+	svg, ok := ParseAndRenderGeometryJSON(rawJson)
+	if !ok || svg == "" {
+		t.Fatalf("Failed to parse and render geometry JSON")
+	}
+
+	// 1. Kiểm tra nhãn cạnh đề bài và nhãn đường cao lời giải
+	if !strings.Contains(svg, ">6 cm</text>") {
+		t.Errorf("SVG missing label '6 cm'")
+	}
+	if !strings.Contains(svg, ">8 cm</text>") {
+		t.Errorf("SVG missing label '8 cm'")
+	}
+	if !strings.Contains(svg, ">h</text>") {
+		t.Errorf("SVG missing label 'h'")
+	}
+
+	// 2. Kiểm tra nét đứt của đường cao AH trong lời giải
+	if !strings.Contains(svg, `stroke="#2563eb"`) {
+		t.Errorf("SVG missing solution color #2563eb")
+	}
+	if !strings.Contains(svg, `stroke-dasharray="6,4"`) {
+		t.Errorf("SVG missing dashed line for solution line AH")
+	}
+
+	// 3. Kiểm tra ký hiệu vuông góc cho cả A (đề bài) và H (lời giải)
+	rightAnglePaths := strings.Count(svg, `fill="none" stroke=`)
+	if rightAnglePaths < 2 {
+		t.Errorf("Expected at least 2 right angle markers, got %d", rightAnglePaths)
+	}
+}
+

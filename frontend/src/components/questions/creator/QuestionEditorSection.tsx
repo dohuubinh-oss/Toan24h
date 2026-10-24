@@ -4,12 +4,16 @@ import {
   Info, Lightbulb, Brain, AlertCircle, Zap
 } from 'lucide-react'
 import { Question, QuestionBlock } from '../../../types/question'
+import { extractDiagramSvg } from '@/lib/diagram-utils'
 
 interface QuestionEditorSectionProps {
   currentBlock?: QuestionBlock | null;
   currentQuestion?: Question | null;
   updateBlock?: (key: keyof QuestionBlock, value: any) => void;
   updateQuestion?: (key: keyof Question, value: any) => void;
+  currentQuestionIndex?: number;
+  onSelectSubQuestion?: (index: number) => void;
+  onAddSubQuestion?: () => void;
 }
 
 import SharedEditorCard from './editor/SharedEditorCard'
@@ -21,7 +25,10 @@ function QuestionEditorSection({
   currentBlock = null,
   currentQuestion = null,
   updateBlock = () => { },
-  updateQuestion = () => { }
+  updateQuestion = () => { },
+  currentQuestionIndex = 0,
+  onSelectSubQuestion,
+  onAddSubQuestion
 }: QuestionEditorSectionProps) {
   const isEssay = currentQuestion?.type === 'Tự luận';
 
@@ -105,28 +112,15 @@ function QuestionEditorSection({
   };
 
   const activeDiagramSvg = isGroup
-    ? (currentBlock?.diagram_svg ||
-       currentQuestion?.diagram_svg ||
-       (typeof currentQuestion?.solution_guide === 'object' && currentQuestion?.solution_guide?.diagram_svg) ||
-       null)
-    : (currentQuestion?.diagram_svg ||
-       currentBlock?.diagram_svg ||
-       (typeof currentQuestion?.solution_guide === 'object' && currentQuestion?.solution_guide?.diagram_svg) ||
+    ? (extractDiagramSvg(currentBlock?.diagram_svg, currentBlock?.questions?.[0]?.solution_guide) || null)
+    : (extractDiagramSvg(currentQuestion?.diagram_svg, currentQuestion?.solution_guide) ||
+       extractDiagramSvg(currentBlock?.diagram_svg, currentQuestion?.solution_guide) ||
        null);
 
   const handleUpdateDiagram = (val: string | null) => {
     if (isGroup) {
       if (updateBlock) {
         updateBlock('diagram_svg', val);
-      }
-      if (updateQuestion) {
-        updateQuestion('diagram_svg', val);
-        if (currentQuestion?.solution_guide && typeof currentQuestion.solution_guide === 'object') {
-          updateQuestion('solution_guide', {
-            ...currentQuestion.solution_guide,
-            diagram_svg: val,
-          });
-        }
       }
     } else {
       if (updateQuestion) {
@@ -157,13 +151,38 @@ function QuestionEditorSection({
         />
       )}
 
+      {/* Illustration Image Section:
+          - Nếu là câu hỏi đơn: hiển thị ở đầu (ngay trước Nội dung câu hỏi)
+          - Nếu là câu hỏi chùm: hiển thị ngay dưới component Nội dung dẫn chung */}
+      <SharedIllustrationCard
+        diagramSvg={activeDiagramSvg}
+        isGroup={isGroup}
+        questionContent={
+          isGroup
+            ? [
+                currentBlock?.shared_content,
+                ...(currentBlock?.questions || []).map((q, idx) => `Câu ${idx + 1}: ${q.content}`)
+              ].filter(Boolean).join('\n\n')
+            : [currentBlock?.shared_content, currentQuestion?.content].filter(Boolean).join('\n\n')
+        }
+        solutionContent={
+          isGroup
+            ? (currentBlock?.questions || []).map((q, idx) => {
+                const sol = formatSolutionGuide(q.solution_guide || '');
+                return `Lời giải câu ${idx + 1}:\n${sol}`;
+              }).filter(Boolean).join('\n\n')
+            : formatSolutionGuide(currentQuestion?.solution_guide || '')
+        }
+        onUpdateDiagram={handleUpdateDiagram}
+      />
+
       {/* Question Content Card */}
       <SharedEditorCard
-        title="Nội dung câu hỏi"
+        title={isGroup ? `Nội dung câu hỏi con #${(currentQuestionIndex ?? 0) + 1}` : "Nội dung câu hỏi"}
         icon={<FileQuestion className="text-primary w-5 h-5" />}
         content={currentQuestion?.content || ''}
         onContentChange={(val) => updateQuestion('content', val)}
-        placeholder="Nhập nội dung câu hỏi..."
+        placeholder={isGroup ? `Nhập nội dung câu hỏi con #${(currentQuestionIndex ?? 0) + 1}...` : "Nhập nội dung câu hỏi..."}
       />
 
       {/* Answers Section */}
@@ -251,40 +270,15 @@ function QuestionEditorSection({
         )}
       </div>
 
-      {/* Illustration Image Section - Luôn hiển thị phía trên Lời giải chi tiết */}
-      <SharedIllustrationCard
-        diagramSvg={activeDiagramSvg}
-        isGroup={isGroup}
-        questionContent={
-          isGroup
-            ? [
-                currentBlock?.shared_content,
-                ...(currentBlock?.questions || []).map((q, idx) => `Câu ${idx + 1}: ${q.content}`)
-              ].filter(Boolean).join('\n\n')
-            : [currentBlock?.shared_content, currentQuestion?.content].filter(Boolean).join('\n\n')
-        }
-        solutionContent={
-          isGroup
-            ? (currentBlock?.questions || []).map((q, idx) => {
-                const sol = typeof q.solution_guide === 'object' ? formatSolutionGuide(q.solution_guide) : (q.solution_guide || '');
-                return `Lời giải câu ${idx + 1}:\n${sol}`;
-              }).filter(Boolean).join('\n\n')
-            : (typeof currentQuestion?.solution_guide === 'object'
-                ? formatSolutionGuide(currentQuestion?.solution_guide)
-                : (currentQuestion?.solution_guide || ''))
-        }
-        onUpdateDiagram={handleUpdateDiagram}
-      />
-
       {/* Solution Section */}
       <SharedEditorCard
         title="Lời giải chi tiết"
         icon={<FileText className="text-primary w-5 h-5" />}
-        content={
-          typeof currentQuestion?.solution_guide === 'object'
-            ? formatSolutionGuide({ ...currentQuestion?.solution_guide, diagram_svg: null })
+        content={formatSolutionGuide(
+          currentQuestion?.solution_guide && typeof currentQuestion.solution_guide === 'object'
+            ? { ...currentQuestion.solution_guide, diagram_svg: null }
             : (currentQuestion?.solution_guide || '')
-        }
+        )}
         onContentChange={(val) => updateQuestion('solution_guide', val)}
         placeholder="Nhập lời giải chi tiết..."
       />

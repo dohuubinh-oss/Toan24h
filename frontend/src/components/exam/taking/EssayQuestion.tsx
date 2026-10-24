@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { Camera, CheckCircle, Sparkles, Flag, BookOpen, AlertTriangle, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
+import DOMPurify from 'dompurify'
 import MathText from '@/components/ui/MathText'
 import RichTextEditor from '@/components/questions/creator/editor/RichTextEditor'
-import { useToast } from '@/components/ui/ToastProvider'
+import { toast } from '@/components/ui/ToastProvider'
 import { recognizeHandwriting, submitAppeal, reportQuestion } from '@/lib/api'
 import MobileQrUploadModal from './MobileQrUploadModal'
 import InAppCameraModal from './InAppCameraModal'
@@ -11,6 +12,7 @@ import InAppCameraModal from './InAppCameraModal'
 export interface SubQuestion {
   id: string | number
   type: 'mc' | 'essay'
+  diagram_svg?: string | null
   content: React.ReactNode
   options?: { id: string, text: string }[]
   solution_guide?: string
@@ -50,6 +52,8 @@ interface EssayQuestionProps {
   resultId?: string
   questionId: string | number
   index: number
+  diagram_svg?: string | null
+  diagramSvg?: string | null
   content?: string
   sharedContext?: React.ReactNode
   solution_guide?: string
@@ -188,8 +192,6 @@ function EditorItem({
 }) {
   const isMC = q.type === 'mc'
   const editorContent = (isMC ? (explanation || answer) : (answer || explanation)) || ''
-  
-  const { success, error } = useToast()
 
   const handleEditorChange = (val: string) => {
     if (onAnswerChange) {
@@ -469,6 +471,8 @@ export default function EssayQuestion({
   resultId,
   questionId,
   index,
+  diagram_svg,
+  diagramSvg,
   content,
   sharedContext,
   solution_guide,
@@ -492,7 +496,6 @@ export default function EssayQuestion({
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [reportMessage, setReportMessage] = useState('')
   const [isSubmittingReport, setIsSubmittingReport] = useState(false)
-  const toast = useToast()
 
   const handleReportSubmit = async () => {
     if (!reportMessage.trim()) return
@@ -515,6 +518,62 @@ export default function EssayQuestion({
     }
   }
 
+  const renderDiagram = (rawDiagram?: string | null) => {
+    if (!rawDiagram || typeof rawDiagram !== 'string') return null;
+    const diagram = rawDiagram.trim();
+    if (!diagram || diagram === 'null' || diagram === 'undefined' || diagram === 'none' || diagram === '[]' || diagram === '{}') {
+      return null;
+    }
+    let clean = diagram;
+    if (clean.includes('```')) {
+      const match = clean.match(/```(?:xml|svg)?\s*([\s\S]*?)\s*```/i);
+      if (match && match[1]) clean = match[1].trim();
+    }
+    const svgStart = clean.indexOf('<svg');
+    const svgEnd = clean.lastIndexOf('</svg>');
+    const isSvg = svgStart !== -1 && svgEnd !== -1 && svgEnd >= svgStart;
+
+    const isImageUrl = !isSvg && (
+      clean.startsWith('http://') || 
+      clean.startsWith('https://') || 
+      clean.startsWith('/') || 
+      clean.startsWith('uploads/') || 
+      clean.startsWith('data:image/')
+    );
+
+    if (!isSvg && !isImageUrl) {
+      return null;
+    }
+
+    const finalSvg = isSvg ? clean.substring(svgStart, svgEnd + 6) : '';
+    let imgSrc = clean;
+    if (!isSvg && clean.startsWith('uploads/')) {
+      imgSrc = `/${clean}`;
+    }
+    return (
+      <div className="my-4 flex justify-center" data-testid="question-illustration">
+        <div className="max-w-[540px] w-full flex items-center justify-center overflow-hidden py-1">
+          {isSvg ? (
+            <div 
+              className="w-full flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-[380px] [&>svg]:h-auto [&>svg]:w-auto [&>svg]:mx-auto [&>svg>rect:first-child]:fill-transparent [&>svg>rect:first-child]:stroke-none"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(finalSvg) }} 
+            />
+          ) : (
+            <img 
+              src={imgSrc} 
+              alt="Hình vẽ minh họa bài toán" 
+              onError={(e) => {
+                const container = e.currentTarget.closest('[data-testid="question-illustration"]');
+                if (container) (container as HTMLElement).style.display = 'none';
+              }}
+              className="max-w-full max-h-[380px] h-auto w-auto object-contain mx-auto"
+            />
+          )}
+        </div>
+      </div>
+    );
+  };
+
   // Determine what to render on the left side
   const renderLeftContent = () => {
     if (isGroup) {
@@ -523,6 +582,7 @@ export default function EssayQuestion({
           <div className="text-lg leading-relaxed">
             {typeof sharedContext === 'string' ? <MathText content={sharedContext} /> : sharedContext}
           </div>
+          {renderDiagram(diagram_svg || diagramSvg)}
           <ul className="list-disc ml-5 space-y-2 mt-4 text-lg leading-relaxed">
             {subQuestions.map((q) => (
               <li key={q.id}>
@@ -580,6 +640,7 @@ export default function EssayQuestion({
 
     return (
       <div className="prose prose-slate max-w-none mb-8 text-lg leading-relaxed">
+        {renderDiagram(diagram_svg || diagramSvg)}
         <MathText content={content || ''} />
       </div>
     )

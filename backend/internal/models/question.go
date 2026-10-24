@@ -18,6 +18,7 @@ type Question struct {
 	Cate            string         `gorm:"type:varchar(50);not null;default:'exam';index" json:"cate"` // 'exam' or 'practice'
 	TypeQuestion    string         `gorm:"type:varchar(20);not null" json:"typeQuestion"` // 'group', 'single'
 	Content         string         `gorm:"type:text;not null" json:"content"`
+	DiagramSvg      string         `gorm:"type:text;column:diagram_svg" json:"diagram_svg,omitempty"` // Hình vẽ minh họa SVG hoặc URL ảnh
 	Type            string         `gorm:"type:varchar(50);not null" json:"type"`         // 'Trắc nghiệm', 'Tự luận'
 	
 	Grade           int            `gorm:"not null;index" json:"grade"`

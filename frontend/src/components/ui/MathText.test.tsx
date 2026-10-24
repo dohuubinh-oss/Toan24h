@@ -64,4 +64,29 @@ describe('MathText', () => {
     const katexElement = container.querySelector('.katex');
     expect(katexElement).toBeInTheDocument();
   });
+
+  it('automatically formats structured solution guide JSON string into rich steps', () => {
+    const jsonStr = JSON.stringify({
+      steps: [
+        { step: 1, title: 'Bước 1: Rút gọn', content: 'Ta có $A = 2$' }
+      ],
+      conclusion: 'Vậy ta có $A = 2$'
+    });
+    const { container, getByText } = render(<MathText content={jsonStr} />);
+    expect(getByText('Bước 1: Rút gọn')).toBeInTheDocument();
+    expect(getByText('Kết luận')).toBeInTheDocument();
+    expect(container.textContent).not.toContain('{"steps":');
+  });
+
+  it('automatically formats structured solution guide object into rich steps', () => {
+    const guideObj = {
+      steps: [
+        { step: 1, title: 'Bước 1: Giải phương trình', content: 'Nghiệm là $x = 1$' }
+      ],
+      conclusion: 'Vậy nghiệm là $x = 1$'
+    };
+    const { container, getByText } = render(<MathText content={guideObj} />);
+    expect(getByText('Bước 1: Giải phương trình')).toBeInTheDocument();
+    expect(container.textContent).not.toContain('[object Object]');
+  });
 });

@@ -44,7 +44,7 @@ describe('SharedIllustrationCard Component', () => {
     expect(screen.getByText('Sửa hình minh hoạ')).toBeInTheDocument()
     expect(screen.getByText('Sao chép SVG')).toBeInTheDocument()
     expect(screen.getByText('Xóa')).toBeInTheDocument()
-    expect(screen.getByAltText('Hình vẽ minh họa bài toán')).toBeInTheDocument()
+    expect(screen.getByTestId('illustration-svg')).toBeInTheDocument()
   })
 
   it('opens and closes the AI refinement modal', () => {

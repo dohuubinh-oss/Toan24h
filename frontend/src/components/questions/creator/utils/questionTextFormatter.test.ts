@@ -147,6 +147,38 @@ describe('questionTextFormatter utility', () => {
       expect(html).toContain('solution-diagram-wrapper')
       expect(html).toContain('data:image/svg+xml;utf8,')
     })
+
+    it('formats stringified JSON solution guide into timeline HTML instead of raw JSON', () => {
+      const jsonStr = JSON.stringify({
+        problem: 'Giải phương trình bậc hai',
+        steps: [
+          { step: 1, title: 'Tính biệt thức', content: 'Ta có $\\Delta = b^2 - 4ac$', formula: '\\Delta = 9' }
+        ],
+        conclusion: 'Phương trình có 2 nghiệm phân biệt'
+      })
+      const html = formatSolutionGuide(jsonStr)
+      expect(html).toContain('exercise-content')
+      expect(html).toContain('Giải phương trình bậc hai')
+      expect(html).toContain('Tính biệt thức')
+      expect(html).toContain('$$\\Delta = 9$$')
+      expect(html).toContain('Phương trình có 2 nghiệm phân biệt')
+      expect(html).not.toContain('{"problem":')
+    })
+
+    it('formats array of string steps into timeline HTML', () => {
+      const guideWithStrSteps = {
+        steps: [
+          'Bước 1: Áp dụng định lý Pythagoras',
+          'Bước 2: Tính độ dài cạnh huyền'
+        ],
+        conclusion: 'Cạnh huyền bằng 10 cm'
+      }
+      const html = formatSolutionGuide(guideWithStrSteps)
+      expect(html).toContain('exercise-content')
+      expect(html).toContain('Bước 1: Áp dụng định lý Pythagoras')
+      expect(html).toContain('Bước 2: Tính độ dài cạnh huyền')
+      expect(html).toContain('Cạnh huyền bằng 10 cm')
+    })
   })
 
   describe('ensureMathDelimiters', () => {

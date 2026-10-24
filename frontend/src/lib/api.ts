@@ -190,9 +190,22 @@ export async function refineGeometrySVG(params: RefineGeometrySVGParams): Promis
     return response.diagram_svg
   }
 
-  throw new Error(response.error || 'Không thể tạo hình vẽ minh họa SVG!')
+  let errorMsg = response.error || 'Chưa thể dựng hình vẽ minh họa tự động.'
+  const lower = errorMsg.toLowerCase()
+  if (lower.includes('quota') || lower.includes('429') || lower.includes('resource_exhausted')) {
+    errorMsg = 'Hệ thống AI đang tiếp nhận nhiều yêu cầu cùng lúc. Thầy cô vui lòng thử lại sau giây lát hoặc dán ảnh chụp từ GeoGebra.'
+  } else if (lower.includes('timeout') || lower.includes('deadline')) {
+    errorMsg = 'Quá thời gian phản hồi từ máy chủ AI. Thầy cô vui lòng bấm thử lại hoặc bổ sung thêm mô tả ngắn gọn.'
+  } else if (lower.includes('failed to fetch') || lower.includes('network')) {
+    errorMsg = 'Không thể kết nối đến máy chủ. Thầy cô vui lòng kiểm tra kết nối mạng và thử lại.'
+  }
+
+  throw new Error(errorMsg)
 }
 
+
+import { extractDiagramSvg } from './diagram-utils'
+export { extractDiagramSvg }
 
 export async function getQuestions(page: number = 1, limit: number = 20, filters?: { ids?: string[], grade?: string, topic?: string, type?: string, difficulty?: string, q?: string, cate?: string }): Promise<{data: Question[], total: number, totalPages?: number}> {
   let url = `/questions?page=${page}&limit=${limit}`
@@ -238,8 +251,10 @@ export async function getQuestions(page: number = 1, limit: number = 20, filters
           try {
             pOpts = typeof sub.options === 'string' ? JSON.parse(sub.options || '[]') : (sub.options || [])
           } catch(e) {}
+          const subDiagram = extractDiagramSvg(sub.diagram_svg || sub.diagramSvg, sub.solutionGuide || sub.solution_guide);
           return {
             ...sub,
+            diagram_svg: subDiagram,
             type_question: sub.typeQuestion,
             correct_answer: sub.correctAnswer,
             solution_guide: sub.solutionGuide,
@@ -259,8 +274,10 @@ export async function getQuestions(page: number = 1, limit: number = 20, filters
         })
       }
 
+      const questionDiagram = extractDiagramSvg(q.diagram_svg || q.diagramSvg, q.solutionGuide || q.solution_guide);
       return {
         ...q,
+        diagram_svg: questionDiagram,
         type_question: q.typeQuestion,
         correct_answer: q.correctAnswer,
         solution_guide: q.solutionGuide,
@@ -316,8 +333,10 @@ export async function getQuestion(id: string): Promise<Question | null> {
           let pOpts = []
           try { pTags = typeof sub.tags === 'string' ? JSON.parse(sub.tags || '[]') : (sub.tags || []) } catch(e) {}
           try { pOpts = typeof sub.options === 'string' ? JSON.parse(sub.options || '[]') : (sub.options || []) } catch(e) {}
+          const subDiagram = extractDiagramSvg(sub.diagram_svg || sub.diagramSvg, sub.solutionGuide || sub.solution_guide);
           return {
             ...sub,
+            diagram_svg: subDiagram,
             type_question: sub.typeQuestion,
             correct_answer: sub.correctAnswer,
             solution_guide: sub.solutionGuide,
@@ -337,8 +356,10 @@ export async function getQuestion(id: string): Promise<Question | null> {
         })
       }
 
+      const questionDiagram = extractDiagramSvg(q.diagram_svg || q.diagramSvg, q.solutionGuide || q.solution_guide);
       return {
         ...q,
+        diagram_svg: questionDiagram,
         type_question: q.typeQuestion,
         correct_answer: q.correctAnswer,
         solution_guide: q.solutionGuide,
@@ -384,6 +405,8 @@ export async function updateQuestion(id: string, data: Partial<Question>): Promi
       hint: data.hint,
       mistakes: data.mistakes,
       bookName: data.book_name ?? (data as any).bookName,
+      diagram_svg: data.diagram_svg ?? (data as any).diagramSvg ?? null,
+      diagramSvg: data.diagram_svg ?? (data as any).diagramSvg ?? null,
       subQuestions: data.subQuestions ? data.subQuestions.map((sub: any) => {
         const subShort = sub.short_answer ?? sub.shortAnswer ?? sub.quick_solve_tips ?? sub.quickSolveTips
         return {
@@ -400,6 +423,8 @@ export async function updateQuestion(id: string, data: Partial<Question>): Promi
           quickSolveTips: subShort,
           generalMethod: sub.general_method ?? sub.generalMethod,
           bookName: sub.book_name ?? sub.bookName,
+          diagram_svg: sub.diagram_svg ?? sub.diagramSvg ?? null,
+          diagramSvg: sub.diagram_svg ?? sub.diagramSvg ?? null,
         }
       }) : undefined
     }

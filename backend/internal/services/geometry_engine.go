@@ -14,6 +14,7 @@ type GeometrySegment struct {
 	Style       string  `json:"style,omitempty"`        // "solid" | "dashed"
 	Color       string  `json:"color,omitempty"`        // e.g. "#0f172a", "#2563eb", "#059669"
 	StrokeWidth float64 `json:"stroke_width,omitempty"` // default 2.5 for solid, 2.0 for dashed
+	Label       string  `json:"label,omitempty"`        // e.g. "6 cm", "8 cm", "a", "x"
 }
 
 // GeometryRightAngle represents a right-angle marker at vertex between arm1 and arm2
@@ -196,7 +197,6 @@ func RenderGeometryModelToSVG(model GeometryModel) (string, error) {
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf(`<svg viewBox="0 0 %.0f %.0f" width="100%%" height="auto" xmlns="http://www.w3.org/2000/svg">`+"\n", canvasW, canvasH))
-	sb.WriteString(fmt.Sprintf(`  <rect width="%.0f" height="%.0f" fill="#ffffff" rx="12"/>`+"\n", canvasW, canvasH))
 
 	// 3. Render Cartesian Axes if requested
 	if model.ShowAxes {
@@ -325,6 +325,24 @@ func RenderGeometryModelToSVG(model GeometryModel) (string, error) {
 
 		sb.WriteString(fmt.Sprintf(`  <line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="%.1f"%s/>`+"\n",
 			x1, y1, x2, y2, color, strokeW, dashAttr))
+
+		if seg.Label != "" {
+			midX := (x1 + x2) / 2.0
+			midY := (y1 + y2) / 2.0
+			dx := x2 - x1
+			dy := y2 - y1
+			lenSeg := math.Hypot(dx, dy)
+			var nx, ny float64
+			if lenSeg > 0.001 {
+				// Normal vector pointing outward
+				nx = -dy / lenSeg
+				ny = dx / lenSeg
+			}
+			lblX := midX + 11*nx
+			lblY := midY + 11*ny
+			sb.WriteString(fmt.Sprintf(`  <text x="%.1f" y="%.1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="#475569" text-anchor="middle" paint-order="stroke" stroke="#ffffff" stroke-width="3">%s</text>`+"\n",
+				lblX, lblY+4, seg.Label))
+		}
 	}
 
 	// 7. Render Point Dots

@@ -173,13 +173,31 @@ export function formatQuestionContent(content?: string | null): string {
 export function formatSolutionGuide(guide: any): string {
   if (!guide) return ''
 
-  // Nếu là chuỗi string thuần
+  // Nếu là chuỗi JSON hoặc object được stringify
+  if (typeof guide === 'string') {
+    const trimmed = guide.trim()
+    if (
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    ) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        if (parsed && typeof parsed === 'object') {
+          guide = parsed
+        }
+      } catch (e) {
+        // Not valid JSON, continue with string processing
+      }
+    }
+  }
+
+  // Nếu vẫn là chuỗi string thuần (không phải JSON)
   if (typeof guide === 'string') {
     return formatTextToHtml(cleanCitations(guide))
   }
 
   // Nếu là object có cấu trúc problem / steps / conclusion / tips
-  if (typeof guide === 'object') {
+  if (typeof guide === 'object' && guide !== null) {
     let html = `<div class="exercise-content bg-transparent p-4">`
 
     // 0. Hình vẽ minh họa lời giải SVG (nếu có)
@@ -187,23 +205,32 @@ export function formatSolutionGuide(guide: any): string {
     if (rawSvg && typeof rawSvg === 'string' && rawSvg.trim().startsWith('<svg')) {
       const cleanSvg = rawSvg.trim()
       const encodedSvg = `data:image/svg+xml;utf8,${encodeURIComponent(cleanSvg)}`
-      html += `<div class="solution-diagram-wrapper my-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center shadow-xs">
-        <img src="${encodedSvg}" alt="Hình vẽ minh họa lời giải" class="max-w-[420px] max-h-[320px] w-auto h-auto mx-auto object-contain rounded-lg" />
+      html += `<div class="solution-diagram-wrapper my-4 text-center">
+        <img src="${encodedSvg}" alt="Hình vẽ minh họa lời giải" class="max-w-[420px] max-h-[320px] w-auto h-auto mx-auto object-contain" />
       </div>`
     }
 
-    if (guide.problem) {
-      const cleanProb = cleanCitations(guide.problem)
+    if (guide.problem || guide.analysis) {
+      const cleanProb = cleanCitations(guide.problem || guide.analysis)
       const formattedProb = formatTextToHtml(cleanProb)
       html += `<div class="bg-slate-50 p-5 rounded-lg border border-slate-200 mb-8">
         <div class="italic text-slate-700 !m-0">${formattedProb}</div>
       </div>`
     }
 
-    const stepsData = guide.steps || guide.Steps
-    const cleanConclusion = cleanCitations(guide.conclusion)
-    const cleanTips = cleanCitations(guide.tips)
+    const stepsData = Array.isArray(guide) ? guide : (guide.steps || guide.Steps)
+    const cleanConclusion = cleanCitations(guide.conclusion || guide.Conclusion)
+    const cleanTips = cleanCitations(guide.tips || guide.Tips)
     const hasTimeline = (stepsData && Array.isArray(stepsData) && stepsData.length > 0) || cleanConclusion || cleanTips
+
+    if (!hasTimeline) {
+      const rawText = guide.content || guide.solution || guide.explanation || guide.text || guide.guide || guide.solution_guide || ''
+      if (rawText && typeof rawText === 'string') {
+        html += `<div class="text-slate-700 leading-relaxed">${formatTextToHtml(cleanCitations(rawText))}</div>`
+        html += `</div>`
+        return html
+      }
+    }
 
     if (hasTimeline) {
       const timelineItems: Array<{
@@ -217,6 +244,17 @@ export function formatSolutionGuide(guide: any): string {
 
       if (stepsData && Array.isArray(stepsData)) {
         stepsData.forEach((st: any, idx: number) => {
+          if (typeof st === 'string') {
+            timelineItems.push({
+              type: 'step',
+              idx: idx + 1,
+              title: '',
+              content: cleanCitations(st),
+              formula: null,
+              point: null,
+            })
+            return
+          }
           const rawPoint = st.point !== undefined && st.point !== null ? st.point : st.Point
           const parsedPoint = rawPoint !== undefined && rawPoint !== null && !isNaN(Number(rawPoint)) ? Number(rawPoint) : null
 

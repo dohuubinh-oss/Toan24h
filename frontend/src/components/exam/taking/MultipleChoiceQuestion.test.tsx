@@ -18,10 +18,10 @@ vi.mock('./ExplanationPopup', () => ({
 
 describe('MultipleChoiceQuestion Component', () => {
   const options = [
-    { id: 'A', text: '$x = 3$' },
-    { id: 'B', text: '$x = 5$' },
-    { id: 'C', text: '$x = 4$' },
-    { id: 'D', text: '$x = -3$' },
+    { id: 'A', label: 'A', text: '$x = 3$' },
+    { id: 'B', label: 'B', text: '$x = 5$' },
+    { id: 'C', label: 'C', text: '$x = 4$' },
+    { id: 'D', label: 'D', text: '$x = -3$' },
   ]
 
   it('renders question and options', () => {

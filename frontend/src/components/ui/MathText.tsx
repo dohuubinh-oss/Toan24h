@@ -3,23 +3,39 @@ import 'katex/dist/katex.min.css';
 import { InlineMath, BlockMath } from 'react-katex';
 import katex from 'katex';
 import DOMPurify from 'isomorphic-dompurify';
-
-
+import { formatSolutionGuide } from '../questions/creator/utils/questionTextFormatter';
 
 interface MathTextProps {
-  content: string;
+  content: any;
   className?: string;
 }
 
 export default function MathText({ content, className = '' }: MathTextProps) {
+  // Tự động nhận diện nếu content là object hoặc JSON string của lời giải chi tiết (solution_guide)
+  let rawText = content;
+  if (typeof rawText === 'object' && rawText !== null) {
+    rawText = formatSolutionGuide(rawText);
+  } else if (typeof rawText === 'string') {
+    const trimmed = rawText.trim();
+    if (
+      (trimmed.startsWith('{') && trimmed.endsWith('}') && (trimmed.includes('"steps"') || trimmed.includes('"Steps"') || trimmed.includes('"problem"') || trimmed.includes('"conclusion"') || trimmed.includes('"analysis"'))) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']') && trimmed.includes('"step"'))
+    ) {
+      rawText = formatSolutionGuide(trimmed);
+    }
+  }
+
+  // Đảm bảo rawText luôn là string
+  const textContent = typeof rawText === 'string' ? rawText : '';
+
   // Kiểm tra xem chuỗi có chứa thẻ HTML không
-  const hasHtml = /<[a-z][\s\S]*>/i.test(content);
+  const hasHtml = /<[a-z][\s\S]*>/i.test(textContent);
 
   const renderedHtml = useMemo(() => {
-    if (!hasHtml) return content;
+    if (!hasHtml) return textContent;
     
     // Convert TipTap math tags to latex delimiters
-    let processed = content
+    let processed = textContent
       .replace(/<math-inline[^>]*data-latex="([^"]*)"[^>]*>[\s\S]*?<\/math-inline>/gi, '$$$1$$')
       .replace(/<math-inline[^>]*latex="([^"]*)"[^>]*>[\s\S]*?<\/math-inline>/gi, '$$$1$$')
       .replace(/<span[^>]*data-type="math"[^>]*data-latex="([^"]*)"[^>]*>[\s\S]*?<\/span>/gi, '$$$1$$')
@@ -57,7 +73,7 @@ export default function MathText({ content, className = '' }: MathTextProps) {
     });
 
     return processed;
-  }, [content, hasHtml]);
+  }, [textContent, hasHtml]);
 
   if (hasHtml) {
     const cleanHtml = DOMPurify.sanitize(renderedHtml);
@@ -70,11 +86,11 @@ export default function MathText({ content, className = '' }: MathTextProps) {
   }
 
   // Hàm đơn giản phân tách text thường và text latex
-  let processedContent = content;
+  let processedContent = textContent;
   // Nếu chuỗi chứa lệnh latex phổ biến (\dfrac, \frac, \sqrt, \int, \sum...) mà chưa được bọc $, $$, \(, \[
-  if (content && !/(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^$]+\$|\\\([\s\S]*?\\\))/.test(content)) {
-    if (/\\(dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|in|subset|cup|cap|widehat|degree)/.test(content)) {
-      processedContent = `$${content}$`;
+  if (textContent && !/(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^$]+\$|\\\([\s\S]*?\\\))/.test(textContent)) {
+    if (/\\(dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|in|subset|cup|cap|widehat|degree)/.test(textContent)) {
+      processedContent = `$${textContent}$`;
     }
   }
 

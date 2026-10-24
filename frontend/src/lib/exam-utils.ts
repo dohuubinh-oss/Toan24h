@@ -75,3 +75,57 @@ export function validateExamConfig(config: Partial<Exam>): Record<string, string
 
   return errors;
 }
+
+export const DIFFICULTY_WEIGHT: Record<string, number> = {
+  'Nhận biết': 1,
+  'Thông hiểu': 2,
+  'Vận dụng': 3,
+  'Vận dụng cao': 4,
+};
+
+export function getQuestionDifficultyWeight(q: any): number {
+  const level = q?.difficulty_level || q?.difficultyLevel || '';
+  if (level && DIFFICULTY_WEIGHT[level]) {
+    return DIFFICULTY_WEIGHT[level];
+  }
+  if ((q?.type_question === 'group' || q?.typeQuestion === 'group') && q?.subQuestions && q?.subQuestions.length > 0) {
+    const subLevel = q.subQuestions[0].difficulty_level || q.subQuestions[0].difficultyLevel || '';
+    if (subLevel && DIFFICULTY_WEIGHT[subLevel]) {
+      return DIFFICULTY_WEIGHT[subLevel];
+    }
+  }
+  return 1;
+}
+
+export function isEssayOrGroupQuestion(q: any): boolean {
+  return q?.type === 'Tự luận' || q?.type_question === 'group' || q?.typeQuestion === 'group';
+}
+
+/**
+ * Chuẩn hóa thứ tự câu hỏi trong đề thi:
+ * 1. Câu trắc nghiệm ở trên (Phần 1), Câu tự luận & Câu hỏi chùm ở dưới (Phần 2)
+ * 2. Trong từng phần: Câu dễ ở trên, Câu khó ở dưới (Nhận biết -> Thông hiểu -> Vận dụng -> Vận dụng cao)
+ */
+export function sortExamQuestions<T = any>(questions: T[]): T[] {
+  if (!questions || !Array.isArray(questions) || questions.length === 0) return [];
+
+  const sortByDifficulty = (a: any, b: any) => {
+    const wA = getQuestionDifficultyWeight(a);
+    const wB = getQuestionDifficultyWeight(b);
+    if (wA !== wB) return wA - wB;
+
+    const pointA = a?.difficulty_point ?? a?.difficultyPoint ?? 0;
+    const pointB = b?.difficulty_point ?? b?.difficultyPoint ?? 0;
+    return pointA - pointB;
+  };
+
+  const multipleChoiceQuestions = questions
+    .filter(q => !isEssayOrGroupQuestion(q))
+    .sort(sortByDifficulty);
+
+  const essayQuestions = questions
+    .filter(q => isEssayOrGroupQuestion(q))
+    .sort(sortByDifficulty);
+
+  return [...multipleChoiceQuestions, ...essayQuestions];
+}

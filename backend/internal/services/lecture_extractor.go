@@ -108,8 +108,6 @@ func ExtractLectureFromImages(files [][]byte, mimeTypes []string) (string, error
 		"gemini-3.7-flash",
 		"gemini-3.6-flash",
 		"gemini-3.5-flash",
-		"gemini-3.1-pro-preview",
-		"gemini-pro-latest",
 	}
 
 	candidateModels := []string{}
@@ -243,7 +241,7 @@ Yêu cầu nghiêm ngặt về nội dung và định dạng văn bản:
 		return "", fmt.Errorf("failed to marshal Gemini request: %w", err)
 	}
 
-	client := &http.Client{Timeout: 90 * time.Second}
+	client := &http.Client{Timeout: 30 * time.Second}
 	var rawText string
 	var lastErr error
 

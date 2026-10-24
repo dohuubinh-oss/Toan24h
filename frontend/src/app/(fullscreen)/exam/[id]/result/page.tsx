@@ -11,6 +11,7 @@ import EssayQuestion from '@/components/exam/taking/EssayQuestion'
 import AIHintPanel from '@/components/exam/taking/AIHintPanel'
 import MathText from '@/components/ui/MathText'
 import { getExamResultById, submitTeacherGradingReview } from '@/lib/api'
+import { sortExamQuestions } from '@/lib/exam-utils'
 import { useToast } from '@/components/ui/ToastProvider'
 
 export default function ExamResultPage({ params }: { params: Promise<{ id: string }> }) {
@@ -146,13 +147,8 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     const childQs = rawQs.filter((q: any) => !!q.parentId)
 
     let structuredQuestions = parentQs.length > 0 ? parentQs : rawQs
-    if (exam && Array.isArray(exam.questionIds) && exam.questionIds.length > 0) {
-      const qMap = new Map(structuredQuestions.map((q: any) => [q.id, q]))
-      const sorted = exam.questionIds.map((qid: string) => qMap.get(qid)).filter(Boolean)
-      if (sorted.length > 0) {
-        structuredQuestions = sorted
-      }
-    }
+    // Sắp xếp câu hỏi chuẩn hóa: Trắc nghiệm trước, Tự luận sau; Dễ trước, Khó sau
+    structuredQuestions = sortExamQuestions(structuredQuestions)
 
     const questions: any[] = []
     const mapItems: QuestionMapItem[] = []
@@ -509,6 +505,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                   questionId={currentQuestion.id}
                   index={currentQuestionIndex}
                   topic={currentQuestion.topic || ""}
+                  diagram_svg={currentQuestion.diagram_svg || (currentQuestion as any).diagramSvg}
                   content={currentQuestion.content}
                   options={currentQuestion.options.map((opt: any, i: number) => ({
                     id: typeof opt === 'string' ? opt : (opt.id || opt.text),
@@ -534,12 +531,14 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                   resultId={id}
                   questionId={currentQuestion.id}
                   index={currentQuestionIndex}
+                  diagram_svg={currentQuestion.diagram_svg || (currentQuestion as any).diagramSvg}
                   content={currentQuestion.content}
                   sharedContext={currentQuestion.content}
                   solution_guide={currentQuestion.solution_guide}
                   subQuestions={currentQuestion.subQuestions?.map((sq: any) => ({
                     id: sq.id,
                     type: sq.type === 'Trắc nghiệm' ? 'mc' : 'essay',
+                    diagram_svg: sq.diagram_svg || (sq as any).diagramSvg,
                     content: sq.content,
                     options: sq.options,
                     solution_guide: sq.solution_guide,

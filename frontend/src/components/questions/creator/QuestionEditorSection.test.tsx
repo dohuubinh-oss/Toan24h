@@ -149,9 +149,70 @@ describe('QuestionEditorSection Component', () => {
     render(<QuestionEditorSection currentQuestion={mockQuestion} currentBlock={mockBlock} />)
 
     expect(screen.getByText('Hình vẽ minh họa bài toán')).toBeInTheDocument()
-    const img = screen.getByAltText('Hình vẽ minh họa bài toán')
-    expect(img).toBeInTheDocument()
-    expect(img.getAttribute('src')).toContain('data:image/svg+xml;utf8,')
+    const svgContainer = screen.getByTestId('illustration-svg')
+    expect(svgContainer).toBeInTheDocument()
+    expect(svgContainer.querySelector('circle')).toBeInTheDocument()
+  })
+
+  it('renders illustration card at the very top before question content for single questions', () => {
+    const mockQuestion = {
+      id: '1',
+      content: 'Tính diện tích hình tròn',
+      type: 'Trắc nghiệm',
+      options: ['10', '20', '30', '40'],
+      diagram_svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" /></svg>'
+    } as any
+
+    render(<QuestionEditorSection currentQuestion={mockQuestion} />)
+
+    const illustrationCard = screen.getByText('Hình vẽ minh họa bài toán')
+    const questionContentCard = screen.getByText('Nội dung câu hỏi')
+
+    expect(illustrationCard).toBeInTheDocument()
+    expect(questionContentCard).toBeInTheDocument()
+    expect(screen.queryByText('Nội dung dẫn chung')).not.toBeInTheDocument()
+
+    // Verify illustration is before question content in DOM
+    expect(illustrationCard.compareDocumentPosition(questionContentCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('renders illustration card between shared content and sub-questions list for group questions', () => {
+    const mockQuestion1 = { id: '1', content: 'Câu 1a', type: 'Trắc nghiệm', options: ['A', 'B'] } as any
+    const mockQuestion2 = { id: '2', content: 'Câu 1b', type: 'Trắc nghiệm', options: ['C', 'D'] } as any
+
+    const mockBlock = {
+      is_group: true,
+      shared_content: 'Đoạn thông tin chung cho cả bài',
+      diagram_svg: '<svg viewBox="0 0 100 100"><rect width="80" height="80" /></svg>',
+      questions: [mockQuestion1, mockQuestion2]
+    } as any
+
+    const onSelectSubQuestion = vi.fn()
+    const onAddSubQuestion = vi.fn()
+
+    render(
+      <QuestionEditorSection 
+        currentQuestion={mockQuestion1} 
+        currentBlock={mockBlock}
+        currentQuestionIndex={0}
+        onSelectSubQuestion={onSelectSubQuestion}
+        onAddSubQuestion={onAddSubQuestion}
+      />
+    )
+
+    const sharedContentEl = screen.getByText('Nội dung dẫn chung')
+    const illustrationEl = screen.getByText('Hình vẽ minh họa bài toán')
+    const subQuestionsListEl = screen.queryByTestId('sub-questions-list')
+    const questionContentEl = screen.getByText('Nội dung câu hỏi con #1')
+
+    expect(sharedContentEl).toBeInTheDocument()
+    expect(illustrationEl).toBeInTheDocument()
+    expect(subQuestionsListEl).not.toBeInTheDocument()
+    expect(questionContentEl).toBeInTheDocument()
+
+    // Verify strict order: Shared Context -> Illustration -> Question Content
+    expect(sharedContentEl.compareDocumentPosition(illustrationEl) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(illustrationEl.compareDocumentPosition(questionContentEl) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })
 
