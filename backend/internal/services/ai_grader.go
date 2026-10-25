@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
@@ -104,8 +103,10 @@ func GradeEssayBatchWithGemini(input EssayBatchInput) (*EssayBatchResponse, erro
 }
 
 func gradeEssayChunk(input EssayBatchInput) (*EssayBatchResponse, error) {
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
+	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
+		utils.InitGlobalGeminiPool()
+	}
+	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
 		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
 	}
 
@@ -269,19 +270,20 @@ BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Tr�
 	var response *EssayBatchResponse
 
 	for _, model := range candidateModels {
-		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
 		result, err := utils.AIBreaker.Execute(func() (interface{}, error) {
-			return utils.ExecuteWithRetry(2, 1*time.Second, func() (interface{}, error) {
-				resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
-				if err != nil {
-					return nil, err
-				}
-				defer resp.Body.Close()
+			resp, err := utils.GlobalGeminiPool.ExecuteWithRetry(func(currentKey string) (*http.Response, error) {
+				url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, currentKey)
+				return http.Post(url, "application/json", bytes.NewBuffer(body))
+			})
+			if err != nil {
+				return nil, err
+			}
+			defer resp.Body.Close()
 
-				if resp.StatusCode != http.StatusOK {
-					respBody, _ := io.ReadAll(resp.Body)
-					return nil, fmt.Errorf("Gemini API error (%s status %d): %s", model, resp.StatusCode, string(respBody))
-				}
+			if resp.StatusCode != http.StatusOK {
+				respBody, _ := io.ReadAll(resp.Body)
+				return nil, fmt.Errorf("Gemini API error (%s status %d): %s", model, resp.StatusCode, string(respBody))
+			}
 
 				var res struct {
 					Candidates []struct {
@@ -306,7 +308,6 @@ BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Tr�
 					return nil, fmt.Errorf("failed to parse JSON from %s", model)
 				}
 				return nil, fmt.Errorf("empty response from %s", model)
-			})
 		})
 
 		if err == nil && result != nil {
@@ -398,8 +399,10 @@ func EvaluateReasoningBatchWithGemini(input ReasoningBatchInput) (*ReasoningBatc
 }
 
 func evaluateReasoningChunk(input ReasoningBatchInput) (*ReasoningBatchResponse, error) {
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
+	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
+		utils.InitGlobalGeminiPool()
+	}
+	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
 		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
 	}
 
@@ -523,19 +526,20 @@ BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Tr�
 	var response *ReasoningBatchResponse
 
 	for _, model := range candidateModels {
-		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
 		result, err := utils.AIBreaker.Execute(func() (interface{}, error) {
-			return utils.ExecuteWithRetry(2, 1*time.Second, func() (interface{}, error) {
-				resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
-				if err != nil {
-					return nil, err
-				}
-				defer resp.Body.Close()
+			resp, err := utils.GlobalGeminiPool.ExecuteWithRetry(func(currentKey string) (*http.Response, error) {
+				url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, currentKey)
+				return http.Post(url, "application/json", bytes.NewBuffer(body))
+			})
+			if err != nil {
+				return nil, err
+			}
+			defer resp.Body.Close()
 
-				if resp.StatusCode != http.StatusOK {
-					respBody, _ := io.ReadAll(resp.Body)
-					return nil, fmt.Errorf("Gemini API error (%s status %d): %s", model, resp.StatusCode, string(respBody))
-				}
+			if resp.StatusCode != http.StatusOK {
+				respBody, _ := io.ReadAll(resp.Body)
+				return nil, fmt.Errorf("Gemini API error (%s status %d): %s", model, resp.StatusCode, string(respBody))
+			}
 
 				var res struct {
 					Candidates []struct {
@@ -561,7 +565,6 @@ BẮT BUỘC giữ nguyên submissionId, examId, studentId từ đầu vào. Tr�
 				}
 
 				return nil, fmt.Errorf("empty response from %s", model)
-			})
 		})
 
 		if err == nil && result != nil {

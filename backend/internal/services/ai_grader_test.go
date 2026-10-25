@@ -2,8 +2,10 @@ package services
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,3 +51,25 @@ func TestEssayQuestionResult_StepResultsSchema(t *testing.T) {
 	assert.False(t, res.StepResults[1].IsCorrect)
 	assert.Equal(t, "u = 5", res.StepResults[1].ErrorLocation)
 }
+
+func TestAIGrader_MissingKeys(t *testing.T) {
+	origPool := utils.GlobalGeminiPool
+	defer func() { utils.GlobalGeminiPool = origPool }()
+
+	utils.GlobalGeminiPool = utils.NewGeminiPoolManager("", 0)
+	// Clear env fallback as well
+	origKey := os.Getenv("GEMINI_API_KEY")
+	origKeys := os.Getenv("GEMINI_API_KEYS")
+	defer func() {
+		os.Setenv("GEMINI_API_KEY", origKey)
+		os.Setenv("GEMINI_API_KEYS", origKeys)
+	}()
+	os.Setenv("GEMINI_API_KEY", "")
+	os.Setenv("GEMINI_API_KEYS", "")
+	utils.InitGlobalGeminiPool()
+
+	_, err := gradeEssayChunk(EssayBatchInput{})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "GEMINI_API_KEY is not set")
+}
+
