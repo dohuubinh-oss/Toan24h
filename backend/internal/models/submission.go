@@ -42,9 +42,19 @@ type StepGradeResult struct {
 	DeductionReason string  `json:"deduction_reason,omitempty"`
 }
 
+type DiagramResult struct {
+	HasDiagramRequired bool    `json:"has_diagram_required"`
+	Score              float64 `json:"score"`
+	MaxScore           float64 `json:"max_score"`
+	IsCorrect          bool    `json:"is_correct"`
+	StudentDiagramURL  string  `json:"student_diagram_url,omitempty"`
+	Explanation        string  `json:"explanation,omitempty"`
+}
+
 type QuestionAnswer struct {
 	Type                string            `json:"type"`
 	StudentAnswer       string            `json:"student_answer"`
+	StudentDiagramURL   string            `json:"student_diagram_url,omitempty"`
 	ImageURLs           []string          `json:"image_urls"`
 	Score               float64           `json:"score"`
 	MaxScore            float64           `json:"max_score,omitempty"`
@@ -59,6 +69,7 @@ type QuestionAnswer struct {
 	Appeal              AppealInfo        `json:"appeal"`
 	StudentExplanation  string            `json:"student_explanation"`
 	StepResults         []StepGradeResult `json:"step_results,omitempty"`
+	DiagramResult       *DiagramResult    `json:"diagram_result,omitempty"`
 	IsAlternativeMethod bool              `json:"is_alternative_method,omitempty"`
 }
 
