@@ -25,6 +25,7 @@ type SubmitExamRequest struct {
 		StudentExplanation string `json:"studentExplanation"`
 		IsEssay            bool   `json:"isEssay"`
 		ImagePath          string `json:"imagePath"`
+		StudentDiagramURL  string `json:"studentDiagramUrl,omitempty"`
 	} `json:"answers"`
 }
 
@@ -65,6 +66,8 @@ func SubmitExam(c *gin.Context) {
 			return
 		}
 		isUpdate = true
+	} else {
+		submission.ID = uuid.New()
 	}
 
 	answersMap := make(map[string]models.QuestionAnswer)
@@ -79,10 +82,16 @@ func SubmitExam(c *gin.Context) {
 			qType = "Tự luận"
 		}
 
+		diagramURL := ans.StudentDiagramURL
+		if strings.HasPrefix(diagramURL, "/uploads/temp/") {
+			diagramURL = services.MoveDiagramTempToPermanent(".", diagramURL, submission.ID.String(), ans.QuestionID)
+		}
+
 		answersMap[ans.QuestionID] = models.QuestionAnswer{
 			Type:               qType,
 			StudentAnswer:      ans.StudentAnswer,
 			StudentExplanation: ans.StudentExplanation,
+			StudentDiagramURL:  diagramURL,
 			ImageURLs:          []string{ans.ImagePath},
 			Appeal: models.AppealInfo{
 				IsAppealed: false,
@@ -211,19 +220,22 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 		}
 
 		if question.Type == "Tự luận" {
-			if ans.StudentAnswer == "" {
+			if ans.StudentAnswer == "" && ans.StudentDiagramURL == "" {
 				ans.Score = 0
 				ans.IsCorrect = false
 				ans.AIExplanation = "Không có câu trả lời."
 				answersMap[qID] = ans
 			} else {
+				hasDiagram := ans.StudentDiagramURL != "" || strings.Contains(strings.ToLower(question.Content), "vẽ hình") || strings.Contains(strings.ToLower(question.Content), "hình vẽ") || strings.Contains(strings.ToLower(question.SolutionGuide), "hình vẽ")
 				essayQuestions = append(essayQuestions, services.EssayBatchQuestionItem{
-					QuestionID:      qID,
-					QuestionContent: question.Content,
-					CorrectAnswer:   question.CorrectAnswer,
-					SolutionGuide:   question.SolutionGuide,
-					MaxScore:        float64(question.DifficultyPoint),
-					StudentAnswer:   ans.StudentAnswer,
+					QuestionID:        qID,
+					QuestionContent:   question.Content,
+					CorrectAnswer:     question.CorrectAnswer,
+					SolutionGuide:     question.SolutionGuide,
+					MaxScore:          float64(question.DifficultyPoint),
+					StudentAnswer:     ans.StudentAnswer,
+					StudentDiagramURL: ans.StudentDiagramURL,
+					HasDiagram:        hasDiagram,
 				})
 			}
 		} else {
@@ -281,6 +293,15 @@ func ProcessExamGrading(submissionID uuid.UUID) {
 				ans.DeductionReason = res.DeductionReason
 				ans.StepResults = res.StepResults
 				ans.IsAlternativeMethod = res.IsAlternativeMethod
+				if res.DiagramResult != nil {
+					ans.DiagramResult = res.DiagramResult
+					if ans.DiagramResult.StudentDiagramURL == "" {
+						ans.DiagramResult.StudentDiagramURL = ans.StudentDiagramURL
+					}
+					if res.DiagramResult.IsCorrect {
+						totalScore += res.DiagramResult.Score
+					}
+				}
 				totalScore += ans.Score
 				answersMap[res.QuestionID] = ans
 			}

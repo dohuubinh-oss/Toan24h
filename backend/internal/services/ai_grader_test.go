@@ -73,3 +73,49 @@ func TestAIGrader_MissingKeys(t *testing.T) {
 	assert.Contains(t, err.Error(), "GEMINI_API_KEY is not set")
 }
 
+func TestEssayQuestionResult_DiagramResult(t *testing.T) {
+	rawJSON := `{
+		"questionId": "q_geo_1",
+		"score": 1.5,
+		"maxScore": 1.5,
+		"isCorrect": true,
+		"explanation": "Lời giải hoàn toàn chính xác.",
+		"diagramResult": {
+			"hasDiagramRequired": true,
+			"score": 0.5,
+			"maxScore": 0.5,
+			"isCorrect": true,
+			"explanation": "Hình vẽ chính xác đỉnh, cạnh và góc vuông theo giả thiết."
+		},
+		"stepResults": [
+			{
+				"step": 1,
+				"title": "Áp dụng định lý Pythagoras",
+				"score": 0.75,
+				"max_score": 0.75,
+				"is_correct": true
+			},
+			{
+				"step": 2,
+				"title": "Tính độ dài đoạn thẳng BC",
+				"score": 0.75,
+				"max_score": 0.75,
+				"is_correct": true
+			}
+		]
+	}`
+
+	var res EssayQuestionResult
+	err := json.Unmarshal([]byte(rawJSON), &res)
+	assert.NoError(t, err)
+	assert.Equal(t, "q_geo_1", res.QuestionID)
+	assert.NotNil(t, res.DiagramResult)
+	assert.True(t, res.DiagramResult.HasDiagramRequired)
+	assert.Equal(t, 0.5, res.DiagramResult.Score)
+	assert.Equal(t, 0.5, res.DiagramResult.MaxScore)
+	assert.True(t, res.DiagramResult.IsCorrect)
+	assert.Equal(t, "Hình vẽ chính xác đỉnh, cạnh và góc vuông theo giả thiết.", res.DiagramResult.Explanation)
+	assert.Len(t, res.StepResults, 2)
+}
+
+

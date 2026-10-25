@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -49,6 +50,31 @@ type DiagramResult struct {
 	IsCorrect          bool    `json:"is_correct"`
 	StudentDiagramURL  string  `json:"student_diagram_url,omitempty"`
 	Explanation        string  `json:"explanation,omitempty"`
+}
+
+func (d *DiagramResult) UnmarshalJSON(data []byte) error {
+	type Alias DiagramResult
+	aux := &struct {
+		HasDiagramRequiredCamel *bool    `json:"hasDiagramRequired"`
+		MaxScoreCamel           *float64 `json:"maxScore"`
+		IsCorrectCamel          *bool    `json:"isCorrect"`
+		*Alias
+	}{
+		Alias: (*Alias)(d),
+	}
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+	if aux.HasDiagramRequiredCamel != nil {
+		d.HasDiagramRequired = *aux.HasDiagramRequiredCamel
+	}
+	if aux.MaxScoreCamel != nil {
+		d.MaxScore = *aux.MaxScoreCamel
+	}
+	if aux.IsCorrectCamel != nil {
+		d.IsCorrect = *aux.IsCorrectCamel
+	}
+	return nil
 }
 
 type QuestionAnswer struct {
