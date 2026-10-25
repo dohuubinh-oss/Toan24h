@@ -170,3 +170,48 @@ func TestMobileUpload_TTL_Expiration(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "expired", resp["status"])
 }
+
+func TestMobileUpload_DiagramTemp(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	ctrl := controllers.NewMobileUploadController()
+
+	r := gin.New()
+	r.POST("/api/v1/mobile-upload/:sessionId", ctrl.UploadFromMobile)
+	r.GET("/api/v1/mobile-upload/:sessionId", ctrl.CheckUploadStatus)
+
+	sessionID := "session-diagram-test"
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	part, _ := writer.CreateFormFile("file", "diagram.jpg")
+	part.Write(validJpegHeader)
+	part.Write([]byte("fake diagram image payload"))
+	writer.Close()
+
+	req, _ := http.NewRequest("POST", "/api/v1/mobile-upload/"+sessionID+"?type=diagram", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var uploadResp map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &uploadResp)
+	assert.NoError(t, err)
+
+	diagramUrl, ok := uploadResp["diagramUrl"].(string)
+	assert.True(t, ok, "Expected diagramUrl in response")
+	assert.Contains(t, diagramUrl, "/uploads/temp/session-diagram-test_diagram")
+
+	// Verify CheckUploadStatus returns the diagramUrl
+	checkReq, _ := http.NewRequest("GET", "/api/v1/mobile-upload/"+sessionID, nil)
+	checkW := httptest.NewRecorder()
+	r.ServeHTTP(checkW, checkReq)
+
+	assert.Equal(t, http.StatusOK, checkW.Code)
+	var checkResp map[string]interface{}
+	err = json.Unmarshal(checkW.Body.Bytes(), &checkResp)
+	assert.NoError(t, err)
+	assert.Equal(t, "completed", checkResp["status"])
+	assert.Equal(t, diagramUrl, checkResp["diagramUrl"])
+}
+

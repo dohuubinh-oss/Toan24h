@@ -5,6 +5,8 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -17,6 +19,8 @@ type TextExtractorFunc func(fileBytes []byte, mimeType string) (*services.OCRRes
 
 type MobileUploadResult struct {
 	Text       string    `json:"text"`
+	DiagramURL string    `json:"diagramUrl,omitempty"`
+	UploadType string    `json:"uploadType,omitempty"`
 	PageCount  int       `json:"pageCount"`
 	CreatedAt  time.Time `json:"createdAt"`
 	UpdatedAt  time.Time `json:"updatedAt"`
@@ -157,7 +161,70 @@ func (ctrl *MobileUploadController) UploadFromMobile(c *gin.Context) {
 		return
 	}
 
-	// 4. Validate và nhận dạng từng trang ảnh
+	uploadType := c.DefaultQuery("type", "ocr")
+
+	// Nếu là upload hình vẽ độc lập (type=diagram): Lưu tạm tại uploads/temp và bỏ qua OCR
+	if uploadType == "diagram" {
+		if len(fileHeaders) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Không tìm thấy file ảnh"})
+			return
+		}
+		header := fileHeaders[0]
+		if header.Size > 10*1024*1024 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "File ảnh vượt quá dung lượng tối đa 10MB"})
+			return
+		}
+		file, err := header.Open()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi khi mở file ảnh"})
+			return
+		}
+		fileBytes, err := io.ReadAll(file)
+		_ = file.Close()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi khi đọc file ảnh"})
+			return
+		}
+
+		if err := utils.ValidateImageBytes(fileBytes, utils.DefaultImageValidationOptions); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Định dạng ảnh không hợp lệ: " + err.Error()})
+			return
+		}
+
+		tempDir := filepath.Join(".", "uploads", "temp")
+		if err := os.MkdirAll(tempDir, 0755); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo thư mục lưu trữ ảnh tạm"})
+			return
+		}
+
+		ext := filepath.Ext(header.Filename)
+		if ext == "" {
+			ext = ".jpg"
+		}
+		fileName := fmt.Sprintf("%s_diagram%s", sessionID, ext)
+		filePath := filepath.Join(tempDir, fileName)
+		if err := os.WriteFile(filePath, fileBytes, 0644); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi khi lưu file ảnh hình vẽ"})
+			return
+		}
+
+		diagramURL := fmt.Sprintf("/uploads/temp/%s", fileName)
+		existing.DiagramURL = diagramURL
+		existing.UploadType = "diagram"
+		existing.PageCount = 1
+		existing.IsComplete = true
+		existing.UpdatedAt = time.Now()
+		ctrl.store.Store(sessionID, existing)
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":    "Tải ảnh hình vẽ thành công",
+			"diagramUrl": diagramURL,
+			"uploadType": "diagram",
+		})
+		return
+	}
+
+	// 4. Validate và nhận dạng từng trang ảnh (type=ocr)
 	for _, header := range fileHeaders {
 		if header.Size > 10*1024*1024 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "File ảnh vượt quá dung lượng tối đa 10MB"})
@@ -243,8 +310,10 @@ func (ctrl *MobileUploadController) CheckUploadStatus(c *gin.Context) {
 	ctrl.store.Delete(sessionID)
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":    "completed",
-		"text":      res.Text,
-		"pageCount": res.PageCount,
+		"status":     "completed",
+		"text":       res.Text,
+		"diagramUrl": res.DiagramURL,
+		"uploadType": res.UploadType,
+		"pageCount":  res.PageCount,
 	})
 }
