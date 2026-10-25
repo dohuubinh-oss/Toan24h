@@ -1,7 +1,11 @@
 package utils
 
 import (
+	"bytes"
+	"io"
+	"net/http"
 	"os"
+	"sync"
 	"testing"
 	"time"
 )
@@ -137,4 +141,95 @@ func TestGeminiPool_StickyAndCooldown(t *testing.T) {
 		t.Fatalf("Expected recovered key to be 'key1', got '%s'", recoveredKey)
 	}
 }
+
+func TestGeminiPool_ExecuteWithRetry(t *testing.T) {
+	var mu sync.Mutex
+	calls := make(map[string]int)
+
+	pool := NewGeminiPoolManager("key1, key2", 6*time.Hour)
+
+	resp, err := pool.ExecuteWithRetry(func(apiKey string) (*http.Response, error) {
+		mu.Lock()
+		calls[apiKey]++
+		mu.Unlock()
+
+		if apiKey == "key1" {
+			return &http.Response{
+				StatusCode: http.StatusTooManyRequests,
+				Body:       io.NopCloser(bytes.NewBufferString(`{"error":{"status":"RESOURCE_EXHAUSTED","message":"Quota exceeded"}}`)),
+			}, nil
+		}
+
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`{"candidates":[{"content":{"parts":[{"text":"Result from ` + apiKey + `"}]}}]}`)),
+		}, nil
+	})
+	if err != nil {
+		t.Fatalf("Unexpected error from ExecuteWithRetry: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("Expected status 200 OK, got %d", resp.StatusCode)
+	}
+
+	mu.Lock()
+	c1 := calls["key1"]
+	c2 := calls["key2"]
+	mu.Unlock()
+
+	if c1 != 1 || c2 != 1 {
+		t.Fatalf("Expected key1 called once and key2 called once, got key1=%d, key2=%d", c1, c2)
+	}
+
+	// Active key should now stick to key2
+	activeKey, err := pool.GetActiveKey()
+	if err != nil || activeKey != "key2" {
+		t.Fatalf("Expected active key to be key2, got %s (err: %v)", activeKey, err)
+	}
+}
+
+func TestGeminiPool_ConcurrentAccess(t *testing.T) {
+	pool := NewGeminiPoolManager("dead_key, healthy_key_1, healthy_key_2", 6*time.Hour)
+
+	var wg sync.WaitGroup
+	workers := 20
+
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			resp, err := pool.ExecuteWithRetry(func(apiKey string) (*http.Response, error) {
+				if apiKey == "dead_key" {
+					return &http.Response{
+						StatusCode: http.StatusTooManyRequests,
+						Body:       io.NopCloser(bytes.NewBufferString(`{"error":{"message":"Resource has been exhausted"}}`)),
+					}, nil
+				}
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Body:       io.NopCloser(bytes.NewBufferString(`{"status":"ok"}`)),
+				}, nil
+			})
+			if err != nil {
+				t.Errorf("Unexpected error: %v", err)
+				return
+			}
+			resp.Body.Close()
+		}()
+	}
+
+	wg.Wait()
+
+	activeKey, err := pool.GetActiveKey()
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if activeKey == "dead_key" {
+		t.Fatalf("Active key should not be dead_key")
+	}
+}
+
+
 

@@ -1,14 +1,30 @@
 package utils
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 	"sync"
 	"time"
 )
 
-var ErrAllGeminiKeysExhausted = errors.New("Hệ thống AI đang tạm thời quá tải hạn mức, vui lòng thử lại sau ít phút")
+var (
+	ErrAllGeminiKeysExhausted = errors.New("Hệ thống AI đang tạm thời quá tải hạn mức, vui lòng thử lại sau ít phút")
+	GlobalGeminiPool          *GeminiPoolManager
+)
+
+func InitGlobalGeminiPool() {
+	keysEnv := os.Getenv("GEMINI_API_KEYS")
+	GlobalGeminiPool = NewGeminiPoolManager(keysEnv, 6*time.Hour)
+}
+
+func init() {
+	InitGlobalGeminiPool()
+}
 
 type KeyState struct {
 	Key           string
@@ -170,4 +186,71 @@ func (m *GeminiPoolManager) MarkKeySuccess(key string) {
 		}
 	}
 }
+
+// KeyCount returns the total number of configured keys.
+func (m *GeminiPoolManager) KeyCount() int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return len(m.keys)
+}
+
+// ExecuteWithRetry executes an HTTP request operation using the active Gemini API key.
+// If the key returns an HTTP 429/503 or quota error body, it records the failure (putting that key into cooldown)
+// and retries with the next healthy key in the pool until success or all available keys are exhausted.
+func (m *GeminiPoolManager) ExecuteWithRetry(executeFunc func(apiKey string) (*http.Response, error)) (*http.Response, error) {
+	if m == nil {
+		return nil, errors.New("GeminiPoolManager is not initialized")
+	}
+
+	maxAttempts := m.KeyCount()
+	if maxAttempts == 0 {
+		return nil, errors.New("no Gemini API keys configured in pool")
+	}
+
+	var lastErr error
+	var lastResp *http.Response
+
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		activeKey, err := m.GetActiveKey()
+		if err != nil {
+			return nil, err
+		}
+
+		resp, err := executeFunc(activeKey)
+		if err != nil {
+			return nil, err
+		}
+
+		// Read response body safely if status code is not 200 to check for Quota errors
+		if resp.StatusCode != http.StatusOK {
+			bodyBytes, readErr := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			bodyStr := ""
+			if readErr == nil {
+				bodyStr = string(bodyBytes)
+				// Re-create Body buffer for caller if it's not a retryable quota error
+				resp.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			}
+
+			if m.MarkKeyFailure(activeKey, resp.StatusCode, bodyStr) {
+				lastErr = fmt.Errorf("Gemini API key exhausted (status %d): %s", resp.StatusCode, bodyStr)
+				lastResp = resp
+				continue // Retry with the next healthy active key!
+			}
+
+			// Not a quota error (e.g. 400 Bad Request, 404) -> do not rotate key, return as is
+			return resp, nil
+		}
+
+		// Success!
+		m.MarkKeySuccess(activeKey)
+		return resp, nil
+	}
+
+	if lastResp != nil {
+		return lastResp, lastErr
+	}
+	return nil, ErrAllGeminiKeysExhausted
+}
+
 
