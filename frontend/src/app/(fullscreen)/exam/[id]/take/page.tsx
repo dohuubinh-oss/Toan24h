@@ -244,14 +244,16 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
             questionId: sub.id,
             studentAnswer: answers[sub.id] || "",
             studentExplanation: explanations[sub.id] || "",
-            isEssay: sub.type === 'Tự luận'
+            isEssay: sub.type === 'Tự luận',
+            studentDiagramUrl: answers[`${sub.id}_diagram`] || answers[`${q.id}_diagram`] || ""
           }))
         }
         return {
           questionId: q.id,
           studentAnswer: answers[q.id] || "",
           studentExplanation: explanations[q.id] || "",
-          isEssay: q.type === 'Tự luận'
+          isEssay: q.type === 'Tự luận',
+          studentDiagramUrl: answers[`${q.id}_diagram`] || ""
         }
       })
 

@@ -19,6 +19,19 @@ export interface SubQuestion {
   correctAnswer?: string
 }
 
+export interface DiagramResultData {
+  has_diagram_required?: boolean
+  hasDiagramRequired?: boolean
+  score: number
+  max_score?: number
+  maxScore?: number
+  is_correct?: boolean
+  isCorrect?: boolean
+  explanation?: string
+  student_diagram_url?: string
+  studentDiagramUrl?: string
+}
+
 export interface StepGradeResult {
   step: number
   title: string
@@ -46,6 +59,8 @@ export interface AIFeedbackData {
   reasoningScore?: number
   stepResults?: StepGradeResult[]
   isAlternativeMethod?: boolean
+  diagramResult?: DiagramResultData
+  studentDiagramUrl?: string
 }
 
 interface EssayQuestionProps {
@@ -171,6 +186,7 @@ function EditorItem({
   q, 
   answer, 
   explanation, 
+  diagramUrl,
   onAnswerChange, 
   isGroup,
   examType,
@@ -179,15 +195,16 @@ function EditorItem({
   onToggleHint,
   resultId
 }: { 
-  q: { id: number, label: string, type: string, solution_guide?: string, correctAnswer?: string },
+  q: { id: number | string, label: string, type: string, solution_guide?: string, correctAnswer?: string },
   answer: string,
   explanation: string,
-  onAnswerChange: (id: number, answer: string, explanation?: string) => void,
+  diagramUrl?: string,
+  onAnswerChange: (id: any, answer: string, explanation?: string) => void,
   isGroup: boolean,
   examType?: string,
   readonly?: boolean,
   aiFeedback?: AIFeedbackData,
-  onToggleHint?: (id: number) => void
+  onToggleHint?: (id: any) => void
   resultId?: string
 }) {
   const isMC = q.type === 'mc'
@@ -207,6 +224,9 @@ function EditorItem({
   const [isInAppCameraOpen, setIsInAppCameraOpen] = React.useState(false)
   const [qrSessionId, setQrSessionId] = React.useState('')
 
+  const [isDiagramQrModalOpen, setIsDiagramQrModalOpen] = React.useState(false)
+  const [diagramQrSessionId, setDiagramQrSessionId] = React.useState('')
+
   const isMobileDevice = () => {
     if (typeof window === 'undefined') return false
     return (
@@ -219,6 +239,12 @@ function EditorItem({
     const newSession = 'sess_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now()
     setQrSessionId(newSession)
     setIsQrModalOpen(true)
+  }
+
+  const handleOpenDiagramQrModal = () => {
+    const newSession = 'sess_diag_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now()
+    setDiagramQrSessionId(newSession)
+    setIsDiagramQrModalOpen(true)
   }
 
   const handleCameraClick = () => {
@@ -237,6 +263,53 @@ function EditorItem({
     <div className="flex flex-col flex-1 min-h-[250px]">
       {readonly ? (
         <div className="flex flex-col flex-1">
+          {/* Dedicated Diagram Result Card */}
+          {aiFeedback?.diagramResult && (
+            <div className="mb-4 bg-white border border-slate-200 rounded-xl p-5 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-indigo-600" />
+                  <h4 className="text-slate-800 font-bold text-base">
+                    Phần vẽ hình: {aiFeedback.diagramResult.score ?? 0} / {aiFeedback.diagramResult.maxScore ?? aiFeedback.diagramResult.max_score ?? 0.5} điểm
+                  </h4>
+                </div>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                    (aiFeedback.diagramResult.isCorrect ?? aiFeedback.diagramResult.is_correct)
+                      ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                      : 'bg-rose-100 text-rose-700 border border-rose-200'
+                  }`}
+                >
+                  {(aiFeedback.diagramResult.isCorrect ?? aiFeedback.diagramResult.is_correct) ? '✓ Vẽ đúng hình (+0.5đ)' : '✗ Chưa chính xác (0.0đ)'}
+                </span>
+              </div>
+
+              {aiFeedback.diagramResult.explanation && (
+                <p className="text-slate-700 text-sm mb-3">
+                  {aiFeedback.diagramResult.explanation}
+                </p>
+              )}
+
+              {(aiFeedback.diagramResult.studentDiagramUrl || aiFeedback.diagramResult.student_diagram_url || aiFeedback.studentDiagramUrl) && (
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <span className="text-xs font-semibold text-slate-500 mb-2 block">Ảnh hình vẽ của học sinh:</span>
+                  <div className="inline-block rounded-xl border border-slate-200 overflow-hidden bg-slate-50 p-1 shadow-xs max-w-xs">
+                    <img
+                      src={
+                        (aiFeedback.diagramResult.studentDiagramUrl || aiFeedback.diagramResult.student_diagram_url || aiFeedback.studentDiagramUrl)!.startsWith('http') ||
+                        (aiFeedback.diagramResult.studentDiagramUrl || aiFeedback.diagramResult.student_diagram_url || aiFeedback.studentDiagramUrl)!.startsWith('/')
+                          ? (aiFeedback.diagramResult.studentDiagramUrl || aiFeedback.diagramResult.student_diagram_url || aiFeedback.studentDiagramUrl)!
+                          : `/${aiFeedback.diagramResult.studentDiagramUrl || aiFeedback.diagramResult.student_diagram_url || aiFeedback.studentDiagramUrl}`
+                      }
+                      alt="Ảnh hình vẽ bài làm"
+                      className="max-h-48 rounded-lg object-contain"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <div className="flex items-center gap-2 flex-wrap">
               <label className="text-sm font-bold text-slate-800">
@@ -320,17 +393,51 @@ function EditorItem({
               className="flex-1 border-none rounded-none rounded-t-xl"
               minHeight="220px"
               rightCustomAction={
-                <button
-                  type="button"
-                  onClick={handleCameraClick}
-                  className="flex items-center gap-1.5 px-2.5 py-1 bg-primary text-white hover:bg-primary/90 rounded-lg font-bold text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
-                  title="Chụp ảnh bài làm viết tay"
-                >
-                  <Camera className="w-3.5 h-3.5" />
-                  <span>Chụp bài thi</span>
-                </button>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleOpenDiagramQrModal}
+                    className="flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
+                    title="Chụp ảnh hình vẽ bài toán"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>📷 Tải ảnh hình vẽ</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCameraClick}
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-primary text-white hover:bg-primary/90 rounded-lg font-bold text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
+                    title="Chụp ảnh bài làm viết tay"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Chụp bài thi</span>
+                  </button>
+                </div>
               }
             />
+            {diagramUrl && (
+              <div className="p-2.5 bg-emerald-50 border-t border-emerald-200 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="font-semibold text-emerald-900">Đã tải ảnh hình vẽ:</span>
+                  <a
+                    href={diagramUrl.startsWith('http') || diagramUrl.startsWith('/') ? diagramUrl : `/${diagramUrl}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary underline font-medium hover:text-primary/80"
+                  >
+                    Xem ảnh
+                  </a>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onAnswerChange(`${q.id}_diagram`, '')}
+                  className="text-rose-600 hover:text-rose-700 font-bold text-xs cursor-pointer"
+                >
+                  Xóa ảnh
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -344,6 +451,19 @@ function EditorItem({
         onSwitchToInAppCamera={() => {
           setIsQrModalOpen(false)
           setIsInAppCameraOpen(true)
+        }}
+      />
+
+      {/* Modal Quét mã QR Hình vẽ */}
+      <MobileQrUploadModal
+        isOpen={isDiagramQrModalOpen}
+        onClose={() => setIsDiagramQrModalOpen(false)}
+        sessionId={diagramQrSessionId}
+        uploadType="diagram"
+        onUploadSuccess={(_text, dUrl) => {
+          if (dUrl) {
+            onAnswerChange(`${q.id}_diagram`, dUrl)
+          }
         }}
       />
 
@@ -668,14 +788,15 @@ export default function EssayQuestion({
         {questionsToRender.map((q) => (
           <EditorItem 
             key={q.id}
-            q={q}
+            q={q as any}
             answer={answers[q.id] || ''}
             explanation={explanations?.[q.id] || ''}
+            diagramUrl={answers[`${q.id}_diagram`] || answers[`${questionId}_diagram`]}
             onAnswerChange={onAnswerChange || (() => {})}
             isGroup={!!isGroup}
             examType={examType}
             readonly={readonly}
-            aiFeedback={aiFeedbacks?.[q.id]}
+            aiFeedback={aiFeedbacks?.[q.id] || aiFeedbacks?.[questionId]}
             resultId={resultId}
             onToggleHint={onToggleHint}
           />

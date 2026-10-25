@@ -9,8 +9,9 @@ import { useToast } from '@/components/ui/ToastProvider'
 interface MobileQrUploadModalProps {
   isOpen: boolean
   onClose: () => void
-  onUploadSuccess: (text: string) => void
+  onUploadSuccess: (text: string, diagramUrl?: string) => void
   sessionId: string
+  uploadType?: 'ocr' | 'diagram'
   onSwitchToInAppCamera?: () => void
   onRefreshSession?: () => void
 }
@@ -20,6 +21,7 @@ export default function MobileQrUploadModal({
   onClose,
   onUploadSuccess,
   sessionId,
+  uploadType = 'ocr',
   onSwitchToInAppCamera,
   onRefreshSession
 }: MobileQrUploadModalProps) {
@@ -95,15 +97,30 @@ export default function MobileQrUploadModal({
             return
           }
 
-          if (res.status === 'completed' && res.text) {
-            clearInterval(intervalId)
-            setIsSuccess(true)
-            setIsSyncing(false)
-            toast.success('Đã đồng bộ bài làm từ điện thoại thành công!')
-            setTimeout(() => {
-              onUploadSuccess(res.text)
-              onClose()
-            }, 800)
+          if (res.status === 'completed') {
+            if (uploadType === 'diagram') {
+              const diagramUrl = res.diagramUrl || res.diagram_url || res.url || ''
+              clearInterval(intervalId)
+              setIsSuccess(true)
+              setIsSyncing(false)
+              toast.success('Đã tải ảnh hình vẽ thành công!')
+              setTimeout(() => {
+                onUploadSuccess('', diagramUrl)
+                onClose()
+              }, 800)
+              return
+            }
+
+            if (res.text) {
+              clearInterval(intervalId)
+              setIsSuccess(true)
+              setIsSyncing(false)
+              toast.success('Đã đồng bộ bài làm từ điện thoại thành công!')
+              setTimeout(() => {
+                onUploadSuccess(res.text)
+                onClose()
+              }, 800)
+            }
           }
         }
       } catch (err) {
@@ -114,11 +131,13 @@ export default function MobileQrUploadModal({
     return () => {
       clearInterval(intervalId)
     }
-  }, [isOpen, activeSessionId, isExpired, isSuccess, onUploadSuccess, onClose, toast])
+  }, [isOpen, activeSessionId, isExpired, isSuccess, onUploadSuccess, onClose, toast, uploadType])
 
   if (!isOpen) return null
 
-  const uploadUrl = origin && activeSessionId ? `${origin}/mobile-upload?session=${activeSessionId}` : ''
+  const uploadUrl = origin && activeSessionId 
+    ? `${origin}/mobile-upload?session=${activeSessionId}${uploadType === 'diagram' ? '&type=diagram' : ''}` 
+    : ''
 
   const minutes = Math.floor(timeLeft / 60)
   const seconds = timeLeft % 60
@@ -141,10 +160,12 @@ export default function MobileQrUploadModal({
           <Smartphone className="w-7 h-7" />
         </div>
         <h3 className="text-xl font-bold text-slate-800 mb-1">
-          Chụp bài làm bằng điện thoại
+          {uploadType === 'diagram' ? 'Chụp ảnh hình vẽ bằng điện thoại' : 'Chụp bài làm bằng điện thoại'}
         </h3>
         <p className="text-xs text-slate-500 mb-4 leading-relaxed">
-          Dùng camera điện thoại quét mã QR bên dưới để chụp ảnh lời giải viết tay (hỗ trợ nhiều trang).
+          {uploadType === 'diagram'
+            ? 'Dùng camera điện thoại quét mã QR bên dưới để chụp ảnh hình vẽ bài toán của bạn.'
+            : 'Dùng camera điện thoại quét mã QR bên dưới để chụp ảnh lời giải viết tay (hỗ trợ nhiều trang).'}
         </p>
 
         {/* TTL Timer Indicator */}

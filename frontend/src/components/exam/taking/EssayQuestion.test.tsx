@@ -265,4 +265,62 @@ describe('EssayQuestion Component', () => {
     expect(screen.getByText(/Chuyển vế đổi dấu sai/i)).toBeInTheDocument()
     expect(screen.getByText(/phương pháp tương đương hợp lệ/i)).toBeInTheDocument()
   })
+
+  it('renders diagram upload button and opens diagram QR modal', () => {
+    renderWithToast(
+      <EssayQuestion
+        questionId={50}
+        index={49}
+        content="Cho hình chóp S.ABCD"
+        answers={{}}
+        isHintOpen={false}
+        isFlagged={false}
+        onAnswerChange={vi.fn()}
+        onToggleFlag={vi.fn()}
+        onToggleHint={vi.fn()}
+      />
+    )
+
+    const diagramButton = screen.getByRole('button', { name: /Tải ảnh hình vẽ/i })
+    expect(diagramButton).toBeInTheDocument()
+    fireEvent.click(diagramButton)
+
+    expect(screen.getByText(/Chụp ảnh hình vẽ bằng điện thoại/i)).toBeInTheDocument()
+  })
+
+  it('renders independent diagram result card in readonly mode', () => {
+    const aiFeedbacks = {
+      60: {
+        isCorrect: true,
+        score: 1.0,
+        maxScore: 1.0,
+        aiExplanation: 'Lời giải tốt',
+        diagramResult: {
+          hasDiagramRequired: true,
+          score: 0.5,
+          maxScore: 0.5,
+          isCorrect: true,
+          explanation: 'Hình vẽ các đỉnh, đường cao AH và ký hiệu vuông góc chính xác.',
+          studentDiagramUrl: '/uploads/diagrams/sub_test_60.jpg'
+        }
+      }
+    }
+
+    renderWithToast(
+      <EssayQuestion
+        questionId={60}
+        index={59}
+        content="Cho tam giác ABC có đường cao AH"
+        answers={{ 60: 'AH = 4cm' }}
+        isHintOpen={false}
+        isFlagged={false}
+        readonly={true}
+        aiFeedbacks={aiFeedbacks as any}
+      />
+    )
+
+    expect(screen.getByText(/Phần vẽ hình: 0.5 \/ 0.5 điểm/i)).toBeInTheDocument()
+    expect(screen.getByText(/Hình vẽ các đỉnh, đường cao AH và ký hiệu vuông góc chính xác./i)).toBeInTheDocument()
+    expect(screen.getByAltText(/Ảnh hình vẽ bài làm/i)).toBeInTheDocument()
+  })
 })
