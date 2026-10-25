@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
 // GeometryVisualizerRequest contains parameters for dedicated AI geometry illustration
@@ -91,8 +93,10 @@ func BuildGeometryContext(req GeometryVisualizerRequest) string {
 
 // GenerateGeometrySVG sends a dedicated geometry construction prompt to Gemini
 func GenerateGeometrySVG(req GeometryVisualizerRequest) (string, error) {
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
+	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
+		utils.InitGlobalGeminiPool()
+	}
+	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
 		return "", fmt.Errorf("GEMINI_API_KEY is not configured")
 	}
 
@@ -267,15 +271,15 @@ Bạn hãy trả về DUY NHẤT một chuỗi JSON thuần tuý (không bọc m
 	var lastErr error
 
 	for _, currentModel := range candidateModels {
-		apiUrl := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", currentModel, apiKey)
-		httpReq, err := http.NewRequest("POST", apiUrl, bytes.NewReader(bodyBytes))
-		if err != nil {
-			lastErr = fmt.Errorf("failed to create request for %s: %w", currentModel, err)
-			continue
-		}
-		httpReq.Header.Set("Content-Type", "application/json")
-
-		resp, err := client.Do(httpReq)
+		resp, err := utils.GlobalGeminiPool.ExecuteWithRetry(func(currentKey string) (*http.Response, error) {
+			apiUrl := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", currentModel, currentKey)
+			httpReq, err := http.NewRequest("POST", apiUrl, bytes.NewReader(bodyBytes))
+			if err != nil {
+				return nil, err
+			}
+			httpReq.Header.Set("Content-Type", "application/json")
+			return client.Do(httpReq)
+		})
 		if err != nil {
 			log.Printf("[Geometry Visualizer] Model %s failed: %v. Trying next model...", currentModel, err)
 			lastErr = fmt.Errorf("call failed for %s: %w", currentModel, err)

@@ -19,8 +19,10 @@ type OCRResult struct {
 }
 
 func ExtractTextFromImageWithGemini(fileBytes []byte, mimeType string) (*OCRResult, error) {
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
+	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
+		utils.InitGlobalGeminiPool()
+	}
+	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
 		return nil, fmt.Errorf("GEMINI_API_KEY is not set")
 	}
 
@@ -96,15 +98,15 @@ Yêu cầu:
 	var lastErr error
 
 	for _, model := range candidateModels {
-		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, apiKey)
-		req, err := http.NewRequest("POST", url, bytes.NewReader(bodyBytes))
-		if err != nil {
-			lastErr = err
-			continue
-		}
-		req.Header.Set("Content-Type", "application/json")
-
-		resp, err := client.Do(req)
+		resp, err := utils.GlobalGeminiPool.ExecuteWithRetry(func(currentKey string) (*http.Response, error) {
+			url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", model, currentKey)
+			req, err := http.NewRequest("POST", url, bytes.NewReader(bodyBytes))
+			if err != nil {
+				return nil, err
+			}
+			req.Header.Set("Content-Type", "application/json")
+			return client.Do(req)
+		})
 		if err != nil {
 			lastErr = err
 			continue

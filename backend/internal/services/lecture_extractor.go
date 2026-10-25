@@ -92,8 +92,10 @@ func ParseAndProcessExtractedLecture(rawJson string, sourceImages []image.Image,
 
 // ExtractLectureFromImages calls Gemini Vision to extract math lecture types, methods and step-by-step examples
 func ExtractLectureFromImages(files [][]byte, mimeTypes []string) (string, error) {
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
+	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
+		utils.InitGlobalGeminiPool()
+	}
+	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
 		return "", fmt.Errorf("GEMINI_API_KEY is not configured")
 	}
 
@@ -246,15 +248,15 @@ Yêu cầu nghiêm ngặt về nội dung và định dạng văn bản:
 	var lastErr error
 
 	for _, currentModel := range candidateModels {
-		apiUrl := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", currentModel, apiKey)
-		req, err := http.NewRequest("POST", apiUrl, bytes.NewBuffer(jsonBytes))
-		if err != nil {
-			lastErr = fmt.Errorf("failed to create Gemini request for %s: %w", currentModel, err)
-			continue
-		}
-		req.Header.Set("Content-Type", "application/json")
-
-		resp, err := client.Do(req)
+		resp, err := utils.GlobalGeminiPool.ExecuteWithRetry(func(currentKey string) (*http.Response, error) {
+			apiUrl := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", currentModel, currentKey)
+			req, err := http.NewRequest("POST", apiUrl, bytes.NewBuffer(jsonBytes))
+			if err != nil {
+				return nil, err
+			}
+			req.Header.Set("Content-Type", "application/json")
+			return client.Do(req)
+		})
 		if err != nil {
 			log.Printf("[AI Lecture Extractor] Model %s failed: %v. Trying next model...", currentModel, err)
 			lastErr = fmt.Errorf("gemini API call failed for %s: %w", currentModel, err)
