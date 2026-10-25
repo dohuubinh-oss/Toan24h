@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronRight, PenTool } from 'lucide-react';
 import PracticeTable from '@/components/practices/PracticeTable';
@@ -7,6 +8,21 @@ import { getExams, getMyExamResults } from '@/lib/api';
 import { Practice } from '@/types/practice';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ grade: string }>
+}): Promise<Metadata> {
+  const { grade } = await params;
+  return {
+    title: `Bộ Đề Thi Toán Lớp ${grade} Có Đáp Án & Lời Giải Chi Tiết`,
+    description: `Tuyển chọn đề thi Toán lớp ${grade} giữa kì, cuối kì và đề thi thử chọn lọc mới nhất. Tự động chấm thi tự luận bằng AI và nhận xét từng bước giải.`,
+    alternates: {
+      canonical: `/exams/lop/${grade}`,
+    },
+  };
+}
 
 export default async function GradeExamsPage({
   params,

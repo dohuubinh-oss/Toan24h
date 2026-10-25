@@ -159,3 +159,84 @@ func TestDeleteExam_CascadeCleanup(t *testing.T) {
 	// 6. Verify image of Q2 is still on disk
 	assert.FileExists(t, img2Path, "Image 2 of Q2 should still be on disk")
 }
+
+func TestDeleteExam_GroupAndSoftDeletedSubQuestions(t *testing.T) {
+	r, db := setupDeleteExamTestEnv(t)
+	if db == nil {
+		return
+	}
+
+	// Create parent group question
+	parentID := uuid.New()
+	parentQ := models.Question{
+		ID:            parentID,
+		BookName:      "Câu chùm",
+		Content:       "Cho đoạn văn sau...",
+		TypeQuestion:  "group",
+		Type:          "Trắc nghiệm",
+		SolutionGuide: "HD chung",
+		Tags:          "[]",
+		Options:       "[]",
+	}
+	db.Create(&parentQ)
+
+	// Create active sub-question
+	subQ1 := models.Question{
+		ID:            uuid.New(),
+		ParentID:      &parentID,
+		BookName:      "Câu con 1",
+		Content:       "Ý 1",
+		TypeQuestion:  "single",
+		Type:          "Trắc nghiệm",
+		SolutionGuide: "HD ý 1",
+		Tags:          "[]",
+		Options:       "[]",
+	}
+	db.Create(&subQ1)
+
+	// Create soft-deleted sub-question
+	subQ2 := models.Question{
+		ID:            uuid.New(),
+		ParentID:      &parentID,
+		BookName:      "Câu con 2",
+		Content:       "Ý 2 bị xoá mềm",
+		TypeQuestion:  "single",
+		Type:          "Trắc nghiệm",
+		SolutionGuide: "HD ý 2",
+		Tags:          "[]",
+		Options:       "[]",
+	}
+	db.Create(&subQ2)
+	db.Delete(&subQ2) // Soft delete S2
+
+	// Create exam referencing parent question
+	exam := models.Exam{
+		ID:          uuid.New(),
+		Title:       "Đề thi có câu hỏi chùm",
+		ExamCode:    "DTC1",
+		Type:        "midterm",
+		Grade:       "9",
+		QuestionIDs: pq.StringArray{parentQ.ID.String()},
+	}
+	db.Create(&exam)
+
+	// Call DELETE /api/v1/exams/:id
+	req, _ := http.NewRequest("DELETE", "/api/v1/exams/"+exam.ID.String(), nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code, "DeleteExam should return 200 without FK constraint violation")
+
+	// Verify parent and both sub-questions are hard deleted
+	var parentCount int64
+	db.Unscoped().Model(&models.Question{}).Where("id = ?", parentQ.ID).Count(&parentCount)
+	assert.Equal(t, int64(0), parentCount, "Parent question should be deleted")
+
+	var sub1Count int64
+	db.Unscoped().Model(&models.Question{}).Where("id = ?", subQ1.ID).Count(&sub1Count)
+	assert.Equal(t, int64(0), sub1Count, "Active sub-question should be deleted")
+
+	var sub2Count int64
+	db.Unscoped().Model(&models.Question{}).Where("id = ?", subQ2.ID).Count(&sub2Count)
+	assert.Equal(t, int64(0), sub2Count, "Soft-deleted sub-question should be deleted")
+}

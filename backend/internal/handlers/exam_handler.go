@@ -145,10 +145,10 @@ func UpdateExam(c *gin.Context) {
 			}
 
 			if len(toDeleteIDs) > 0 {
-				if err := tx.Delete(&models.Question{}, "id IN (?)", toDeleteIDs).Error; err != nil {
+				if err := tx.Delete(&models.Question{}, "parent_id IN (?)", toDeleteIDs).Error; err != nil {
 					return err
 				}
-				if err := tx.Delete(&models.Question{}, "parent_id IN (?)", toDeleteIDs).Error; err != nil {
+				if err := tx.Delete(&models.Question{}, "id IN (?)", toDeleteIDs).Error; err != nil {
 					return err
 				}
 			}
@@ -169,6 +169,12 @@ func GetExams(c *gin.Context) {
 	query := config.DB.Order("created_at desc")
 	if lectureID := c.Query("lecture_id"); lectureID != "" {
 		query = query.Where("lecture_id = ?", lectureID)
+	}
+	if grade := c.Query("grade"); grade != "" {
+		query = query.Where("grade = ?", grade)
+	}
+	if examType := c.Query("type"); examType != "" {
+		query = query.Where("type = ?", examType)
 	}
 	if err := query.Find(&exams).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch exams: " + err.Error()})
@@ -213,11 +219,11 @@ func DeleteExam(c *gin.Context) {
 		}
 	}
 
-	// 2. Also find any sub-questions whose parent_id is in orphanQuestionIDs
+	// 2. Also find any sub-questions whose parent_id is in orphanQuestionIDs (including soft-deleted ones)
 	var allOrphanIDs []string
 	if len(orphanQuestionIDs) > 0 {
 		var subQuestions []models.Question
-		_ = config.DB.Where("parent_id IN (?)", orphanQuestionIDs).Find(&subQuestions).Error
+		_ = config.DB.Unscoped().Where("parent_id IN (?)", orphanQuestionIDs).Find(&subQuestions).Error
 		allOrphanIDs = append(allOrphanIDs, orphanQuestionIDs...)
 		for _, sq := range subQuestions {
 			allOrphanIDs = append(allOrphanIDs, sq.ID.String())
@@ -228,7 +234,7 @@ func DeleteExam(c *gin.Context) {
 	var candidateImageURLs []string
 	if len(allOrphanIDs) > 0 {
 		var orphanQuestions []models.Question
-		if err := config.DB.Where("id IN (?)", allOrphanIDs).Find(&orphanQuestions).Error; err == nil {
+		if err := config.DB.Unscoped().Where("id IN (?)", allOrphanIDs).Find(&orphanQuestions).Error; err == nil {
 			for _, q := range orphanQuestions {
 				extracted := services.ExtractQuestionImageURLs(
 					q.Content, q.Options, q.SolutionGuide, q.Hint,
@@ -248,6 +254,11 @@ func DeleteExam(c *gin.Context) {
 
 		// Hard delete orphan questions (including sub-questions)
 		if len(allOrphanIDs) > 0 {
+			// First, decouple parent_id to break any self-referencing constraints cleanly
+			if err := tx.Exec("UPDATE questions SET parent_id = NULL WHERE parent_id IN (?) OR id IN (?)", allOrphanIDs, allOrphanIDs).Error; err != nil {
+				return err
+			}
+
 			if err := tx.Unscoped().Where("id IN (?)", allOrphanIDs).Delete(&models.Question{}).Error; err != nil {
 				return err
 			}

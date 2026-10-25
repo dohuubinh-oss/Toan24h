@@ -1,4 +1,5 @@
 import { DangToanItem, MethodItem } from '../LectureCreatorContext'
+import { safeJsonParse } from '@/lib/jsonRepair'
 
 export interface RawProblemStep {
   step: number;
@@ -254,7 +255,7 @@ export const buildExerciseHtmlFromExams = buildExerciseHtmlFromProblems
 export function parseLectureJson(jsonString: string): DangToanItem[] {
   let parsed: unknown
   try {
-    parsed = JSON.parse(jsonString)
+    parsed = safeJsonParse(jsonString)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'JSON không hợp lệ'
     throw new Error(`JSON không hợp lệ: ${message}`)

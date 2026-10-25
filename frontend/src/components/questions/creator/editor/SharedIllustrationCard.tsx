@@ -455,7 +455,7 @@ export default function SharedIllustrationCard({
                 <textarea
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
-                  placeholder="Ví dụ: 'Hình vẽ sai rồi, góc B không vuông mà là góc A', 'Vẽ thêm đường cao AH', 'Kẻ tiếp tuyến tại M'... Khi bạn chỉ ra lỗi sai, AI sẽ xem xét và tính toán lại tọa độ từ đầu thật cẩn thận."
+                  placeholder="Ví dụ: 'Vẽ tam giác nhọn ABC', 'Kẻ thêm đường cao AH', 'Kẻ tiếp tuyến tại M', 'Đổi góc vuông sang đỉnh A'... AI sẽ tự động tính toán tọa độ giải tích để dựng hình chuẩn xác."
                   rows={3}
                   className="w-full text-xs rounded-xl border border-slate-200 p-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-slate-400 resize-none font-sans"
                 />
@@ -470,7 +470,7 @@ export default function SharedIllustrationCard({
                       <span>{aiError}</span>
                     </div>
                     <div className="text-[11px] text-amber-800 leading-relaxed bg-white/70 p-2.5 rounded-lg border border-amber-200/60">
-                      💡 <strong>Gợi ý khắc phục:</strong> Thầy cô có thể nhập rõ thêm hình dạng và các đỉnh tại ô <em>"Chỉ dẫn bổ sung"</em> phía trên (ví dụ: <code>Đáy BC nằm ngang dài 8cm, đỉnh A(3, 6), kẻ AH vuông góc BC</code>), hoặc ấn <strong>Ctrl+V</strong> để dán trực tiếp ảnh chụp từ GeoGebra / sách bài tập.
+                      💡 <strong>Gợi ý:</strong> AI sẽ tự động đọc hiểu đề bài và tính toán tọa độ để dựng hình. Nếu muốn tùy chỉnh nét vẽ, Thầy cô chỉ cần ghi chú ngắn gọn bằng tiếng Việt tự nhiên tại ô <em>"Chỉ dẫn bổ sung"</em> phía trên (ví dụ: <code>Vẽ tam giác nhọn ABC</code>, <code>Kẻ thêm đường cao AH và phân giác AD</code>, <code>Đổi góc vuông sang đỉnh A</code>), hoặc ấn <strong>Ctrl+V</strong> để dán trực tiếp ảnh chụp từ GeoGebra / sách bài tập.
                     </div>
                   </div>
                   <button

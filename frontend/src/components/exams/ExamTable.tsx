@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Calculator, Trash2, Edit2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { Button } from '../ui/Button'
+import { cn } from '@/lib/utils'
 
-export type ExamType = 'Giữa kỳ' | 'Cuối kỳ' | 'Chuyên đề' | 'Ôn tập' | 'Chuyên'
+export type ExamType = 'Giữa kì 1' | 'Cuối kì 1' | 'Giữa kì 2' | 'Cuối kì 2' | 'Chuyên Đề' | 'Ôn tập' | string
 
 export interface Exam {
   id: string
@@ -97,7 +98,22 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
                   <span className="text-sm font-medium text-slate-700">{exam.cate === 'practice' ? 'Bài tập' : 'Bài thực hành'}</span>
                 </td>
                 <td className="px-3 py-3 text-center whitespace-nowrap">
-                  <span className="text-sm font-medium text-slate-700">{exam.type || '-'}</span>
+                  {exam.type ? (
+                    <span className={cn(
+                      "text-xs font-semibold px-2.5 py-1 rounded-full border inline-block",
+                      exam.type === 'Giữa kì 1' ? "bg-blue-50 text-blue-700 border-blue-200" :
+                      exam.type === 'Cuối kì 1' ? "bg-indigo-50 text-indigo-700 border-indigo-200" :
+                      exam.type === 'Giữa kì 2' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                      exam.type === 'Cuối kì 2' ? "bg-purple-50 text-purple-700 border-purple-200" :
+                      exam.type === 'Chuyên Đề' ? "bg-amber-50 text-amber-700 border-amber-200" :
+                      exam.type === 'Ôn tập' ? "bg-sky-50 text-sky-700 border-sky-200" :
+                      "bg-slate-100 text-slate-700 border-slate-200"
+                    )}>
+                      {exam.type}
+                    </span>
+                  ) : (
+                    <span className="text-sm font-medium text-slate-400">-</span>
+                  )}
                 </td>
                 <td className="px-3 py-3 text-center whitespace-nowrap">
                   <span className="text-sm font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">{Number(exam.diffScore || 0).toFixed(1)}</span>

@@ -235,3 +235,36 @@ func TestRenderGeometryModelToSVG_ProblemAndSolutionElements(t *testing.T) {
 	}
 }
 
+func TestParseAndRenderGeometryJSON_FlexibleFormats(t *testing.T) {
+	// Raw JSON where segments are arrays of strings ["A", "B"] and points have {x, y}
+	rawJson := `{
+		"points": {
+			"A": {"x": 0, "y": 0},
+			"B": [0, 6],
+			"C": [8, 0],
+			"H": [2.88, 3.84]
+		},
+		"segments": [
+			["A", "B"],
+			["B", "C"],
+			["C", "A"],
+			{"from": "A", "to": "H", "style": "dashed", "color": "#2563eb"}
+		],
+		"right_angles": [
+			{"vertex": "A", "arm1": "B", "arm2": "C"}
+		]
+	}`
+
+	svg, ok := ParseAndRenderGeometryJSON(rawJson)
+	if !ok || svg == "" {
+		t.Fatalf("Failed to parse flexible geometry JSON")
+	}
+
+	if !strings.Contains(svg, ">A</text>") || !strings.Contains(svg, ">B</text>") || !strings.Contains(svg, ">H</text>") {
+		t.Errorf("SVG missing point labels")
+	}
+	if strings.Count(svg, "<line") < 4 {
+		t.Errorf("Expected 4 lines rendered from mixed segment formats, got %d", strings.Count(svg, "<line"))
+	}
+}
+

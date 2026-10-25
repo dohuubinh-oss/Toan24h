@@ -17,6 +17,26 @@ type GeometrySegment struct {
 	Label       string  `json:"label,omitempty"`        // e.g. "6 cm", "8 cm", "a", "x"
 }
 
+// UnmarshalJSON allows GeometrySegment to parse from either an object {"from":"A", "to":"B"} or an array ["A", "B"]
+func (s *GeometrySegment) UnmarshalJSON(data []byte) error {
+	type Alias GeometrySegment
+	var alias Alias
+	if err := json.Unmarshal(data, &alias); err == nil && alias.From != "" && alias.To != "" {
+		*s = GeometrySegment(alias)
+		return nil
+	}
+
+	var arr []string
+	if err := json.Unmarshal(data, &arr); err == nil && len(arr) >= 2 {
+		s.From = arr[0]
+		s.To = arr[1]
+		s.Style = "solid"
+		return nil
+	}
+
+	return fmt.Errorf("invalid geometry segment: %s", string(data))
+}
+
 // GeometryRightAngle represents a right-angle marker at vertex between arm1 and arm2
 type GeometryRightAngle struct {
 	Vertex string `json:"vertex"`
@@ -43,6 +63,75 @@ type GeometryModel struct {
 	Circles     []GeometryCircle           `json:"circles,omitempty"`
 	Labels      map[string]string          `json:"labels,omitempty"`     // Custom text label per point
 	Directions  map[string]string          `json:"directions,omitempty"` // "top", "bottom", "left", "right", "top-left", "top-right", "bottom-left", "bottom-right"
+}
+
+// UnmarshalJSON provides resilient parsing for GeometryModel supporting various formats
+func (m *GeometryModel) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		ShowAxes    bool                       `json:"show_axes"`
+		Points      map[string]json.RawMessage `json:"points"`
+		Segments    []GeometrySegment          `json:"segments"`
+		RightAngles []GeometryRightAngle       `json:"right_angles"`
+		Circles     []GeometryCircle           `json:"circles"`
+		Labels      map[string]string          `json:"labels"`
+		Directions  map[string]string          `json:"directions"`
+	}
+
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	m.ShowAxes = raw.ShowAxes
+	m.Segments = raw.Segments
+	m.RightAngles = raw.RightAngles
+	m.Circles = raw.Circles
+	m.Labels = raw.Labels
+	m.Directions = raw.Directions
+	m.Points = make(map[string][2]float64)
+
+	for ptName, rawPt := range raw.Points {
+		// Case 1: [x, y]
+		var coords [2]float64
+		if err := json.Unmarshal(rawPt, &coords); err == nil {
+			m.Points[ptName] = coords
+			continue
+		}
+
+		// Case 2: {"x": x, "y": y}
+		var xy struct {
+			X float64 `json:"x"`
+			Y float64 `json:"y"`
+		}
+		if err := json.Unmarshal(rawPt, &xy); err == nil {
+			m.Points[ptName] = [2]float64{xy.X, xy.Y}
+			continue
+		}
+
+		// Case 3: []float64 with len >= 2
+		var slice []float64
+		if err := json.Unmarshal(rawPt, &slice); err == nil && len(slice) >= 2 {
+			m.Points[ptName] = [2]float64{slice[0], slice[1]}
+			continue
+		}
+	}
+
+	// Auto-fallback: if points >= 3 but segments is empty, auto-connect main points (e.g. A-B, B-C, C-A)
+	if len(m.Points) >= 3 && len(m.Segments) == 0 {
+		ptNames := make([]string, 0, len(m.Points))
+		for k := range m.Points {
+			ptNames = append(ptNames, k)
+		}
+		for i := 0; i < len(ptNames); i++ {
+			next := (i + 1) % len(ptNames)
+			m.Segments = append(m.Segments, GeometrySegment{
+				From:  ptNames[i],
+				To:    ptNames[next],
+				Style: "solid",
+			})
+		}
+	}
+
+	return nil
 }
 
 // ParseAndRenderGeometryJSON checks if the raw string contains a valid GeometryModel JSON.

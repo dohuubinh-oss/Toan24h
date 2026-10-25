@@ -1,6 +1,14 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import { ExamProvider } from '@/contexts/ExamContext'
 import SubscriptionBanner from '@/components/layout/SubscriptionBanner'
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 export default function FullscreenLayout({
   children,

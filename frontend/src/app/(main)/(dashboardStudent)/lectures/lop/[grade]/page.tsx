@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronRight, BookOpen, ArrowLeft } from 'lucide-react';
 import { LectureCard, PracticeLectureCard } from '@/components/lectures/LectureCard';
@@ -9,6 +10,21 @@ import LectureAntiCheatTracker from '@/components/lecture/LectureAntiCheatTracke
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ grade: string }>
+}): Promise<Metadata> {
+  const { grade } = await params;
+  return {
+    title: `Bài Giảng Toán Lớp ${grade} - Tóm Tắt Lý Thuyết & Dạng Bài Trọng Tâm`,
+    description: `Hệ thống bài giảng Toán lớp ${grade} chuẩn sách giáo khoa mới. Tổng hợp lý thuyết, phương pháp giải nhanh và bài tập tự luyện có hướng dẫn chi tiết.`,
+    alternates: {
+      canonical: `/lectures/lop/${grade}`,
+    },
+  };
+}
 
 export default async function GradeLecturesPage({
   params,

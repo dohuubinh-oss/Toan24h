@@ -906,15 +906,16 @@ func ExtractQuestionsFromImages(files [][]byte, mimeTypes []string, targetGradeS
 
 	primaryModel := os.Getenv("GEMINI_MODEL")
 	if primaryModel == "" {
-		primaryModel = "gemini-3.8-flash"
+		primaryModel = "gemini-3.5-flash"
 	}
 
 	validModels := []string{
-		"gemini-3.8-flash",
-		"gemini-flash-latest",
-		"gemini-3.7-flash",
-		"gemini-3.6-flash",
 		"gemini-3.5-flash",
+		"gemini-3.5-flash-lite",
+		"gemini-3.6-flash",
+		"gemini-3-flash-preview",
+		"gemini-3.1-flash-lite",
+		"gemini-3.8-flash",
 	}
 
 	candidateModels := []string{}
@@ -1187,7 +1188,7 @@ CHỈ trả về DUY NHẤT chuỗi JSON hợp lệ (mảng các block), tuyệt
 		return nil, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	client := &http.Client{Timeout: 30 * time.Second}
+	client := &http.Client{Timeout: 90 * time.Second}
 	var rawJSON string
 	var lastErr error
 

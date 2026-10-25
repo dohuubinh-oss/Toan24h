@@ -49,7 +49,7 @@ func TestGeminiPool_InitAndErrorClassifier(t *testing.T) {
 			expected     bool
 		}{
 			{"HTTP 429 Too Many Requests", 429, `{"error":{"message":"Resource has been exhausted (e.g. check quota)."}}`, true},
-			{"HTTP 503 Service Unavailable", 503, `{"error":{"message":"The model is overloaded. Please try again later."}}`, true},
+			{"HTTP 503 Service Unavailable", 503, `{"error":{"message":"The model is overloaded. Please try again later."}}`, false},
 			{"HTTP 200 with RESOURCE_EXHAUSTED", 200, `{"error":{"status":"RESOURCE_EXHAUSTED"}}`, true},
 			{"HTTP 200 with quota exceeded text", 200, `{"error":{"message":"Quota exceeded for quota metric"}}`, true},
 			{"HTTP 200 with rateLimitExceeded text", 200, `{"error":{"message":"rateLimitExceeded"}}`, true},
@@ -113,14 +113,14 @@ func TestGeminiPool_StickyAndCooldown(t *testing.T) {
 		t.Fatalf("Expected active key to switch to 'key2', got '%s'", keyAfter429)
 	}
 
-	// 4. Mark key2 with 503 (server overloaded): should switch to key3
-	pool.MarkKeyFailure("key2", 503, "overloaded")
-	keyAfter503, err := pool.GetActiveKey()
+	// 4. Mark key2 with 429: should switch to key3
+	pool.MarkKeyFailure("key2", 429, "quota exceeded")
+	keyAfterKey2Exhausted, err := pool.GetActiveKey()
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	if keyAfter503 != "key3" {
-		t.Fatalf("Expected active key to switch to 'key3', got '%s'", keyAfter503)
+	if keyAfterKey2Exhausted != "key3" {
+		t.Fatalf("Expected active key to switch to 'key3', got '%s'", keyAfterKey2Exhausted)
 	}
 
 	// 5. Mark key3 with 429: all keys are now in cooldown

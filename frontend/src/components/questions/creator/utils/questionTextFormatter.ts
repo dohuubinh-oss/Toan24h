@@ -1,7 +1,4 @@
-/**
- * Tiện ích chuẩn hóa và chuyển đổi nội dung câu hỏi/lời giải sang định dạng HTML
- * Hỗ trợ tự động xuống hàng (<br/>, <p>), danh sách (<ul>, <ol>) và bảo toàn công thức KaTeX ($...$, $$...$$)
- */
+import { safeJsonParse } from '@/lib/jsonRepair'
 
 /**
  * Kiểm tra xem chuỗi có phải biểu thức hoặc công thức toán học cần bọc $...$ không
@@ -181,7 +178,7 @@ export function formatSolutionGuide(guide: any): string {
       (trimmed.startsWith('[') && trimmed.endsWith(']'))
     ) {
       try {
-        const parsed = JSON.parse(trimmed)
+        const parsed = safeJsonParse(trimmed)
         if (parsed && typeof parsed === 'object') {
           guide = parsed
         }

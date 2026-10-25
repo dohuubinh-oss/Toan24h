@@ -11,7 +11,7 @@ import (
 type Question struct {
 	ID              uuid.UUID      `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	ParentID        *uuid.UUID     `gorm:"type:uuid;index" json:"parentId,omitempty"` // Dùng cho 'group' (Câu hỏi con tham chiếu câu hỏi cha)
-	SubQuestions    []Question     `gorm:"foreignKey:ParentID" json:"subQuestions,omitempty"` // Dùng cho 'group' để tự động nạp các câu con
+	SubQuestions    []Question     `gorm:"foreignKey:ParentID;constraint:OnDelete:CASCADE" json:"subQuestions,omitempty"` // Dùng cho 'group' để tự động nạp các câu con
 
 	GgDrive         string         `gorm:"type:text;column:gg_drive" json:"gg_drive"` // Link Google Drive gốc
 	BookName        string         `gorm:"-" json:"bookName,omitempty"`               // Backward compatibility

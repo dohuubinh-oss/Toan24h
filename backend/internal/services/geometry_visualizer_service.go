@@ -102,18 +102,16 @@ func GenerateGeometrySVG(req GeometryVisualizerRequest) (string, error) {
 
 	primaryModel := os.Getenv("GEMINI_MODEL")
 	if primaryModel == "" {
-		primaryModel = "gemini-3.8-flash"
+		primaryModel = "gemini-3.5-flash"
 	}
 
 	validModels := []string{
-		"gemini-3.8-flash",
-		"gemini-flash-latest",
-		"gemini-flash-lite-latest",
-		"gemini-2.5-flash",
-		"gemini-2.0-flash",
-		"gemini-3.7-flash",
-		"gemini-3.6-flash",
 		"gemini-3.5-flash",
+		"gemini-3.5-flash-lite",
+		"gemini-3.6-flash",
+		"gemini-3-flash-preview",
+		"gemini-3.1-flash-lite",
+		"gemini-3.8-flash",
 	}
 
 	candidateModels := []string{}
@@ -134,111 +132,127 @@ func GenerateGeometrySVG(req GeometryVisualizerRequest) (string, error) {
 	}
 
 	prompt := `Bạn là chuyên gia sư phạm toán học hình học và kỹ sư đồ họa vector cấp cao (Senior Mathematical Geometry Specialist).
-Nhiệm vụ của bạn: Đọc kỹ ĐỀ BÀI và LỜI GIẢI CHI TIẾT (cùng chỉ dẫn bổ sung của giáo viên nếu có), hãy xây dựng MÔ HÌNH HÌNH HỌC CARTESIAN OXY (GeometryModel JSON) CHUẨN XÁC 100% VỀ GIẢI TÍCH TOÁN HỌC để phục vụ việc hiểu đề bài và các bước giải theo sách giáo khoa Toán học Việt Nam.
-
-Engine nội bộ của hệ thống sẽ tự động chuyển đổi mô hình Oxy của bạn thành hình vẽ vector SVG, căn giữa khung hình, tính Bounding Box, vẽ ký hiệu góc vuông, chấm điểm và gắn nhãn chữ cái tự động.
 
 ══════════════════════════════════════════════════════════════════════════
-★ QUY TẮC BẮT BUỘC VỀ HỆ TỌA ĐỘ DESCARTES OXY (TOÁN HỌC PHỔ THÔNG)
+★ NGUYÊN TẮC CỐT LÕI: TỰ ĐỘNG CHUẨN HÓA HỆ TRỤC OXY (CANONICAL AUTO-FRAMING)
 ══════════════════════════════════════════════════════════════════════════
-1. Mọi điểm M được biểu diễn bằng cặp số thực [x, y] trong mặt phẳng Oxy:
-   - Trục hoành Ox hướng SANG PHẢI (x tăng).
-   - Trục tung Oy hướng LÊN TRÊN (y tăng, chuẩn toán học, KHÔNG PHẢI tọa độ màn hình).
-   - Đặt tọa độ trong khoảng số đẹp từ 0 đến 10 để hình vẽ cân đối.
+1. BẢN CHẤT CỦA BÀI TOÁN HÌNH HỌC PHỔ THÔNG:
+   - Giáo viên đưa đề bài là HÌNH HỌC THUẦN TÚY (Pure Synthetic Geometry), ví dụ: "Cho tam giác nhọn ABC có đường cao AH...", "Cho đường tròn (O) và điểm M nằm ngoài...", "Cho hình chóp S.ABCD đáy hình bình hành...".
+   - Đề bài KHÔNG CÓ TỌA ĐỘ VÀ THƯỜNG KHÔNG CHO KÍCH THƯỚC CỤ THỂ. Đây là điều hoàn toàn TỰ NHIÊN và ĐẶC TRƯNG của môn Toán!
+   - NHIỆM VỤ DUY NHẤT VÀ TỐI CAO CỦA BẠN: TỰ ĐỘNG GÁN HỆ TRỤC TỌA ĐỘ CARTESIAN OXY TỰ NHIÊN, TỰ GIẢ ĐỊNH KÍCH THƯỚC ĐẸP TRONG KHOẢNG [0, 10] THEO TỶ LỆ VÀNG, VÀ TỰ TÍNH TOÁN TOÀN BỘ TỌA ĐỘ GIẢI TÍCH CHUẨN XÁC 100%.
+   - TUYỆT ĐỐI KHÔNG BAO GIỜ TỪ CHỐI, KHÔNG ĐÒI HỎI GIÁO VIÊN PHẢI CUNG CẤP TỌA ĐỘ HOẶC KÍCH THƯỚC!
 
-2. PHÂN BIỆT RÕ RÀNG GIỮA "NÉT VẼ ĐỀ BÀI" VÀ "NÉT VẼ LỜI GIẢI":
-   - Các điểm và đoạn thẳng thuộc ĐỀ BÀI GỐC:
-     👉 BẮT BUỘC đặt "style": "solid", "color": "#0f172a" (nét liền màu xanh than).
-   - Các điểm phụ và đường dựng thêm trong LỜI GIẢI (như kẻ đường cao, phân giác, nối trung điểm, kẻ tiếp tuyến...):
-     👉 BẮT BUỘC đặt "style": "dashed", "color": "#2563eb" (nét đứt màu xanh dương hoàng gia).
-     Giúp học sinh và giáo viên nhìn vào hình nhận biết ngay đâu là giả thiết đề bài, đâu là đường phụ do lời giải vẽ thêm!
-   - Đoạn thẳng có độ dài cho trước trong đề (ví dụ 6 cm, 8 cm, a):
-     👉 Đặt thêm trường "label": "6 cm" (nếu có).
+2. QUY TẮC MẶT PHẲNG OXY:
+   - Điểm M được biểu diễn bằng [x, y]: Ox sang phải, Oy hướng LÊN TRÊN (chuẩn toán học).
+   - Tọa độ các điểm đặt trong khoảng số đẹp từ 0 đến 10 để hình vẽ cân đối, sắc nét.
+
+3. PHÂN BIỆT RÕ RÀNG GIỮA "NÉT VẼ ĐỀ BÀI" VÀ "NÉT VẼ LỜI GIẢI":
+   - Nét vẽ ĐỀ BÀI GỐC (các điểm, đoạn thẳng, đường tròn đã cho):
+     👉 Đặt "style": "solid", "color": "#0f172a" (nét liền màu xanh than).
+   - Nét vẽ LỜI GIẢI / DỰNG THÊM (đường cao, trung tuyến, phân giác, tiếp tuyến, đường phụ...):
+     👉 Đặt "style": "dashed", "color": "#2563eb" (nét đứt màu xanh dương hoàng gia).
+   - Nếu đề bài có cho số đo cụ thể (ví dụ 6 cm, 8 cm, a):
+     👉 Thêm trường "label": "6 cm" vào đoạn thẳng tương ứng.
 
 ══════════════════════════════════════════════════════════════════════════
-★ CẨM NANG CÔNG THỨC TỌA ĐỘ TOÁN HỌC KINH ĐIỂN (CHUẨN 100% TUYỆT ĐỐI)
+★ BỘ KHUÔN MẪU TỌA ĐỘ TỰ NHIÊN (CANONICAL FRAMING) CHO TỪNG DẠNG BÀI TOÁN
 ══════════════════════════════════════════════════════════════════════════
-Hãy áp dụng chính xác các công thức giải tích tọa độ sau đây để hình vẽ không bao giờ bị sai hay lệch:
+Bất kể đề bài có cho kích thước hay không, hãy áp dụng ngay các bộ tọa độ mẫu mực sau đây:
 
-➤ 1. TAM GIÁC VUÔNG TẠI A (AB = c, AC = b):
-   - Đỉnh vuông A đặt tại gốc: A = [0, 0]
-   - Cạnh góc vuông AC nằm ngang sang phải: C = [b, 0] (ví dụ AC = 8 => C = [8, 0])
-   - Cạnh góc vuông AB thẳng đứng lên trên: B = [0, c] (ví dụ AB = 6 => B = [0, 6])
-   - Cạnh huyền BC nối B và C.
-   - Góc vuông tại A: {"vertex": "A", "arm1": "B", "arm2": "C"}
-   - CHÂN ĐƯỜNG CAO AH HẠ TỪ A XUỐNG CẠNH HUYỀN BC:
-     Tọa độ điểm H trên đoạn BC tính theo công thức hình chiếu chuẩn xác:
-     x_H = (b * c^2) / (b^2 + c^2)
-     y_H = (b^2 * c) / (b^2 + c^2)
-     Ví dụ: b = 8, c = 6 => b^2 + c^2 = 100 => x_H = 8*36/100 = 2.88, y_H = 64*6/100 = 3.84
-     => H = [2.88, 3.84] (TUYỆT ĐỐI KHÔNG ĐỂ H = [0, 0]!)
+➤ 1. TAM GIÁC NHỌN BẤT KỲ ABC:
+   - Đặt cạnh đáy BC nằm ngang trên trục Ox: B = [0, 0], C = [8, 0]
+   - Đỉnh A chọn cao và lệch sang trái để tạo tam giác nhọn rõ rệt (AB < AC): A = [2.5, 6]
+   - Chân đường cao AH hạ từ A xuống BC: H = [2.5, 0]
      Góc vuông tại H: {"vertex": "H", "arm1": "A", "arm2": "C"}
-   - TRUNG ĐIỂM M CỦA CẠNH HUYỀN BC: M = [b/2, c/2] = [4, 3]
-
-➤ 2. TAM GIÁC NHỌN ABC (Cạnh đáy BC nằm ngang):
-   - Đỉnh B = [0, 0]
-   - Đỉnh C = [8, 0]
-   - Đỉnh A = [2.5, 6] (chọn đỉnh cao 6 đơn vị, lệch nhẹ sang trái tạo tam giác nhọn đẹp)
-   - Đường cao AH hạ xuống BC: H = [2.5, 0] (cùng hoành độ với A, tung độ = 0 trên BC)
-     Góc vuông tại H: {"vertex": "H", "arm1": "A", "arm2": "C"}
+   - Chân đường cao BK hạ từ B xuống AC: K = [4.35, 3.98]
+     Góc vuông tại K: {"vertex": "K", "arm1": "B", "arm2": "A"}
+   - Trực tâm (giao AH và BK): H_ort = [2.5, 2.3]
    - Trung điểm M của BC: M = [4, 0]
 
-➤ 3. ĐƯỜNG TRÒN TÂM O VÀ TIẾP TUYẾN / CÁT TUYẾN:
-   - Tâm đường tròn: O = [0, 0], bán kính R = 3: {"center": "O", "radius": 3, "style": "solid"}
-   - Điểm M nằm ngoài đường tròn: M = [6, 0] (cách tâm d = 6)
-   - Hai tiếp điểm A, B của tiếp tuyến MA, MB kẻ từ M:
-     cos(alpha) = R / d = 3 / 6 = 0.5 => alpha = 60 độ
-     A = [R * cos(60°), R * sin(60°)] = [3 * 0.5, 3 * 0.866] = [1.5, 2.6]
-     B = [R * cos(-60°), R * sin(-60°)] = [1.5, -2.6]
-     Tiếp tuyến MA, MB nối từ M(6, 0) đến A và B.
-     Góc vuông tiếp tuyến: {"vertex": "A", "arm1": "M", "arm2": "O"} và {"vertex": "B", "arm1": "M", "arm2": "O"}
+➤ 2. TAM GIÁC VUÔNG TẠI A (ABC):
+   - Đỉnh vuông A đặt tại gốc: A = [0, 0]
+   - Cạnh góc vuông AC nằm ngang sang phải: C = [8, 0] (hoặc độ dài đề bài)
+   - Cạnh góc vuông AB thẳng đứng lên trên: B = [0, 6] (hoặc độ dài đề bài)
+   - Cạnh huyền BC nối B và C.
+   - Góc vuông tại A: {"vertex": "A", "arm1": "B", "arm2": "C"}
+   - Chân đường cao AH hạ xuống BC tính theo công thức hình chiếu chuẩn xác:
+     x_H = (8 * 6^2) / (8^2 + 6^2) = 2.88
+     y_H = (8^2 * 6) / (8^2 + 6^2) = 3.84
+     => H = [2.88, 3.84] (TUYỆT ĐỐI KHÔNG ĐỂ H TRÙNG A HOẶC GỐC TỌA ĐỘ!)
+     Góc vuông tại H: {"vertex": "H", "arm1": "A", "arm2": "C"}
+   - Trung điểm M của cạnh huyền BC: M = [4, 3]
 
-➤ 4. TAM GIÁC ABC NỘI TIẾP ĐƯỜNG TRÒN TÂM O:
+➤ 3. TAM GIÁC CÂN VÀ TAM GIÁC ĐỀU:
+   - Tam giác cân tại A: B = [0, 0], C = [8, 0], A = [4, 6], đường cao AH với H = [4, 0]
+   - Tam giác đều ABC cạnh 6: B = [0, 0], C = [6, 0], A = [3, 5.2]
+
+➤ 4. ĐƯỜNG TRÒN (O; R) VÀ TIẾP TUYẾN / CÁT TUYẾN:
+   - Tâm O = [0, 0], bán kính chuẩn R = 3: {"center": "O", "radius": 3, "style": "solid"}
+   - Điểm M nằm ngoài đường tròn: M = [6, 0] (cách tâm d = 6)
+   - Hai tiếp điểm A, B của tiếp tuyến MA, MB (cos α = R/d = 0.5 => α = 60°):
+     A = [1.5, 2.6], B = [1.5, -2.6]
+     Góc vuông tiếp tuyến: {"vertex": "A", "arm1": "M", "arm2": "O"}, {"vertex": "B", "arm1": "M", "arm2": "O"}
+   - Cát tuyến MCD qua M cắt đường tròn: C = [3, 0] (hoặc điểm quay góc đẹp)
+
+➤ 5. TAM GIÁC ABC NỘI TIẾP ĐƯỜNG TRÒN (O):
    - Tâm O = [0, 0], bán kính R = 4: {"center": "O", "radius": 4, "style": "solid"}
-   - Đỉnh A ở trên cao nhất: A = [0, 4]
+   - Đỉnh A ở trên đỉnh: A = [0, 4]
    - Đỉnh B ở góc 210°: B = [-3.46, -2]
    - Đỉnh C ở góc 330°: C = [3.46, -2]
-   - Cạnh đáy BC nằm ngang y = -2, tam giác ABC cân hoặc nhọn nội tiếp đẹp chuẩn mực.
+   - Cạnh đáy BC nằm ngang y = -2, tam giác nhọn nội tiếp hoàn mỹ!
 
-➤ 5. TỨ GIÁC, HÌNH THANG, HÌNH BÌNH HÀNH:
+➤ 6. TỨ GIÁC, HÌNH THANG, HÌNH BÌNH HÀNH, HÌNH CHỮ NHẬT:
+   - Luôn đặt đáy dưới trên trục Ox bắt đầu từ [0, 0]:
    - Hình chữ nhật: A = [0, 0], B = [8, 0], C = [8, 5], D = [0, 5]
    - Hình bình hành: A = [0, 0], B = [7, 0], C = [9, 4], D = [2, 4]
-   - Hình thang vuông tại A và D: A = [0, 0], D = [0, 4], C = [5, 4], B = [8, 0]
+   - Hình thang vuông tại A và D: A = [0, 0], B = [8, 0], C = [5, 4], D = [0, 4]
+   - Hình thang cân: A = [0, 0], B = [8, 0], C = [6, 4], D = [2, 4]
+   - Hình thoi: A = [0, 3], B = [4, 0], C = [8, 3], D = [4, 6]
 
-➤ 6. HÌNH HỌC KHÔNG GIAN 3D (Hình chóp S.ABC, S.ABCD):
-   - Đáy hình bình hành vẽ phối cảnh nghiêng:
+➤ 7. HÌNH HỌC KHÔNG GIAN 3D (Hình chóp S.ABC, S.ABCD, Lăng trụ):
+   - Đáy vẽ theo phối cảnh xiên góc (Cabinet projection):
      A = [1, 1], B = [6, 1], C = [8, 3], D = [3, 3]
-   - Cạnh khuất (bên trong/sau): AD, CD, SA đặt "style": "dashed", "color": "#64748b"
-   - Cạnh thấy: AB, BC, SB, SC, SD đặt "style": "solid"
+   - Cạnh khuất (bên trong/sau): AD, CD, SA... đặt "style": "dashed", "color": "#64748b"
+   - Cạnh thấy: AB, BC, SB, SC, SD... đặt "style": "solid", "color": "#0f172a"
    - Đỉnh chóp S ở trên cao: S = [3, 7]
+
+══════════════════════════════════════════════════════════════════════════
+★ CÔNG THỨC VECTOR TÍNH TỌA ĐỘ ĐIỂM SUY DIỄN (DERIVED POINTS)
+══════════════════════════════════════════════════════════════════════════
+- Chân đường cao H hạ từ P xuống đường thẳng AB:
+  Vector u = B - A = [B.x - A.x, B.y - A.y]
+  Vector v = P - A = [P.x - A.x, P.y - A.y]
+  t = (v.x * u.x + v.y * u.y) / (u.x^2 + u.y^2)
+  H = [A.x + t * u.x, A.y + t * u.y]
+- Trung điểm M của AB: M = [(A.x + B.x)/2, (A.y + B.y)/2]
+- Trọng tâm G của tam giác ABC: G = [(A.x + B.x + C.x)/3, (A.y + B.y + C.y)/3]
 
 ══════════════════════════════════════════════════════════════════════════
 ★ ĐỊNH DẠNG ĐẦU RA JSON BẮT BUỘC (OUTPUT SCHEMA)
 ══════════════════════════════════════════════════════════════════════════
-Bạn hãy trả về DUY NHẤT một chuỗi JSON thuần tuý (không bọc markdown, không thêm bất kỳ văn bản nào ngoài JSON) theo đúng cấu trúc sau:
+Bạn hãy trả về DUY NHẤT một chuỗi JSON thuần tuý (không bọc markdown, không kèm lời giải thích) theo đúng cấu trúc sau:
 {
   "points": {
-    "A": [0, 0],
-    "B": [0, 6],
+    "A": [2.5, 6],
+    "B": [0, 0],
     "C": [8, 0],
-    "H": [2.88, 3.84]
+    "H": [2.5, 0]
   },
   "segments": [
-    {"from": "A", "to": "B", "style": "solid", "label": "6 cm"},
+    {"from": "A", "to": "B", "style": "solid"},
     {"from": "B", "to": "C", "style": "solid"},
-    {"from": "C", "to": "A", "style": "solid", "label": "8 cm"},
+    {"from": "C", "to": "A", "style": "solid"},
     {"from": "A", "to": "H", "style": "dashed", "color": "#2563eb"}
   ],
   "right_angles": [
-    {"vertex": "A", "arm1": "B", "arm2": "C"},
     {"vertex": "H", "arm1": "A", "arm2": "C"}
   ],
   "circles": [],
   "directions": {
-    "A": "bottom-left",
-    "B": "top",
+    "A": "top",
+    "B": "bottom-left",
     "C": "bottom-right",
-    "H": "top-right"
+    "H": "bottom"
   },
   "show_axes": false
 }`
@@ -267,7 +281,7 @@ Bạn hãy trả về DUY NHẤT một chuỗi JSON thuần tuý (không bọc m
 		return "", fmt.Errorf("failed to marshal geometry request: %w", err)
 	}
 
-	client := &http.Client{Timeout: 15 * time.Second}
+	client := &http.Client{Timeout: 60 * time.Second}
 	var lastErr error
 
 	for _, currentModel := range candidateModels {

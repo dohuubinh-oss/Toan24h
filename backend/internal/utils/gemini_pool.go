@@ -83,7 +83,7 @@ func NewGeminiPoolManager(keysStr string, cooldown time.Duration) *GeminiPoolMan
 
 // IsQuotaError determines whether an HTTP status code or response body indicates quota exhaustion or rate limits.
 func IsQuotaError(statusCode int, responseBody string) bool {
-	if statusCode == 429 || statusCode == 503 {
+	if statusCode == 429 {
 		return true
 	}
 
@@ -159,7 +159,12 @@ func (m *GeminiPoolManager) MarkKeyFailure(key string, statusCode int, responseB
 	now := m.now()
 	for i, k := range m.keys {
 		if k.Key == key {
-			k.CooldownUntil = now.Add(m.cooldownPeriod)
+			cooldown := m.cooldownPeriod
+			if statusCode == 503 || len(m.keys) == 1 {
+				// Transient service unavailability (503) or single key should not lock out for 6 hours
+				cooldown = 10 * time.Second
+			}
+			k.CooldownUntil = now.Add(cooldown)
 			k.FailCount++
 
 			// Advance currentIndex to the next key

@@ -39,11 +39,15 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
   } catch (netErr: any) {
     // Retry once after short delay for network glitches / cold start
     await new Promise(res => setTimeout(res, 300));
-    response = await fetch(url, {
-      ...options,
-      headers,
-      credentials: 'include',
-    });
+    try {
+      response = await fetch(url, {
+        ...options,
+        headers,
+        credentials: 'include',
+      });
+    } catch (secondErr: any) {
+      throw new Error(`Không thể kết nối đến máy chủ Backend (Port 8080). Bạn vui lòng kiểm tra xem Backend đã khởi động chưa.`);
+    }
   }
 
   if (!response.ok) {
@@ -473,9 +477,18 @@ export async function updateExam(id: string, payload: any, deleteOrphanQuestionI
   return response
 }
 
-export async function getExams(): Promise<any[]> {
+export async function getExams(params?: { grade?: string; type?: string; lecture_id?: string }): Promise<any[]> {
   try {
-    const response = await apiFetch('/exams', { cache: 'no-store' })
+    let query = '';
+    if (params) {
+      const q = new URLSearchParams();
+      if (params.grade) q.append('grade', params.grade);
+      if (params.type) q.append('type', params.type);
+      if (params.lecture_id) q.append('lecture_id', params.lecture_id);
+      const str = q.toString();
+      if (str) query = `?${str}`;
+    }
+    const response = await apiFetch(`/exams${query}`, { cache: 'no-store' })
     if (response.data) {
       return response.data
     }

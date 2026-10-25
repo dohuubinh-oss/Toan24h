@@ -114,9 +114,11 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
                     )}
                   >
                     <option value="" disabled>Chọn loại đề</option>
-                    <option value="Giữa kỳ">Giữa kỳ</option>
-                    <option value="Cuối kỳ">Cuối kỳ</option>
-                    <option value="Chuyên đề">Chuyên đề</option>
+                    <option value="Giữa kì 1">Giữa kì 1</option>
+                    <option value="Cuối kì 1">Cuối kì 1</option>
+                    <option value="Giữa kì 2">Giữa kì 2</option>
+                    <option value="Cuối kì 2">Cuối kì 2</option>
+                    <option value="Chuyên Đề">Chuyên Đề</option>
                     <option value="Ôn tập">Ôn tập</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none w-5 h-5" />

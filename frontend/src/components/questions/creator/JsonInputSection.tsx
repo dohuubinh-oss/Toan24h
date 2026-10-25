@@ -8,6 +8,7 @@ import {
   ensureMathDelimiters
 } from './utils/questionTextFormatter'
 import { extractDiagramSvg } from '@/lib/diagram-utils'
+import { safeJsonParse } from '@/lib/jsonRepair'
 
 interface JsonInputSectionProps {
   onProcessJson?: (blocks: QuestionBlock[]) => void;
@@ -176,7 +177,7 @@ export default function JsonInputSection({
   initialValue = ''
 }: JsonInputSectionProps) {
   const handleProcess = (jsonInput: string) => {
-    const parsed = JSON.parse(jsonInput) as QuestionBlock[];
+    const parsed = safeJsonParse<QuestionBlock[]>(jsonInput);
     if (!Array.isArray(parsed)) {
       throw new Error('Dữ liệu phải là mảng (array)');
     }

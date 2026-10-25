@@ -1,10 +1,19 @@
 import React from 'react'
+import type { Metadata } from 'next'
 import HomeNavigation from '../components/home/HomeNavigation'
 import HomeHero from '../components/home/HomeHero'
 import HomeFeatures from '../components/home/HomeFeatures'
 import HomePricing from '../components/home/HomePricing'
 import HomeFooter from '../components/home/HomeFooter'
 import { Sparkles } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'Học và Luyện thi Toán THCS Lớp 6, 7, 8, 9 Thông Minh | toan6789.vn',
+  description: 'Nền tảng tự luyện Toán THCS chuẩn Bộ GD&ĐT. Tự động chấm thi tự luận và trắc nghiệm với MathAI, ngân hàng 10.000+ đề thi có đáp án và lời giải chi tiết.',
+  alternates: {
+    canonical: '/',
+  },
+}
 
 export default function HomePage() {
   return (

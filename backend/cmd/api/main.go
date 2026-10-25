@@ -49,6 +49,22 @@ func main() {
 		log.Fatalf("Auto Migrate failed: %v", err)
 	}
 
+	// Đảm bảo ràng buộc khoá ngoại câu hỏi con tự động CASCADE khi xoá câu hỏi cha
+	config.DB.Exec(`
+		DO $$ 
+		BEGIN 
+			IF EXISTS (
+				SELECT 1 FROM pg_constraint c 
+				WHERE c.conname = 'fk_questions_sub_questions' 
+				AND c.confdeltype != 'c'
+			) THEN
+				ALTER TABLE questions DROP CONSTRAINT fk_questions_sub_questions;
+				ALTER TABLE questions ADD CONSTRAINT fk_questions_sub_questions 
+					FOREIGN KEY (parent_id) REFERENCES questions(id) ON DELETE CASCADE;
+			END IF;
+		END $$;
+	`)
+
 	// 3. Connect Redis (Fail Fast if error)
 	if err := config.ConnectRedis(config.Env.RedisURL); err != nil {
 		log.Fatalf("Redis connection failed: %v", err)
