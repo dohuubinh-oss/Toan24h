@@ -81,3 +81,93 @@ func IsQuotaError(statusCode int, responseBody string) bool {
 
 	return false
 }
+
+// SetNowFunc overrides the current time function (mainly for unit tests simulating cooldown expiration).
+func (m *GeminiPoolManager) SetNowFunc(fn func() time.Time) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if fn == nil {
+		m.nowFunc = time.Now
+	} else {
+		m.nowFunc = fn
+	}
+}
+
+func (m *GeminiPoolManager) now() time.Time {
+	if m.nowFunc != nil {
+		return m.nowFunc()
+	}
+	return time.Now()
+}
+
+// GetActiveKey returns the current active Gemini API key in sticky sequential mode.
+// If the current key is in cooldown, it seeks to the next available healthy key.
+// If all keys are in cooldown, it returns ErrAllGeminiKeysExhausted.
+func (m *GeminiPoolManager) GetActiveKey() (string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if len(m.keys) == 0 {
+		return "", errors.New("no Gemini API keys configured")
+	}
+
+	now := m.now()
+
+	// Check sequentially starting from currentIndex
+	for i := 0; i < len(m.keys); i++ {
+		idx := (m.currentIndex + i) % len(m.keys)
+		k := m.keys[idx]
+
+		// Check if key is healthy or its cooldown has expired
+		if k.CooldownUntil.IsZero() || now.After(k.CooldownUntil) {
+			k.CooldownUntil = time.Time{} // Clear cooldown if expired
+			m.currentIndex = idx
+			return k.Key, nil
+		}
+	}
+
+	return "", ErrAllGeminiKeysExhausted
+}
+
+// MarkKeyFailure records a failure for a key. If it is a quota or rate-limit error,
+// it puts the key into cooldown for cooldownPeriod (default 6 hours) and advances the active key index.
+// Returns true if the error was treated as a quota error.
+func (m *GeminiPoolManager) MarkKeyFailure(key string, statusCode int, responseBody string) bool {
+	if !IsQuotaError(statusCode, responseBody) {
+		return false
+	}
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	now := m.now()
+	for i, k := range m.keys {
+		if k.Key == key {
+			k.CooldownUntil = now.Add(m.cooldownPeriod)
+			k.FailCount++
+
+			// Advance currentIndex to the next key
+			if len(m.keys) > 0 {
+				m.currentIndex = (i + 1) % len(m.keys)
+			}
+			return true
+		}
+	}
+
+	return false
+}
+
+// MarkKeySuccess records a successful invocation for the key.
+func (m *GeminiPoolManager) MarkKeySuccess(key string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for _, k := range m.keys {
+		if k.Key == key {
+			k.TotalSuccess++
+			k.CooldownUntil = time.Time{}
+			return
+		}
+	}
+}
+

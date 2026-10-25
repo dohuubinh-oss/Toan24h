@@ -64,3 +64,77 @@ func TestGeminiPool_InitAndErrorClassifier(t *testing.T) {
 		}
 	})
 }
+
+func TestGeminiPool_StickyAndCooldown(t *testing.T) {
+	fakeTime := time.Date(2026, 10, 25, 8, 0, 0, 0, time.UTC)
+	now := fakeTime
+
+	pool := NewGeminiPoolManager("key1, key2, key3", 6*time.Hour)
+	pool.SetNowFunc(func() time.Time {
+		return now
+	})
+
+	// 1. Sticky sequential: 5 consecutive calls must all return "key1"
+	for i := 0; i < 5; i++ {
+		key, err := pool.GetActiveKey()
+		if err != nil {
+			t.Fatalf("Unexpected error getting key: %v", err)
+		}
+		if key != "key1" {
+			t.Fatalf("Expected sticky 'key1', got '%s'", key)
+		}
+	}
+
+	// 2. Mark non-quota error (HTTP 400 Bad Request): should not cooldown
+	isQuota := pool.MarkKeyFailure("key1", 400, "invalid argument")
+	if isQuota {
+		t.Errorf("Expected false for HTTP 400, got true")
+	}
+	keyAfter400, _ := pool.GetActiveKey()
+	if keyAfter400 != "key1" {
+		t.Fatalf("Expected key1 to remain active after HTTP 400, got '%s'", keyAfter400)
+	}
+
+	// 3. Mark quota error (HTTP 429): should cooldown key1 and switch to key2
+	isQuota = pool.MarkKeyFailure("key1", 429, "rateLimitExceeded")
+	if !isQuota {
+		t.Errorf("Expected true for HTTP 429, got false")
+	}
+
+	keyAfter429, err := pool.GetActiveKey()
+	if err != nil {
+		t.Fatalf("Unexpected error getting next key: %v", err)
+	}
+	if keyAfter429 != "key2" {
+		t.Fatalf("Expected active key to switch to 'key2', got '%s'", keyAfter429)
+	}
+
+	// 4. Mark key2 with 503 (server overloaded): should switch to key3
+	pool.MarkKeyFailure("key2", 503, "overloaded")
+	keyAfter503, err := pool.GetActiveKey()
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if keyAfter503 != "key3" {
+		t.Fatalf("Expected active key to switch to 'key3', got '%s'", keyAfter503)
+	}
+
+	// 5. Mark key3 with 429: all keys are now in cooldown
+	pool.MarkKeyFailure("key3", 429, "RESOURCE_EXHAUSTED")
+	_, err = pool.GetActiveKey()
+	if err != ErrAllGeminiKeysExhausted {
+		t.Fatalf("Expected ErrAllGeminiKeysExhausted, got %v", err)
+	}
+
+	// 6. Advance time by 6 hours + 1 second: key1 cooldown expired, should recover!
+	now = now.Add(6*time.Hour + 1*time.Second)
+
+	recoveredKey, err := pool.GetActiveKey()
+	if err != nil {
+		t.Fatalf("Expected key to recover after 6 hours, got error: %v", err)
+	}
+	if recoveredKey != "key1" {
+		t.Fatalf("Expected recovered key to be 'key1', got '%s'", recoveredKey)
+	}
+}
+
