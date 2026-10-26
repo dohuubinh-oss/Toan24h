@@ -14,21 +14,6 @@ interface MathKeyboardModalProps {
   onCancel: () => void
 }
 
-const QUICK_SYMBOLS = [
-  { label: 'a/b', latex: '\\frac{#0}{#?}', title: 'Phân số (a/b)' },
-  { label: ':', latex: ' : ', title: 'Phép chia hai chấm (:)' },
-  { label: '·', latex: ' \\cdot ', title: 'Phép nhân dấu chấm (·)' },
-  { label: '+', latex: '+', title: 'Phép cộng (+)' },
-  { label: '−', latex: '-', title: 'Phép trừ (−)' },
-  { label: '=', latex: '=', title: 'Dấu bằng (=)' },
-  { label: ',', latex: ',', title: 'Dấu phẩy thập phân (chuẩn VN)' },
-  { label: '√x', latex: '\\sqrt{#0}', title: 'Căn bậc hai' },
-  { label: 'x²', latex: '#@^2', title: 'Bình phương' },
-  { label: 'xⁿ', latex: '#@^{#0}', title: 'Số mũ' },
-  { label: '( )', latex: '\\left(#0\\right)', title: 'Đóng mở ngoặc' },
-  { label: '…', latex: '\\dots ', title: 'Dấu ba chấm (\\dots)' },
-]
-
 export default function MathKeyboardModal({ initialValue, anchorEl, onChange, onSave, onCancel }: MathKeyboardModalProps) {
   const [latex, setLatex] = useState(initialValue || '')
   const [mounted, setMounted] = useState(false)
@@ -43,7 +28,7 @@ export default function MathKeyboardModal({ initialValue, anchorEl, onChange, on
     if (anchorEl && typeof window !== 'undefined') {
       const rect = anchorEl.getBoundingClientRect()
       const modalWidth = 440
-      const modalHeight = 280
+      const modalHeight = 220
       
       let top = rect.bottom + window.scrollY + 8
       let left = rect.left + window.scrollX
@@ -84,17 +69,12 @@ export default function MathKeyboardModal({ initialValue, anchorEl, onChange, on
     }
   }
 
-  const handleQuickInsert = (snippet: string) => {
-    if (mathInputRef.current) {
-      mathInputRef.current.insertSnippet(snippet)
-    }
-  }
-
   if (!mounted) return null
 
   return createPortal(
     <div 
       style={{ top: `${position.top}px`, left: `${position.left}px` }}
+      data-math-keyboard-modal="true"
       className="absolute z-[10000] flex flex-col w-[440px] pointer-events-none transition-all duration-150"
     >
       {/* Modal Container */}
@@ -105,21 +85,6 @@ export default function MathKeyboardModal({ initialValue, anchorEl, onChange, on
           <div className="flex items-center justify-between mb-2">
             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Soạn công thức</label>
             <span className="text-[10px] text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full">Chuẩn VN (phẩy , chia : nhân ·)</span>
-          </div>
-
-          {/* Quick Math Symbols Toolbar */}
-          <div className="flex items-center flex-wrap gap-1.5 p-2 mb-2 bg-slate-100/80 rounded-xl border border-slate-200/80">
-            {QUICK_SYMBOLS.map((sym, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handleQuickInsert(sym.latex)}
-                title={sym.title}
-                className="min-w-[32px] h-7 px-1.5 flex items-center justify-center font-bold text-xs bg-white text-slate-800 rounded-lg border border-slate-200 shadow-xs hover:bg-primary hover:text-white hover:border-primary active:scale-95 transition-all cursor-pointer font-mono"
-              >
-                {sym.label}
-              </button>
-            ))}
           </div>
 
           <div className="relative rounded-xl overflow-y-auto max-h-[200px] border border-slate-200 shadow-inner bg-slate-50/80">

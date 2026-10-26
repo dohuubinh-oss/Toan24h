@@ -39,7 +39,7 @@ export default function TelegramLoginWidget({
 
     const initialLink = `https://t.me/${botName}?start=login_${localId}`
     setSessionId(localId)
-    setDeepLink(initialLink)
+    setDeepLink('')
     setShowQrModal(true)
     setQrStatus('waiting')
 
@@ -54,12 +54,13 @@ export default function TelegramLoginWidget({
       })
       if (res && res.sessionId) {
         setSessionId(res.sessionId)
-        if (res.deepLink) {
-          setDeepLink(res.deepLink)
-        }
+        setDeepLink(res.deepLink || `https://t.me/${botName}?start=login_${res.sessionId}`)
+      } else {
+        setDeepLink(`https://t.me/${botName}?start=login_${localId}`)
       }
     } catch (err) {
       console.warn('Backend session registration fallback:', err)
+      setDeepLink(`https://t.me/${botName}?start=login_${localId}`)
     }
   }
 
@@ -91,6 +92,7 @@ export default function TelegramLoginWidget({
       ? 'Liên kết Telegram (Phụ huynh)'
       : 'Liên kết Telegram (Học sinh)'
     : 'Liên kết Telegram nhận thông báo'
+
   const defaultModalTitle = linkUserId
     ? slot === 2
       ? 'Liên kết Telegram Phụ huynh'
@@ -160,10 +162,22 @@ export default function TelegramLoginWidget({
                   </span>
                 </div>
 
+                {deepLink && (
+                  <a
+                    href={deepLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#24A1DE] hover:bg-[#208ec4] text-white font-semibold rounded-xl shadow-sm text-sm transition-all active:scale-[0.98]"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Mở ứng dụng Telegram để liên kết</span>
+                  </a>
+                )}
+
                 {/* Instructions */}
                 <div className="bg-sky-50/70 border border-sky-100 rounded-xl p-3.5 text-xs text-sky-900 space-y-1.5">
                   <p className="font-bold text-sky-950">📌 Các bước thực hiện:</p>
-                  <p>1. Dùng <strong>Camera điện thoại</strong> hoặc <strong>App Telegram</strong> quét mã QR trên.</p>
+                  <p>1. Dùng <strong>Camera điện thoại</strong> hoặc <strong>App Telegram</strong> quét mã QR trên (hoặc bấm nút mở ứng dụng phía trên).</p>
                   <p>2. Trên ứng dụng Telegram, nhấn nút <strong>Bắt đầu (Start)</strong>.</p>
                   <p>3. Tài khoản Telegram sẽ được <strong>liên kết tự động</strong> để nhận thông báo!</p>
                 </div>
@@ -175,8 +189,6 @@ export default function TelegramLoginWidget({
                   </span>
                   <span>Đang đợi bạn nhấn Start trên Telegram...</span>
                 </div>
-
-
               </div>
             )}
           </div>

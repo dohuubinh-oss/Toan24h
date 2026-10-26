@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/models"
@@ -114,8 +115,18 @@ func (h *AuthHandler) LinkTelegram(c *gin.Context) {
 	// Check if Telegram ID is already linked to another user across either slot 1 or slot 2
 	var existing models.User
 	if err := h.db.Unscoped().Where("(telegram_id = ? OR telegram_id2 = ?) AND id != ?", tgID, tgID, currentUID).First(&existing).Error; err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "Tài khoản Telegram này đã được liên kết với một người dùng khác"})
-		return
+		if strings.HasSuffix(existing.Email, "@telegram.local") || existing.DeletedAt.Valid {
+			// Auto-unlink legacy dummy user or deleted user
+			_ = h.db.Model(&models.User{}).Unscoped().Where("id = ?", existing.ID).Updates(map[string]interface{}{
+				"telegram_id":   nil,
+				"telegram_user":  nil,
+				"telegram_id2":  nil,
+				"telegram_user2": nil,
+			}).Error
+		} else {
+			c.JSON(http.StatusConflict, gin.H{"error": "Tài khoản Telegram này đã được liên kết với một người dùng khác"})
+			return
+		}
 	}
 
 	// Update current user for the selected slot

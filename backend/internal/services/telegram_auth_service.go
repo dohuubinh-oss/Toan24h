@@ -130,6 +130,12 @@ func CompleteTelegramLinkDirect(db *gorm.DB, sessionID string, telegramID int64,
 		return nil, fmt.Errorf("invalid telegram ID")
 	}
 
+	// Retry once after 500ms in case frontend registration is finishing concurrently
+	if !hasSession || sessionData.LinkUserID == "" {
+		time.Sleep(500 * time.Millisecond)
+		sessionData, hasSession = GetTelegramQRSession(sessionID)
+	}
+
 	if !hasSession || sessionData.LinkUserID == "" {
 		return nil, fmt.Errorf("đăng nhập bằng Telegram không còn được hỗ trợ. Telegram chỉ dùng để nhận thông báo")
 	}
@@ -139,10 +145,24 @@ func CompleteTelegramLinkDirect(db *gorm.DB, sessionID string, telegramID int64,
 		return nil, fmt.Errorf("không tìm thấy người dùng cần liên kết")
 	}
 
-	// Check collision: if this telegram ID is already linked to another user
-	var collision models.User
-	if err := db.Unscoped().Where("(telegram_id = ? OR telegram_id2 = ?) AND id != ?", telegramID, telegramID, user.ID).First(&collision).Error; err == nil {
-		return nil, fmt.Errorf("tài khoản Telegram này đã được liên kết với một người dùng khác")
+	// Auto-unlink if this telegram ID was previously linked to another account (e.g. legacy dummy account or previous user)
+	var collisions []models.User
+	if err := db.Unscoped().Where("(telegram_id = ? OR telegram_id2 = ?) AND id != ?", telegramID, telegramID, user.ID).Find(&collisions).Error; err == nil && len(collisions) > 0 {
+		for _, c := range collisions {
+			updatesOld := map[string]interface{}{}
+			if c.TelegramID != nil && *c.TelegramID == telegramID {
+				updatesOld["telegram_id"] = nil
+				updatesOld["telegram_user"] = nil
+			}
+			if c.TelegramID2 != nil && *c.TelegramID2 == telegramID {
+				updatesOld["telegram_id2"] = nil
+				updatesOld["telegram_user2"] = nil
+			}
+			if len(updatesOld) > 0 {
+				_ = db.Model(&models.User{}).Unscoped().Where("id = ?", c.ID).Updates(updatesOld).Error
+				log.Printf("[TelegramBot] Auto-unlinked previous user %s (%s) from telegram ID %d to transfer to user %s", c.FullName, c.Email, telegramID, user.FullName)
+			}
+		}
 	}
 
 	updates := map[string]interface{}{}

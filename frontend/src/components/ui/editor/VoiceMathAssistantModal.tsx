@@ -63,8 +63,13 @@ export default function VoiceMathAssistantModal({
       }
 
       recognition.onerror = (err: any) => {
-        console.error('Speech recognition error', err)
         setIsListening(false)
+        const errType = err.error || (err as any).type
+        if (errType === 'not-allowed') {
+          console.warn('Microphone permission not granted')
+        } else {
+          console.warn('Speech recognition warning:', errType)
+        }
       }
 
       recognition.onend = () => {
@@ -73,7 +78,7 @@ export default function VoiceMathAssistantModal({
 
       recognitionRef.current = recognition
     } catch (e) {
-      console.error('Speech recognition initialization error', e)
+      console.warn('Speech recognition initialization warning:', e)
       setSpeechSupported(false)
     }
   }, [isOpen])

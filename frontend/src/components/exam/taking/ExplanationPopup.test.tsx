@@ -69,4 +69,39 @@ describe('ExplanationPopup Component', () => {
     await userEvent.click(submitBtn)
     expect(handleSubmit).toHaveBeenCalledWith('Biết ngay mà')
   })
+
+  it('calls onClose when clicking outside the explanation popup', async () => {
+    const handleClose = vi.fn()
+    render(
+      <div>
+        <div data-testid="outside-element">Outside</div>
+        <ExplanationPopup
+          isOpen={true}
+          onClose={handleClose}
+          onSubmit={vi.fn()}
+        />
+      </div>
+    )
+
+    const outsideEl = screen.getByTestId('outside-element')
+    fireEvent.mouseDown(outsideEl)
+    expect(handleClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not call onClose when clicking inside the popup panel', async () => {
+    const handleClose = vi.fn()
+    render(
+      <div>
+        <ExplanationPopup
+          isOpen={true}
+          onClose={handleClose}
+          onSubmit={vi.fn()}
+        />
+      </div>
+    )
+
+    const panel = screen.getByTestId('explanation-popup-panel')
+    fireEvent.mouseDown(panel)
+    expect(handleClose).not.toHaveBeenCalled()
+  })
 })

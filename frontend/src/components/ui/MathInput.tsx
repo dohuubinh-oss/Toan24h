@@ -56,11 +56,11 @@ const MathInput = React.forwardRef<MathInputHandle, MathInputProps>(function Mat
             variants: [',', '.']
           });
 
-          // 2. Phím chia hai chấm ':' theo chuẩn sách giáo khoa Việt Nam
+          // 2. Phím chia hai chấm ':' theo chuẩn sách giáo khoa Việt Nam, nhãn phân số hiển thị là a/b
           window.mathVirtualKeyboard.setKeycap('[/]', {
             class: 'big-op hide-shift',
-            shift: { class: '', latex: '\\frac{#@}{#?}', label: '\\frac{\\Box}{\\Box}' },
-            variants: [':', '\\div', '/', '\\frac{#@}{#?}'],
+            shift: { class: '', latex: '\\frac{#@}{#?}', label: 'a/b' },
+            variants: [':', { latex: '\\frac{#@}{#?}', label: 'a/b' }, '\\div', '/'],
             latex: ' : ',
             label: ':'
           });
@@ -108,6 +108,7 @@ const MathInput = React.forwardRef<MathInputHandle, MathInputProps>(function Mat
             ':': ' : ',
             'chia': ' : ',
             'div': ' : ',
+            'a/b': '\\frac{#@}{#?}',
             '*': ' \\cdot ',
             '**': ' \\cdot ',
             'nhan': ' \\cdot ',

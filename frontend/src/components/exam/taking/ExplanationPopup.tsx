@@ -11,12 +11,48 @@ interface ExplanationPopupProps {
 
 export default function ExplanationPopup({ isOpen, onClose, onSubmit, initialExplanation }: ExplanationPopupProps) {
   const [explanation, setExplanation] = useState('')
+  const containerRef = React.useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (isOpen) {
       setExplanation(initialExplanation || '')
     }
   }, [isOpen, initialExplanation])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handlePointerDown = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+
+      // Don't close if clicking inside popup container
+      if (containerRef.current && containerRef.current.contains(target)) {
+        return
+      }
+
+      // Don't close if interacting with MathLive virtual keyboard, math modals or toggle buttons
+      if (
+        target.closest?.('[data-math-keyboard-modal="true"]') ||
+        target.closest?.('[class*="MLK__"]') ||
+        target.closest?.('math-field') ||
+        target.closest?.('[data-explanation-toggle="true"]') ||
+        target.tagName?.toLowerCase() === 'math-field'
+      ) {
+        return
+      }
+
+      onClose()
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('touchstart', handlePointerDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('touchstart', handlePointerDown)
+    }
+  }, [isOpen, onClose])
 
   if (!isOpen) return null
 
@@ -40,6 +76,8 @@ export default function ExplanationPopup({ isOpen, onClose, onSubmit, initialExp
     <div className="fixed top-24 right-8 z-[100] flex flex-col w-[400px] pointer-events-none">
       {/* Panel Container */}
       <div 
+        ref={containerRef}
+        data-testid="explanation-popup-panel"
         className="relative bg-white/70 backdrop-blur-2xl w-full rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.05)] border border-white/50 flex flex-col overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] opacity-100 scale-100 ring-1 ring-black/5 pointer-events-auto h-[420px]"
         style={{
           boxShadow: '0 20px 40px -15px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.4)'

@@ -139,7 +139,12 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
       return
     }
 
-    if (!recognitionRef.current) {
+    // Khởi tạo instance mới cho mỗi phiên để tránh lỗi stale state của Chromium
+    try {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort() } catch {}
+      }
+
       const recognition = new SpeechRecognition()
       recognition.lang = 'vi-VN'
       recognition.continuous = true
@@ -184,8 +189,19 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
       }
 
       recognition.onerror = (event: any) => {
-        console.error('Speech recognition error', event.error)
         setIsListening(false)
+        const errType = event.error || (event as any).type
+        if (errType === 'not-allowed') {
+          toast.error('Micro bị từ chối! Bạn hãy tắt hẳn Chrome (nhấn tổ hợp phím Cmd + Q) rồi mở lại để macOS cập nhật quyền nhé.')
+        } else if (errType === 'no-speech') {
+          toast.info('Chưa nhận diện được giọng nói. Vui lòng nói to và rõ hơn.')
+        } else if (errType === 'audio-capture') {
+          toast.error('Không tìm thấy thiết bị thu âm (micro). Vui lòng kiểm tra lại mic.')
+        } else if (errType === 'network') {
+          toast.error('Lỗi mạng khi nhận diện giọng nói.')
+        } else {
+          console.warn('Speech recognition warning:', errType)
+        }
       }
 
       recognition.onend = () => {
@@ -193,14 +209,12 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
       }
 
       recognitionRef.current = recognition
-    }
-
-    try {
-      recognitionRef.current.start()
+      recognition.start()
       setIsListening(true)
       toast.success('🎙️ Đang lắng nghe giọng nói... Hãy nói công thức toán!')
-    } catch (e) {
-      console.error(e)
+    } catch (e: any) {
+      setIsListening(false)
+      console.warn('Speech recognition start error:', e?.message || e)
     }
   }, [editor, isListening])
 

@@ -191,12 +191,15 @@ export default function ProfilePage() {
       })
 
       if (res && (res.message || res.status === 'completed' || res.telegramId)) {
-        toast.success(`Liên kết Telegram ${slot === 2 ? 'Phụ huynh' : 'Học sinh'} thành công!`)
+        toast.success(`Liên kết Telegram ${slot === 2 ? 'Phụ huynh' : 'Học sinh'} thành công! Đang làm mới...`)
         const newRes = await apiFetch('/users/me')
         if (newRes && newRes.data) {
           setUser(newRes.data)
           localStorage.setItem('user', JSON.stringify(newRes.data))
         }
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
       } else {
         toast.error(res?.error || 'Liên kết thất bại')
       }
