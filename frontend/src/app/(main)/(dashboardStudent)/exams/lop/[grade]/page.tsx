@@ -109,22 +109,30 @@ export default async function GradeExamsPage({
 
   // Map to Practice format
   const practices: Practice[] = paginatedData.map((exam: any) => {
-    // Find the latest result for this exam
+    // Find submissions for this exam
     const examResults = myResults.filter((r: any) => r.examId === exam.id);
-    // Sort by created_at desc (if not already)
-    examResults.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    
-    const latestResult = examResults.length > 0 ? examResults[0] : null;
+    const attempt1 = examResults.find((r: any) => r.attemptNumber === 1);
+    const attempt2 = examResults.find((r: any) => r.attemptNumber === 2);
+
+    // Official result is Attempt 1 (or oldest if not marked)
+    const officialResult = attempt1 || (examResults.length > 0 ? examResults[examResults.length - 1] : null);
+    const latestResult = attempt2 || officialResult;
+
     let status: 'NOT_STARTED' | 'PENDING' | 'COMPLETED' = 'NOT_STARTED';
     let score = undefined;
+    let retakeScore = undefined;
 
-    if (latestResult) {
-      if (latestResult.status === 'graded') {
+    if (officialResult) {
+      if (officialResult.status === 'graded') {
         status = 'COMPLETED';
-        score = latestResult.totalScore;
-      } else if (latestResult.status === 'submitted' || latestResult.status === 'in_progress') {
+        score = officialResult.totalScore;
+      } else if (officialResult.status === 'submitted' || officialResult.status === 'in_progress') {
         status = 'PENDING';
       }
+    }
+
+    if (attempt2 && attempt2.status === 'graded') {
+      retakeScore = attempt2.totalScore;
     }
 
     return {
@@ -135,8 +143,9 @@ export default async function GradeExamsPage({
       questionCount: exam.questionIds ? exam.questionIds.length : 0,
       status: status,
       score: score, 
+      retakeScore: retakeScore,
       grade: String(exam.grade),
-      resultId: latestResult?.id,
+      resultId: latestResult?.id || officialResult?.id,
     };
   });
 

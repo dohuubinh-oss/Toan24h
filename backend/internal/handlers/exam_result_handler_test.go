@@ -166,3 +166,101 @@ func TestSubmitExam_EmptyEssayQuestion(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), sub.TotalScore)
 }
+
+func TestTwoAttemptsSubmissionLifecycle(t *testing.T) {
+	r, db, cleanup := setupExamTestEnv(t)
+	defer cleanup()
+
+	qID := uuid.New()
+	question := models.Question{
+		ID:              qID,
+		Content:         "1 + 1 = ?",
+		Type:            "Trắc nghiệm",
+		DifficultyPoint: 1.0,
+		Tags:            "[]",
+		Options:         `[{"key":"A","content":"2","is_correct":true}]`,
+	}
+	db.Create(&question)
+
+	examID := uuid.New()
+	exam := models.Exam{
+		ID:          examID,
+		Title:       "Official Exam Test",
+		ExamCode:    "OET101",
+		Type:        "exam",
+		Cate:        "exam", // Official exam
+		Grade:       "8",
+		QuestionIDs: pq.StringArray{qID.String()},
+	}
+	db.Create(&exam)
+
+	makePayload := func(ans string) []byte {
+		p := map[string]interface{}{
+			"answers": []map[string]interface{}{
+				{
+					"questionId":    qID.String(),
+					"studentAnswer": ans,
+					"isEssay":       false,
+				},
+			},
+		}
+		b, _ := json.Marshal(p)
+		return b
+	}
+
+	// 1. Submit Attempt 1
+	req1, _ := http.NewRequest("POST", "/api/v1/exams/"+examID.String()+"/submit", bytes.NewBuffer(makePayload("A")))
+	req1.Header.Set("Content-Type", "application/json")
+	w1 := httptest.NewRecorder()
+	r.ServeHTTP(w1, req1)
+	assert.Equal(t, http.StatusOK, w1.Code)
+
+	var subsAfter1 []models.Submission
+	db.Where("exam_id = ?", examID).Order("attempt_number asc").Find(&subsAfter1)
+	assert.Equal(t, 1, len(subsAfter1))
+	assert.Equal(t, 1, subsAfter1[0].AttemptNumber)
+
+	// Simulate grading completion for attempt 1
+	db.Model(&models.Submission{}).Where("id = ?", subsAfter1[0].ID).Updates(map[string]interface{}{
+		"status":      models.StatusGraded,
+		"total_score": 10.0,
+	})
+
+	// 2. Submit Attempt 2 (Previously this returned 400 "Bài thi chính thức chỉ được làm và nộp 1 lần")
+	req2, _ := http.NewRequest("POST", "/api/v1/exams/"+examID.String()+"/submit", bytes.NewBuffer(makePayload("B")))
+	req2.Header.Set("Content-Type", "application/json")
+	w2 := httptest.NewRecorder()
+	r.ServeHTTP(w2, req2)
+	assert.Equal(t, http.StatusOK, w2.Code, "Attempt 2 should succeed without 400 error")
+
+	var subsAfter2 []models.Submission
+	db.Where("exam_id = ?", examID).Order("attempt_number asc").Find(&subsAfter2)
+	assert.Equal(t, 2, len(subsAfter2), "Should have exactly 2 submissions now")
+	assert.Equal(t, 1, subsAfter2[0].AttemptNumber)
+	assert.Equal(t, 2, subsAfter2[1].AttemptNumber)
+	assert.Equal(t, float64(10.0), subsAfter2[0].TotalScore, "Attempt 1 total score must remain 10.0 untouched")
+
+	attempt2ID := subsAfter2[1].ID
+
+	// Simulate grading completion for attempt 2
+	db.Model(&models.Submission{}).Where("id = ?", attempt2ID).Updates(map[string]interface{}{
+		"status":      models.StatusGraded,
+		"total_score": 0.0,
+	})
+
+	// 3. Submit Attempt 3 (Should overwrite Attempt 2, still 2 rows in DB)
+	req3, _ := http.NewRequest("POST", "/api/v1/exams/"+examID.String()+"/submit", bytes.NewBuffer(makePayload("A")))
+	req3.Header.Set("Content-Type", "application/json")
+	w3 := httptest.NewRecorder()
+	r.ServeHTTP(w3, req3)
+	assert.Equal(t, http.StatusOK, w3.Code, "Attempt 3 should succeed")
+
+	var subsAfter3 []models.Submission
+	db.Where("exam_id = ?", examID).Order("attempt_number asc").Find(&subsAfter3)
+	assert.Equal(t, 2, len(subsAfter3), "Must maintain at most 2 submissions total")
+	assert.Equal(t, 1, subsAfter3[0].AttemptNumber)
+	assert.Equal(t, 2, subsAfter3[1].AttemptNumber)
+	assert.Equal(t, attempt2ID, subsAfter3[1].ID, "Attempt 2 record should be overwritten in-place")
+	assert.Equal(t, float64(10.0), subsAfter3[0].TotalScore, "Attempt 1 total score must still remain 10.0 untouched")
+}
+

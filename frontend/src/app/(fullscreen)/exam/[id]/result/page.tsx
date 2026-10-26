@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Sparkles, ArrowLeft, Loader2, Award, Save, CheckCircle, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles, ArrowLeft, Loader2, Award, Save, CheckCircle, X, RotateCcw } from 'lucide-react'
 import ExamProgressNav from '@/components/exam/taking/ExamProgressNav'
 import QuestionMapSidebar, { QuestionMapItem, QuestionStatus } from '@/components/exam/taking/QuestionMapSidebar'
 import MultipleChoiceQuestion from '@/components/exam/taking/MultipleChoiceQuestion'
@@ -469,6 +469,63 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         examType="result"
         onBack={handleBack}
       />
+
+      {/* Attempt Switcher & Retake Action Bar */}
+      {resultData?.attempts && resultData.attempts.length > 0 && (
+        <div className="bg-white border-b border-slate-200/80 px-4 md:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-2xs z-30">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:inline">Lần làm bài:</span>
+            <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
+              {resultData.attempts.map((att: any) => {
+                const isCurrent = att.id === resultData.submission?.id
+                const isOfficial = att.attemptNumber === 1
+                return (
+                  <button
+                    key={att.id}
+                    onClick={() => {
+                      if (!isCurrent) {
+                        router.push(`/exam/${att.id}/result`)
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      isCurrent
+                        ? 'bg-white text-blue-600 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                  >
+                    {isOfficial ? (
+                      <>
+                        <Award className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Lần 1 (Chính thức): <strong>{att.totalScore != null ? Number(att.totalScore).toFixed(1) : 0}đ</strong></span>
+                      </>
+                    ) : (
+                      <>
+                        <RotateCcw className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>Lần 2 (Ôn tập): <strong>{att.totalScore != null ? Number(att.totalScore).toFixed(1) : 0}đ</strong></span>
+                      </>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Retake button */}
+          {mappedData.exam?.id && (
+            <button
+              onClick={() => {
+                sessionStorage.removeItem(`exam_state_${mappedData.exam.id}`)
+                sessionStorage.removeItem(`exam_end_time_${mappedData.exam.id}`)
+                router.push(`/exam/${mappedData.exam.id}/take`)
+              }}
+              className="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs md:text-sm font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Làm lại đề thi</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Main Workspace Area */}
       <div className="flex-1 flex flex-col overflow-hidden relative pb-[88px] w-full">

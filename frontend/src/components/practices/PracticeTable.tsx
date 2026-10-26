@@ -118,9 +118,16 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
 
                   <td className="px-6 py-4 text-center">
                     {isCompleted ? (
-                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${scoreBg} ${scoreColor} font-bold text-sm`}>
-                        <ScoreIcon className="w-4 h-4" />
-                        <span>{scoreLabel}</span>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg ${scoreBg} ${scoreColor} font-bold text-sm`}>
+                          <ScoreIcon className="w-3.5 h-3.5" />
+                          <span>{scoreLabel}</span>
+                        </div>
+                        {practice.retakeScore !== undefined && (
+                          <span className="text-[11px] text-slate-500 font-medium">
+                            Lần 2: <strong className="text-emerald-600 font-bold">{practice.retakeScore.toFixed(1)}</strong>
+                          </span>
+                        )}
                       </div>
                     ) : isPending ? (
                       <span className="text-sm text-slate-400 italic">Đang tính...</span>

@@ -55,19 +55,45 @@ func SubmitExam(c *gin.Context) {
 		return
 	}
 
+	var existingSubs []models.Submission
+	config.DB.Where("exam_id = ? AND user_id = ?", examID, studentID).Order("attempt_number asc, created_at asc").Find(&existingSubs)
+
 	var submission models.Submission
 	var isUpdate bool
-	if err := config.DB.Where("exam_id = ? AND user_id = ?", examID, studentID).First(&submission).Error; err == nil {
-		if exam.Cate == "exam" && (submission.Status == models.StatusGraded || submission.Status == models.StatusInProgress) {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"status":  "error",
-				"message": "Bài thi chính thức chỉ được làm và nộp 1 lần. Bạn không thể nộp lại.",
-			})
-			return
-		}
-		isUpdate = true
-	} else {
+
+	if len(existingSubs) == 0 {
+		// Chưa có lần nộp nào -> Lần 1 (Điểm thi chính thức)
 		submission.ID = uuid.New()
+		submission.AttemptNumber = 1
+		isUpdate = false
+	} else if len(existingSubs) == 1 {
+		firstSub := existingSubs[0]
+		if firstSub.Status == models.StatusInProgress {
+			// Đang làm dở lần 1 -> tiếp tục cập nhật lần 1
+			submission = firstSub
+			submission.AttemptNumber = 1
+			isUpdate = true
+		} else {
+			// Lần 1 đã nộp/chấm xong -> Bắt đầu Lần 2 (Lần ôn tập mới)
+			submission.ID = uuid.New()
+			submission.AttemptNumber = 2
+			isUpdate = false
+		}
+	} else {
+		// Đã có từ 2 bản ghi trở lên: Luôn bảo vệ Lần 1, ghi đè vào Lần 2
+		var attempt2Sub *models.Submission
+		for i := range existingSubs {
+			if existingSubs[i].AttemptNumber == 2 {
+				attempt2Sub = &existingSubs[i]
+				break
+			}
+		}
+		if attempt2Sub == nil {
+			attempt2Sub = &existingSubs[1]
+		}
+		submission = *attempt2Sub
+		submission.AttemptNumber = 2
+		isUpdate = true
 	}
 
 	answersMap := make(map[string]models.QuestionAnswer)
@@ -389,8 +415,17 @@ func GetExamResultByID(c *gin.Context) {
 	id := c.Param("id")
 	var submission models.Submission
 	if err := config.DB.First(&submission, "id = ?", id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Result not found"})
-		return
+		// Fallback: check if id is an exam ID for the current user
+		currentUID, uErr := utils.GetUserID(c)
+		if uErr == nil {
+			if err2 := config.DB.Where("exam_id = ? AND user_id = ?", id, currentUID).Order("attempt_number desc, created_at desc").First(&submission).Error; err2 != nil {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Result not found"})
+				return
+			}
+		} else {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Result not found"})
+			return
+		}
 	}
 
 	// Verify authorization: either submission owner or staff (admin/teacher)
@@ -406,12 +441,6 @@ func GetExamResultByID(c *gin.Context) {
 			return
 		}
 	}
-
-	// We also need to attach the exam and questions information for the frontend to render it properly.
-	// Instead of rewriting everything, we can just return the submission, and the frontend will fetch the exam details separately.
-	// Actually, the previous implementation returned ExamResult with Preloaded Details and Questions.
-	// Since JSON doesn't preload, we need to manually fetch questions if the frontend expects them in this same API call.
-	// For simplicity, let's fetch questions and embed them in the response.
 
 	var answersMap map[string]models.QuestionAnswer
 	json.Unmarshal(submission.AnswersJSON, &answersMap)
@@ -451,6 +480,30 @@ func GetExamResultByID(c *gin.Context) {
 		config.DB.Where("id IN ?", qIDs).Find(&questions)
 	}
 
+	type AttemptSummary struct {
+		ID            string     `json:"id"`
+		AttemptNumber int        `json:"attemptNumber"`
+		TotalScore    float64    `json:"totalScore"`
+		Status        string     `json:"status"`
+		SubmittedAt   *time.Time `json:"submittedAt"`
+		CreatedAt     time.Time  `json:"createdAt"`
+	}
+	var allSubs []models.Submission
+	if submission.UserID != nil {
+		config.DB.Where("exam_id = ? AND user_id = ?", submission.ExamID, *submission.UserID).Order("attempt_number asc, created_at asc").Find(&allSubs)
+	}
+	var attempts []AttemptSummary
+	for _, s := range allSubs {
+		attempts = append(attempts, AttemptSummary{
+			ID:            s.ID.String(),
+			AttemptNumber: s.AttemptNumber,
+			TotalScore:    s.TotalScore,
+			Status:        string(s.Status),
+			SubmittedAt:   s.SubmittedAt,
+			CreatedAt:     s.CreatedAt,
+		})
+	}
+
 	// Send everything back
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
@@ -458,6 +511,7 @@ func GetExamResultByID(c *gin.Context) {
 			"exam":       exam,
 			"submission": submission,
 			"questions":  questions,
+			"attempts":   attempts,
 		},
 	})
 }

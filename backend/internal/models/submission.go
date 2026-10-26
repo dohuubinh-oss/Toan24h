@@ -103,6 +103,7 @@ type Submission struct {
 	ID                           uuid.UUID        `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	UserID                       *uuid.UUID       `gorm:"type:uuid;index" json:"userId,omitempty"`
 	ExamID                       uuid.UUID        `gorm:"type:uuid;not null;index" json:"examId"`
+	AttemptNumber                int              `gorm:"type:int;not null;default:1" json:"attemptNumber"`
 	Status                       SubmissionStatus `gorm:"type:varchar(20);not null;default:'in_progress'" json:"status"`
 	TotalScore                   float64          `gorm:"type:decimal(5,2);default:0" json:"totalScore"`
 	OverallEssayFeedback         string           `gorm:"type:text" json:"overallEssayFeedback,omitempty"`
@@ -119,6 +120,9 @@ type Submission struct {
 func (s *Submission) BeforeCreate(tx *gorm.DB) (err error) {
 	if s.ID == uuid.Nil {
 		s.ID = uuid.New()
+	}
+	if s.AttemptNumber <= 0 {
+		s.AttemptNumber = 1
 	}
 	return
 }

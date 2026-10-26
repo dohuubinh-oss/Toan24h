@@ -7,7 +7,8 @@ export interface Practice {
   duration: number; // minutes
   questionCount: number;
   status: PracticeStatus;
-  score?: number; // Score if completed
+  score?: number; // Score if completed (Attempt 1)
+  retakeScore?: number; // Score of Attempt 2 if completed
   grade: string;
   resultId?: string;
 }
@@ -44,6 +45,7 @@ export interface Submission {
   id: string;
   userId?: string;
   examId: string;
+  attemptNumber?: number;
   status: 'in_progress' | 'submitted' | 'graded' | 'needs_review';
   totalScore: number;
   answersJson: Record<string, QuestionAnswer>;
