@@ -126,4 +126,106 @@ describe('MultipleChoiceQuestion Component', () => {
     
     expect(screen.getByText('Đã đánh dấu')).toBeInTheDocument()
   })
+
+  it('renders student explanation under options with light blue styling when provided', () => {
+    render(
+      <MultipleChoiceQuestion
+        questionId={3}
+        index={2}
+        content="Nghiệm?"
+        options={options}
+        selectedOptionId="B"
+        selectedExplanation="Em bình phương 2 vế được x - 1 = 4 suy ra x = 5"
+        isHintOpen={false}
+        isFlagged={false}
+        onSelectOption={vi.fn()}
+        onToggleHint={vi.fn()}
+        onToggleFlag={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText('Lời giải thích của bạn')).toBeInTheDocument()
+    expect(screen.getByText(/Em bình phương 2 vế/)).toBeInTheDocument()
+    // Verify light blue container styling
+    const explanationBox = screen.getByText('Lời giải thích của bạn').closest('div.bg-sky-50\\/80')
+    expect(explanationBox).toBeInTheDocument()
+  })
+
+  it('renders inline hints under explanation when isHintOpen is true in practice mode', () => {
+    render(
+      <MultipleChoiceQuestion
+        questionId={3}
+        index={2}
+        content="Nghiệm?"
+        options={options}
+        selectedOptionId="B"
+        selectedExplanation="Em áp dụng công thức"
+        hint="Đặt điều kiện xác định x >= 1"
+        mistakes="Quên đặt điều kiện dưới dấu căn"
+        shortAnswer="Thử trực tiếp các đáp án A, B, C, D"
+        generalMethod="Phương trình căn bậc hai cơ bản"
+        isHintOpen={true}
+        isFlagged={false}
+        examType="practice"
+        onSelectOption={vi.fn()}
+        onToggleHint={vi.fn()}
+        onToggleFlag={vi.fn()}
+      />
+    )
+
+    expect(screen.getByTestId('question-hints-inline')).toBeInTheDocument()
+    // Step 1: Gợi ý hướng giải is active by default
+    expect(screen.getByText('Gợi ý hướng giải bài toán')).toBeInTheDocument()
+    expect(screen.getByText(/Đặt điều kiện xác định/)).toBeInTheDocument()
+
+    // Step button exists for next sequential step: Mẹo giải nhanh
+    expect(screen.getByText('Mẹo giải nhanh')).toBeInTheDocument()
+  })
+
+  it('toggles solution guide (Hình 3) when isHintOpen is true in readonly result mode', () => {
+    const { rerender } = render(
+      <MultipleChoiceQuestion
+        questionId={3}
+        index={2}
+        content="Nghiệm?"
+        options={options}
+        selectedOptionId="B"
+        selectedExplanation="Giải thích của học sinh"
+        correctOptionId="B"
+        solutionGuide="Lời giải chuẩn: x = 5"
+        readonly={true}
+        isHintOpen={true}
+        isFlagged={false}
+        onSelectOption={vi.fn()}
+        onToggleHint={vi.fn()}
+        onToggleFlag={vi.fn()}
+      />
+    )
+
+    // Component like Hình 3 is shown
+    expect(screen.getByTestId('solution-guide-result')).toBeInTheDocument()
+    expect(screen.getByText('Lời giải chi tiết (Đáp án chuẩn)')).toBeInTheDocument()
+    expect(screen.getByText(/Lời giải chuẩn: x = 5/)).toBeInTheDocument()
+
+    // When isHintOpen is false, Hình 3 is hidden
+    rerender(
+      <MultipleChoiceQuestion
+        questionId={3}
+        index={2}
+        content="Nghiệm?"
+        options={options}
+        selectedOptionId="B"
+        selectedExplanation="Giải thích của học sinh"
+        correctOptionId="B"
+        solutionGuide="Lời giải chuẩn: x = 5"
+        readonly={true}
+        isHintOpen={false}
+        isFlagged={false}
+        onSelectOption={vi.fn()}
+        onToggleHint={vi.fn()}
+        onToggleFlag={vi.fn()}
+      />
+    )
+    expect(screen.queryByTestId('solution-guide-result')).toBeNull()
+  })
 })

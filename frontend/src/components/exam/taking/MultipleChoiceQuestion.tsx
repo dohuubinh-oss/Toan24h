@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { Sparkles, CheckCircle2, Flag, BookOpen, AlertTriangle, MessageSquare } from 'lucide-react'
+import { Sparkles, CheckCircle2, Flag, BookOpen, AlertTriangle, MessageSquare, Edit3, Lightbulb, Zap } from 'lucide-react'
 import Link from 'next/link'
 import DOMPurify from 'dompurify'
 import MathText from '@/components/ui/MathText'
 import ExplanationPopup from './ExplanationPopup'
+import QuestionHintTabs from './QuestionHintTabs'
 import { toast } from '@/components/ui/ToastProvider'
 import { reportQuestion, submitAppeal } from '@/lib/api'
 
@@ -48,6 +49,10 @@ interface MultipleChoiceQuestionProps {
   isFlagged: boolean
   examType?: string
   lectureUrl?: string
+  hint?: string
+  mistakes?: string
+  shortAnswer?: string
+  generalMethod?: string
   onSelectOption?: (optionId: string, explanation?: string) => void
   onToggleHint?: () => void
   onToggleFlag?: () => void
@@ -57,6 +62,7 @@ export default function MultipleChoiceQuestion({
   resultId,
   questionId,
   index,
+  topic,
   diagram_svg,
   diagramSvg,
   content,
@@ -72,6 +78,10 @@ export default function MultipleChoiceQuestion({
   isFlagged,
   examType = 'exam',
   lectureUrl,
+  hint,
+  mistakes,
+  shortAnswer,
+  generalMethod,
   onSelectOption,
   onToggleHint,
   onToggleFlag,
@@ -124,7 +134,7 @@ export default function MultipleChoiceQuestion({
 
   return (
     <main className="flex-grow flex flex-row items-start justify-center p-6 sm:p-12 relative w-full">
-      <div className={`w-full max-w-4xl space-y-8 transition-all duration-500 ${isHintOpen ? 'mr-[460px]' : ''}`}>
+      <div className="w-full max-w-4xl space-y-8 transition-all duration-300">
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-10 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary"></div>
           <div className="space-y-6">
@@ -218,7 +228,7 @@ export default function MultipleChoiceQuestion({
                 imgSrc = `/${clean}`;
               }
               return (
-                <div className="my-4 flex justify-center" data-testid="question-illustration">
+                <div className="my-3 flex justify-center" data-testid="question-illustration">
                   <div className="max-w-[540px] w-full flex items-center justify-center overflow-hidden py-1">
                     {isSvg ? (
                       <div 
@@ -295,12 +305,26 @@ export default function MultipleChoiceQuestion({
           })}
         </div>
 
-        {readonly && (
-          <div className="mt-4 bg-teal-50/80 border border-teal-200 rounded-xl p-6 shadow-sm">
-            <h4 className="flex items-center gap-2 text-teal-800 font-bold mb-3">
-              <MessageSquare className="w-5 h-5 text-teal-600" />
-              Lời giải thích của bạn
-            </h4>
+        {/* Lời giải thích của học sinh (hiển thị màu xanh nhạt ngay dưới 4 đáp án) */}
+        {((selectedExplanation && selectedExplanation.trim().length > 0) || readonly) && (
+          <div className="mt-4 bg-sky-50/80 border border-sky-200/80 rounded-xl p-5 shadow-sm transition-all" data-testid="student-explanation">
+            <div className="flex items-center justify-between mb-2.5">
+              <h4 className="flex items-center gap-2 text-sky-900 font-bold text-sm">
+                <MessageSquare className="w-4 h-4 text-sky-600" />
+                Lời giải thích của bạn
+              </h4>
+              {!readonly && (
+                <button
+                  type="button"
+                  onClick={() => setPendingOptionId(selectedOptionId)}
+                  className="text-xs font-semibold text-sky-600 hover:text-sky-800 transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  Sửa giải thích
+                </button>
+              )}
+            </div>
+
             {selectedExplanation && selectedExplanation.trim().length > 0 ? (
               <div className="text-slate-800 leading-relaxed text-base">
                 <MathText content={selectedExplanation} />
@@ -312,7 +336,7 @@ export default function MultipleChoiceQuestion({
             )}
 
             {/* Random Guess Alert */}
-            {aiFeedback?.isRandomGuess && (
+            {readonly && aiFeedback?.isRandomGuess && (
               <div className="mt-4 p-3 bg-amber-100/80 border border-amber-300 rounded-xl text-amber-800 text-xs flex items-center gap-2 font-medium">
                 <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>⚠️ AI phát hiện đáp án có khả năng đoán mò (thiếu các bước suy luận giải thích).</span>
@@ -320,7 +344,7 @@ export default function MultipleChoiceQuestion({
             )}
 
             {/* Deduction reason if any */}
-            {aiFeedback?.deductionReason && (
+            {readonly && aiFeedback?.deductionReason && (
               <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs leading-relaxed font-medium">
                 <strong>📌 Lý do trừ điểm:</strong> {aiFeedback.deductionReason}
               </div>
@@ -328,12 +352,36 @@ export default function MultipleChoiceQuestion({
           </div>
         )}
 
-        {readonly && (aiExplanation || solutionGuide) && (
-          <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-6 shadow-sm">
-            <h4 className="flex items-center gap-2 text-emerald-800 font-bold mb-3">
-              <BookOpen className="w-5 h-5 text-emerald-600" />
-              Lời giải chi tiết (Đáp án chuẩn)
-            </h4>
+        {/* Trong chế độ practice: ấn nút gợi ý hiện component như hình 3 với nội dung lần lượt hint, short_answer, lời giải mẫu */}
+        {examType === 'practice' && isHintOpen && (
+          <QuestionHintTabs 
+            hint={hint}
+            shortAnswer={shortAnswer}
+            solutionGuide={solutionGuide || aiExplanation}
+            onClose={onToggleHint}
+            onToggleHint={onToggleHint}
+            className="mt-4"
+          />
+        )}
+
+        {/* Trong trang kết quả: ấn nút gợi ý sẽ hiện hoặc ẩn component như hình 3 */}
+        {readonly && isHintOpen && (aiExplanation || solutionGuide) && (
+          <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-6 shadow-sm" data-testid="solution-guide-result">
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-emerald-200/50">
+              <h4 className="flex items-center gap-2 text-emerald-800 font-bold text-base">
+                <BookOpen className="w-5 h-5 text-emerald-600" />
+                Lời giải chi tiết (Đáp án chuẩn)
+              </h4>
+              {onToggleHint && (
+                <button
+                  type="button"
+                  onClick={onToggleHint}
+                  className="text-xs font-semibold text-emerald-700 hover:text-emerald-950 px-2 py-1 rounded-lg hover:bg-emerald-100/70 cursor-pointer"
+                >
+                  Đóng ✕
+                </button>
+              )}
+            </div>
             <div className="text-slate-800 leading-relaxed text-base">
               <MathText content={aiExplanation || solutionGuide || ''} />
             </div>
@@ -358,12 +406,14 @@ export default function MultipleChoiceQuestion({
         )}
       </div>
       
-      <ExplanationPopup 
-        isOpen={pendingOptionId !== null} 
-        onClose={handleExplanationClose} 
-        onSubmit={handleExplanationSubmit}
-        initialExplanation={pendingOptionId === selectedOptionId ? selectedExplanation : ''}
-      />
+      {!readonly && (
+        <ExplanationPopup 
+          isOpen={pendingOptionId !== null} 
+          onClose={handleExplanationClose} 
+          onSubmit={handleExplanationSubmit}
+          initialExplanation={pendingOptionId === selectedOptionId ? selectedExplanation : ''}
+        />
+      )}
 
       {isReportModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">

@@ -1,7 +1,7 @@
 import { mergeAttributes, Node, nodeInputRule, nodePasteRule } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react'
 import MathInput from '../../../ui/MathInput'
-import MathText from '../../../ui/MathText'
+import MathText, { decodeMathEntities } from '../../../ui/MathText'
 import MathKeyboardModal from '../../../ui/MathKeyboardModal'
 import React, { useState, useEffect } from 'react'
 
@@ -94,13 +94,13 @@ export const MathExtension = Node.create({
       {
         tag: 'math-inline',
         getAttrs: (node: any) => ({
-          latex: node.getAttribute('data-latex') || node.getAttribute('latex') || ''
+          latex: decodeMathEntities(node.getAttribute('data-latex') || node.getAttribute('latex') || '')
         })
       },
       {
         tag: 'span[data-type="math"]',
         getAttrs: (node: any) => ({
-          latex: node.getAttribute('data-latex') || node.getAttribute('latex') || ''
+          latex: decodeMathEntities(node.getAttribute('data-latex') || node.getAttribute('latex') || '')
         })
       }
     ]

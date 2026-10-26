@@ -8,6 +8,7 @@ import { toast } from '@/components/ui/ToastProvider'
 import { recognizeHandwriting, submitAppeal, reportQuestion } from '@/lib/api'
 import MobileQrUploadModal from './MobileQrUploadModal'
 import InAppCameraModal from './InAppCameraModal'
+import QuestionHintTabs from './QuestionHintTabs'
 
 export interface SubQuestion {
   id: string | number
@@ -17,6 +18,10 @@ export interface SubQuestion {
   options?: { id: string, text: string }[]
   solution_guide?: string
   correctAnswer?: string
+  hint?: string
+  mistakes?: string
+  shortAnswer?: string
+  generalMethod?: string
 }
 
 export interface DiagramResultData {
@@ -72,6 +77,10 @@ interface EssayQuestionProps {
   content?: string
   sharedContext?: React.ReactNode
   solution_guide?: string
+  hint?: string
+  mistakes?: string
+  shortAnswer?: string
+  generalMethod?: string
   subQuestions?: SubQuestion[]
   answers: Record<string | number, string>
   explanations?: Record<string | number, string>
@@ -596,6 +605,10 @@ export default function EssayQuestion({
   content,
   sharedContext,
   solution_guide,
+  hint,
+  mistakes,
+  shortAnswer,
+  generalMethod,
   subQuestions,
   answers,
   explanations,
@@ -805,8 +818,15 @@ export default function EssayQuestion({
     )
   }
 
+  const activeSubQ = isGroup && activeHintQuestionId ? subQuestions?.find(sq => sq.id === activeHintQuestionId) : null
+  const effectiveHint = activeSubQ?.hint || hint
+  const effectiveMistakes = activeSubQ?.mistakes || mistakes
+  const effectiveShortAnswer = activeSubQ?.shortAnswer || shortAnswer
+  const effectiveGeneralMethod = activeSubQ?.generalMethod || generalMethod
+  const effectiveSolutionGuide = activeSubQ?.solution_guide || solution_guide
+
   return (
-    <main className={`flex-1 flex overflow-hidden relative transition-all duration-500 ${isHintOpen ? 'mr-[460px]' : ''}`}>
+    <main className="flex-1 flex overflow-hidden relative transition-all duration-500">
       {/* Left Pane: Problem & Geometry */}
       <div className="w-1/2 overflow-y-auto p-8 border-r border-slate-200 bg-white">
         <div className="max-w-xl ml-auto">
@@ -850,6 +870,43 @@ export default function EssayQuestion({
           </div>
           
           {renderLeftContent()}
+
+          {/* Trong chế độ practice: ấn nút gợi ý hiện component như hình 3 với nội dung lần lượt hint, short_answer, lời giải mẫu */}
+          {examType === 'practice' && isHintOpen && (
+            <div className="mt-6">
+              <QuestionHintTabs 
+                hint={effectiveHint}
+                shortAnswer={effectiveShortAnswer}
+                solutionGuide={effectiveSolutionGuide || (aiFeedbacks?.[activeHintQuestionId || questionId]?.aiExplanation)}
+                onClose={() => onToggleHint && onToggleHint(activeHintQuestionId || questionId)}
+                onToggleHint={() => onToggleHint && onToggleHint(activeHintQuestionId || questionId)}
+              />
+            </div>
+          )}
+
+          {/* Trong trang kết quả: bỏ component hình 1, 2. Ấn nút gợi ý sẽ hiện hoặc ẩn component như hình 3 */}
+          {readonly && isHintOpen && (effectiveSolutionGuide || aiFeedbacks?.[activeHintQuestionId || questionId]?.aiExplanation) && (
+            <div className="mt-6 bg-emerald-50 border border-emerald-200 rounded-2xl p-6 shadow-sm" data-testid="solution-guide-result">
+              <div className="flex items-center justify-between mb-3 pb-2 border-b border-emerald-200/50">
+                <h4 className="flex items-center gap-2 text-emerald-800 font-bold text-base">
+                  <BookOpen className="w-5 h-5 text-emerald-600" />
+                  Lời giải chi tiết (Đáp án chuẩn)
+                </h4>
+                {onToggleHint && (
+                  <button
+                    type="button"
+                    onClick={() => onToggleHint(activeHintQuestionId || questionId)}
+                    className="text-xs font-semibold text-emerald-700 hover:text-emerald-950 px-2 py-1 rounded-lg hover:bg-emerald-100/70 cursor-pointer"
+                  >
+                    Đóng ✕
+                  </button>
+                )}
+              </div>
+              <div className="text-slate-800 leading-relaxed text-base">
+                <MathText content={effectiveSolutionGuide || aiFeedbacks?.[activeHintQuestionId || questionId]?.aiExplanation || ''} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

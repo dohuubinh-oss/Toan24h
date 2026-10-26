@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import EssayQuestion from './EssayQuestion'
 import { ToastProvider } from '@/components/ui/ToastProvider'
@@ -322,5 +322,71 @@ describe('EssayQuestion Component', () => {
     expect(screen.getByText(/Phần vẽ hình: 0.5 \/ 0.5 điểm/i)).toBeInTheDocument()
     expect(screen.getByText(/Hình vẽ các đỉnh, đường cao AH và ký hiệu vuông góc chính xác./i)).toBeInTheDocument()
     expect(screen.getByAltText(/Ảnh hình vẽ bài làm/i)).toBeInTheDocument()
+  })
+
+  it('renders inline QuestionHintTabs below question content when isHintOpen is true in practice mode', () => {
+    const handleToggleHint = vi.fn()
+    renderWithToast(
+      <EssayQuestion
+        questionId={70}
+        index={69}
+        content="Cho tam giác vuông có hai cạnh góc vuông là 3 và 4. Tính cạnh huyền."
+        answers={{}}
+        hint="Sử dụng định lý Pytago a^2 + b^2 = c^2"
+        shortAnswer="Cạnh huyền bằng 5"
+        generalMethod="Phương pháp áp dụng định lý Pytago"
+        solution_guide="Áp dụng định lý Pytago: c = \sqrt{3^2 + 4^2} = 5"
+        isHintOpen={true}
+        isFlagged={false}
+        examType="practice"
+        onToggleHint={handleToggleHint}
+      />
+    )
+
+    expect(screen.getByTestId('question-hints-inline')).toBeInTheDocument()
+    expect(screen.getByText('Gợi ý hướng giải bài toán')).toBeInTheDocument()
+    expect(screen.getByText(/Sử dụng định lý Pytago/)).toBeInTheDocument()
+    expect(screen.getByText('Mẹo giải nhanh')).toBeInTheDocument()
+    expect(screen.getByText('Lời giải mẫu')).toBeInTheDocument()
+  })
+
+  it('toggles solution guide (Hình 3) below question content in readonly result mode', () => {
+    const handleToggleHint = vi.fn()
+    const { rerender } = renderWithToast(
+      <EssayQuestion
+        questionId={70}
+        index={69}
+        content="Cho tam giác vuông có hai cạnh góc vuông là 3 và 4. Tính cạnh huyền."
+        answers={{ 70: 'c = 5' }}
+        solution_guide="Áp dụng định lý Pytago: c = \sqrt{3^2 + 4^2} = 5"
+        isHintOpen={true}
+        isFlagged={false}
+        readonly={true}
+        onToggleHint={handleToggleHint}
+      />
+    )
+
+    // Solution guide like Hình 3 is displayed below question content
+    const solutionResultBox = screen.getByTestId('solution-guide-result')
+    expect(solutionResultBox).toBeInTheDocument()
+    expect(within(solutionResultBox).getByText('Lời giải chi tiết (Đáp án chuẩn)')).toBeInTheDocument()
+
+    // When isHintOpen is false, it is hidden
+    rerender(
+      <ToastProvider>
+        <EssayQuestion
+          questionId={70}
+          index={69}
+          content="Cho tam giác vuông có hai cạnh góc vuông là 3 và 4. Tính cạnh huyền."
+          answers={{ 70: 'c = 5' }}
+          solution_guide="Áp dụng định lý Pytago: c = \sqrt{3^2 + 4^2} = 5"
+          isHintOpen={false}
+          isFlagged={false}
+          readonly={true}
+          onToggleHint={handleToggleHint}
+        />
+      </ToastProvider>
+    )
+    expect(screen.queryByTestId('solution-guide-result')).toBeNull()
   })
 })

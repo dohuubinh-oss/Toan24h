@@ -89,4 +89,21 @@ describe('MathText', () => {
     expect(getByText('Bước 1: Giải phương trình')).toBeInTheDocument();
     expect(container.textContent).not.toContain('[object Object]');
   });
+
+  it('renders math-inline with escaped HTML entities like &lt; and \\dots without error', () => {
+    const htmlContent = '<p>b) <math-inline latex="4,3 + 2,1 &lt; \\dots &lt; 8,25" data-latex="4,3 + 2,1 &lt; \\dots &lt; 8,25">$4,3 + 2,1 &lt; \\dots &lt; 8,25$</math-inline></p>';
+    const { container } = render(<MathText content={htmlContent} />);
+    const katexElement = container.querySelector('.katex');
+    expect(katexElement).toBeInTheDocument();
+    expect(container.querySelector('.katex-error')).not.toBeInTheDocument();
+    expect(container.textContent).toContain('b)');
+  });
+
+  it('renders inline math with &lt; and &gt; correctly in plain text without HTML tags', () => {
+    const content = 'Điền số: $38,15 &lt; \\dots &lt; 39,02$';
+    const { container } = render(<MathText content={content} />);
+    const katexElement = container.querySelector('.katex');
+    expect(katexElement).toBeInTheDocument();
+    expect(container.querySelector('.katex-error')).not.toBeInTheDocument();
+  });
 });

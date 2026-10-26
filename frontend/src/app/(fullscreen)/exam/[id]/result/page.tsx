@@ -521,6 +521,10 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                   correctOptionId={currentQuestion.correctAnswer}
                   aiExplanation={mappedData.aiFeedbacks[currentQuestion.id]?.aiExplanation || currentQuestion.solution_guide}
                   solutionGuide={currentQuestion.solution_guide}
+                  hint={currentQuestion.hint}
+                  mistakes={currentQuestion.mistakes}
+                  shortAnswer={currentQuestion.short_answer || (currentQuestion as any).shortAnswer || (currentQuestion as any).quick_solve_tips || (currentQuestion as any).quickSolveTips}
+                  generalMethod={currentQuestion.general_method || (currentQuestion as any).generalMethod}
                   aiFeedback={mappedData.aiFeedbacks[currentQuestion.id]}
                   readonly={true}
                   isHintOpen={isAiHintOpen}
@@ -539,11 +543,19 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                   content={currentQuestion.content}
                   sharedContext={currentQuestion.content}
                   solution_guide={currentQuestion.solution_guide}
+                  hint={currentQuestion.hint}
+                  mistakes={currentQuestion.mistakes}
+                  shortAnswer={currentQuestion.short_answer || (currentQuestion as any).shortAnswer || (currentQuestion as any).quick_solve_tips || (currentQuestion as any).quickSolveTips}
+                  generalMethod={currentQuestion.general_method || (currentQuestion as any).generalMethod}
                   subQuestions={currentQuestion.subQuestions?.map((sq: any) => ({
                     id: sq.id,
                     type: sq.type === 'Trắc nghiệm' ? 'mc' : 'essay',
                     diagram_svg: sq.diagram_svg || (sq as any).diagramSvg,
                     content: sq.content,
+                    hint: sq.hint,
+                    mistakes: sq.mistakes,
+                    shortAnswer: sq.short_answer || sq.shortAnswer || sq.quick_solve_tips,
+                    generalMethod: sq.general_method || sq.generalMethod,
                     options: sq.options,
                     solution_guide: sq.solution_guide,
                     correctAnswer: sq.correctAnswer
@@ -605,7 +617,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
           {/* AI Hint Panel */}
           <AIHintPanel 
-            isOpen={isAiHintOpen} 
+            isOpen={false} 
             onClose={() => setIsAiHintOpen(false)} 
             question={resultData?.questions?.find((q: any) => q.id === currentQuestion?.id) || null}
             unlockedLevel={10}

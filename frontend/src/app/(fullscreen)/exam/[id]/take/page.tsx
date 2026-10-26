@@ -494,6 +494,10 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
             options={currentQuestion.options.map((opt, i) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt }))}
             selectedOptionId={answers[currentQuestion.id] || null}
             selectedExplanation={explanations[currentQuestion.id]}
+            hint={currentQuestion.hint}
+            mistakes={currentQuestion.mistakes}
+            shortAnswer={currentQuestion.short_answer || (currentQuestion as any).shortAnswer || (currentQuestion as any).quick_solve_tips || (currentQuestion as any).quickSolveTips}
+            generalMethod={currentQuestion.general_method || (currentQuestion as any).generalMethod}
             isHintOpen={isAiHintOpen && activeHintQuestionId === currentQuestion.id}
             isFlagged={!!flaggedQuestions[currentQuestion.id]}
             onSelectOption={(optId, explanation) => handleAnswerSelect(currentQuestion.id, optId, explanation)}
@@ -509,11 +513,21 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
             diagram_svg={currentQuestion.diagram_svg || (currentQuestion as any).diagramSvg}
             content={currentQuestion.content}
             sharedContext={currentQuestion.content}
+            solution_guide={currentQuestion.solution_guide}
+            hint={currentQuestion.hint}
+            mistakes={currentQuestion.mistakes}
+            shortAnswer={currentQuestion.short_answer || (currentQuestion as any).shortAnswer || (currentQuestion as any).quick_solve_tips || (currentQuestion as any).quickSolveTips}
+            generalMethod={currentQuestion.general_method || (currentQuestion as any).generalMethod}
             subQuestions={currentQuestion.subQuestions?.map(sq => ({
               id: sq.id,
               type: sq.type === 'Trắc nghiệm' ? 'mc' : 'essay',
               diagram_svg: sq.diagram_svg || (sq as any).diagramSvg,
               content: sq.content,
+              hint: sq.hint,
+              mistakes: sq.mistakes,
+              shortAnswer: sq.short_answer || (sq as any).shortAnswer || (sq as any).quick_solve_tips,
+              generalMethod: sq.general_method || (sq as any).generalMethod,
+              solution_guide: sq.solution_guide || (sq as any).solutionGuide,
               options: sq.options ? sq.options.map((opt, i) => ({ id: opt, label: String.fromCharCode(65 + i), text: opt })) : undefined
             })) || []}
             answers={answers}
@@ -522,7 +536,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
             activeHintQuestionId={activeHintQuestionId}
             isFlagged={!!flaggedQuestions[currentQuestion.id]}
             onAnswerChange={(id, val, explanation) => handleAnswerSelect(String(id), val, explanation)}
-            onToggleHint={(subId) => toggleAiHint(subId ? String(subId) : undefined)}
+            onToggleHint={(subId) => toggleAiHint(subId ? String(subId) : String(currentQuestion.id))}
             onToggleFlag={() => handleToggleFlag(currentQuestion.id)}
             examType={exam.cate}
             lectureUrl={lectureUrl}
@@ -530,7 +544,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         )}
 
         <AIHintPanel 
-          isOpen={isAiHintOpen} 
+          isOpen={false} 
           onClose={() => setIsAiHintOpen(false)} 
           question={activeQuestionData}
           unlockedLevel={unlockedHints[activeHintQuestionId || ''] || 0}

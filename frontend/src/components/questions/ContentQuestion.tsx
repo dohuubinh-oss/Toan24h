@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckCircle } from 'lucide-react';
 import DOMPurify from 'isomorphic-dompurify';
 import MathText from '../ui/MathText';
+import SolutionGuideSection from './SolutionGuideSection';
 
 export interface SubQuestion {
   content: string;
@@ -190,12 +191,7 @@ export default function ContentQuestion({
           )}
 
           {/* Solution */}
-          {qSolution && (
-            <div className={`p-4 rounded-xl border border-dashed border-orange-300 bg-orange-50/50 ${!isSubQuestion ? 'mb-0' : 'mb-8'}`}>
-              <h4 className="text-[10px] font-bold text-orange-600 uppercase mb-2 tracking-widest">HƯỚNG DẪN CHẤM / LỜI GIẢI MẪU:</h4>
-              <MathText content={qSolution} className="text-sm text-slate-700" />
-            </div>
-          )}
+          <SolutionGuideSection solution={qSolution} isSubQuestion={isSubQuestion} />
         </div>
       </div>
     );
