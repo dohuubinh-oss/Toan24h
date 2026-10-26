@@ -88,12 +88,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
   let blogRoutes: MetadataRoute.Sitemap = []
   try {
     const posts = getBlogPosts()
-    blogRoutes = posts.map((post) => ({
-      url: `${baseUrl}/blog/${post.slug}`,
-      lastModified: post.publishedAt ? new Date(post.publishedAt) : currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    }))
+    blogRoutes = posts.map((post) => {
+      let lastModified = currentDate
+      if (post.publishedAt) {
+        const parsed = new Date(post.publishedAt)
+        if (!isNaN(parsed.getTime())) {
+          lastModified = parsed
+        }
+      }
+      return {
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 0.7,
+      }
+    })
   } catch (e) {
     console.error('Failed to load blog posts for sitemap:', e)
   }
