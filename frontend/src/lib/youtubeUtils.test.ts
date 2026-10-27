@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { extractYouTubeVideoId, parseShortsPlaylist } from './youtubeUtils'
+import { extractYouTubeVideoId, parseShortsPlaylist, isImageUrl, getMediaThumbnail } from './youtubeUtils'
 
 describe('youtubeUtils', () => {
   it('extracts 11-char videoId from various YouTube Shorts and standard URLs', () => {
@@ -12,14 +12,26 @@ describe('youtubeUtils', () => {
     expect(extractYouTubeVideoId('')).toBe(null)
   })
 
-  it('safely parses valid and corrupted playlist JSON', () => {
+  it('safely parses valid and corrupted playlist JSON including image items', () => {
     const validJson = JSON.stringify([
-      { id: '1', youtubeUrl: 'https://youtube.com/shorts/abc12345678', videoId: 'abc12345678', title: 'Tip 1', notes: 'Công thức A' }
+      { id: '1', youtubeUrl: 'https://youtube.com/shorts/abc12345678', videoId: 'abc12345678', title: 'Tip 1', notes: 'Công thức A' },
+      { id: '2', youtubeUrl: 'https://images.unsplash.com/photo-123.jpg', title: 'Ảnh Tip 2', notes: 'Ghi chú ảnh' }
     ])
-    expect(parseShortsPlaylist(validJson)).toHaveLength(1)
-    expect(parseShortsPlaylist(validJson)[0].videoId).toBe('abc12345678')
+    const parsed = parseShortsPlaylist(validJson)
+    expect(parsed).toHaveLength(2)
+    expect(parsed[0].videoId).toBe('abc12345678')
+    expect(parsed[1].title).toBe('Ảnh Tip 2')
     expect(parseShortsPlaylist('')).toEqual([])
     expect(parseShortsPlaylist('corrupted json')).toEqual([])
     expect(parseShortsPlaylist(undefined)).toEqual([])
+  })
+
+  it('correctly detects image URLs and generates thumbnails', () => {
+    expect(isImageUrl('https://example.com/photo.png')).toBe(true)
+    expect(isImageUrl('https://images.unsplash.com/photo-12345')).toBe(true)
+    expect(isImageUrl('https://youtube.com/shorts/dQw4w9WgXcQ')).toBe(false)
+
+    expect(getMediaThumbnail({ videoId: 'dQw4w9WgXcQ' })).toBe('https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg')
+    expect(getMediaThumbnail({ youtubeUrl: 'https://example.com/banner.jpg' })).toBe('https://example.com/banner.jpg')
   })
 })

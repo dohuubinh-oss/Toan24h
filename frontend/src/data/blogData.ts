@@ -12,7 +12,9 @@ export type BlogPostType = 'standard' | 'shorts_playlist'
 export interface ShortItem {
   id: string
   youtubeUrl: string
-  videoId: string
+  videoId?: string
+  imageUrl?: string
+  mediaType?: 'video' | 'image'
   title: string
   duration?: string
   notes: string // Ghi chú công thức toán học và mẹo bấm máy

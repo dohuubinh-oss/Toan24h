@@ -106,4 +106,16 @@ describe('MathText', () => {
     expect(katexElement).toBeInTheDocument();
     expect(container.querySelector('.katex-error')).not.toBeInTheDocument();
   });
+
+  it('renders markdown headers, lists and bold formatting with math', () => {
+    const md = `### Tiêu đề bài học
+1. Bước 1: Tính $x = 1$
+- Chú ý: Bấm **SHIFT** + **FACT**`
+    const { container } = render(<MathText content={md} />);
+    expect(container.querySelector('h3')).toBeInTheDocument();
+    expect(container.querySelector('ol')).toBeInTheDocument();
+    expect(container.querySelector('ul')).toBeInTheDocument();
+    expect(container.querySelector('strong')).toBeInTheDocument();
+    expect(container.querySelector('.katex')).toBeInTheDocument();
+  });
 });

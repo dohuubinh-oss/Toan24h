@@ -4,6 +4,7 @@ import { InlineMath, BlockMath } from 'react-katex';
 import katex from 'katex';
 import DOMPurify from 'isomorphic-dompurify';
 import { formatSolutionGuide } from '../questions/creator/utils/questionTextFormatter';
+import { markdownToHtml } from '@/lib/markdownUtils';
 
 interface MathTextProps {
   content: any;
@@ -56,7 +57,13 @@ export default function MathText({ content, className = '' }: MathTextProps) {
   }
 
   // Đảm bảo rawText luôn là string
-  const textContent = typeof rawText === 'string' ? rawText : '';
+  let textContent = typeof rawText === 'string' ? rawText : '';
+
+  // Tự động nhận diện cú pháp Markdown (###, **, \n\n, danh sách) nếu chưa có thẻ khối HTML
+  const hasBlockHtml = /<(?:p|div|ul|ol|table|h[1-6]|blockquote|article|section)[\s>]/i.test(textContent);
+  if (!hasBlockHtml && (/#{1,6}\s+|(?:\n\s*[-*•]|\n\s*\d+[\.\)])|\*\*[^*]+\*\*|\n\n/).test(textContent)) {
+    textContent = markdownToHtml(textContent);
+  }
 
   // Kiểm tra xem chuỗi có chứa thẻ HTML chuẩn không
   const hasHtml = /<(?:p|div|span|h[1-6]|ul|ol|li|table|tr|td|th|tbody|thead|img|br|strong|b|em|i|u|s|sub|sup|blockquote|code|pre|math-inline)[\s>/]/i.test(textContent);

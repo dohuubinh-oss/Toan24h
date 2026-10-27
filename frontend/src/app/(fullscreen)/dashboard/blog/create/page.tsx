@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/ToastProvider'
 import { useSearchParams } from 'next/navigation'
 import { addBlogPost, getBlogPostByIdOrSlug, BlogPost, BlogPostType, ShortItem } from '@/data/blogData'
-import { extractYouTubeVideoId, parseShortsPlaylist } from '@/lib/youtubeUtils'
+import { extractYouTubeVideoId, parseShortsPlaylist, isImageUrl, getMediaThumbnail } from '@/lib/youtubeUtils'
 import { ShortsPlaylistStage } from '@/components/blog/ShortsPlaylistStage'
 import { Suspense } from 'react'
 
@@ -220,13 +220,13 @@ function CreateBlogPostContent() {
     let coverImage = 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=1200'
 
     if (postType === 'shorts_playlist') {
-      const validShorts = shortsList.filter(s => s.videoId && s.title.trim())
+      const validShorts = shortsList.filter(s => (s.videoId || s.youtubeUrl?.trim()) && s.title.trim())
       if (validShorts.length === 0) {
-        toast.error("Vui lòng nhập ít nhất 1 video Short với đường link và tiêu đề hợp lệ!")
+        toast.error("Vui lòng nhập ít nhất 1 video Short hoặc hình ảnh với đường link và tiêu đề hợp lệ!")
         return
       }
       finalPlaylistData = JSON.stringify(validShorts)
-      coverImage = `https://img.youtube.com/vi/${validShorts[0].videoId}/hqdefault.jpg`
+      coverImage = getMediaThumbnail(validShorts[0])
     } else {
       if (!content.trim()) {
         toast.error("Vui lòng nhập Nội dung bài viết!")
@@ -487,12 +487,16 @@ function CreateBlogPostContent() {
                           <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
                             {idx + 1}
                           </span>
-                          <span className="text-xs font-bold text-slate-800">Video Short #{idx + 1}</span>
-                          {item.videoId && (
+                          <span className="text-xs font-bold text-slate-800">Bài học #{idx + 1}</span>
+                          {item.videoId ? (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-mono font-semibold">
-                              ID: {item.videoId}
+                              YouTube: {item.videoId}
                             </span>
-                          )}
+                          ) : isImageUrl(item.youtubeUrl) ? (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold">
+                              Hình ảnh
+                            </span>
+                          ) : null}
                         </div>
                         <div className="flex items-center gap-1">
                           <button
@@ -525,14 +529,14 @@ function CreateBlogPostContent() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                        {/* YouTube URL & Duration */}
+                        {/* YouTube URL or Image URL & Duration */}
                         <div className="md:col-span-8 space-y-1.5">
                           <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1">
-                            Đường link YouTube Short <span className="text-red-500">*</span>
+                            Đường link YouTube Short hoặc Link Ảnh bài học <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="url"
-                            placeholder="Dán link YouTube Short (ví dụ: https://www.youtube.com/shorts/...)..."
+                            placeholder="Dán link YouTube Short (ví dụ: https://www.youtube.com/shorts/...) hoặc link ảnh (https://...)..."
                             value={item.youtubeUrl}
                             onChange={(e) => handleShortChange(idx, 'youtubeUrl', e.target.value)}
                             className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
@@ -711,7 +715,7 @@ function CreateBlogPostContent() {
 
             {postType === 'shorts_playlist' ? (
               <ShortsPlaylistStage
-                shorts={shortsList.filter(s => s.videoId && s.title.trim())}
+                shorts={shortsList.filter(s => (s.videoId || s.youtubeUrl?.trim()) && s.title.trim())}
                 postTitle={title || 'Tiêu đề Playlist Shorts'}
                 authorName={authorName}
               />

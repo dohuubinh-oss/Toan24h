@@ -28,7 +28,38 @@ export function extractYouTubeVideoId(url: string): string | null {
 }
 
 /**
+ * Kiểm tra xem đường link có phải là link ảnh trực tiếp hoặc dịch vụ lưu trữ ảnh không
+ */
+export function isImageUrl(url?: string): boolean {
+  if (!url || typeof url !== 'string') return false
+  const clean = url.trim().toLowerCase()
+  if (clean.startsWith('data:image/')) return true
+  if (/\.(jpg|jpeg|png|webp|gif|svg|avif|bmp)(\?.*)?$/i.test(clean)) return true
+  if (clean.includes('images.unsplash.com') || clean.includes('/uploads/') || clean.includes('cloudinary.com') || clean.includes('imgur.com')) {
+    return true
+  }
+  // Nếu là HTTP link và không phải YouTube
+  if (/^https?:\/\//i.test(clean) && !extractYouTubeVideoId(clean)) {
+    return true
+  }
+  return false
+}
+
+/**
+ * Lấy ảnh thumbnail đại diện cho video Short hoặc hình ảnh bài học
+ */
+export function getMediaThumbnail(item: { videoId?: string; youtubeUrl?: string; imageUrl?: string }): string {
+  if (item.videoId && !isImageUrl(item.youtubeUrl)) {
+    return `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`
+  }
+  if (item.imageUrl) return item.imageUrl
+  if (item.youtubeUrl) return item.youtubeUrl
+  return 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=400'
+}
+
+/**
  * Chuyển đổi an toàn chuỗi JSON playlist sang mảng ShortItem[]
+ * Hỗ trợ cả item dạng video YouTube lẫn item dạng hình ảnh
  */
 export function parseShortsPlaylist(playlistData?: string): ShortItem[] {
   if (!playlistData || typeof playlistData !== 'string') return []
@@ -38,7 +69,7 @@ export function parseShortsPlaylist(playlistData?: string): ShortItem[] {
   try {
     const parsed = JSON.parse(clean)
     if (Array.isArray(parsed)) {
-      return parsed.filter(item => item && typeof item === 'object' && item.videoId)
+      return parsed.filter(item => item && typeof item === 'object' && (item.videoId || item.youtubeUrl || item.imageUrl))
     }
     return []
   } catch {

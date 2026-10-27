@@ -15,36 +15,45 @@ vi.mock('@/components/ui/MathText', () => ({
 
 const mockShorts: ShortItem[] = [
   { id: '1', youtubeUrl: 'https://youtube.com/shorts/vid11111111', videoId: 'vid11111111', title: 'Mẹo Tích Phân', notes: 'Công thức tích phân hàm ẩn' },
-  { id: '2', youtubeUrl: 'https://youtube.com/shorts/vid22222222', videoId: 'vid22222222', title: 'Mẹo Cực Trị', notes: 'Công thức cực trị bậc 3' }
+  { id: '2', youtubeUrl: 'https://images.unsplash.com/photo-math.jpg', title: 'Ảnh Cheatsheet Cực Trị', notes: 'Công thức cực trị bậc 3' }
 ]
 
 describe('ShortsPlaylistStage', () => {
-  it('renders initial video and synchronized notes', () => {
+  it('renders initial video and synchronized notes without inside-video nav buttons', () => {
     render(<ShortsPlaylistStage shorts={mockShorts} postTitle="Chuỗi Shorts Casio" authorName="ThS. Nguyễn Văn An" />)
     expect(screen.getAllByText('Mẹo Tích Phân').length).toBeGreaterThan(0)
     expect(screen.getByText(/Công thức tích phân hàm ẩn/i)).toBeInTheDocument()
     const iframe = screen.getByTitle(/YouTube Shorts Player/i)
     expect(iframe).toHaveAttribute('src', expect.stringContaining('vid11111111'))
+
+    // Verify navigation buttons inside video are removed per user request
+    expect(screen.queryByRole('button', { name: /Video trước/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Tiếp theo/i })).not.toBeInTheDocument()
   })
 
-  it('navigates to next and previous video updating notes and player', () => {
+  it('switches between video and image item when clicking thumbnail rail', () => {
     render(<ShortsPlaylistStage shorts={mockShorts} postTitle="Chuỗi Shorts Casio" authorName="ThS. Nguyễn Văn An" />)
-    const nextBtn = screen.getByRole('button', { name: /Tiếp theo/i })
-    fireEvent.click(nextBtn)
-    expect(screen.getAllByText('Mẹo Cực Trị').length).toBeGreaterThan(0)
-    expect(screen.getByText(/Công thức cực trị bậc 3/i)).toBeInTheDocument()
-    const iframe = screen.getByTitle(/YouTube Shorts Player/i)
-    expect(iframe).toHaveAttribute('src', expect.stringContaining('vid22222222'))
-
-    const prevBtn = screen.getByRole('button', { name: /Video trước/i })
-    fireEvent.click(prevBtn)
-    expect(screen.getByText(/Công thức tích phân hàm ẩn/i)).toBeInTheDocument()
-  })
-
-  it('selects video directly from thumbnail rail', () => {
-    render(<ShortsPlaylistStage shorts={mockShorts} postTitle="Chuỗi Shorts Casio" authorName="ThS. Nguyễn Văn An" />)
+    
+    // Click second item which is an image
     const secondThumb = screen.getByTestId('rail-item-1')
     fireEvent.click(secondThumb)
+
+    expect(screen.getAllByText('Ảnh Cheatsheet Cực Trị').length).toBeGreaterThan(0)
     expect(screen.getByText(/Công thức cực trị bậc 3/i)).toBeInTheDocument()
+    expect(screen.getByText('ẢNH BÀI HỌC')).toBeInTheDocument()
+    // Image element rendered instead of iframe
+    expect(screen.queryByTitle(/YouTube Shorts Player/i)).not.toBeInTheDocument()
+  })
+
+  it('supports keyboard navigation via arrow keys', () => {
+    render(<ShortsPlaylistStage shorts={mockShorts} postTitle="Chuỗi Shorts Casio" authorName="ThS. Nguyễn Văn An" />)
+    
+    // Press ArrowRight to move to next item
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+    expect(screen.getAllByText('Ảnh Cheatsheet Cực Trị').length).toBeGreaterThan(0)
+
+    // Press ArrowLeft to move back
+    fireEvent.keyDown(window, { key: 'ArrowLeft' })
+    expect(screen.getAllByText('Mẹo Tích Phân').length).toBeGreaterThan(0)
   })
 })
