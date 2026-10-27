@@ -7,12 +7,25 @@ export type BlogCategoryType =
   | 'Toan-9' 
   | 'Meo-Casio'
 
+export type BlogPostType = 'standard' | 'shorts_playlist'
+
+export interface ShortItem {
+  id: string
+  youtubeUrl: string
+  videoId: string
+  title: string
+  duration?: string
+  notes: string // Ghi chú công thức toán học và mẹo bấm máy
+}
+
 export interface BlogPost {
   id: string
   slug: string
   title: string
   summary?: string
   content: string
+  postType?: BlogPostType
+  playlistData?: string // JSON string của ShortItem[]
   category: BlogCategoryType
   categoryLabel: string
   coverImage: string
