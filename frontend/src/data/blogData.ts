@@ -98,6 +98,79 @@ Học sinh có thể nhập trực tiếp biểu thức vào máy tính CASIO v�
     tags: ['Tích phân', 'CASIO', 'Ôn thi THPT', 'Mẹo giải nhanh']
   },
   {
+    id: 'shorts-casio-580vnx',
+    slug: 'tuyen-tap-shorts-meo-casio-fx-580vnx-giai-nhanh',
+    title: 'Tuyển tập Video Shorts: Mẹo bấm máy tính Casio fx-580VNX giải nhanh Toán 9 & THPT',
+    summary: 'Chuỗi video ngắn 60s tổng hợp thủ thuật Casio bấm máy tìm nghiệm, cực trị và hệ phương trình siêu tốc kèm bảng công thức tóm tắt.',
+    content: 'Tuyển tập các video Short hướng dẫn bấm máy tính Casio fx-580VNX giải nhanh các bài toán trọng tâm.',
+    postType: 'shorts_playlist',
+    playlistData: JSON.stringify([
+      {
+        id: 'short-1',
+        youtubeUrl: 'https://www.youtube.com/shorts/dQw4w9WgXcQ',
+        videoId: 'dQw4w9WgXcQ',
+        title: 'Mẹo 1: Bấm máy tìm cực trị hàm bậc 3 trong 5 giây',
+        duration: '0:45',
+        notes: `### Mẹo bấm máy tính tìm cực trị hàm bậc ba
+Cho hàm số bậc ba:
+$$y = ax^3 + bx^2 + cx + d \\quad (a \\neq 0)$$
+
+**Các bước thao tác trên Casio fx-580VNX:**
+1. Bấm **MENU** $\\rightarrow$ **9** (Phương trình/Hệ PT) $\\rightarrow$ **2** (Phương trình) $\\rightarrow$ **3** (Bậc 3).
+2. Nhập lần lượt các hệ số $a, b, c, d$.
+3. Bấm **=** liên tiếp bỏ qua các nghiệm $x_1, x_2, x_3$.
+4. Màn hình hiện:
+   - **Cực đại của hàm số:** Giá trị $x_{CĐ}$ và $y_{CĐ}$.
+   - **Cực tiểu của hàm số:** Giá trị $x_{CT}$ và $y_{CT}$.`
+      },
+      {
+        id: 'short-2',
+        youtubeUrl: 'https://www.youtube.com/shorts/jNQXAC9IVRw',
+        videoId: 'jNQXAC9IVRw',
+        title: 'Mẹo 2: Giải hệ phương trình bậc nhất hai ẩn & kiểm tra nghiệm vô số',
+        duration: '0:52',
+        notes: `### Giải hệ phương trình bậc nhất 2 ẩn
+Hệ phương trình:
+$$\\begin{cases} a_1 x + b_1 y = c_1 \\\\ a_2 x + b_2 y = c_2 \\end{cases}$$
+
+**Thao tác máy tính:**
+- Bấm **MENU** $\\rightarrow$ **9** $\\rightarrow$ **1** (Hệ phương trình) $\\rightarrow$ **2** (Số ẩn là 2).
+- Nhập $a_1, b_1, c_1$ và $a_2, b_2, c_2$.
+- Nếu màn hình báo:
+  - **Vô nghiệm (No Solution)**: $\\frac{a_1}{a_2} = \\frac{b_1}{b_2} \\neq \\frac{c_1}{c_2}$.
+  - **Vô số nghiệm (Infinite Solutions)**: $\\frac{a_1}{a_2} = \\frac{b_1}{b_2} = \\frac{c_1}{c_2}$.`
+      },
+      {
+        id: 'short-3',
+        youtubeUrl: 'https://www.youtube.com/shorts/kJQP7kiw5Fk',
+        videoId: 'kJQP7kiw5Fk',
+        title: 'Mẹo 3: Tìm nhanh BCNN và ƯCLN phân tích thừa số nguyên tố',
+        duration: '0:38',
+        notes: `### Phân tích ra thừa số nguyên tố (FACT)
+Ví dụ phân tích số $1260$:
+1. Gõ $1260$ $\\rightarrow$ bấm **=**.
+2. Bấm tổ hợp phím: **SHIFT** + **FACT** (phím dấu độ phút giây $\\circ'''$).
+3. Kết quả: $1260 = 2^2 \\times 3^2 \\times 5 \\times 7$.
+
+**Tính ƯCLN (GCD) và BCNN (LCM):**
+- **ƯCLN**: Bấm **ALPHA** + **(x)** ($GCD$) $\\rightarrow$ nhập $a$ $\\rightarrow$ bấm **SHIFT** + **)** (dấu phẩy) $\\rightarrow$ nhập $b$ $\\rightarrow$ **)** $\\rightarrow$ **=**.
+- **BCNN**: Bấm **ALPHA** + **(÷)** ($LCM$).`
+      }
+    ]),
+    category: 'Meo-Casio',
+    categoryLabel: 'Mẹo Casio',
+    coverImage: 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    author: {
+      name: 'ThS. Nguyễn Văn An',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+      role: 'Chuyên gia Mẹo Casio Toan6789'
+    },
+    publishedAt: '27 Tháng 10, 2026',
+    readTime: '3 Shorts',
+    featured: false,
+    tags: ['Casio fx-580VNX', 'Mẹo giải nhanh', 'Shorts', 'Toán 9']
+  },
+  {
     id: '2',
     slug: 'ung-dung-ai-cham-diem-tu-luan-toan-hoc-dot-pha',
     title: 'Cách trợ lý AI Toan24h phân tích mạch suy luận và chấm bài tự luận chuẩn xác',

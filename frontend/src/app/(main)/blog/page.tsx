@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { 
   Search, Sparkles, Clock, Calendar, ArrowRight, BookOpen, Send, 
-  CheckCircle2, Tag, Mail, Layers, Edit3, PlusCircle 
+  CheckCircle2, Tag, Mail, Layers, Edit3, PlusCircle, Play, Video 
 } from 'lucide-react'
 import { getBlogPosts, BLOG_CATEGORIES, BlogPost } from '@/data/blogData'
 import { Pagination } from '@/components/ui/Pagination'
@@ -126,11 +126,17 @@ export default function BlogListPage() {
                   sizes="(max-width: 1024px) 100vw, 60vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+                <div className="absolute top-4 left-4 z-10 flex items-center gap-2 flex-wrap">
                   <span className="px-3 py-1.5 rounded-xl bg-primary text-white text-xs font-bold shadow-md flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" />
                     Bài viết Nổi bật
                   </span>
+                  {featuredPost.postType === 'shorts_playlist' && (
+                    <span className="px-3 py-1.5 rounded-xl bg-red-600 text-white text-xs font-bold shadow-md flex items-center gap-1.5">
+                      <Play className="w-3.5 h-3.5 fill-white" />
+                      Playlist Shorts
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="lg:col-span-5 p-6 sm:p-8 lg:p-10 space-y-5 flex flex-col justify-between">
@@ -274,10 +280,16 @@ export default function BlogListPage() {
                           priority={index < 2}
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                        <div className="absolute top-3 left-3 z-10">
+                        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 flex-wrap">
                           <span className="px-2.5 py-1 rounded-lg bg-white/90 backdrop-blur-xs text-primary font-bold text-[11px] shadow-xs">
                             {post.categoryLabel}
                           </span>
+                          {post.postType === 'shorts_playlist' && (
+                            <span className="px-2.5 py-1 rounded-lg bg-red-600 text-white font-bold text-[11px] shadow-xs flex items-center gap-1">
+                              <Play className="w-2.5 h-2.5 fill-white" />
+                              Playlist Shorts
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -340,8 +352,17 @@ export default function BlogListPage() {
                           href={`/blog/${post.slug}`}
                           className="text-xs font-bold text-primary hover:text-blue-700 flex items-center gap-1 group-hover:translate-x-1 transition-transform"
                         >
-                          Đọc tiếp
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          {post.postType === 'shorts_playlist' ? (
+                            <>
+                              <Play className="w-3 h-3 fill-primary" />
+                              Xem Shorts
+                            </>
+                          ) : (
+                            <>
+                              Đọc tiếp
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </>
+                          )}
                         </Link>
                       </div>
                     </div>
