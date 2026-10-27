@@ -8,7 +8,7 @@ import MultipleChoiceQuestion from '@/components/exam/taking/MultipleChoiceQuest
 import EssayQuestion from '@/components/exam/taking/EssayQuestion'
 import ExamTakeFooter from '@/components/exam/taking/ExamTakeFooter'
 import AIHintPanel from '@/components/exam/taking/AIHintPanel'
-import { getExamById, getQuestions, getExamResultById } from '@/lib/api'
+import { getExamById, getQuestions } from '@/lib/api'
 import { deductPoints, getUserProfile } from '@/lib/authApi'
 import { Question } from '@/types/question'
 import { sortExamQuestions } from '@/lib/exam-utils'
@@ -22,7 +22,6 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
   const [userPoints, setUserPoints] = useState(0)
-  const [isRetake, setIsRetake] = useState(false)
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
@@ -132,16 +131,6 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
             // Sắp xếp chuẩn hóa: Trắc nghiệm trước, Tự luận sau; Dễ trước, Khó sau
             const sortedQuestions = sortExamQuestions(qRes.data as Question[])
             setQuestions(sortedQuestions)
-          }
-
-          // Check if user has already taken this exam
-          try {
-            const resData = await getExamResultById(id)
-            if (resData?.submission && (resData.submission.status === 'graded' || resData.submission.status === 'needs_review')) {
-              setIsRetake(true)
-            }
-          } catch (e) {
-            // First time taking exam
           }
         }
       } catch (err) {
@@ -274,11 +263,9 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         sessionStorage.removeItem(`exam_end_time_${id}`);
         toast.success("Nộp bài thành công!");
 
-        const prevUrl = exam?.cate === 'practice' && exam?.lectureId
-          ? `/lectures/lop/${exam?.grade || 12}/${exam?.lectureId}`
-          : exam?.cate === 'exam'
-            ? (exam?.grade ? `/exams/lop/${exam?.grade}` : '/student')
-            : (exam?.grade ? `/practices/lop/${exam?.grade}` : '/student');
+        const prevUrl = exam?.lectureId
+          ? `/practices/lop/${exam?.grade || 12}?lecture=${exam?.lectureId}`
+          : (exam?.grade ? `/lectures/lop/${exam?.grade}` : '/student');
 
         setTimeout(() => {
           router.push(prevUrl);
@@ -469,22 +456,6 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         points={userPoints}
         onBack={handleBack}
       />
-
-      {/* Retake Banner */}
-      {isRetake && (
-        <div className="bg-amber-50/90 border-b border-amber-200/80 px-4 md:px-8 py-2 flex items-center justify-between text-xs sm:text-sm text-amber-900 shadow-2xs z-20">
-          <div className="flex items-center gap-2 font-medium">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span>
-              Bạn đang <strong>làm lại đề thi (Lần ôn tập)</strong>. Điểm thi chính thức lần 1 của bạn được bảo lưu an toàn.
-            </span>
-          </div>
-          <span className="text-xs bg-amber-200/60 text-amber-800 px-2 py-0.5 rounded-full font-bold hidden sm:inline">
-            Lần 2 (Ôn tập)
-          </span>
-        </div>
-      )}
-
       <div className="flex-1 flex overflow-hidden relative pb-[88px] w-full">
         {/* Left Navigation Overlay */}
         {currentQuestionIndex > 0 && (

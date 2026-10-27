@@ -29,9 +29,18 @@ export default function StudentProgressCard({ progress }: Props) {
               <div className="bg-white h-full shadow-[0_0_10px_white]" style={{ width: `${progress.percentage}%` }}></div>
             </div>
           </div>
-          <button className="bg-white text-primary px-8 h-12 rounded-lg font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
-            {progress.actionText} <ArrowRight size={18} />
-          </button>
+          {progress.actionHref ? (
+            <a 
+              href={progress.actionHref}
+              className="bg-white text-primary px-8 h-12 rounded-lg font-bold hover:bg-slate-50 transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {progress.actionText} <ArrowRight size={18} />
+            </a>
+          ) : (
+            <button className="bg-white text-primary px-8 h-12 rounded-lg font-bold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+              {progress.actionText} <ArrowRight size={18} />
+            </button>
+          )}
         </div>
         <div className="hidden lg:block opacity-20">
           <Calculator size={120} />

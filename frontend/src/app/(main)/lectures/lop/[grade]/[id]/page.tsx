@@ -102,7 +102,7 @@ export default async function GradeLecturePage({
               className="flex-1 flex items-center justify-center gap-3 px-6 py-4 font-bold rounded-xl transition-all text-lg bg-primary text-white hover:bg-primary/90 shadow-md hover:shadow-lg hover:-translate-y-1"
             >
               <PenTool size={24} />
-              Làm bài tập
+              Làm bài tập & Đề thi
             </Link>
           </div>
         </div>

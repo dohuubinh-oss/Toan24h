@@ -121,12 +121,51 @@ import { segmentSpeechTextAndMath } from '@/lib/math-speech/segmentSpeechTextAnd
 
 export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomAction }: { editor: any, mathOnlyToolbar?: boolean, smallToolbar?: boolean, rightCustomAction?: React.ReactNode }) => {
   const [isListening, setIsListening] = useState(false)
+  const [interimText, setInterimText] = useState('')
+  const interimTextRef = useRef('')
   const recognitionRef = useRef<any>(null)
+
+  const commitSpeechText = useCallback((rawSentence: string) => {
+    if (!rawSentence || !editor) return
+    const segments = segmentSpeechTextAndMath(rawSentence)
+    for (const seg of segments) {
+      if (seg.type === 'math' && seg.content) {
+        // Chèn công thức toán học và render KaTeX trực tiếp tại vị trí con trỏ
+        editor.chain().focus().insertContent({
+          type: 'math',
+          attrs: { latex: seg.content }
+        }).insertContent(' ').run()
+      } else if (seg.type === 'text' && seg.content) {
+        // Xử lý các dòng nếu có khẩu lệnh xuống dòng (\n)
+        if (seg.content.includes('\n')) {
+          const lines = seg.content.split('\n')
+          lines.forEach((line: string, idx: number) => {
+            if (line) {
+              editor.chain().focus().insertContent(line).run()
+            }
+            if (idx < lines.length - 1) {
+              editor.chain().focus().setHardBreak().run()
+            } else {
+              editor.chain().focus().insertContent(' ').run()
+            }
+          })
+        } else {
+          // Chèn văn bản thường giữ nguyên dấu cách tự nhiên
+          editor.chain().focus().insertContent(seg.content + ' ').run()
+        }
+      }
+    }
+  }, [editor])
 
   const toggleListening = useCallback(() => {
     if (isListening) {
       if (recognitionRef.current) {
         try { recognitionRef.current.stop() } catch {}
+      }
+      if (interimTextRef.current) {
+        commitSpeechText(interimTextRef.current)
+        setInterimText('')
+        interimTextRef.current = ''
       }
       setIsListening(false)
       return
@@ -148,44 +187,24 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
       const recognition = new SpeechRecognition()
       recognition.lang = 'vi-VN'
       recognition.continuous = true
-      recognition.interimResults = false
+      recognition.interimResults = true
 
       recognition.onresult = (event: any) => {
+        let currentInterim = ''
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            const rawSentence = event.results[i][0].transcript.trim()
-            if (rawSentence && editor) {
-              const segments = segmentSpeechTextAndMath(rawSentence)
-              for (const seg of segments) {
-                if (seg.type === 'math' && seg.content) {
-                  // Chèn công thức toán học và render KaTeX trực tiếp tại vị trí con trỏ
-                  editor.chain().focus().insertContent({
-                    type: 'math',
-                    attrs: { latex: seg.content }
-                  }).insertContent(' ').run()
-                } else if (seg.type === 'text' && seg.content) {
-                  // Xử lý các dòng nếu có khẩu lệnh xuống dòng (\n)
-                  if (seg.content.includes('\n')) {
-                    const lines = seg.content.split('\n')
-                    lines.forEach((line, idx) => {
-                      if (line) {
-                        editor.chain().focus().insertContent(line).run()
-                      }
-                      if (idx < lines.length - 1) {
-                        editor.chain().focus().setHardBreak().run()
-                      } else {
-                        editor.chain().focus().insertContent(' ').run()
-                      }
-                    })
-                  } else {
-                    // Chèn văn bản thường giữ nguyên dấu cách tự nhiên
-                    editor.chain().focus().insertContent(seg.content + ' ').run()
-                  }
-                }
-              }
+          const result = event.results[i]
+          if (result.isFinal) {
+            const rawSentence = result[0].transcript.trim()
+            if (rawSentence) {
+              commitSpeechText(rawSentence)
             }
+          } else {
+            currentInterim += result[0].transcript
           }
         }
+        const trimmed = currentInterim.trim()
+        setInterimText(trimmed)
+        interimTextRef.current = trimmed
       }
 
       recognition.onerror = (event: any) => {
@@ -205,18 +224,25 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
       }
 
       recognition.onend = () => {
+        if (interimTextRef.current) {
+          commitSpeechText(interimTextRef.current)
+          setInterimText('')
+          interimTextRef.current = ''
+        }
         setIsListening(false)
       }
 
       recognitionRef.current = recognition
       recognition.start()
       setIsListening(true)
+      setInterimText('')
+      interimTextRef.current = ''
       toast.success('🎙️ Đang lắng nghe giọng nói... Hãy nói công thức toán!')
     } catch (e: any) {
       setIsListening(false)
       console.warn('Speech recognition start error:', e?.message || e)
     }
-  }, [editor, isListening])
+  }, [commitSpeechText, isListening])
 
   // Phím tắt Ctrl+M / Cmd+M
   useEffect(() => {
@@ -230,6 +256,35 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [toggleListening])
 
+  const renderLiveVoiceBanner = () => (
+    <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-rose-50 via-amber-50/50 to-rose-50 border-t border-rose-200/80 text-xs shadow-inner transition-all animate-in fade-in duration-200">
+      <div className="flex items-center gap-1.5 shrink-0 text-rose-600 font-bold">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
+        </span>
+        <span className="text-xs">Đang nghe:</span>
+      </div>
+      <div className="flex-1 min-w-0 flex items-center gap-1">
+        {interimText ? (
+          <span className="text-slate-900 bg-white px-2 py-0.5 rounded border border-rose-200 font-semibold shadow-xs inline-block truncate max-w-full">
+            {interimText}
+            <span className="inline-block w-1.5 h-3 bg-rose-500 animate-pulse ml-1 align-middle"></span>
+          </span>
+        ) : (
+          <span className="text-slate-400 italic">Hãy nói... Từng chữ bạn phát ra sẽ hiện tại đây theo thời gian thực</span>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={toggleListening}
+        className="text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-white hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded transition-colors shrink-0 shadow-xs cursor-pointer"
+      >
+        Xong
+      </button>
+    </div>
+  )
+
   if (!editor) return null
 
   const btnClass = smallToolbar ? "p-1 rounded transition-colors" : "p-1.5 rounded transition-colors"
@@ -237,137 +292,143 @@ export const MenuBar = ({ editor, mathOnlyToolbar, smallToolbar, rightCustomActi
 
   if (mathOnlyToolbar) {
     return (
-      <div className="flex items-center gap-1 p-1 bg-slate-50 border-b border-slate-200 rounded-t-xl overflow-x-auto">
-        <button
-          onClick={() => editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()}
-          className={`${btnClass} text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0`}
-          title="Chèn công thức Toán (MathLive)"
-        >
-          <Sigma className={iconClass} />
-        </button>
-        <button
-          onClick={toggleListening}
-          className={`${btnClass} flex items-center gap-1.5 justify-center flex-shrink-0 relative transition-all ${
-            isListening
-              ? 'text-rose-600 bg-rose-50 border border-rose-200 shadow-xs'
-              : 'text-slate-600 hover:text-primary hover:bg-white'
-          }`}
-          title={isListening ? "Đang lắng nghe... Bấm để dừng" : "Nói để nhập Toán trực tiếp (Ctrl+M)"}
-        >
-          <Mic className={`${iconClass} ${isListening ? 'animate-pulse text-rose-600' : ''}`} />
-          {isListening && (
-            <span className="text-[11px] font-bold text-rose-600 pr-1 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> Đang nghe...
-            </span>
-          )}
-        </button>
+      <div className="flex flex-col border-b border-slate-200 bg-slate-50 rounded-t-xl overflow-hidden">
+        <div className="flex items-center gap-1 p-1 overflow-x-auto">
+          <button
+            onClick={() => editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()}
+            className={`${btnClass} text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0`}
+            title="Chèn công thức Toán (MathLive)"
+          >
+            <Sigma className={iconClass} />
+          </button>
+          <button
+            onClick={toggleListening}
+            className={`${btnClass} flex items-center gap-1.5 justify-center flex-shrink-0 relative transition-all ${
+              isListening
+                ? 'text-rose-600 bg-rose-50 border border-rose-200 shadow-xs'
+                : 'text-slate-600 hover:text-primary hover:bg-white'
+            }`}
+            title={isListening ? "Đang lắng nghe... Bấm để dừng" : "Nói để nhập Toán trực tiếp (Ctrl+M)"}
+          >
+            <Mic className={`${iconClass} ${isListening ? 'animate-pulse text-rose-600' : ''}`} />
+            {isListening && (
+              <span className="text-[11px] font-bold text-rose-600 pr-1 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> Đang nghe...
+              </span>
+            )}
+          </button>
+        </div>
+        {isListening && renderLiveVoiceBanner()}
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-between gap-1 p-1 bg-slate-50 border-b border-slate-200 rounded-t-xl overflow-x-auto">
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`${btnClass} ${editor.isActive('bold') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
-          title="In đậm"
-        >
-          <Bold className={iconClass} />
-        </button>
-        <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
-        <button
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`${btnClass} ${editor.isActive('bulletList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
-          title="Danh sách"
-        >
-          <List className={iconClass} />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`${btnClass} ${editor.isActive('orderedList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
-          title="Danh sách số"
-        >
-          <ListOrdered className={iconClass} />
-        </button>
-        <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
-        <button
-          onClick={() => editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()}
-          className={`${btnClass} text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0`}
-          title="Chèn công thức Toán (MathLive)"
-        >
-          <Sigma className={iconClass} />
-        </button>
-        <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
-        <button
-          onClick={() => {
-            const selection = editor.state.selection;
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = async (e: any) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                if (file.size > 5 * 1024 * 1024) {
-                  toast.error('Dung lượng ảnh vượt quá giới hạn 5MB!');
-                  return;
+    <div className="flex flex-col border-b border-slate-200 bg-slate-50 rounded-t-xl overflow-hidden">
+      <div className="flex items-center justify-between gap-1 p-1 overflow-x-auto">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={`${btnClass} ${editor.isActive('bold') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
+            title="In đậm"
+          >
+            <Bold className={iconClass} />
+          </button>
+          <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
+          <button
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={`${btnClass} ${editor.isActive('bulletList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
+            title="Danh sách"
+          >
+            <List className={iconClass} />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={`${btnClass} ${editor.isActive('orderedList') ? 'bg-slate-200 text-slate-900' : 'text-slate-600 hover:bg-white'}`}
+            title="Danh sách số"
+          >
+            <ListOrdered className={iconClass} />
+          </button>
+          <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
+          <button
+            onClick={() => editor.chain().focus().insertContent({ type: 'math', attrs: { latex: '' } }).run()}
+            className={`${btnClass} text-primary font-bold hover:bg-white flex items-center justify-center flex-shrink-0`}
+            title="Chèn công thức Toán (MathLive)"
+          >
+            <Sigma className={iconClass} />
+          </button>
+          <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
+          <button
+            onClick={() => {
+              const selection = editor.state.selection;
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = 'image/*';
+              input.onchange = async (e: any) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  if (file.size > 5 * 1024 * 1024) {
+                    toast.error('Dung lượng ảnh vượt quá giới hạn 5MB!');
+                    return;
+                  }
+                  try {
+                    const url = await uploadTempImage(file);
+                    editor.chain().focus().insertContentAt(selection.to, { type: 'image', attrs: { src: url } }).run();
+                  } catch (error: any) {
+                    console.error("Error uploading image", error);
+                    toast.error(error?.message || 'Tải ảnh thất bại! Vui lòng thử lại.');
+                  }
                 }
-                try {
-                  const url = await uploadTempImage(file);
-                  editor.chain().focus().insertContentAt(selection.to, { type: 'image', attrs: { src: url } }).run();
-                } catch (error: any) {
-                  console.error("Error uploading image", error);
-                  toast.error(error?.message || 'Tải ảnh thất bại! Vui lòng thử lại.');
-                }
+              };
+              input.click();
+            }}
+            className={`${btnClass} text-slate-600 hover:bg-white flex items-center justify-center flex-shrink-0`}
+            title="Chèn ảnh"
+          >
+            <ImageIcon className={iconClass} />
+          </button>
+          <button
+            onClick={() => {
+              const url = prompt('Nhập URL YouTube (VD: https://www.youtube.com/watch?v=...)');
+              if (url) {
+                editor.commands.setYoutubeVideo({
+                  src: url,
+                  width: 640,
+                  height: 480,
+                })
               }
-            };
-            input.click();
-          }}
-          className={`${btnClass} text-slate-600 hover:bg-white flex items-center justify-center flex-shrink-0`}
-          title="Chèn ảnh"
-        >
-          <ImageIcon className={iconClass} />
-        </button>
-        <button
-          onClick={() => {
-            const url = prompt('Nhập URL YouTube (VD: https://www.youtube.com/watch?v=...)');
-            if (url) {
-              editor.commands.setYoutubeVideo({
-                src: url,
-                width: 640,
-                height: 480,
-              })
-            }
-          }}
-          className={`${btnClass} text-red-600 hover:bg-white flex items-center justify-center flex-shrink-0`}
-          title="Chèn YouTube"
-        >
-          <YoutubeIcon className={iconClass} />
-        </button>
-        <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
-        <button
-          onClick={toggleListening}
-          className={`${btnClass} flex items-center gap-1.5 justify-center flex-shrink-0 relative transition-all ${
-            isListening 
-              ? 'text-rose-600 bg-rose-50 border border-rose-200 shadow-xs' 
-              : 'text-slate-600 hover:text-primary hover:bg-white'
-          }`}
-          title={isListening ? "Đang lắng nghe... Bấm để dừng" : "Nói để nhập Toán trực tiếp (Ctrl+M)"}
-        >
-          <Mic className={`${iconClass} ${isListening ? 'animate-pulse text-rose-600' : ''}`} />
-          {isListening && (
-            <span className="text-[11px] font-bold text-rose-600 pr-1 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> Đang nghe...
-            </span>
-          )}
-        </button>
-      </div>
-
-      {rightCustomAction && (
-        <div className="flex items-center ml-auto pl-2 flex-shrink-0">
-          {rightCustomAction}
+            }}
+            className={`${btnClass} text-red-600 hover:bg-white flex items-center justify-center flex-shrink-0`}
+            title="Chèn YouTube"
+          >
+            <YoutubeIcon className={iconClass} />
+          </button>
+          <div className="w-px h-4 bg-slate-300 mx-1 flex-shrink-0"></div>
+          <button
+            onClick={toggleListening}
+            className={`${btnClass} flex items-center gap-1.5 justify-center flex-shrink-0 relative transition-all ${
+              isListening 
+                ? 'text-rose-600 bg-rose-50 border border-rose-200 shadow-xs' 
+                : 'text-slate-600 hover:text-primary hover:bg-white'
+            }`}
+            title={isListening ? "Đang lắng nghe... Bấm để dừng" : "Nói để nhập Toán trực tiếp (Ctrl+M)"}
+          >
+            <Mic className={`${iconClass} ${isListening ? 'animate-pulse text-rose-600' : ''}`} />
+            {isListening && (
+              <span className="text-[11px] font-bold text-rose-600 pr-1 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> Đang nghe...
+              </span>
+            )}
+          </button>
         </div>
-      )}
+
+        {rightCustomAction && (
+          <div className="flex items-center ml-auto pl-2 flex-shrink-0">
+            {rightCustomAction}
+          </div>
+        )}
+      </div>
+      {isListening && renderLiveVoiceBanner()}
     </div>
   )
 }

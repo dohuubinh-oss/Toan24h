@@ -9,8 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: [
           '/',
-          '/exams',
-          '/exams/*',
           '/lectures',
           '/lectures/*',
           '/practices',

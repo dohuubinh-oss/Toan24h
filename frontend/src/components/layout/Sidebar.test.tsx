@@ -27,8 +27,8 @@ describe('Sidebar', () => {
   it('renders student navigation links for student role', () => {
     render(<Sidebar role="student" />)
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
-    expect(screen.getByText('Bài học')).toBeInTheDocument()
-    expect(screen.getByText('Đề thi')).toBeInTheDocument()
+    expect(screen.getByText('Bài giảng')).toBeInTheDocument()
+    expect(screen.queryByText('Đề thi')).not.toBeInTheDocument()
     expect(screen.getByText('Bảng xếp hạng')).toBeInTheDocument()
     expect(screen.queryByText('Quản lý người dùng')).not.toBeInTheDocument()
   })

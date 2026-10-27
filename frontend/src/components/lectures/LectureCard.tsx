@@ -108,6 +108,7 @@ export interface PracticeLectureCardProps {
   chapter?: string;
   practiceCount?: number;
   href?: string;
+  thumbnailUrl?: string;
 }
 
 export function PracticeLectureCard({
@@ -116,6 +117,7 @@ export function PracticeLectureCard({
   chapter,
   practiceCount = 0,
   href,
+  thumbnailUrl,
 }: PracticeLectureCardProps) {
   const hrefUrl = href || `/practices/lop/${grade}`;
 
@@ -126,11 +128,23 @@ export function PracticeLectureCard({
     >
       {/* Thumbnail Header */}
       <div className="relative h-44 overflow-hidden bg-gradient-to-br from-emerald-100/60 via-teal-50 to-sky-100/50 flex items-center justify-center">
-        <div className="w-16 h-16 rounded-2xl bg-white/90 shadow-md shadow-emerald-500/10 flex items-center justify-center text-emerald-600 transition-transform duration-500 group-hover:scale-110">
-          <PenTool className="w-8 h-8" />
-        </div>
+        {thumbnailUrl ? (
+          <Image 
+            src={thumbnailUrl} 
+            alt={title} 
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+            unoptimized={true}
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-2xl bg-white/90 shadow-md shadow-emerald-500/10 flex items-center justify-center text-emerald-600 transition-transform duration-500 group-hover:scale-110">
+            <PenTool className="w-8 h-8" />
+          </div>
+        )}
         <div className="absolute top-4 right-4 z-10">
-          <div className="bg-emerald-600 text-white px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 shadow-sm">
+          <div className="bg-emerald-600 text-white px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 shadow-sm backdrop-blur-sm">
             Luyện tập & Đề
           </div>
         </div>

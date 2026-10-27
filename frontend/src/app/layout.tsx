@@ -135,7 +135,7 @@ export default function RootLayout({
                   },
                   potentialAction: {
                     '@type': 'SearchAction',
-                    target: `${baseUrl}/exams?q={search_term_string}`,
+                    target: `${baseUrl}/lectures?q={search_term_string}`,
                     'query-input': 'required name=search_term_string',
                   },
                 },

@@ -20,16 +20,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/exams`,
-      lastModified: currentDate,
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
       url: `${baseUrl}/lectures`,
       lastModified: currentDate,
       changeFrequency: 'daily',
-      priority: 0.8,
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/practices`,
@@ -64,16 +58,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   grades.forEach((grade) => {
     gradeRoutes.push(
       {
-        url: `${baseUrl}/exams/lop/${grade}`,
+        url: `${baseUrl}/lectures/lop/${grade}`,
         lastModified: currentDate,
         changeFrequency: 'daily',
         priority: 0.9,
-      },
-      {
-        url: `${baseUrl}/lectures/lop/${grade}`,
-        lastModified: currentDate,
-        changeFrequency: 'weekly',
-        priority: 0.8,
       },
       {
         url: `${baseUrl}/practices/lop/${grade}`,

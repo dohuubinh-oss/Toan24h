@@ -191,15 +191,13 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		return errors.New("category is required")
 	}
 
-	hasBasicConcept := req.BasicConcept != "" && req.BasicConcept != "<p>Nhập khái niệm cơ bản tại đây...</p>" && req.BasicConcept != "<p></p>"
-	hasExamples := len(req.Examples) > 0
-
-	if !hasBasicConcept && !hasExamples {
-		return errors.New("must provide at least basic concept or examples")
+	basicConcept := req.BasicConcept
+	if basicConcept == "<p>Nhập khái niệm cơ bản tại đây...</p>" || basicConcept == "<p></p>" {
+		basicConcept = ""
 	}
 
 	lectureID := uuid.New()
-	processedConcept, examplesStr := processLectureImagesAndSerialize(req.Grade, req.BasicConcept, req.Examples)
+	processedConcept, examplesStr := processLectureImagesAndSerialize(req.Grade, basicConcept, req.Examples)
 
 	var authorUUID *uuid.UUID
 	if req.AuthorID != nil && *req.AuthorID != "" {
@@ -235,19 +233,17 @@ func (s *lectureService) UpdateLecture(ctx context.Context, id string, req Creat
 		return errors.New("category is required")
 	}
 
-	hasBasicConcept := req.BasicConcept != "" && req.BasicConcept != "<p>Nhập khái niệm cơ bản tại đây...</p>" && req.BasicConcept != "<p></p>"
-	hasExamples := len(req.Examples) > 0
-
-	if !hasBasicConcept && !hasExamples {
-		return errors.New("must provide at least basic concept or examples")
-	}
-
 	lecture, err := s.repo.GetLectureByID(ctx, id)
 	if err != nil {
 		return errors.New("lecture not found")
 	}
 
-	processedConcept, examplesStr := processLectureImagesAndSerialize(req.Grade, req.BasicConcept, req.Examples)
+	basicConcept := req.BasicConcept
+	if basicConcept == "<p>Nhập khái niệm cơ bản tại đây...</p>" || basicConcept == "<p></p>" {
+		basicConcept = ""
+	}
+
+	processedConcept, examplesStr := processLectureImagesAndSerialize(req.Grade, basicConcept, req.Examples)
 
 	lecture.Title = req.Title
 	lecture.Grade = req.Grade

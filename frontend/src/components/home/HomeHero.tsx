@@ -25,7 +25,7 @@ const GRADE_EXAMS: Record<number, GradeExamInfo> = {
     questionCount: '30 câu',
     submissions: '980+ lượt thi',
     avgScore: '8.1 / 10',
-    examUrl: '/exams/lop/6',
+    examUrl: '/lectures/lop/6',
   },
   7: {
     grade: 7,
@@ -35,7 +35,7 @@ const GRADE_EXAMS: Record<number, GradeExamInfo> = {
     questionCount: '35 câu',
     submissions: '1.150+ lượt thi',
     avgScore: '7.9 / 10',
-    examUrl: '/exams/lop/7',
+    examUrl: '/lectures/lop/7',
   },
   8: {
     grade: 8,
@@ -45,7 +45,7 @@ const GRADE_EXAMS: Record<number, GradeExamInfo> = {
     questionCount: '35 câu',
     submissions: '1.280+ lượt thi',
     avgScore: '7.8 / 10',
-    examUrl: '/exams/lop/8',
+    examUrl: '/lectures/lop/8',
   },
   9: {
     grade: 9,
@@ -55,7 +55,7 @@ const GRADE_EXAMS: Record<number, GradeExamInfo> = {
     questionCount: '40 câu',
     submissions: '1.420+ lượt thi',
     avgScore: '7.6 / 10',
-    examUrl: '/exams/lop/9',
+    examUrl: '/lectures/lop/9',
   },
 }
 
@@ -226,14 +226,14 @@ export default function HomeHero() {
                     href={currentExam.examUrl}
                     className="px-4 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-lg shadow-primary/25 transition-all"
                   >
-                    <span>Vào thi ngay</span>
+                    <span>Học ngay</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                   <Link
                     href={currentExam.examUrl}
                     className="px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-300 font-semibold rounded-xl border border-white/10 transition-colors"
                   >
-                    Cấu trúc đề
+                    Xem bài giảng
                   </Link>
                 </div>
                 <div className="text-right hidden sm:block">

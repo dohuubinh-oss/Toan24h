@@ -100,7 +100,9 @@ export async function getLecturesByGrade(grade: string, page: number = 1, limit:
       }
     } catch(e) {}
     
-    const isPracticeCard = (!item.basicConcept || item.basicConcept.trim() === '') && (!item.examples || item.examples === '[]' || item.examples === '');
+    const textWithoutImages = item.basicConcept ? item.basicConcept.replace(/<img[^>]*>/gi, '').replace(/<[^>]+>/g, '').trim() : '';
+    const hasNoExamples = !item.examples || item.examples === '[]' || item.examples === '';
+    const isPracticeCard = hasNoExamples && (textWithoutImages === '' || Boolean(item.practiceIds));
 
     let practiceCount = 0;
     if (item.practiceIds) {

@@ -41,4 +41,15 @@ describe('ExamConfigSidebar Component', () => {
     expect(screen.getByText('Ma trận đề thi')).toBeInTheDocument()
     expect(screen.getByText('Tổng cộng')).toBeInTheDocument()
   })
+
+  it('renders "Liên kết bài giảng" for both exam and practice categories', () => {
+    // 1. Exam mode (cate === 'exam' or undefined)
+    const { rerender } = render(<ExamConfigSidebar config={{ ...mockConfig, cate: 'exam' }} onChange={mockOnChange} questions={mockQuestions as any} />)
+    expect(screen.getByText('Liên kết bài giảng')).toBeInTheDocument()
+    expect(screen.getByText('Chưa liên kết bài giảng')).toBeInTheDocument()
+
+    // 2. Practice mode (cate === 'practice')
+    rerender(<ExamConfigSidebar config={{ ...mockConfig, cate: 'practice' }} onChange={mockOnChange} questions={mockQuestions as any} />)
+    expect(screen.getByText('Liên kết bài giảng')).toBeInTheDocument()
+  })
 })

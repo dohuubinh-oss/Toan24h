@@ -40,7 +40,7 @@ export default function AdminTestsDashboard() {
         {grades.map((grade) => (
           <Link
             key={grade.id}
-            href={`/exams/lop/${grade.id}`}
+            href={`/lectures/lop/${grade.id}`}
             className="group flex flex-col items-center justify-center bg-white border border-slate-200 p-8 rounded-2xl hover:border-primary hover:shadow-lg transition-all"
           >
             <div className="h-16 w-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -48,7 +48,7 @@ export default function AdminTestsDashboard() {
             </div>
             <h3 className="text-lg font-bold text-slate-800">{grade.name}</h3>
             <span className="text-sm font-semibold text-primary mt-2 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-              Xem đề thi →
+              Xem bài giảng →
             </span>
           </Link>
         ))}

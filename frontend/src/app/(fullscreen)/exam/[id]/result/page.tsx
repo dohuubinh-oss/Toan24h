@@ -304,17 +304,15 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const handleBack = () => {
     const exam = mappedData.exam
     if (exam) {
-      if (exam.cate === 'practice' && exam.lectureId) {
-        router.push(`/lectures/lop/${exam.grade || 8}/${exam.lectureId}`)
-        return
-      } else if (exam.cate === 'exam' && exam.grade) {
-        router.push(`/exams/lop/${exam.grade}`)
+      if (exam.lectureId) {
+        router.push(`/practices/lop/${exam.grade || 8}?lecture=${exam.lectureId}`)
         return
       } else if (exam.grade) {
-        router.push(`/practices/lop/${exam.grade}`)
+        router.push(`/lectures/lop/${exam.grade}`)
         return
       }
     }
+    router.push('/student')
   }
 
   if (loading) {

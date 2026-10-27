@@ -16,8 +16,7 @@ export interface SidebarProps {
 
 const STUDENT_LINKS = [
   { href: '/student', icon: LayoutDashboard, label: 'Dashboard', matchPrefix: false },
-  { href: '/lectures', icon: BookOpen, label: 'Bài học', matchPrefix: true },
-  { href: '/exams', icon: PenTool, label: 'Đề thi', matchPrefix: true },
+  { href: '/lectures', icon: BookOpen, label: 'Bài giảng', matchPrefix: true },
   { href: '/leaderboard', icon: Trophy, label: 'Bảng xếp hạng', matchPrefix: true },
 ];
 

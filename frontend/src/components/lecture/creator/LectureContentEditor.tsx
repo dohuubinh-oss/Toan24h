@@ -71,11 +71,13 @@ export default function LectureContentEditor() {
 
   return (
     <div className="space-y-6">
+      {/* 1. Giải thích khái niệm & Ảnh bài giảng - Luôn mở để người dùng có thể tải ảnh bìa cho bài giảng ôn */}
+      <LectureMediaCard />
+
+      {/* 2. Phân tích bài tập mẫu - Vô hiệu hóa khi chọn loại Luyện tập / Đề */}
       <div className={`space-y-6 transition-opacity duration-300 ${
         contentType === 'practice' ? 'opacity-35 pointer-events-none select-none filter grayscale-[30%]' : ''
       }`}>
-        <LectureMediaCard />
-
         <div className="mb-2">
           <h2 className="text-xl font-bold text-slate-800">2. Phân tích bài tập mẫu</h2>
         </div>

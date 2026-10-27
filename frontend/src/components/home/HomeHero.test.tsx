@@ -15,7 +15,7 @@ describe('HomeHero', () => {
     expect(screen.getByText('Bắt đầu miễn phí')).toBeInTheDocument()
     expect(screen.getByText('Xem demo')).toBeInTheDocument()
     expect(screen.getByText(/Thi thử vào 10 • Toán 9/i)).toBeInTheDocument()
-    expect(screen.getByText('Vào thi ngay')).toBeInTheDocument()
+    expect(screen.getByText('Học ngay')).toBeInTheDocument()
     expect(screen.getByText(/90 phút/i)).toBeInTheDocument()
   })
 

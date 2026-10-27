@@ -20,7 +20,11 @@ export default function StudentTopics({ topics }: Props) {
         {topics.map((topic) => {
           const Icon = topic.icon;
           return (
-            <div key={topic.id} className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full">
+            <Link 
+              key={topic.id} 
+              href={topic.href || '/lectures'}
+              className="bg-white p-6 rounded-xl border border-slate-200/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group cursor-pointer flex flex-col h-full"
+            >
               <div className={`w-12 h-12 ${topic.bgClass} ${topic.textClass} rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                 <Icon size={24} />
               </div>
@@ -30,11 +34,11 @@ export default function StudentTopics({ topics }: Props) {
                 <div className={`${topic.progressBgClass} h-full rounded-full`} style={{ width: `${topic.progress}%` }}></div>
               </div>
               <div className="mt-auto">
-                <button aria-label={`Tiếp tục học ${topic.title}`} className={`${topic.textClass} font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all min-h-[44px]`}>
+                <span className={`${topic.textClass} font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all min-h-[44px]`}>
                   Tiếp tục <ArrowRight size={16} />
-                </button>
+                </span>
               </div>
-            </div>
+            </Link>
           )
         })}
       </div>

@@ -190,7 +190,7 @@ function CreateExamPageContent() {
           duration: exam.duration,
           diffScore: diffScore,
           questionIds: questionIds,
-          lectureId: exam.lectureId,
+          lectureId: exam.lectureId || null,
         },
         questionIds,
       };

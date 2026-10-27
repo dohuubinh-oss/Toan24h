@@ -171,25 +171,46 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
               </div>
             </div>
             
-            {/* Lựa chọn bài giảng (chỉ hiện cho practice) */}
-            {config.cate === 'practice' && (
-              <div className="space-y-1.5 pt-4 border-t border-slate-100">
+            {/* Lựa chọn bài giảng (cho cả đề thi và bài tập) */}
+            <div className="space-y-1.5 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between">
                 <Label className="text-xs ml-1 mb-1">Liên kết bài giảng</Label>
-                <div className="flex gap-2">
-                  <div className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 truncate flex items-center">
-                    {selectedLectureName ? selectedLectureName : <span className="text-slate-400 italic">Chưa liên kết</span>}
-                  </div>
-                  <Button
+                {config.lectureId && (
+                  <button
                     type="button"
-                    variant="outline"
-                    className="flex-shrink-0"
-                    onClick={() => setIsLectureModalOpen(true)}
+                    onClick={() => {
+                      onChange('lectureId', null)
+                      setSelectedLectureName(null)
+                    }}
+                    className="text-xs text-red-500 hover:text-red-700 transition-colors font-medium cursor-pointer"
                   >
-                    Chọn
-                  </Button>
-                </div>
+                    Gỡ liên kết
+                  </button>
+                )}
               </div>
-            )}
+              <div className="flex gap-2">
+                <div 
+                  className={cn(
+                    "flex-1 px-3 py-2 bg-slate-50 border rounded-xl text-sm truncate flex items-center transition-colors",
+                    selectedLectureName ? "text-slate-800 font-medium border-slate-200" : "text-slate-400 italic border-slate-200"
+                  )}
+                  title={selectedLectureName || "Chưa liên kết bài giảng"}
+                >
+                  {selectedLectureName ? selectedLectureName : "Chưa liên kết bài giảng"}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-shrink-0"
+                  onClick={() => setIsLectureModalOpen(true)}
+                >
+                  {selectedLectureName ? "Đổi" : "Chọn"}
+                </Button>
+              </div>
+              <p className="text-[11px] text-slate-500 ml-1 leading-relaxed">
+                Liên kết đề thi với bài giảng (ví dụ: &quot;Kiểm tra giữa kì 1&quot;) để học sinh làm bài trực tiếp từ bài giảng tương ứng.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -279,6 +300,7 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
           onChange('lectureId', lecture.id)
           setSelectedLectureName(lecture.title)
         }}
+        grade={config.grade}
       />
     </div>
   )

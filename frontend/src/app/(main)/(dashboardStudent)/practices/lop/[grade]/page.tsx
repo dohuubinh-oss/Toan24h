@@ -85,13 +85,15 @@ export default async function GradePracticesPage({
     console.error("Failed to load exams or results", error);
   }
 
-  // Filter for practice and grade
-  let practicesData = allExams.filter((exam: any) => exam.cate === 'practice' && String(exam.grade) === String(grade));
+  // Filter for practice/exam and grade
+  let practicesData = allExams.filter((exam: any) => String(exam.grade) === String(grade));
 
   if (practiceIdsArray && practiceIdsArray.length > 0) {
     practicesData = practicesData.filter((item: any) => practiceIdsArray.includes(item.id));
   } else if (lectureId) {
     practicesData = practicesData.filter((item: any) => item.lectureId === lectureId);
+  } else {
+    practicesData = practicesData.filter((item: any) => item.cate === 'practice');
   }
 
   // Sắp xếp theo ngày tạo (cũ nhất đến mới nhất) để bài tập hiện theo thứ tự được tạo
@@ -149,10 +151,16 @@ export default async function GradePracticesPage({
               Dashboard
             </Link>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-primary font-bold min-h-[44px] flex items-center">Bài thực hành</span>
+            <Link href={`/lectures/lop/${grade}`} className="hover:text-primary transition-colors min-h-[44px] flex items-center">
+              Bài giảng
+            </Link>
+            <ChevronRight className="w-3 h-3" />
+            <span className="text-primary font-bold min-h-[44px] flex items-center">
+              {lectureName || 'Danh sách đề'}
+            </span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900">
-            {lectureName ? `Bài thực hành Khối ${grade} - ${lectureName}` : `Danh sách Bài thực hành Khối ${grade}`}
+            {lectureName ? `Danh sách Đề thi & Luyện tập: ${lectureName}` : `Kho Đề thi & Bài tập Lớp ${grade}`}
           </h1>
         </div>
       </div>

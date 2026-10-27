@@ -61,8 +61,8 @@ export default async function GradeLecturesPage({
   const { data: lectures, totalPages, totalItems, startIndex, endIndex, currentPage } = lecturesResult;
 
   const mappedLectures = lectures.map(lecture => {
-    // Find all practices for this lecture
-    const lectureExams = examsData.filter((exam: any) => exam.cate === 'practice' && exam.lectureId === lecture.id);
+    // Find all exams and practices for this lecture
+    const lectureExams = examsData.filter((exam: any) => exam.lectureId === lecture.id);
     const practiceCount = lectureExams.length;
     
     // Count how many are completed with score > 6.5
@@ -131,6 +131,7 @@ export default async function GradeLecturesPage({
                 chapter={item.chapter}
                 practiceCount={item.practiceCount}
                 href={practiceUrl}
+                thumbnailUrl={item.thumbnailUrl}
               />
             )
           }

@@ -15,15 +15,22 @@ interface LectureSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (lecture: Lecture) => void;
+  grade?: string;
 }
 
-export default function LectureSelectorModal({ isOpen, onClose, onSelect }: LectureSelectorModalProps) {
+export default function LectureSelectorModal({ isOpen, onClose, onSelect, grade }: LectureSelectorModalProps) {
   const [lectures, setLectures] = useState<Lecture[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedGradeFilter, setSelectedGradeFilter] = useState<string>('all')
 
   useEffect(() => {
     if (isOpen) {
+      if (grade) {
+        setSelectedGradeFilter(grade)
+      } else {
+        setSelectedGradeFilter('all')
+      }
       setIsLoading(true)
       apiFetch('/lectures')
         .then(res => {
@@ -34,14 +41,16 @@ export default function LectureSelectorModal({ isOpen, onClose, onSelect }: Lect
         .catch(console.error)
         .finally(() => setIsLoading(false))
     }
-  }, [isOpen])
+  }, [isOpen, grade])
 
   if (!isOpen) return null
 
-  const filteredLectures = lectures.filter(l => 
-    l.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    l.category.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredLectures = lectures.filter(l => {
+    const matchSearch = l.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      l.category.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchGrade = selectedGradeFilter === 'all' || String(l.grade) === String(selectedGradeFilter)
+    return matchSearch && matchGrade
+  })
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
@@ -59,16 +68,43 @@ export default function LectureSelectorModal({ isOpen, onClose, onSelect }: Lect
           </button>
         </div>
 
-        <div className="p-4 border-b border-slate-100">
+        <div className="p-4 border-b border-slate-100 space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
             <input
               type="text"
-              placeholder="Tìm kiếm bài giảng..."
+              placeholder="Tìm kiếm bài giảng theo tên, chuyên đề..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              className="w-full pl-10 pr-4 h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm"
             />
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            <span className="text-slate-400 font-medium shrink-0 mr-1">Khối lớp:</span>
+            {[
+              { id: 'all', label: 'Tất cả' },
+              { id: '5', label: 'Lớp 5' },
+              { id: '6', label: 'Lớp 6' },
+              { id: '7', label: 'Lớp 7' },
+              { id: '8', label: 'Lớp 8' },
+              { id: '9', label: 'Lớp 9' },
+              { id: '12', label: 'Lớp 12' },
+              { id: 'chuyen_cap', label: 'Chuyển cấp' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSelectedGradeFilter(tab.id)}
+                className={`px-2.5 py-1 rounded-lg font-medium transition-all shrink-0 ${
+                  selectedGradeFilter === tab.id
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 

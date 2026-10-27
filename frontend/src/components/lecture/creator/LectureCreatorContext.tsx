@@ -127,7 +127,9 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
           }
 
           // Auto-detect if this is a standalone practice card
-          if ((!data.basicConcept || data.basicConcept.trim() === '') && (!rawExamples || rawExamples.length === 0)) {
+          const hasNoExamples = !rawExamples || rawExamples.length === 0
+          const textWithoutImages = data.basicConcept ? data.basicConcept.replace(/<img[^>]*>/gi, '').replace(/<[^>]+>/g, '').trim() : ''
+          if (hasNoExamples && textWithoutImages === '') {
             setContentType('practice')
           } else {
             setContentType('lecture')
@@ -168,10 +170,9 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
       const { apiFetch, uploadObjectUrlIfNeeded } = await import('@/lib/api')
 
       let processedDangToanList: any[] = []
-      let processedBasicConcept = ''
+      let processedBasicConcept = basicConcept
 
       if (contentType === 'lecture') {
-        processedBasicConcept = basicConcept
 
         const isMethodNonEmpty = (m: MethodItem) => {
           return Boolean(

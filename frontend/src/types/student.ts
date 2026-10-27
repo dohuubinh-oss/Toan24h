@@ -22,6 +22,7 @@ export interface TopicData {
   bgClass: string
   textClass: string
   progressBgClass: string
+  href?: string
 }
 
 export interface ProgressData {
@@ -30,6 +31,7 @@ export interface ProgressData {
   description: string
   percentage: number
   actionText: string
+  actionHref?: string
 }
 
 export interface LeaderboardUser {
