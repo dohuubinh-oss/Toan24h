@@ -7,6 +7,8 @@ import { ArrowLeft, Calendar, Clock, Share2, Sparkles, BookOpen, ChevronRight } 
 import { getBlogPosts, BlogPost } from '@/data/blogData'
 import MathText from '@/components/ui/MathText'
 import { useToast } from '@/components/ui/ToastProvider'
+import { ShortsPlaylistStage } from '@/components/blog/ShortsPlaylistStage'
+import { parseShortsPlaylist } from '@/lib/youtubeUtils'
 
 export default function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params)
@@ -63,9 +65,11 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
     }
   }
 
+  const isShortsPlaylist = post.postType === 'shorts_playlist'
+
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className={`${isShortsPlaylist ? 'max-w-6xl' : 'max-w-4xl'} mx-auto space-y-8`}>
         
         {/* Breadcrumb Navigation - Left Aligned */}
         <div className="flex items-center gap-2 text-xs text-slate-500 font-semibold">
@@ -75,7 +79,7 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
         </div>
 
         {/* Article Main Card */}
-        <article className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden p-6 sm:p-10 space-y-4">
+        <article className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden p-6 sm:p-10 space-y-6">
           
           {/* Title */}
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 leading-snug tracking-tight">
@@ -83,7 +87,7 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
           </h1>
 
           {/* Author, Date/ReadTime & Share Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pb-1">
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-slate-100">
             {/* Left: Author */}
             <div className="flex items-center gap-3">
               <img 
@@ -121,10 +125,20 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
             </div>
           </div>
 
-          {/* Article Body directly under author without gap */}
-          <div className="text-slate-800 leading-relaxed text-sm sm:text-base font-sans pt-0 mt-0 [&_p:first-child]:mt-0 [&_img:first-child]:mt-1 [&_img]:w-full [&_img]:h-auto [&_img]:rounded-2xl [&_img]:mb-6 [&_img]:object-cover [&_img]:shadow-xs">
-            <MathText content={post.content} />
-          </div>
+          {/* Article Body directly under author */}
+          {isShortsPlaylist ? (
+            <div className="pt-2">
+              <ShortsPlaylistStage 
+                shorts={parseShortsPlaylist(post.playlistData || post.content)}
+                postTitle={post.title}
+                authorName={post.author.name}
+              />
+            </div>
+          ) : (
+            <div className="text-slate-800 leading-relaxed text-sm sm:text-base font-sans pt-0 mt-0 [&_p:first-child]:mt-0 [&_img:first-child]:mt-1 [&_img]:w-full [&_img]:h-auto [&_img]:rounded-2xl [&_img]:mb-6 [&_img]:object-cover [&_img]:shadow-xs">
+              <MathText content={post.content} />
+            </div>
+          )}
 
         </article>
 
