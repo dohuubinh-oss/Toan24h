@@ -72,12 +72,12 @@ describe('youtubeUtils', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/lib/youtubeUtils.test.ts`
 Expected: FAIL with "Cannot find module './youtubeUtils'"
 
-- [ ] **Step 3: Implement `youtubeUtils.ts` and extend `blogData.ts`**
+- [x] **Step 3: Implement `youtubeUtils.ts` and extend `blogData.ts`**
 
 In `frontend/src/lib/youtubeUtils.ts`:
 - Implement `extractYouTubeVideoId(url: string): string | null`: using regex matching `/(?:shorts\/|youtu\.be\/|v=|watch\?v=|^)([a-zA-Z0-9_-]{11})(?:[&?]|$)/`.
@@ -88,12 +88,12 @@ In `frontend/src/data/blogData.ts`:
 - Add `ShortItem` interface.
 - Add optional `postType?: BlogPostType` and `playlistData?: string` to `BlogPost`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/lib/youtubeUtils.test.ts`
 Expected: PASS (all 2 tests pass)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/lib/youtubeUtils.ts frontend/src/lib/youtubeUtils.test.ts frontend/src/data/blogData.ts
@@ -112,7 +112,7 @@ git commit -m "feat(blog): add ShortItem data models and youtube parser helpers"
 - Consumes: `ShortItem` from `frontend/src/data/blogData.ts`
 - Produces: `ShortsPlaylistStage({ shorts, postTitle, authorName }: ShortsPlaylistStageProps)`
 
-- [ ] **Step 1: Write the failing test for `ShortsPlaylistStage`**
+- [x] **Step 1: Write the failing test for `ShortsPlaylistStage`**
 
 ```tsx
 // frontend/src/components/blog/ShortsPlaylistStage.test.tsx
@@ -155,12 +155,12 @@ describe('ShortsPlaylistStage', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/components/blog/ShortsPlaylistStage.test.tsx`
 Expected: FAIL with "Cannot find module './ShortsPlaylistStage'"
 
-- [ ] **Step 3: Implement `ShortsPlaylistStage.tsx`**
+- [x] **Step 3: Implement `ShortsPlaylistStage.tsx`**
 
 In `frontend/src/components/blog/ShortsPlaylistStage.tsx`:
 - Render 2-column layout (Split Stage Focus - Layout A):
@@ -169,12 +169,12 @@ In `frontend/src/components/blog/ShortsPlaylistStage.tsx`:
   - Bottom: Mini Playlist Rail with thumbnail images (`https://img.youtube.com/vi/${short.videoId}/mqdefault.jpg`) and active outline indicator.
   - Support keyboard listener for `ArrowLeft` and `ArrowRight` when focus is not inside an input.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/components/blog/ShortsPlaylistStage.test.tsx`
 Expected: PASS (all 3 tests pass)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/components/blog/ShortsPlaylistStage.tsx frontend/src/components/blog/ShortsPlaylistStage.test.tsx
@@ -193,7 +193,7 @@ git commit -m "feat(blog): implement ShortsPlaylistStage component for Layout A"
 - Consumes: `BlogPost` from `blogData.ts`, `ShortsPlaylistStage` from `ShortsPlaylistStage.tsx`, `parseShortsPlaylist` from `youtubeUtils.ts`.
 - Produces: Blog detail page dynamically rendering `ShortsPlaylistStage` when `post.postType === 'shorts_playlist'`.
 
-- [ ] **Step 1: Write the failing test for blog detail shorts playlist rendering**
+- [x] **Step 1: Write the failing test for blog detail shorts playlist rendering**
 
 ```tsx
 // frontend/src/app/(main)/blog/[slug]/page.test.tsx
@@ -238,12 +238,12 @@ describe('BlogDetailPage with shorts_playlist', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/app/(main)/blog/[slug]/page.test.tsx`
 Expected: FAIL (renders standard article body instead of Shorts stage)
 
-- [ ] **Step 3: Update `frontend/src/app/(main)/blog/[slug]/page.tsx`**
+- [x] **Step 3: Update `frontend/src/app/(main)/blog/[slug]/page.tsx`**
 
 In `page.tsx`:
 - Import `ShortsPlaylistStage` and `parseShortsPlaylist`.
@@ -252,12 +252,12 @@ In `page.tsx`:
   - Render `<ShortsPlaylistStage shorts={shorts} postTitle={post.title} authorName={post.author.name} />` directly under the article header/author bar.
 - Else: keep standard `MathText content={post.content}`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/app/(main)/blog/[slug]/page.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/app/(main)/blog/[slug]/page.tsx frontend/src/app/(main)/blog/[slug]/page.test.tsx
@@ -276,7 +276,7 @@ git commit -m "feat(blog): integrate shorts_playlist rendering into blog detail 
 - Consumes: `BlogPostType`, `ShortItem`, `extractYouTubeVideoId`, `ShortsPlaylistStage`
 - Produces: Form supporting `postType` toggle, dynamic ShortItem cards (YouTube URL, title, notes editor), preview mode, and JSON serialization.
 
-- [ ] **Step 1: Write the failing test for blog create shorts editor**
+- [x] **Step 1: Write the failing test for blog create shorts editor**
 
 ```tsx
 // frontend/src/app/(fullscreen)/dashboard/blog/create/page.test.tsx
@@ -305,12 +305,12 @@ describe('CreateBlogPostPage shorts playlist mode', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/app/(fullscreen)/dashboard/blog/create/page.test.tsx`
 Expected: FAIL with "Unable to find label Playlist Video Shorts"
 
-- [ ] **Step 3: Update `frontend/src/app/(fullscreen)/dashboard/blog/create/page.tsx`**
+- [x] **Step 3: Update `frontend/src/app/(fullscreen)/dashboard/blog/create/page.tsx`**
 
 In `page.tsx`:
 - Add state `postType: BlogPostType = 'standard'`.
@@ -326,12 +326,12 @@ In `page.tsx`:
   - In Preview tab: Render `<ShortsPlaylistStage shorts={validShorts} ... />`.
   - In Edit mode: If existing post has `postType === 'shorts_playlist'`, restore `shortsList` from `existing.playlistData`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/app/(fullscreen)/dashboard/blog/create/page.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/app/(fullscreen)/dashboard/blog/create/page.tsx frontend/src/app/(fullscreen)/dashboard/blog/create/page.test.tsx
@@ -351,7 +351,7 @@ git commit -m "feat(blog): add shorts playlist editor and json serialization in 
 - Consumes: `post.postType`, `parseShortsPlaylist`
 - Produces: Visual badge `Playlist Shorts` on blog card, verified end-to-end.
 
-- [ ] **Step 1: Write the failing test for blog list badge**
+- [x] **Step 1: Write the failing test for blog list badge**
 
 ```tsx
 // frontend/src/app/(main)/blog/page.test.tsx
@@ -369,12 +369,12 @@ describe('BlogListPage with shorts playlist items', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run src/app/(main)/blog/page.test.tsx`
 Expected: FAIL (no "Playlist Shorts" badge)
 
-- [ ] **Step 3: Update `blogData.ts` and `frontend/src/app/(main)/blog/page.tsx`**
+- [x] **Step 3: Update `blogData.ts` and `frontend/src/app/(main)/blog/page.tsx`**
 
 In `frontend/src/data/blogData.ts`:
 - Add 1 sample blog post with `postType: 'shorts_playlist'` and realistic math shorts data (e.g. "Tuyển tập 5 mẹo bấm máy Casio fx-580VNX tính tích phân và cực trị") so users can immediately test the feature.
@@ -383,17 +383,17 @@ In `frontend/src/app/(main)/blog/page.tsx`:
 - In the blog card item rendering, check `post.postType === 'shorts_playlist'`:
   - Show a badge `<span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 font-bold text-[10px] flex items-center gap-1"><Play className="w-3 h-3 fill-purple-600" /> Playlist Shorts</span>`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run src/app/(main)/blog/page.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Run full verification loop**
+- [x] **Step 5: Run full verification loop**
 
 Run: `npx tsc --noEmit` and `npx vitest run` across the new test files.
 Expected: Zero type errors, all tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/data/blogData.ts frontend/src/app/(main)/blog/page.tsx frontend/src/app/(main)/blog/page.test.tsx
