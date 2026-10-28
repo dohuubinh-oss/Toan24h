@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phác thảo giao diện: Playlist Shorts Toán học - toan6789.vn</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Playfair+Display:ital@1&display=swap');
+
+    :root {
+      --m-primary: #2563EB;
+      --m-primary-hover: #1D4ED8;
+      --m-primary-container: rgba(37, 99, 235, 0.08);
+      --m-surface: #F8FAFC;
+      --m-canvas: #FFFFFF;
+      --m-border: rgba(226, 232, 240, 0.8);
+      --m-text-main: #0F172A;
+      --m-text-muted: #64748B;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lexend', sans-serif;
+      background: #F1F5F9;
+      color: var(--m-text-main);
+      padding: 2rem 1rem;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .brainstorm-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .math-font {
+      font-family: 'Times New Roman', serif;
+      font-style: italic;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .options-grid { grid-template-columns: 1fr; }
+    }
+
+    .layout-choice-card {
+      background: var(--m-canvas);
+      border: 2px solid var(--m-border);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .layout-choice-card:hover {
+      border-color: rgba(37, 99, 235, 0.4);
+      box-shadow: 0 8px 16px -4px rgba(37, 99, 235, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .layout-choice-card.selected {
+      border-color: var(--m-primary);
+      background: #EFF6FF;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .badge-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--m-primary-container);
+      color: var(--m-primary);
+      margin-bottom: 0.5rem;
+      width: fit-content;
+    }
+
+    .choice-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      color: #1E293B;
+    }
+
+    .choice-desc {
+      font-size: 13px;
+      color: var(--m-text-muted);
+      line-height: 1.45;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Preview Canvas Area */
+    .preview-wrapper {
+      background: white;
+      border: 1px solid var(--m-border);
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .preview-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px dashed #CBD5E1;
+    }
+
+    /* Mock Player UI */
+    .theater-container {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 1.75rem;
+      background: var(--m-surface);
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      border: 1px solid var(--m-border);
+    }
+
+    @media (max-width: 860px) {
+      .theater-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* 9:16 Shorts Mock Frame */
+    .shorts-phone-frame {
+      width: 100%;
+      max-width: 340px;
+      aspect-ratio: 9/16;
+      background: #090D16;
+      border-radius: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.4);
+      border: 4px solid #1E293B;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      margin: 0 auto;
+    }
+
+    .shorts-top-bar {
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 2;
+    }
+
+    .shorts-center-play {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      background: radial-gradient(circle at center, rgba(37,99,235,0.25) 0%, rgba(9,13,22,0.9) 100%);
+    }
+
+    .play-icon-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .play-icon-circle:hover {
+      transform: scale(1.1);
+      background: var(--m-primary);
+    }
+
+    .shorts-bottom-overlay {
+      padding: 1.25rem 1rem;
+      background: linear-gradient(to top, rgba(0,0,0,0.95) 15%, rgba(0,0,0,0.6) 65%, transparent);
+      color: white;
+      z-index: 2;
+    }
+
+    .shorts-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      line-height: 1.35;
+    }
+
+    /* Nav Controls */
+    .shorts-nav-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .btn-nav-control {
+      flex: 1;
+      min-height: 44px;
+      border-radius: 0.6rem;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      transition: background 0.2s;
+    }
+    .btn-nav-control:hover {
+      background: var(--m-primary);
+      border-color: var(--m-primary);
+    }
+
+    /* Notes / CheatSheet Column */
+    .notes-column {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      border: 1px solid var(--m-border);
+    }
+
+    .notes-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #E2E8F0;
+      margin-bottom: 1.25rem;
+    }
+
+    .step-box {
+      background: var(--m-surface);
+      border: 1px solid var(--m-border);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      position: relative;
+      border-left: 4px solid var(--m-primary);
+    }
+
+    .formula-highlight {
+      background: #EFF6FF;
+      border: 1px dashed #93C5FD;
+      padding: 0.6rem 0.9rem;
+      border-radius: 0.5rem;
+      color: #1E3A8A;
+      font-size: 15px;
+      margin: 0.5rem 0;
+    }
+
+    /* Mini Playlist Rail */
+    .playlist-rail {
+      display: flex;
+      gap: 0.75rem;
+      overflow-x: auto;
+      padding: 0.5rem 0;
+      margin-top: 1rem;
+    }
+
+    .playlist-item-card {
+      min-width: 140px;
+      background: white;
+      border: 1px solid var(--m-border);
+      border-radius: 0.75rem;
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .playlist-item-card.active {
+      border-color: var(--m-primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+      background: #EFF6FF;
+    }
+    .playlist-item-card:hover {
+      border-color: var(--m-primary);
+    }
+
+    .playlist-thumb {
+      width: 100%;
+      aspect-ratio: 9/12;
+      background: #1E293B;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94A3B8;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="brainstorm-wrap">
+  <div style="background: white; padding: 1.75rem; border-radius: 1.25rem; margin-bottom: 1.75rem; border: 1px solid var(--m-border);">
+    <span class="badge-tag">GIAO DIỆN BLOG • VIDEO SHORTS PLAYLIST</span>
+    <h1 style="font-size: 1.75rem; font-weight: 800; color: #0F172A; margin-bottom: 0.5rem;">
+      Thiết kế trang Xem Playlist Shorts Toán học & Ghi chú kiến thức
+    </h1>
+    <p style="color: #64748B; font-size: 14px; max-width: 850px;">
+      Tuân thủ hệ thống thiết kế <strong>Modern Academic (DESIGN.md)</strong>: màu chủ đạo Blue 600 (<code>#2563EB</code>), bề mặt Slate 50 (<code>#F8FAFC</code>), viền M3 Outlined siêu nhẹ và công thức toán học sắc nét.
+    </p>
+  </div>
+
+  <!-- BỘ 3 HƯỚNG BỐ CỤC CHÍNH (CLICK ĐỂ BÌNH CHỌN) -->
+  <div class="options-grid">
+    
+    <!-- OPTION A -->
+    <div class="layout-choice-card selected" id="opt-A" onclick="selectLayout('A')">
+      <div>
+        <div class="badge-tag">PHƯƠNG ÁN A (KHUYÊN DÙNG)</div>
+        <div class="choice-title">1. Rạp học tập (Split Stage Focus)</div>
+        <div class="choice-desc">
+          Khung Short 9:16 bên trái với cụm phím Next/Prev tiện tay. Cột phải là <strong>Sổ tay ghi chú & Công thức nhanh</strong> đồng bộ tự động theo từng video.
+        </div>
+      </div>
+      <div style="font-size: 12px; font-weight: 700; color: #2563EB; display: flex; align-items: center; gap: 4px;">
+        <span>Đang chọn phương án này</span> &darr;
+      </div>
+    </div>
+
+    <!-- OPTION B -->
+    <div class="layout-choice-card" id="opt-B" onclick="selectLayout('B')">
+      <div>
+        <div class="badge-tag" style="background: rgba(16, 185, 129, 0.1); color: #059669;">PHƯƠNG ÁN B</div>
+        <div class="choice-title">2. Feed trung tâm + Drawer ghi chú</div>
+        <div class="choice-desc">
+          Video Short 9:16 chiếm vị trí trung tâm màn hình (chuẩn trải nghiệm Shorts/Reels). Ghi chú công thức trượt ra từ bên phải hoặc bung mở dạng Bottom Sheet.
+        </div>
+      </div>
+      <div style="font-size: 12px; font-weight: 700; color: #64748B;">
+        Bấm để xem thử bố cục này &rarr;
+      </div>
+    </div>
+
+    <!-- OPTION C -->
+    <div class="layout-choice-card" id="opt-C" onclick="selectLayout('C')">
+      <div>
+        <div class="badge-tag" style="background: rgba(139, 92, 246, 0.1); color: #7C3AED;">PHƯƠNG ÁN C</div>
+        <div class="choice-title">3. Sticky Shorts + Bài viết Blog dài</div>
+        <div class="choice-desc">
+          Short video trôi cố định (Sticky) bên trái khi cuộn. Cột bên phải là bài viết phân tích chuyên sâu đầy đủ các ví dụ và bài tập trắc nghiệm tự luyện.
+        </div>
+      </div>
+      <div style="font-size: 12px; font-weight: 700; color: #64748B;">
+        Bấm để xem thử bố cục này &rarr;
+      </div>
+    </div>
+
+  </div>
+
+  <!-- VÙNG PREVIEW TƯƠNG TÁC SỐNG ĐỘNG -->
+  <div class="preview-wrapper">
+    <div class="preview-bar">
+      <div>
+        <span style="font-size: 12px; font-weight: 700; color: #2563EB; text-transform: uppercase; letter-spacing: 0.05em;">Bản xem thử tương tác (Live Interactive Mockup)</span>
+        <h3 id="current-layout-label" style="font-size: 1.25rem; font-weight: 800; color: #0F172A; margin-top: 2px;">
+          Bố cục A: Khung Shorts 9:16 + Sổ tay công thức đồng bộ
+        </h3>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <span style="font-size: 13px; background: #F8FAFC; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1; color: #1E293B; font-weight: 700;">
+          Tip <span id="current-index-badge">1</span> / 3
+        </span>
+      </div>
+    </div>
+
+    <!-- THEATER MODE CONTAINER -->
+    <div class="theater-container" id="theater-box">
+      
+      <!-- CỘT 1: SHORTS VIDEO PLAYER -->
+      <div>
+        <div class="shorts-phone-frame">
+          <!-- Top bar -->
+          <div class="shorts-top-bar">
+            <span>TOAN6789 SHORTS</span>
+            <span style="background: rgba(239,68,68,0.9); padding: 2px 6px; border-radius: 4px; font-size: 10px;">TIP NHANH</span>
+          </div>
+
+          <!-- Video center -->
+          <div class="shorts-center-play">
+            <div class="play-icon-circle" onclick="alert('Đang phát video!')">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+            </div>
+            <p style="font-size: 12px; opacity: 0.85; max-width: 220px;" id="mock-video-prompt">Bấm để xem video Short</p>
+          </div>
+
+          <!-- Bottom controls -->
+          <div class="shorts-bottom-overlay">
+            <div class="shorts-title" id="video-title">
+              1. Bấm Casio tính tích phân hàm ẩn trong 15 giây
+            </div>
+            <div style="font-size: 11px; opacity: 0.8; display: flex; align-items: center; gap: 6px;">
+              <span>ThS. Nguyễn Văn An</span> • <span>58 giây</span>
+            </div>
+
+            <!-- Nút điều hướng video -->
+            <div class="shorts-nav-bar">
+              <button class="btn-nav-control" onclick="navigateVideo(-1)" title="Video trước">
+                &larr; Video trước
+              </button>
+              <button class="btn-nav-control" style="background: var(--m-primary);" onclick="navigateVideo(1)" title="Video tiếp theo">
+                Tiếp theo &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CỘT 2: GHI CHÚ BÀI HỌC & CÔNG THỨC ĐỒNG BỘ -->
+      <div class="notes-column">
+        <div>
+          <div class="notes-card-header">
+            <div>
+              <span class="badge-tag">GHI CHÚ BÀI HỌC (ĐỒNG BỘ THEO VIDEO)</span>
+              <h3 id="notes-heading" style="font-size: 1.25rem; font-weight: 800; color: #1E293B; margin-top: 4px;">
+                Mẹo 1: Kỹ thuật chọn hàm Casio fx-580VN
+              </h3>
+            </div>
+            <button onclick="alert('Đã lưu công thức vào sổ tay cá nhân!')" style="background: white; border: 1px solid var(--m-border); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; color: #475569; cursor: pointer; min-height: 40px;">
+              Lưu sổ tay
+            </button>
+          </div>
+
+          <!-- Nội dung tóm tắt & Công thức -->
+          <div id="notes-content-body">
+            <div class="step-box">
+              <strong style="color: #2563EB; font-size: 13px;">BƯỚC 1: NHẬN DIỆN DẠNG BÀI</strong>
+              <p style="font-size: 14px; margin-top: 4px; color: #334155;">
+                Cho <span class="math-font">&int;<sub>0</sub><sup>1</sup> f(x)dx = 5</span>. Tính tích phân biến đổi lượng giác:
+              </p>
+              <div class="formula-highlight math-font">
+                I = &int;<sub>0</sub><sup>&pi;/2</sup> f(sin x) &middot; cos x dx
+              </div>
+            </div>
+
+            <div class="step-box" style="border-left-color: #10B981;">
+              <strong style="color: #059669; font-size: 13px;">BƯỚC 2: BẤM MÁY TRONG 15S</strong>
+              <p style="font-size: 13px; margin-top: 4px; color: #334155;">
+                Đặt <span class="math-font">f(x) = 5</span> (hằng số thỏa mãn tích phân). Bấm trực tiếp tích phân đề bài yêu cầu: kết quả ngay lập tức bằng <strong>5</strong>.
+              </p>
+            </div>
+
+            <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #92400E;">
+              <strong>Lưu ý quan trọng:</strong> Luôn đổi đơn vị góc máy tính về Radian (<code>Shift</code> + <code>Menu</code> + <code>2</code> + <code>2</code>) trước khi bấm các hàm lượng giác!
+            </div>
+          </div>
+        </div>
+
+        <!-- Action cuối card -->
+        <div style="display: flex; gap: 10px; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #E2E8F0;">
+          <button style="flex: 1; min-height: 44px; border-radius: 8px; background: var(--m-primary); color: white; border: none; font-weight: 700; font-size: 13px; cursor: pointer;" onclick="alert('Chuyển tới bài tập tự luyện của mẹo này')">
+            Luyện tập 3 câu tương tự &rarr;
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MINI PLAYLIST BAR BÊN DƯỚI -->
+    <div style="margin-top: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span style="font-size: 13px; font-weight: 700; color: #334155;">Danh sách video trong chuyên đề này (3 video Shorts)</span>
+        <span style="font-size: 12px; color: #64748B;">Bấm vào thẻ để chuyển nhanh</span>
+      </div>
+
+      <div class="playlist-rail">
+        <div class="playlist-item-card active" id="thumb-0" onclick="setVideoIndex(0)">
+          <div class="playlist-thumb">SHORT #1</div>
+          <div style="font-size: 12px; font-weight: 700; color: #1E293B; line-clamp: 1;">Tích phân hàm ẩn</div>
+          <div style="font-size: 11px; color: #64748B;">0:58</div>
+        </div>
+
+        <div class="playlist-item-card" id="thumb-1" onclick="setVideoIndex(1)">
+          <div class="playlist-thumb">SHORT #2</div>
+          <div style="font-size: 12px; font-weight: 700; color: #1E293B; line-clamp: 1;">Cực trị hàm số bậc 3</div>
+          <div style="font-size: 11px; color: #64748B;">0:45</div>
+        </div>
+
+        <div class="playlist-item-card" id="thumb-2" onclick="setVideoIndex(2)">
+          <div class="playlist-thumb">SHORT #3</div>
+          <div style="font-size: 12px; font-weight: 700; color: #1E293B; line-clamp: 1;">Khoảng cách trong không gian</div>
+          <div style="font-size: 11px; color: #64748B;">0:55</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const videoData = [
+    {
+      title: "1. Bấm Casio tính tích phân hàm ẩn trong 15 giây",
+      author: "ThS. Nguyễn Văn An",
+      duration: "58 giây",
+      heading: "Mẹo 1: Kỹ thuật chọn hàm Casio fx-580VN",
+      b1: "Cho f(x) liên tục thỏa mãn ∫₀¹ f(x)dx = 5. Tính I = ∫₀^(π/2) f(sin x)·cos x dx",
+      formula: "I = ∫₀^(π/2) f(sin x) · cos x dx = 5",
+      b2: "Chọn hàm đơn giản nhất f(x) = 5. Bấm tích phân xác định trong chế độ Radian.",
+      note: "Luôn đổi đơn vị góc máy tính về Radian (Shift + Menu + 2 + 2)!"
+    },
+    {
+      title: "2. Tìm cực trị hàm bậc 3 không cần tính đạo hàm y'",
+      author: "ThS. Lê Hoàng Minh",
+      duration: "45 giây",
+      heading: "Mẹo 2: Công thức giải nhanh đường thẳng đi qua 2 cực trị",
+      b1: "Hàm số bậc ba: y = ax³ + bx² + cx + d có 2 điểm cực trị x₁, x₂.",
+      formula: "y = (2c/3 - 2b²/9a)x + (d - bc/9a)",
+      b2: "Nhập lệnh Menu 9-2-3 trên fx-580VNX để đọc ngay tọa độ cực đại và cực tiểu trong 5 giây.",
+      note: "Áp dụng được cho 100% các câu hỏi viết phương trình đường thẳng qua 2 cực trị."
+    },
+    {
+      title: "3. Tính góc giữa 2 mặt phẳng bằng phương pháp tọa độ hóa",
+      author: "Cô Trần Thu Trang",
+      duration: "55 giây",
+      heading: "Mẹo 3: Gắn hệ trục tọa độ Oxyz cho hình lăng trụ",
+      b1: "Xác định gốc tọa độ O tại đỉnh có 3 góc vuông hoặc chân đường cao hình chóp.",
+      formula: "cos(α) = |n₁ · n₂| / (|n₁| · |n₂|)",
+      b2: "Bấm VECTƠ trên Casio để tích vô hướng và độ dài được tính tự động, không lo nhầm dấu.",
+      note: "Đặc biệt hiệu quả với các bài toán hình học không gian mức độ vận dụng."
+    }
+  ];
+
+  let currentIdx = 0;
+
+  function updateVideoUI() {
+    const item = videoData[currentIdx];
+    document.getElementById('current-index-badge').innerText = currentIdx + 1;
+    document.getElementById('video-title').innerText = item.title;
+    document.getElementById('notes-heading').innerText = item.heading;
+    document.getElementById('mock-video-prompt').innerText = "Đang mở: " + item.title;
+
+    document.getElementById('notes-content-body').innerHTML = `
+      <div class="step-box">
+        <strong style="color: #2563EB; font-size: 13px;">BƯỚC 1: DẠNG TOÁN & ĐỀ BÀI</strong>
+        <p style="font-size: 14px; margin-top: 4px; color: #334155;">${item.b1}</p>
+        <div class="formula-highlight math-font">${item.formula}</div>
+      </div>
+      <div class="step-box" style="border-left-color: #10B981;">
+        <strong style="color: #059669; font-size: 13px;">BƯỚC 2: MẸO BẤM MÁY & CÔNG THỨC RÚT GỌN</strong>
+        <p style="font-size: 13px; margin-top: 4px; color: #334155;">${item.b2}</p>
+      </div>
+      <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #92400E;">
+        <strong>Lưu ý:</strong> ${item.note}
+      </div>
+    `;
+
+    for (let i = 0; i < 3; i++) {
+      const el = document.getElementById('thumb-' + i);
+      if (el) {
+        if (i === currentIdx) el.classList.add('active');
+        else el.classList.remove('active');
+      }
+    }
+  }
+
+  function navigateVideo(direction) {
+    currentIdx = (currentIdx + direction + videoData.length) % videoData.length;
+    updateVideoUI();
+  }
+
+  function setVideoIndex(idx) {
+    currentIdx = idx;
+    updateVideoUI();
+  }
+
+  function selectLayout(choice) {
+    document.querySelectorAll('.layout-choice-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('opt-' + choice).classList.add('selected');
+
+    const labelEl = document.getElementById('current-layout-label');
+    const theaterBox = document.getElementById('theater-box');
+
+    if (choice === 'A') {
+      labelEl.innerText = "Bố cục A: Rạp học tập (Split Stage) - Khung 9:16 bên trái & Sổ tay công thức bên phải";
+      theaterBox.style.gridTemplateColumns = "340px 1fr";
+    } else if (choice === 'B') {
+      labelEl.innerText = "Bố cục B: Feed trung tâm (Shorts Focus) - Video ở giữa, ghi chú dạng trượt";
+      theaterBox.style.gridTemplateColumns = "1fr 1fr";
+    } else if (choice === 'C') {
+      labelEl.innerText = "Bố cục C: Sticky Shorts + Bài giảng cuộn dài phía dưới";
+      theaterBox.style.gridTemplateColumns = "320px 1fr";
+    }
+  }
+</script>
+
+</body>
+</html>

@@ -38,10 +38,12 @@ Thumbs.db
 .claude/
 .gemini/
 .archify/
+.superpowers/
 
 # Docs and Examples
 docs/*
 !docs/superpowers/
+!docs/toan6789-architecture.*
 fileExample/
 fileExamples/
 

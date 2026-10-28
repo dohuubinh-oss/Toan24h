@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1020 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="toan6789-arch-title toan6789-arch-desc" id="toan6789-architecture-root">
+        <title id="toan6789-arch-title">Sơ đồ Kiến trúc Hệ thống toan6789.vn</title>
+        <desc id="toan6789-arch-desc">Sơ đồ luồng dữ liệu và phân tầng giữa Client, Next.js Frontend, YouTube Shorts Player, Nginx Gateway, Go Fiber API, Gemini AI Pool, PostgreSQL và Redis.</desc>
+        <defs>
+      <style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;family=Noto+Sans+TC:wght@400;500;600&amp;family=Noto+Serif+TC:wght@400&amp;display=swap');
+      #toan6789-architecture-root { --color-paper: #f5f5f5;
+      --color-paper-2: #ececec;
+      --color-ink: #2d3142;
+      --color-muted: #4f5d75;
+      --color-soft: #5a6580;
+      --color-rule: rgba(45,49,66,0.12);
+      --color-accent: #bf4520;
+      --color-accent-tint: rgba(191,69,32,0.08);
+      --color-link: #2e5aa8;
+      --font-sans: 'Geist', system-ui, sans-serif;
+      --font-serif: 'Instrument Serif', serif;
+      --font-mono: 'Geist Mono', ui-monospace, monospace; }
+      @media (prefers-color-scheme: dark) {
+#toan6789-architecture-root { --color-paper: #1f2330;
+        --color-paper-2: #282c3c;
+        --color-ink: #f5f5f5;
+        --color-muted: #bfc0c0;
+        --color-soft: #949eb2;
+        --color-rule: rgba(245,245,245,0.12);
+        --color-accent: #f08a59;
+        --color-accent-tint: rgba(240,138,89,0.12);
+        --color-link: #739fdf; }
+}
+      #toan6789-architecture-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #toan6789-architecture-root .container { max-width: 1200px; margin: 0 auto; }
+      #toan6789-architecture-root .header-eyebrow { font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.75rem; }
+      #toan6789-architecture-root .subtitle { font-size: 1rem;
+      line-height: 1.55;
+      color: var(--color-muted);
+      max-width: 68ch; }
+      #toan6789-architecture-root .diagram-container { background: var(--color-paper-2);
+      border-radius: 8px;
+      border: 1px solid var(--color-rule);
+      padding: 1.5rem;
+      overflow-x: auto;
+      max-width: 100%; }
+      @media print {
+#toan6789-architecture-root .diagram-container { overflow-x: visible; }
+}
+      #toan6789-architecture-root .card-header { display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.875rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--color-rule); }
+      #toan6789-architecture-root .card-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+      #toan6789-architecture-root .card-dot.coral { background: var(--color-accent); }
+      #toan6789-architecture-root .card-dot.ink { background: var(--color-ink); }
+      #toan6789-architecture-root .card-dot.muted { background: var(--color-muted); }</style>
+          <pattern id="toan6789-architecture-grid-dots" width="22" height="22" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.85" fill="#2d3142" fill-opacity="0.08"/>
+          </pattern>
+          <marker id="toan6789-architecture-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="toan6789-architecture-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+          <marker id="toan6789-architecture-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+
+        <!-- Canvas Background -->
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+        <rect width="100%" height="100%" fill="url(#toan6789-architecture-grid-dots)" opacity="0.6"/>
+
+        <!-- ==================== TIER ZONES (Z-ORDER: 1) ==================== -->
+        <!-- Zone 1: Client & Frontend -->
+        <rect x="40" y="100" width="270" height="350" rx="8"
+              fill="#2d3142" stroke="#2d3142" stroke-width="0.8" fill-opacity="0.02" stroke-opacity="0.10"/>
+        <rect x="95" y="104" width="160" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="175" y="113" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.14em">CLIENT &amp; PRESENTATION</text>
+
+        <!-- Zone 2: Application Tier -->
+        <rect x="350" y="100" width="310" height="350" rx="8"
+              fill="#2d3142" stroke="#2d3142" stroke-width="0.8" fill-opacity="0.02" stroke-opacity="0.10"/>
+        <rect x="420" y="104" width="170" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="505" y="113" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.14em">CORE APPLICATION TIER</text>
+
+        <!-- Zone 3: Persistence & Cloud -->
+        <rect x="700" y="100" width="280" height="350" rx="8"
+              fill="#2d3142" stroke="#2d3142" stroke-width="0.8" fill-opacity="0.02" stroke-opacity="0.10"/>
+        <rect x="760" y="104" width="160" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="840" y="113" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace"
+              text-anchor="middle" letter-spacing="0.14em">DATA &amp; EXTERNAL CLOUD</text>
+
+        <!-- ==================== CONNECTORS (Z-ORDER: 2) ==================== -->
+        <!-- 1. Client -> Nginx Gateway (HTTPS) -->
+        <line x1="280" y1="169" x2="400" y2="169" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#toan6789-architecture-arrow-link)"/>
+        <rect x="306" y="163" width="68" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="340" y="172" fill="#2e5aa8" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HTTPS / TLS</text>
+
+        <!-- 2. Nginx -> Go Fiber (Reverse Proxy API) -->
+        <line x1="505" y1="202" x2="505" y2="236" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#toan6789-architecture-arrow)"/>
+        <rect x="450" y="213" width="110" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="505" y="222" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PROXY PASS :8080</text>
+
+        <!-- 3. Nginx -> Next.js SSR (Web traffic proxy) -->
+        <path d="M 400,185 H 336 Q 328,185 328,193 V 242 Q 328,250 320,250 H 280"
+              fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#toan6789-architecture-arrow)"/>
+        <rect x="306" y="210" width="44" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="328" y="219" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">:3000</text>
+
+        <!-- 4. Next.js -> Go Fiber (REST API client fetch) -->
+        <line x1="280" y1="269" x2="400" y2="269" stroke="#bf4520" stroke-width="1.4" marker-end="url(#toan6789-architecture-arrow-accent)"/>
+        <rect x="300" y="263" width="80" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="340" y="272" fill="#bf4520" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">REST API / JSON</text>
+
+        <!-- 5. Next.js -> Shorts Player (DOM / State) -->
+        <line x1="175" y1="302" x2="175" y2="336" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#toan6789-architecture-arrow)"/>
+        <rect x="130" y="313" width="90" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="175" y="322" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">UI STATE &amp; PROPS</text>
+
+        <!-- 6. Go Fiber -> Redis Cache (Auth & Cache) -->
+        <path d="M 610,252 H 664 Q 672,252 672,244 V 177 Q 672,169 680,169 H 735"
+              fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#toan6789-architecture-arrow)"/>
+        <rect x="632" y="204" width="80" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="672" y="213" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CACHE &amp; AUTH</text>
+
+        <!-- 7. Go Fiber -> PostgreSQL (GORM / SQL persistence) -->
+        <line x1="610" y1="269" x2="735" y2="269" stroke="#bf4520" stroke-width="1.4" marker-end="url(#toan6789-architecture-arrow-accent)"/>
+        <rect x="640" y="263" width="64" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="672" y="272" fill="#bf4520" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SQL / GORM</text>
+
+        <!-- 8. Go Fiber -> Gemini AI Pool (Dispatch AI generation) -->
+        <line x1="505" y1="302" x2="505" y2="336" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#toan6789-architecture-arrow)"/>
+        <rect x="446" y="313" width="118" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="505" y="322" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DISPATCH WORKER</text>
+
+        <!-- 9. Gemini AI Pool -> Google Cloud (Gemini REST API) -->
+        <line x1="610" y1="369" x2="735" y2="369" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#toan6789-architecture-arrow-link)"/>
+        <rect x="622" y="363" width="100" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="672" y="372" fill="#2e5aa8" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GEMINI REST API</text>
+
+        <!-- 10. YouTube CDN -> Shorts Player (Video Stream Underpass) -->
+        <path d="M 840,402 V 416 Q 840,424 832,424 H 183 Q 175,424 175,416 V 402"
+              fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#toan6789-architecture-arrow)"/>
+        <rect x="385" y="418" width="240" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="505" y="427" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HLS / MP4 VIDEO STREAM (Direct to player)</text>
+
+        <!-- ==================== NODES (Z-ORDER: 3) ==================== -->
+        <!-- Node 1.1: Web & Mobile Client -->
+        <rect x="70" y="136" width="210" height="66" rx="6" fill="#f5f5f5"/>
+        <rect x="70" y="136" width="210" height="66" rx="6" fill="#4f5d75" stroke="#5a6580" stroke-width="1" fill-opacity="0.08"/>
+        <rect x="78" y="144" width="38" height="12" rx="2" fill="none" stroke="#5a6580" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="97" y="153" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CLIENT</text>
+        <text x="268" y="188" fill="#2d3142" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end" fill-opacity="0.06">01</text>
+        <text x="175" y="168" fill="#2d3142" font-size="11.5" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Trình duyệt &amp; Mobile</text>
+        <text x="175" y="184" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">Học sinh · Giáo viên · Khách</text>
+
+        <!-- Node 1.2: Next.js 15 Frontend -->
+        <rect x="70" y="236" width="210" height="66" rx="6" fill="#f5f5f5"/>
+        <rect x="70" y="236" width="210" height="66" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="78" y="244" width="36" height="12" rx="2" fill="none" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="96" y="253" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">FRONT</text>
+        <text x="268" y="288" fill="#2d3142" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end" fill-opacity="0.06">02</text>
+        <text x="175" y="268" fill="#2d3142" font-size="11.5" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Next.js 15 App Router</text>
+        <text x="175" y="284" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">SSR · React 19 · Tailwind CSS</text>
+
+        <!-- Node 1.3: YouTube Shorts Player & MathText -->
+        <rect x="70" y="336" width="210" height="66" rx="6" fill="#f5f5f5"/>
+        <rect x="70" y="336" width="210" height="66" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="78" y="344" width="36" height="12" rx="2" fill="none" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="96" y="353" fill="#2d3142" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">MEDIA</text>
+        <text x="268" y="388" fill="#2d3142" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end" fill-opacity="0.06">03</text>
+        <text x="175" y="368" fill="#2d3142" font-size="11.5" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Shorts Player &amp; KaTeX</text>
+        <text x="175" y="384" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">Vertical Feed · MathText Notes</text>
+
+        <!-- Node 2.1: Nginx Reverse Proxy -->
+        <rect x="400" y="136" width="210" height="66" rx="6" fill="#f5f5f5"/>
+        <rect x="400" y="136" width="210" height="66" rx="6" fill="#2d3142" stroke="#2d3142" stroke-width="1" fill-opacity="0.04" stroke-opacity="0.35"/>
+        <rect x="408" y="144" width="38" height="12" rx="2" fill="none" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.30"/>
+        <text x="427" y="153" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GATEWAY</text>
+        <text x="598" y="188" fill="#2d3142" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end" fill-opacity="0.06">04</text>
+        <text x="505" y="168" fill="#2d3142" font-size="11.5" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Nginx Reverse Proxy</text>
+        <text x="505" y="184" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">SSL Term · Rate Limit · Router</text>
+
+        <!-- Node 2.2: Go Fiber API (FOCAL CORAL NODE) -->
+        <rect x="400" y="236" width="210" height="66" rx="6" fill="#f5f5f5"/>
+        <rect x="400" y="236" width="210" height="66" rx="6" fill="#bf4520" stroke="#bf4520" stroke-width="1.2" fill-opacity="0.08"/>
+        <rect x="408" y="244" width="32" height="12" rx="2" fill="none" stroke="#bf4520" stroke-width="0.8" stroke-opacity="0.50"/>
+        <text x="424" y="253" fill="#bf4520" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CORE</text>
+        <text x="598" y="288" fill="#bf4520" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end" fill-opacity="0.12">05</text>
+        <text x="505" y="268" fill="#2d3142" font-size="11.5" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Go Fiber Backend API</text>
+        <text x="505" y="284" fill="#bf4520" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">JWT · Exam CRUD · Playlist Service</text>
+
+        <!-- Node 2.3: Gemini AI Pool -->
+        <rect x="400" y="336" width="210" height="66" rx="6" fill="#f5f5f5"/>
+        <rect x="400" y="336" width="210" height="66" rx="6" fill="#2d3142" stroke="#2d3142" stroke-width="1" fill-opacity="0.04" stroke-opacity="0.35"/>
+        <rect x="408" y="344" width="36" height="12" rx="2" fill="none" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.30"/>
+        <text x="426" y="353" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">AI POOL</text>
+        <text x="598" y="388" fill="#2d3142" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end" fill-opacity="0.06">06</text>
+        <text x="505" y="368" fill="#2d3142" font-size="11.5" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Gemini AI Engine Pool</text>
+        <text x="505" y="384" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">Multi-key Pool · LaTeX Parser</text>
+
+        <!-- Node 3.1: Redis Cache -->
+        <rect x="735" y="136" width="210" height="66" rx="6" fill="#f5f5f5"/>
+        <rect x="735" y="136" width="210" height="66" rx="6" fill="#2d3142" stroke="#4f5d75" stroke-width="1" fill-opacity="0.05"/>
+        <rect x="743" y="144" width="36" height="12" rx="2" fill="none" stroke="#4f5d75" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="761" y="153" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CACHE</text>
+        <text x="933" y="188" fill="#2d3142" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end" fill-opacity="0.06">07</text>
+        <text x="840" y="168" fill="#2d3142" font-size="11.5" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Redis In-Memory</text>
+        <text x="840" y="184" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">Token Blacklist · Feed Cache</text>
+
+        <!-- Node 3.2: PostgreSQL Database -->
+        <rect x="735" y="236" width="210" height="66" rx="6" fill="#f5f5f5"/>
+        <rect x="735" y="236" width="210" height="66" rx="6" fill="#2d3142" stroke="#4f5d75" stroke-width="1" fill-opacity="0.05"/>
+        <rect x="743" y="244" width="30" height="12" rx="2" fill="none" stroke="#4f5d75" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="758" y="253" fill="#4f5d75" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">RDBMS</text>
+        <text x="933" y="288" fill="#2d3142" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end" fill-opacity="0.06">08</text>
+        <text x="840" y="268" fill="#2d3142" font-size="11.5" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">PostgreSQL 16</text>
+        <text x="840" y="284" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">Users · Exams · Questions · Blogs</text>
+
+        <!-- Node 3.3: YouTube & Google Cloud -->
+        <rect x="735" y="336" width="210" height="66" rx="6" fill="#f5f5f5"/>
+        <rect x="735" y="336" width="210" height="66" rx="6" fill="#2e5aa8" stroke="#2e5aa8" stroke-width="1" fill-opacity="0.08"/>
+        <rect x="743" y="344" width="36" height="12" rx="2" fill="none" stroke="#2e5aa8" stroke-width="0.8" stroke-opacity="0.40"/>
+        <text x="761" y="353" fill="#2e5aa8" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CLOUD</text>
+        <text x="933" y="388" fill="#2e5aa8" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end" fill-opacity="0.08">09</text>
+        <text x="840" y="368" fill="#2d3142" font-size="11.5" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">YouTube CDN &amp; Google AI</text>
+        <text x="840" y="384" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">Media CDN · Gemini API Endpoints</text>
+
+        <!-- ==================== LEGEND STRIP ==================== -->
+        <line x1="40" y1="465" x2="980" y2="465" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.10"/>
+        <text x="40" y="482" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.18em">CHÚ THÍCH</text>
+
+        <!-- Legend Items -->
+        <rect x="40" y="496" width="14" height="10" rx="2" fill="#bf4520" stroke="#bf4520" stroke-width="1" fill-opacity="0.08"/>
+        <text x="60" y="504" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Focal / Go Fiber Core</text>
+
+        <rect x="195" y="496" width="14" height="10" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="215" y="504" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">App &amp; Frontend</text>
+
+        <rect x="330" y="496" width="14" height="10" rx="2" fill="#2d3142" stroke="#4f5d75" stroke-width="1" fill-opacity="0.05"/>
+        <text x="350" y="504" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Lưu trữ &amp; Cache</text>
+
+        <rect x="465" y="496" width="14" height="10" rx="2" fill="#2e5aa8" stroke="#2e5aa8" stroke-width="1" fill-opacity="0.08"/>
+        <text x="485" y="504" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Dịch vụ Cloud</text>
+
+        <line x1="595" y1="501" x2="623" y2="501" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#toan6789-architecture-arrow-link)"/>
+        <text x="631" y="504" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">HTTPS / External</text>
+
+        <line x1="745" y1="501" x2="773" y2="501" stroke="#bf4520" stroke-width="1.4" marker-end="url(#toan6789-architecture-arrow-accent)"/>
+        <text x="781" y="504" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Luồng dữ liệu chính</text>
+
+        <line x1="885" y1="501" x2="913" y2="501" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#toan6789-architecture-arrow)"/>
+        <text x="921" y="504" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Stream / Async</text>
+      </svg>
