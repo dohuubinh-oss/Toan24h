@@ -103,6 +103,7 @@ export function LectureCard({
 }
 
 export interface PracticeLectureCardProps {
+  id?: string;
   title: string;
   grade: string;
   chapter?: string;
@@ -112,6 +113,7 @@ export interface PracticeLectureCardProps {
 }
 
 export function PracticeLectureCard({
+  id,
   title,
   grade,
   chapter,
@@ -119,7 +121,7 @@ export function PracticeLectureCard({
   href,
   thumbnailUrl,
 }: PracticeLectureCardProps) {
-  const hrefUrl = href || `/practices/lop/${grade}`;
+  const hrefUrl = href || (id ? `/lectures/lop/${grade}/${id}` : `/practices/lop/${grade}`);
 
   return (
     <Link 

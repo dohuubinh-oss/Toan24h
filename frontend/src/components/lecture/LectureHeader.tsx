@@ -21,9 +21,10 @@ interface LectureHeaderProps {
   id?: string;
   author?: LectureAuthor;
   gg_link?: string;
+  practiceIds?: string;
 }
 
-export default function LectureHeader({ initialBookmarked = false, title, grade, category, createdAt, id, author, gg_link }: LectureHeaderProps) {
+export default function LectureHeader({ initialBookmarked = false, title, grade, category, createdAt, id, author, gg_link, practiceIds }: LectureHeaderProps) {
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -73,9 +74,9 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
     <div className="space-y-8">
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-sm text-slate-500 overflow-x-auto whitespace-nowrap">
-        <a className="hover:text-primary transition-colors" href="#">Trang chủ</a>
+        <Link className="hover:text-primary transition-colors" href="/student">Trang chủ</Link>
         <ChevronRight size={16} />
-        <a className="hover:text-primary transition-colors" href="#">{category}</a>
+        <Link className="hover:text-primary transition-colors" href={`/lectures/lop/${grade}`}>Toán Lớp {grade}</Link>
         <ChevronRight size={16} />
         <span className="text-ink font-medium">{title}</span>
       </nav>
@@ -115,7 +116,7 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
           <div className="flex items-center gap-2">
             {id && (
               <Link 
-                href={`/practices/lop/${grade}?lecture=${id}&lectureName=${encodeURIComponent(title)}`}
+                href={`/practices/lop/${grade}?lecture=${id}&lectureName=${encodeURIComponent(title)}${practiceIds ? `&practiceIds=${encodeURIComponent(practiceIds)}` : ''}`}
                 className="flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] font-bold rounded-lg transition-all border text-sm bg-primary text-white hover:bg-primary/90 border-transparent shadow-sm"
               >
                 <PenTool size={18} />

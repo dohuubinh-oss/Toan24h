@@ -6,7 +6,7 @@ import { getLectureById } from '@/lib/lectureApi'
 import { notFound, redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
-import { PenTool, ArrowLeft } from 'lucide-react'
+import { PenTool, ArrowLeft, BookOpen } from 'lucide-react'
 import LectureAntiCheatTracker from '@/components/lecture/LectureAntiCheatTracker'
 
 export default async function GradeLecturePage({
@@ -77,10 +77,30 @@ export default async function GradeLecturePage({
         id={lecture.id}
         author={lecture.author}
         gg_link={lecture.gg_link}
+        practiceIds={lecture.practiceIds}
       />
 
-      {/* Card Giải thích khái niệm chiếm 100% chiều rộng */}
+      {/* Card Giải thích khái niệm / Tóm tắt nội dung ôn tập */}
       <LectureConcept basicConcept={lecture.basicConcept} />
+
+      {(!lecture.basicConcept && (!examples || examples.length === 0)) && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center text-slate-500 shadow-sm flex flex-col items-center justify-center">
+          <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 text-emerald-600">
+            <BookOpen className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-800">Tóm tắt nội dung ôn tập đang được cập nhật</h3>
+          <p className="text-sm mt-1 mb-6 text-slate-500 max-w-md">
+            Sơ đồ và kiến thức tóm tắt trọng tâm đang được thầy cô hoàn thiện. Bạn có thể bấm vào nút bên dưới để luyện tập và giải đề thi ngay!
+          </p>
+          <Link 
+            href={`/practices/lop/${grade}?lecture=${id}&lectureName=${encodeURIComponent(lecture.title)}${lecture.practiceIds ? `&practiceIds=${encodeURIComponent(lecture.practiceIds)}` : ''}`}
+            className="inline-flex items-center gap-2 px-6 py-3 font-bold rounded-xl text-white bg-primary hover:bg-primary/90 shadow-md transition-all hover:-translate-y-0.5"
+          >
+            <PenTool size={20} />
+            Bắt đầu làm bài thi & Đề ôn
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-12 gap-8">
         <div className="col-span-12 lg:col-span-8 space-y-8">

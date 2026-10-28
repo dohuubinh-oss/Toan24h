@@ -27,7 +27,7 @@ export function LectureConcept({ basicConcept }: LectureConceptProps) {
         <summary className="p-4 bg-white flex flex-wrap items-center justify-between gap-4 cursor-pointer list-none">
           <div className="flex items-center gap-2 px-2 text-primary">
             <BookOpen size={20} />
-            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">1. Giải thích khái niệm</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">1. Tóm tắt lý thuyết & Khái niệm</h2>
           </div>
           <div className="flex items-center gap-2 ml-auto">
             <ChevronDown className="text-slate-400 transition-transform duration-300 group-open:rotate-180" size={20} />

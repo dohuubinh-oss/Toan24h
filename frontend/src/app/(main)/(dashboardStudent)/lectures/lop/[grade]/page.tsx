@@ -122,15 +122,21 @@ export default async function GradeLecturesPage({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {mappedLectures.map((item) => {
           if (item.isPracticeCard) {
-            const practiceUrl = `/practices/lop/${grade}?lecture=${item.id}&lectureName=${encodeURIComponent(item.title)}${item.practiceIds ? `&practiceIds=${encodeURIComponent(item.practiceIds)}` : ''}`
+            let lectureUrl = `/lectures/lop/${grade}/${item.id}`;
+            if (returnUrl) {
+              const params = new URLSearchParams({ returnUrl });
+              if (examId) params.set('examId', examId);
+              lectureUrl += `?${params.toString()}`;
+            }
             return (
               <PracticeLectureCard 
                 key={item.id}
+                id={item.id}
                 grade={grade}
                 title={item.title}
                 chapter={item.chapter}
                 practiceCount={item.practiceCount}
-                href={practiceUrl}
+                href={lectureUrl}
                 thumbnailUrl={item.thumbnailUrl}
               />
             )
