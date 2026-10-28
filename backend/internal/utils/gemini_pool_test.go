@@ -41,6 +41,21 @@ func TestGeminiPool_InitAndErrorClassifier(t *testing.T) {
 		}
 	})
 
+	t.Run("Fallback to comma-separated GEMINI_API_KEY when GEMINI_API_KEYS is empty", func(t *testing.T) {
+		origKey := os.Getenv("GEMINI_API_KEY")
+		defer os.Setenv("GEMINI_API_KEY", origKey)
+
+		os.Setenv("GEMINI_API_KEY", "key_a, key_b , key_c")
+		pool := NewGeminiPoolManager("", 6*time.Hour)
+
+		if len(pool.keys) != 3 {
+			t.Fatalf("Expected 3 fallback keys, got %d", len(pool.keys))
+		}
+		if pool.keys[1].Key != "key_b" {
+			t.Fatalf("Expected 'key_b', got %s", pool.keys[1].Key)
+		}
+	})
+
 	t.Run("IsQuotaError detection", func(t *testing.T) {
 		testCases := []struct {
 			name         string

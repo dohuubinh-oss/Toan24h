@@ -58,11 +58,17 @@ func NewGeminiPoolManager(keysStr string, cooldown time.Duration) *GeminiPoolMan
 		}
 	}
 
-	// Fallback to legacy single key if GEMINI_API_KEYS is not provided
+	// Fallback to legacy single key (or comma-separated keys) if GEMINI_API_KEYS is not provided
 	if len(parsedKeys) == 0 {
 		fallback := strings.TrimSpace(os.Getenv("GEMINI_API_KEY"))
 		if fallback != "" {
-			parsedKeys = append(parsedKeys, fallback)
+			parts := strings.Split(fallback, ",")
+			for _, p := range parts {
+				trimmed := strings.TrimSpace(p)
+				if trimmed != "" {
+					parsedKeys = append(parsedKeys, trimmed)
+				}
+			}
 		}
 	}
 
