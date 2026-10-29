@@ -31,6 +31,10 @@ type User struct {
 	VerificationToken          *string        `gorm:"type:varchar(255);index" json:"-"`
 	VerificationTokenExpiresAt *time.Time     `json:"-"`
 	ExpiresAt    *time.Time     `json:"expiresAt"`
+	ReferralCode            *string        `gorm:"type:varchar(50);uniqueIndex" json:"referralCode,omitempty"`
+	ReferrerID              *uuid.UUID     `gorm:"type:uuid;index" json:"referrerId,omitempty"`
+	CommissionBalance       int64          `gorm:"not null;default:0" json:"commissionBalance"`
+	TotalCommissionReceived int64          `gorm:"not null;default:0" json:"totalCommissionReceived"`
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`

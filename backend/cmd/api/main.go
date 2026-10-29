@@ -48,6 +48,7 @@ func main() {
 		&models.XPTransaction{},
 		&models.Voucher{},
 		&models.VoucherUsage{},
+		&models.CommissionTransaction{},
 	); err != nil {
 		log.Fatalf("Auto Migrate failed: %v", err)
 	}

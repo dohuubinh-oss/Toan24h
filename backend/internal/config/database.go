@@ -44,6 +44,7 @@ func ConnectDB(dsn string) error {
 		&models.Transaction{},
 		&models.Voucher{},
 		&models.VoucherUsage{},
+		&models.CommissionTransaction{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
