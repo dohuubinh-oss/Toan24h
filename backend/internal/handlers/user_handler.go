@@ -192,7 +192,7 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	}
 
 	// Tự động cấp mã referral nếu role là admin, teacher hoặc affiliate mà chưa có mã
-	if user.Role == "admin" || user.Role == "teacher" || user.Role == "affiliate" {
+	if services.IsPartnerRole(user.Role) {
 		if user.ReferralCode == nil || strings.TrimSpace(*user.ReferralCode) == "" {
 			_, _ = services.EnsureUserReferralCode(h.db, &user)
 		}

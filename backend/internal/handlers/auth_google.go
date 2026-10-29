@@ -195,7 +195,9 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 					}
 				}
 
-				_, _ = services.EnsureUserReferralCode(tx, &user)
+				if services.IsPartnerRole(user.Role) {
+					_, _ = services.EnsureUserReferralCode(tx, &user)
+				}
 				return nil
 			})
 

@@ -28,6 +28,16 @@ const (
 	CommissionRateDefault   float32 = 30.0
 )
 
+// IsPartnerRole kiểm tra xem role có phải là đối tác được cấp mã GT và hưởng hoa hồng (admin, teacher, affiliate) hay không
+func IsPartnerRole(role string) bool {
+	switch strings.ToLower(strings.TrimSpace(role)) {
+	case "admin", "teacher", "affiliate":
+		return true
+	default:
+		return false
+	}
+}
+
 // GetCommissionRateByRole trả về tỷ lệ hoa hồng voucher tương ứng theo vai trò người dùng
 func GetCommissionRateByRole(role string) float32 {
 	switch strings.ToLower(strings.TrimSpace(role)) {
@@ -93,6 +103,11 @@ func EnsureUserReferralCode(db *gorm.DB, user *models.User) (*models.Voucher, er
 	}
 	if db == nil {
 		return nil, errors.New("db is required")
+	}
+
+	// Chỉ cấp mã giới thiệu GT... và Voucher đối tác cho admin, teacher, affiliate
+	if !IsPartnerRole(user.Role) {
+		return nil, nil
 	}
 
 	targetCommission := GetCommissionRateByRole(user.Role)

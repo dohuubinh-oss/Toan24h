@@ -165,7 +165,7 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
     await act(async () => {
       fireEvent.click(copyLinkBtn)
     })
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('https://toan6789.vn/register?ref=GT123456')
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(`${window.location.origin}/register?ref=GT123456`)
   })
 
   it('renders correct commission rates for admin (70%) and affiliate (30%)', async () => {

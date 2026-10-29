@@ -59,6 +59,20 @@ func TestReferralCommissionRatesByRole(t *testing.T) {
 	}
 }
 
+func TestIsPartnerRole(t *testing.T) {
+	assert.True(t, services.IsPartnerRole("admin"))
+	assert.True(t, services.IsPartnerRole("Admin"))
+	assert.True(t, services.IsPartnerRole("teacher"))
+	assert.True(t, services.IsPartnerRole("Teacher"))
+	assert.True(t, services.IsPartnerRole("affiliate"))
+	assert.True(t, services.IsPartnerRole("Affiliate"))
+
+	assert.False(t, services.IsPartnerRole("student"))
+	assert.False(t, services.IsPartnerRole("Student"))
+	assert.False(t, services.IsPartnerRole(""))
+	assert.False(t, services.IsPartnerRole("unknown"))
+}
+
 func TestEnsureUserReferralCode_NilUser(t *testing.T) {
 	v, err := services.EnsureUserReferralCode(nil, nil)
 	assert.Error(t, err)
@@ -168,6 +182,24 @@ func TestReferralService_DBLifecycle(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, voucher.Code, voucherUpdated.Code)
 	assert.Equal(t, float32(70.0), voucherUpdated.CommissionPercent)
+
+	// 4.5. Test EnsureUserReferralCode for Student - must NOT generate referral code or voucher
+	student := &models.User{
+		ID:       uuid.New(),
+		Email:    fmt.Sprintf("student_%s@test.com", uuid.New().String()[:8]),
+		FullName: "Student Test",
+		Role:     "student",
+	}
+	require.NoError(t, db.Create(student).Error)
+
+	studentVoucher, err := services.EnsureUserReferralCode(db, student)
+	require.NoError(t, err)
+	assert.Nil(t, studentVoucher, "Student should not get a voucher")
+	assert.Nil(t, student.ReferralCode, "Student should not get a referral code")
+
+	var refetchedStudent models.User
+	require.NoError(t, db.First(&refetchedStudent, "id = ?", student.ID).Error)
+	assert.Nil(t, refetchedStudent.ReferralCode, "DB record should have null referral_code for student")
 
 	// 5. Test MigrateExistingAffiliateCodes
 	adminUser := models.User{

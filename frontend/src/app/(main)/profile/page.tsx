@@ -89,7 +89,8 @@ export default function ProfilePage() {
 
   const handleCopyLink = async () => {
     if (!user?.referralCode) return
-    const link = `https://toan6789.vn/register?ref=${user.referralCode}`
+    const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://toan6789.vn'
+    const link = `${origin}/register?ref=${user.referralCode}`
     try {
       await navigator.clipboard.writeText(link)
       setCopiedLink(true)
