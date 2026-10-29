@@ -27,6 +27,9 @@ type User struct {
 	CurrentStreak  int            `gorm:"not null;default:0" json:"currentStreak"`
 	LastActiveDate *time.Time     `json:"lastActiveDate"`
 	Status         string         `gorm:"type:varchar(50);not null;default:'active'" json:"status"`
+	IsVerified     bool           `gorm:"not null;default:false" json:"isVerified"`
+	VerificationToken          *string        `gorm:"type:varchar(255);index" json:"-"`
+	VerificationTokenExpiresAt *time.Time     `json:"-"`
 	ExpiresAt    *time.Time     `json:"expiresAt"`
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt"`

@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="flow5-title flow5-desc" id="flow-5-payos-payment-root">
+        <title id="flow5-title">Sơ đồ Luồng Thanh toán PayOS VietQR toan6789.vn</title>
+        <desc id="flow5-desc">Sơ đồ Sequence mô tả quy trình tạo mã VietQR, chuyển khoản ngân hàng, xử lý Webhook bất đồng bộ và kích hoạt gói học tập VIP.</desc>
+        <defs>
+      <style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;family=Noto+Sans+TC:wght@400;500;600&amp;family=Noto+Serif+TC:wght@400&amp;display=swap');
+      #flow-5-payos-payment-root { --color-paper: #ffffff;
+      --color-paper-2: #f8fafc;
+      --color-ink: #0f172a;
+      --color-muted: #475569;
+      --color-soft: #64748b;
+      --color-rule: rgba(15, 23, 42, 0.12);
+      --color-rule-solid: #cbd5e1;
+      --color-accent: #2563eb;
+      --color-accent-tint: rgba(37, 99, 235, 0.08);
+      --color-link: #1d4ed8;
+      --color-success: #16a34a;
+      --color-warning: #d97706;
+      --font-sans: 'Lexend', system-ui, sans-serif;
+      --font-serif: 'Lexend', serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace; }
+      @media (prefers-color-scheme: dark) {
+#flow-5-payos-payment-root { --color-paper: #0f172a;
+        --color-paper-2: #1e293b;
+        --color-ink: #f8fafc;
+        --color-muted: #94a3b8;
+        --color-soft: #64748b;
+        --color-rule: rgba(248, 250, 252, 0.12);
+        --color-rule-solid: #334155;
+        --color-accent: #60a5fa;
+        --color-accent-tint: rgba(96, 165, 250, 0.12);
+        --color-link: #93c5fd;
+        --color-success: #4ade80;
+        --color-warning: #fbbf24; }
+}
+      #flow-5-payos-payment-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #flow-5-payos-payment-root .container { max-width: 1200px; margin: 0 auto; }
+      #flow-5-payos-payment-root .header-eyebrow { font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      margin-bottom: 0.5rem; }
+      #flow-5-payos-payment-root .subtitle { font-size: 0.975rem;
+      line-height: 1.55;
+      color: var(--color-muted);
+      max-width: 72ch; }
+      #flow-5-payos-payment-root .diagram-container { background: var(--color-paper-2);
+      border-radius: 10px;
+      border: 1px solid var(--color-rule);
+      padding: 1.5rem;
+      overflow-x: auto;
+      max-width: 100%; }
+      #flow-5-payos-payment-root .card-header { display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--color-rule); }
+      #flow-5-payos-payment-root .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+      #flow-5-payos-payment-root .card-dot.accent { background: var(--color-accent); }
+      #flow-5-payos-payment-root .card-dot.success { background: var(--color-success); }
+      #flow-5-payos-payment-root .card-dot.warning { background: var(--color-warning); }</style>
+          <pattern id="flow-5-payos-payment-grid-dots-5" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.8" fill="#0f172a" fill-opacity="0.08"/>
+          </pattern>
+          <marker id="flow-5-payos-payment-arr-muted-5" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#475569"/>
+          </marker>
+          <marker id="flow-5-payos-payment-arr-link-5" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#1d4ed8"/>
+          </marker>
+          <marker id="flow-5-payos-payment-arr-accent-5" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+          </marker>
+          <marker id="flow-5-payos-payment-arr-success-5" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#16a34a"/>
+          </marker>
+        </defs>
+
+        <!-- Canvas Background -->
+        <rect width="100%" height="100%" fill="#ffffff"/>
+        <rect width="100%" height="100%" fill="url(#flow-5-payos-payment-grid-dots-5)" opacity="0.65"/>
+
+        <!-- Lifelines -->
+        <line x1="90" y1="84" x2="90" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+        <line x1="280" y1="84" x2="280" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+        <line x1="490" y1="84" x2="490" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+        <line x1="700" y1="84" x2="700" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+        <line x1="880" y1="84" x2="880" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+
+        <!-- Activation Bars -->
+        <rect x="86" y="120" width="8" height="430" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+        <rect x="276" y="128" width="8" height="412" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+        <rect x="486" y="136" width="8" height="394" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+        <rect x="696" y="150" width="8" height="270" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+        <rect x="876" y="270" width="8" height="80" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+
+        <!-- Actor Headers -->
+        <!-- Actor 1: Học sinh / Phụ huynh -->
+        <rect x="30" y="32" width="120" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="90" y="52" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">Học sinh / Cha mẹ</text>
+        <text x="90" y="67" fill="#64748b" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">Client Browser</text>
+
+        <!-- Actor 2: Next.js Frontend -->
+        <rect x="216" y="32" width="128" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="280" y="52" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">Next.js Web</text>
+        <text x="280" y="67" fill="#64748b" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">/upgrade · VietQR UI</text>
+
+        <!-- Actor 3: Go Backend API -->
+        <rect x="426" y="32" width="128" height="48" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="490" y="52" fill="#2563eb" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">Go Payment API</text>
+        <text x="490" y="67" fill="#1d4ed8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">/payments · /webhook</text>
+
+        <!-- Actor 4: PayOS Gateway -->
+        <rect x="636" y="32" width="128" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="700" y="52" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">PayOS Gateway</text>
+        <text x="700" y="67" fill="#64748b" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">VietQR Open API</text>
+
+        <!-- Actor 5: Banking App -->
+        <rect x="816" y="32" width="128" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="880" y="52" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">App Ngân hàng</text>
+        <text x="880" y="67" fill="#64748b" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">Napas 24/7 Mobile</text>
+
+        <!-- Step 1: Chọn gói và yêu cầu thanh toán -->
+        <line x1="94" y1="136" x2="276" y2="136" stroke="#1d4ed8" stroke-width="1.2" marker-end="url(#flow-5-payos-payment-arr-link-5)"/>
+        <rect x="132" y="123" width="108" height="15" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="0.8" stroke-opacity="0.08"/>
+        <text x="186" y="134" fill="#1d4ed8" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">Chọn gói VIP (1, 3, 6, 12th)</text>
+
+        <!-- Step 2: Next.js gọi Go Backend tạo đơn -->
+        <line x1="284" y1="154" x2="486" y2="154" stroke="#475569" stroke-width="1.2" marker-end="url(#flow-5-payos-payment-arr-muted-5)"/>
+        <rect x="330" y="141" width="122" height="15" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="0.8" stroke-opacity="0.08"/>
+        <text x="391" y="152" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">POST /api/v1/payments/create</text>
+
+        <!-- Step 3: Go Backend tạo link PayOS -->
+        <line x1="494" y1="172" x2="696" y2="172" stroke="#475569" stroke-width="1.2" marker-end="url(#flow-5-payos-payment-arr-muted-5)"/>
+        <rect x="542" y="159" width="114" height="15" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="0.8" stroke-opacity="0.08"/>
+        <text x="599" y="170" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">CreatePaymentLink(orderCode)</text>
+
+        <!-- Step 4: PayOS trả dữ liệu VietQR -->
+        <line x1="696" y1="196" x2="494" y2="196" stroke="#475569" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#flow-5-payos-payment-arr-muted-5)"/>
+        <rect x="548" y="183" width="102" height="15" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="0.8" stroke-opacity="0.08"/>
+        <text x="599" y="194" fill="#64748b" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">Trả QR Data &amp; VietQR url</text>
+
+        <!-- Step 5: Trả mã QR về cho UI học sinh -->
+        <line x1="486" y1="220" x2="284" y2="220" stroke="#2563eb" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#flow-5-payos-payment-arr-accent-5)"/>
+        <rect x="334" y="207" width="114" height="15" rx="3" fill="#ffffff" stroke="#2563eb" stroke-width="0.8"/>
+        <text x="391" y="218" fill="#2563eb" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">Hiển thị mã VietQR động</text>
+
+        <!-- Step 6: Khách quét mã QR trên điện thoại -->
+        <line x1="94" y1="272" x2="876" y2="272" stroke="#1d4ed8" stroke-width="1.4" marker-end="url(#flow-5-payos-payment-arr-link-5)"/>
+        <rect x="420" y="259" width="140" height="15" rx="3" fill="#ffffff" stroke="#1d4ed8" stroke-width="0.8"/>
+        <text x="490" y="270" fill="#1d4ed8" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">Mở App Ngân hàng quét VietQR</text>
+
+        <!-- Step 7: Chuyển tiền qua cổng Napas -->
+        <line x1="876" y1="316" x2="704" y2="316" stroke="#475569" stroke-width="1.2" marker-end="url(#flow-5-payos-payment-arr-muted-5)"/>
+        <rect x="734" y="303" width="116" height="15" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="0.8" stroke-opacity="0.08"/>
+        <text x="792" y="314" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">Khớp tiền Napas 24/7</text>
+
+        <!-- Step 8: PayOS bắn Webhook có chữ ký bảo mật -->
+        <line x1="696" y1="360" x2="494" y2="360" stroke="#2563eb" stroke-width="1.6" marker-end="url(#flow-5-payos-payment-arr-accent-5)"/>
+        <rect x="530" y="347" width="144" height="15" rx="3" fill="#ffffff" stroke="#2563eb" stroke-width="1"/>
+        <text x="602" y="358" fill="#2563eb" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">POST /webhook/payos (HMAC)</text>
+
+        <!-- Step 9: Go Backend xác thực Checksum & Cập nhật DB (Self-loop) -->
+        <path d="M 494 374 H 530 V 400 H 494" fill="none" stroke="#2563eb" stroke-width="1.2" marker-end="url(#flow-5-payos-payment-arr-accent-5)"/>
+        <text x="538" y="388" fill="#2563eb" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600">Verify Checksum &amp; Idempotency</text>
+        <text x="538" y="402" fill="#16a34a" font-size="8" font-family="'JetBrains Mono', monospace">Cộng hạn VIP vào users.expiresAt</text>
+
+        <!-- Step 10: Phản hồi 200 OK cho PayOS -->
+        <line x1="494" y1="422" x2="696" y2="422" stroke="#16a34a" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#flow-5-payos-payment-arr-success-5)"/>
+        <rect x="548" y="409" width="102" height="15" rx="3" fill="#ffffff" stroke="#16a34a" stroke-width="0.8"/>
+        <text x="599" y="420" fill="#16a34a" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">200 OK { success: true }</text>
+
+        <!-- Step 11: Real-time Polling / Notification tới Client -->
+        <line x1="486" y1="464" x2="284" y2="464" stroke="#16a34a" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#flow-5-payos-payment-arr-success-5)"/>
+        <rect x="330" y="451" width="126" height="15" rx="3" fill="#ffffff" stroke="#16a34a" stroke-width="0.8"/>
+        <text x="393" y="462" fill="#16a34a" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">Status: PAID (Kích hoạt VIP)</text>
+
+        <!-- Step 12: Client chuyển trang ăn mừng -->
+        <line x1="276" y1="504" x2="94" y2="504" stroke="#16a34a" stroke-width="1.6" marker-end="url(#flow-5-payos-payment-arr-success-5)"/>
+        <rect x="136" y="491" width="112" height="15" rx="3" fill="#ffffff" stroke="#16a34a" stroke-width="1"/>
+        <text x="192" y="502" fill="#16a34a" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">Nâng cấp VIP Thành công! 🎉</text>
+
+      </svg>

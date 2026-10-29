@@ -2,19 +2,19 @@ import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronRight, BookOpen, ArrowLeft } from 'lucide-react';
-import { LectureCard, PracticeLectureCard } from '@/components/lectures/LectureCard';
 import { ClientPagination } from '@/components/ui/ClientPagination';
 import { getLecturesByGrade } from '@/lib/lectureApi';
 import { getExams, getMyExamResults } from '@/lib/api';
 import LectureAntiCheatTracker from '@/components/lecture/LectureAntiCheatTracker';
-
+import { calculateLectureProgression } from '@/lib/lectureProgression';
+import { GradeLectureList } from '@/components/lectures/GradeLectureList';
+import { GradeRestrictionModal } from '@/components/lectures/GradeRestrictionModal';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ grade: string }>
+  params: Promise<{ grade: string }>;
 }): Promise<Metadata> {
   const { grade } = await params;
   return {
@@ -30,149 +30,129 @@ export default async function GradeLecturesPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ grade: string }>
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  params: Promise<{ grade: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
-  
-  const grade = resolvedParams.grade; // VD: '5', '8', '9'
-  const page = parseInt(resolvedSearchParams.page as string || '1', 10);
+
+  const grade = resolvedParams.grade; // VD: '5', '6', '7', '8', '9'
+  const page = parseInt((resolvedSearchParams.page as string) || '1', 10);
   const returnUrl = resolvedSearchParams?.returnUrl as string | undefined;
   const examId = resolvedSearchParams?.examId as string | undefined;
 
-  // Lấy userGrade từ cookie để tự động redirect
+  // Kiểm tra quyền hạn khối lớp theo gói học (Bảo vệ bản quyền gói học & chống share tài khoản)
   const cookieStore = await cookies();
   const userGradeCookie = cookieStore.get('userGrade');
   const userRoleCookie = cookieStore.get('userRole');
-  
-  if (userRoleCookie?.value === 'student' && userGradeCookie && userGradeCookie.value !== grade && userGradeCookie.value !== '') {
-    redirect(`/lectures/lop/${userGradeCookie.value}`);
+
+  // Nếu là học sinh và truy cập ngoài khối lớp đăng ký -> hiển thị thông báo bản quyền thân thiện
+  if (
+    userRoleCookie?.value === 'student' &&
+    userGradeCookie &&
+    userGradeCookie.value !== grade &&
+    userGradeCookie.value !== ''
+  ) {
+    return (
+      <div className="space-y-6">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-500">
+          <Link href="/student" className="hover:text-primary transition-colors min-h-[44px] flex items-center">
+            Dashboard
+          </Link>
+          <ChevronRight className="w-3 h-3 text-slate-400" aria-hidden="true" />
+          <span className="text-primary font-bold min-h-[44px] flex items-center" aria-current="page">
+            Bài giảng Khối {grade}
+          </span>
+        </nav>
+        <GradeRestrictionModal
+          userGrade={userGradeCookie.value}
+          attemptedGrade={grade}
+        />
+      </div>
+    );
   }
 
   const token = cookieStore.get('accessToken')?.value;
 
   const [lecturesResult, examsData, resultsData] = await Promise.all([
-    getLecturesByGrade(grade, page, 9),
-    getExams(),
-    token ? getMyExamResults(token) : Promise.resolve([])
+    getLecturesByGrade(grade, page, 12),
+    getExams({ grade }),
+    token ? getMyExamResults(token) : Promise.resolve([]),
   ]);
 
-  const { data: lectures, totalPages, totalItems, startIndex, endIndex, currentPage } = lecturesResult;
+  const {
+    data: lectures,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
+    currentPage,
+  } = lecturesResult;
 
-  const mappedLectures = lectures.map(lecture => {
-    // Find all exams and practices for this lecture
-    const lectureExams = examsData.filter((exam: any) => exam.lectureId === lecture.id);
-    const practiceCount = lectureExams.length;
-    
-    // Count how many are completed with score > 6.5
-    let completedWellCount = 0;
-    lectureExams.forEach((exam: any) => {
-      // Find the latest result for this exam
-      const examResults = resultsData.filter((r: any) => r.examId === exam.id);
-      examResults.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
-      const latestResult = examResults.length > 0 ? examResults[0] : null;
-      if (latestResult && latestResult.status === 'graded' && latestResult.totalScore > 6.5) {
-        completedWellCount++;
-      }
-    });
-
-    return {
-      ...lecture,
-      practiceCount,
-      completedWellCount
-    };
-  });
+  // Tính toán trạng thái học tập và khóa/mở khóa liên hoàn (Mastery Progression)
+  const mappedLectures = calculateLectureProgression(lectures, examsData, resultsData);
 
   return (
     <div className="space-y-8">
       {examId && <LectureAntiCheatTracker examId={examId} />}
 
+      {/* Banner khi học sinh tham khảo bài giảng trong phòng thi */}
       {returnUrl && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-indigo-50/80 border border-indigo-200 rounded-2xl shadow-sm">
-          <div className="flex items-center gap-3 text-indigo-950 font-medium">
-            <BookOpen className="w-5 h-5 text-indigo-600 shrink-0" />
-            <span className="text-sm">Bạn đang tham khảo danh sách bài giảng trong quá trình làm bài tập.</span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-primary/5 border border-primary/20 rounded-2xl shadow-xs">
+          <div className="flex items-center gap-3 text-slate-800 font-medium">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <BookOpen className="w-5 h-5" aria-hidden="true" />
+            </div>
+            <span className="text-sm">
+              Bạn đang tham khảo lý thuyết bài giảng trong quá trình làm bài tập.
+            </span>
           </div>
           <Link
             href={returnUrl}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all text-sm shadow-sm active:scale-95 shrink-0"
+            className="min-h-[44px] h-11 px-5 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all text-sm shadow-sm active:scale-95 flex items-center gap-2 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Trở về bài tập đang làm
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+            <span>Trở về bài tập đang làm</span>
           </Link>
         </div>
       )}
 
+      {/* Header và Breadcrumb */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-            <Link href="/student" className="hover:text-primary transition-colors min-h-[44px] flex items-center">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+            <Link
+              href="/student"
+              className="hover:text-primary transition-colors min-h-[44px] flex items-center px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+            >
               Dashboard
             </Link>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-primary font-bold min-h-[44px] flex items-center">Bài giảng</span>
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900">Danh sách Bài giảng Khối {grade}</h1>
+            <ChevronRight className="w-3 h-3 text-slate-400" aria-hidden="true" />
+            <span className="text-primary font-bold min-h-[44px] flex items-center px-1" aria-current="page">
+              Bài giảng Khối {grade}
+            </span>
+          </nav>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            Danh sách Bài giảng Toán Lớp {grade}
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Tổng hợp lý thuyết trọng tâm và bộ bài tập rèn luyện tư duy theo chương trình chuẩn.
+          </p>
         </div>
       </div>
 
-      {/* Grid danh sách Bài giảng & Bài luyện tập */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mappedLectures.map((item) => {
-          if (item.isPracticeCard) {
-            let lectureUrl = `/lectures/lop/${grade}/${item.id}`;
-            if (returnUrl) {
-              const params = new URLSearchParams({ returnUrl });
-              if (examId) params.set('examId', examId);
-              lectureUrl += `?${params.toString()}`;
-            }
-            return (
-              <PracticeLectureCard 
-                key={item.id}
-                id={item.id}
-                grade={grade}
-                title={item.title}
-                chapter={item.chapter}
-                practiceCount={item.practiceCount}
-                href={lectureUrl}
-                thumbnailUrl={item.thumbnailUrl}
-              />
-            )
-          }
-
-          return (
-            <LectureCard 
-              key={item.id}
-              grade={grade}
-              returnUrl={returnUrl}
-              examId={examId}
-              {...item}
-            />
-          )
-        })}
-        {mappedLectures.length === 0 && (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-500 bg-white rounded-2xl border border-slate-200/60 shadow-sm">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-              <BookOpen className="w-8 h-8 text-slate-300" />
-            </div>
-            <p className="text-lg font-bold text-slate-700">Chưa có bài giảng nào</p>
-            <p className="text-sm mt-1 mb-6 text-center max-w-md">Hiện tại chưa có bài giảng nào được đăng tải cho khối {grade}. Vui lòng quay lại sau hoặc chọn khối lớp khác.</p>
-            <Link 
-              href="/student" 
-              className="h-12 px-6 rounded-lg bg-primary text-white font-semibold flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm"
-            >
-              Quay về Dashboard
-            </Link>
-          </div>
-        )}
-      </div>
+      {/* Toolbar và Danh sách Bài giảng có viền trạng thái & khóa tiến độ */}
+      <GradeLectureList
+        lectures={mappedLectures}
+        grade={grade}
+        returnUrl={returnUrl}
+        examId={examId}
+      />
 
       {/* Phân trang */}
       {totalPages > 1 && (
         <div className="mt-8">
-          <ClientPagination 
+          <ClientPagination
             currentPage={currentPage}
             totalPages={totalPages}
             totalItems={totalItems}
@@ -185,4 +165,3 @@ export default async function GradeLecturesPage({
     </div>
   );
 }
-

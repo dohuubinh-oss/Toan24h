@@ -26,6 +26,7 @@ function UsersPageContent() {
 
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
@@ -49,6 +50,7 @@ function UsersPageContent() {
 
     try {
       setLoading(true);
+      setError(null);
       const queryParams = new URLSearchParams();
       if (q) queryParams.append('q', q);
       if (role) queryParams.append('role', role);
@@ -67,6 +69,7 @@ function UsersPageContent() {
       }));
       setUsers(apiUsers);
     } catch (err: any) {
+      setError(err?.message || 'Lỗi kết nối máy chủ');
       toast.error('Lỗi tải danh sách người dùng');
     } finally {
       setLoading(false);
@@ -131,6 +134,16 @@ function UsersPageContent() {
       <div className="space-y-4">
         {loading ? (
           <div className="p-8 text-center text-slate-500">Đang tải dữ liệu...</div>
+        ) : error ? (
+          <div className="bg-rose-50 border border-rose-200 rounded-xl p-8 text-center max-w-lg mx-auto">
+            <p className="text-rose-700 font-medium mb-3">Đã xảy ra lỗi khi tải danh sách người dùng: {error}</p>
+            <button
+              onClick={() => fetchUsers()}
+              className="px-4 py-2 bg-rose-600 text-white rounded-lg text-sm font-medium hover:bg-rose-700 transition-colors shadow-sm"
+            >
+              Thử lại
+            </button>
+          </div>
         ) : (
           <UserTable 
             users={paginatedUsers} 

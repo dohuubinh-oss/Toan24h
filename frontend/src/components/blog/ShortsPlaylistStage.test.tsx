@@ -19,16 +19,42 @@ const mockShorts: ShortItem[] = [
 ]
 
 describe('ShortsPlaylistStage', () => {
-  it('renders initial video and synchronized notes without inside-video nav buttons', () => {
+  it('renders initial video and synchronized notes matching shorts-blog-layout style', () => {
     render(<ShortsPlaylistStage shorts={mockShorts} postTitle="Chuỗi Shorts Casio" authorName="ThS. Nguyễn Văn An" />)
     expect(screen.getAllByText('Mẹo Tích Phân').length).toBeGreaterThan(0)
     expect(screen.getByText(/Công thức tích phân hàm ẩn/i)).toBeInTheDocument()
     const iframe = screen.getByTitle(/YouTube Shorts Player/i)
     expect(iframe).toHaveAttribute('src', expect.stringContaining('vid11111111'))
 
-    // Verify navigation buttons inside video are removed per user request
-    expect(screen.queryByRole('button', { name: /Video trước/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Tiếp theo/i })).not.toBeInTheDocument()
+    // Verify badge tag matching shorts-blog-layout
+    expect(screen.getByText('GHI CHÚ BÀI HỌC (ĐỒNG BỘ THEO VIDEO)')).toBeInTheDocument()
+
+    // Verify "Lưu sổ tay" button exists and changes to "Đã lưu sổ tay" on click
+    const saveButton = screen.getByRole('button', { name: /Lưu sổ tay/i })
+    expect(saveButton).toBeInTheDocument()
+    fireEvent.click(saveButton)
+    expect(screen.getByText(/Đã lưu sổ tay/i)).toBeInTheDocument()
+
+    // Verify CTA button "Luyện tập 3 câu tương tự"
+    const practiceCta = screen.getByRole('link', { name: /Luyện tập 3 câu tương tự/i })
+    expect(practiceCta).toBeInTheDocument()
+    expect(practiceCta).toHaveAttribute('href', '/practices')
+
+    // Verify external Prev / Next control buttons exist under player
+    expect(screen.getByRole('button', { name: /Xem video hoặc ảnh trước đó/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Xem video hoặc ảnh tiếp theo/i })).toBeInTheDocument()
+  })
+
+  it('navigates through items using Prev and Next buttons', () => {
+    render(<ShortsPlaylistStage shorts={mockShorts} postTitle="Chuỗi Shorts Casio" authorName="ThS. Nguyễn Văn An" />)
+    
+    const nextBtn = screen.getByRole('button', { name: /Xem video hoặc ảnh tiếp theo/i })
+    fireEvent.click(nextBtn)
+    expect(screen.getAllByText('Ảnh Cheatsheet Cực Trị').length).toBeGreaterThan(0)
+
+    const prevBtn = screen.getByRole('button', { name: /Xem video hoặc ảnh trước đó/i })
+    fireEvent.click(prevBtn)
+    expect(screen.getAllByText('Mẹo Tích Phân').length).toBeGreaterThan(0)
   })
 
   it('switches between video and image item when clicking thumbnail rail', () => {

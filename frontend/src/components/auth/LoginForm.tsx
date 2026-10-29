@@ -7,7 +7,7 @@ import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
 import { Checkbox } from '../ui/Checkbox'
-import { login, syncAuthSession } from '@/lib/authApi'
+import { login, syncAuthSession, resendVerification } from '@/lib/authApi'
 import GoogleSignInButton from './GoogleSignInButton'
 import toast from 'react-hot-toast'
 
@@ -21,6 +21,8 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
+  const [isResending, setIsResending] = useState(false)
 
   const {
     register,
@@ -58,6 +60,11 @@ export default function LoginForm() {
       }, 500)
     } catch (error: any) {
       let msg = error.message
+      if (msg.includes('chưa được kích hoạt')) {
+        setUnverifiedEmail(data.identity)
+      } else {
+        setUnverifiedEmail(null)
+      }
       if (msg.includes('Invalid email or password') || msg.includes('401')) {
         msg = 'Email hoặc mật khẩu không chính xác.'
       }
@@ -65,6 +72,19 @@ export default function LoginForm() {
       toast.error(msg || 'Đăng nhập thất bại')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    if (!unverifiedEmail) return
+    setIsResending(true)
+    try {
+      await resendVerification(unverifiedEmail)
+      toast.success('Đã gửi lại liên kết kích hoạt vào email của bạn!')
+    } catch (err: any) {
+      toast.error(err.message || 'Không thể gửi lại email kích hoạt')
+    } finally {
+      setIsResending(false)
     }
   }
 
@@ -90,8 +110,18 @@ export default function LoginForm() {
         {/* Form */}
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
           {errorMessage && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
-              {errorMessage}
+            <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl space-y-2">
+              <p>{errorMessage}</p>
+              {unverifiedEmail && (
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={isResending}
+                  className="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  {isResending ? 'Đang gửi lại email...' : '→ Nhấn vào đây để gửi lại email kích hoạt'}
+                </button>
+              )}
             </div>
           )}
 

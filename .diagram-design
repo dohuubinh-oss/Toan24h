@@ -1,0 +1,19 @@
+# Diagram Design Marker - toan6789.vn
+profile: modern-academic
+name: Modern Academic (toan6789.vn)
+source: DESIGN.md
+colors:
+  paper: "#FFFFFF"
+  paper-2: "#F8FAFC"
+  ink: "#0F172A"
+  muted: "#475569"
+  soft: "#64748B"
+  rule: "rgba(15, 23, 42, 0.12)"
+  rule-solid: "#CBD5E1"
+  accent: "#2563EB"
+  accent-tint: "rgba(37, 99, 235, 0.08)"
+  link: "#1D4ED8"
+typography:
+  font-sans: "'Lexend', system-ui, sans-serif"
+  font-serif: "'Lexend', serif"
+  font-mono: "'JetBrains Mono', ui-monospace, monospace"

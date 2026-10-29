@@ -10,6 +10,12 @@ export interface Lecture {
   isPracticeCard?: boolean;
   practiceIds?: string;
   gg_link?: string;
+  isLocked?: boolean;
+  isCompleted?: boolean;
+  lockReason?: string;
+  averageScore?: number;
+  regularPracticeCount?: number;
+  completedWellCount?: number;
 }
 
 export interface PaginatedLectures {

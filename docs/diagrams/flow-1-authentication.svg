@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="flow1-title flow1-desc" id="flow-1-authentication-root">
+        <title id="flow1-title">Sơ đồ Luồng Xác thực &amp; Phiên làm việc toan6789.vn</title>
+        <desc id="flow1-desc">Biểu đồ Sequence mô tả tương tác giữa Client, Next.js Frontend, Go Backend API, Database và OAuth Providers khi xác thực tài khoản.</desc>
+        <defs>
+      <style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;family=Noto+Sans+TC:wght@400;500;600&amp;family=Noto+Serif+TC:wght@400&amp;display=swap');
+      #flow-1-authentication-root { --color-paper: #ffffff;
+      --color-paper-2: #f8fafc;
+      --color-ink: #0f172a;
+      --color-muted: #475569;
+      --color-soft: #64748b;
+      --color-rule: rgba(15, 23, 42, 0.12);
+      --color-rule-solid: #cbd5e1;
+      --color-accent: #2563eb;
+      --color-accent-tint: rgba(37, 99, 235, 0.08);
+      --color-link: #1d4ed8;
+      --color-success: #16a34a;
+      --color-warning: #d97706;
+      --font-sans: 'Lexend', system-ui, sans-serif;
+      --font-serif: 'Lexend', serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace; }
+      @media (prefers-color-scheme: dark) {
+#flow-1-authentication-root { --color-paper: #0f172a;
+        --color-paper-2: #1e293b;
+        --color-ink: #f8fafc;
+        --color-muted: #94a3b8;
+        --color-soft: #64748b;
+        --color-rule: rgba(248, 250, 252, 0.12);
+        --color-rule-solid: #334155;
+        --color-accent: #60a5fa;
+        --color-accent-tint: rgba(96, 165, 250, 0.12);
+        --color-link: #93c5fd;
+        --color-success: #4ade80;
+        --color-warning: #fbbf24; }
+}
+      #flow-1-authentication-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #flow-1-authentication-root .container { max-width: 1200px; margin: 0 auto; }
+      #flow-1-authentication-root .header-eyebrow { font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      margin-bottom: 0.5rem; }
+      #flow-1-authentication-root .subtitle { font-size: 0.975rem;
+      line-height: 1.55;
+      color: var(--color-muted);
+      max-width: 72ch; }
+      #flow-1-authentication-root .diagram-container { background: var(--color-paper-2);
+      border-radius: 10px;
+      border: 1px solid var(--color-rule);
+      padding: 1.5rem;
+      overflow-x: auto;
+      max-width: 100%; }
+      #flow-1-authentication-root .card-header { display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--color-rule); }
+      #flow-1-authentication-root .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+      #flow-1-authentication-root .card-dot.accent { background: var(--color-accent); }
+      #flow-1-authentication-root .card-dot.ink { background: var(--color-ink); }
+      #flow-1-authentication-root .card-dot.muted { background: var(--color-muted); }</style>
+          <pattern id="flow-1-authentication-grid-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.8" fill="#0f172a" fill-opacity="0.08"/>
+          </pattern>
+          <marker id="flow-1-authentication-arr-muted" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#475569"/>
+          </marker>
+          <marker id="flow-1-authentication-arr-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#1d4ed8"/>
+          </marker>
+          <marker id="flow-1-authentication-arr-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+          </marker>
+        </defs>
+
+        <!-- Canvas Background -->
+        <rect width="100%" height="100%" fill="#ffffff"/>
+        <rect width="100%" height="100%" fill="url(#flow-1-authentication-grid-dots)" opacity="0.65"/>
+
+        <!-- Lifelines (Vertical dashed lines) -->
+        <line x1="100" y1="84" x2="100" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+        <line x1="300" y1="84" x2="300" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+        <line x1="520" y1="84" x2="520" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+        <line x1="730" y1="84" x2="730" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+        <line x1="880" y1="84" x2="880" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+
+        <!-- Activation Bars -->
+        <rect x="96" y="120" width="8" height="430" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+        <rect x="296" y="128" width="8" height="412" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+        <rect x="516" y="136" width="8" height="394" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+        <rect x="726" y="174" width="8" height="44" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+        <rect x="876" y="440" width="8" height="40" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+
+        <!-- Actor Headers -->
+        <!-- Actor 1: Browser Client -->
+        <rect x="36" y="32" width="128" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="100" y="52" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">Browser / Client</text>
+        <text x="100" y="67" fill="#64748b" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">Học sinh / Giáo viên</text>
+
+        <!-- Actor 2: Next.js Frontend -->
+        <rect x="236" y="32" width="128" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="300" y="52" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">Next.js 16 Web</text>
+        <text x="300" y="67" fill="#64748b" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">/login · /register</text>
+
+        <!-- Actor 3: Go API Gateway -->
+        <rect x="456" y="32" width="128" height="48" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="520" y="52" fill="#2563eb" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">Go Backend API</text>
+        <text x="520" y="67" fill="#1d4ed8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">/api/v1/auth/*</text>
+
+        <!-- Actor 4: PostgreSQL Database -->
+        <rect x="666" y="32" width="128" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="730" y="52" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">PostgreSQL DB</text>
+        <text x="730" y="67" fill="#64748b" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">users · sessions</text>
+
+        <!-- Actor 5: OAuth / Telegram -->
+        <rect x="820" y="32" width="120" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="880" y="52" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">Auth Providers</text>
+        <text x="880" y="67" fill="#64748b" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">Google &amp; Telegram</text>
+
+        <!-- Message 1: Client submits Login form -->
+        <line x1="104" y1="136" x2="296" y2="136" stroke="#1d4ed8" stroke-width="1.2" marker-end="url(#flow-1-authentication-arr-link)"/>
+        <rect x="144" y="123" width="112" height="15" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="0.8" stroke-opacity="0.08"/>
+        <text x="200" y="134" fill="#1d4ed8" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">POST /login (email, pw)</text>
+
+        <!-- Message 2: Next.js forwards to Go API -->
+        <line x1="304" y1="156" x2="516" y2="156" stroke="#475569" stroke-width="1.2" marker-end="url(#flow-1-authentication-arr-muted)"/>
+        <rect x="352" y="143" width="116" height="15" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="0.8" stroke-opacity="0.08"/>
+        <text x="410" y="154" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">POST /api/v1/auth/login</text>
+
+        <!-- Message 3: Query DB for User Record -->
+        <line x1="524" y1="180" x2="726" y2="180" stroke="#475569" stroke-width="1.2" marker-end="url(#flow-1-authentication-arr-muted)"/>
+        <rect x="562" y="167" width="128" height="15" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="0.8" stroke-opacity="0.08"/>
+        <text x="626" y="178" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">SELECT user WHERE email = ?</text>
+
+        <!-- Message 4: Return Hash & Info -->
+        <line x1="726" y1="210" x2="524" y2="210" stroke="#475569" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#flow-1-authentication-arr-muted)"/>
+        <rect x="564" y="198" width="122" height="15" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="0.8" stroke-opacity="0.08"/>
+        <text x="625" y="209" fill="#64748b" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">Row: id, password_hash, role</text>
+
+        <!-- Message 5: Bcrypt Verification (Self-loop) -->
+        <path d="M 524 228 H 554 V 248 H 524" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#flow-1-authentication-arr-muted)"/>
+        <text x="562" y="241" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace">bcrypt.CompareHashAndPassword()</text>
+
+        <!-- Combined Fragment: ALT -->
+        <rect x="80" y="272" width="820" height="278" rx="6" fill="#0f172a" stroke="#0f172a" stroke-width="1" fill-opacity="0.015" stroke-opacity="0.16"/>
+        <rect x="80" y="272" width="46" height="18" rx="2" fill="#ffffff" stroke="#0f172a" stroke-width="1" stroke-opacity="0.16"/>
+        <text x="103" y="284" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">ALT</text>
+
+        <!-- Region 1: Credentials Valid (Happy Path) -->
+        <text x="136" y="285" fill="#16a34a" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="500">[Mật khẩu hợp lệ / Cấp quyền thành công]</text>
+
+        <!-- Message 6: Token creation & Cookie Header (Headline) -->
+        <line x1="516" y1="316" x2="304" y2="316" stroke="#2563eb" stroke-width="1.6" stroke-dasharray="5,3" marker-end="url(#flow-1-authentication-arr-accent)"/>
+        <rect x="340" y="303" width="140" height="15" rx="3" fill="#ffffff" stroke="#2563eb" stroke-width="0.8"/>
+        <text x="410" y="314" fill="#2563eb" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">Set-Cookie: token (HttpOnly, Lax)</text>
+
+        <!-- Message 7: Forward Login Success to Client -->
+        <line x1="296" y1="344" x2="104" y2="344" stroke="#2563eb" stroke-width="1.5" marker-end="url(#flow-1-authentication-arr-accent)"/>
+        <rect x="138" y="331" width="124" height="15" rx="3" fill="#ffffff" stroke="#2563eb" stroke-width="0.8"/>
+        <text x="200" y="342" fill="#2563eb" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">200 OK: Chuyển hướng Dashboard</text>
+
+        <!-- Divider Line -->
+        <line x1="88" y1="378" x2="892" y2="378" stroke="#0f172a" stroke-width="1" stroke-dasharray="4,3" stroke-opacity="0.16"/>
+
+        <!-- Region 2: Alternative Social Login / Telegram QR -->
+        <text x="96" y="394" fill="#d97706" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="500">[Hoặc: Đăng nhập Google OAuth / Telegram QR]</text>
+
+        <!-- Message 8: Google One-Tap Login -->
+        <line x1="104" y1="422" x2="516" y2="422" stroke="#1d4ed8" stroke-width="1.2" marker-end="url(#flow-1-authentication-arr-link)"/>
+        <rect x="238" y="409" width="144" height="15" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="0.8" stroke-opacity="0.08"/>
+        <text x="310" y="420" fill="#1d4ed8" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">POST /api/v1/auth/google (id_token)</text>
+
+        <!-- Message 9: Go Backend verifies with Google -->
+        <line x1="524" y1="446" x2="876" y2="446" stroke="#475569" stroke-width="1.2" marker-end="url(#flow-1-authentication-arr-muted)"/>
+        <rect x="638" y="433" width="124" height="15" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="0.8" stroke-opacity="0.08"/>
+        <text x="700" y="444" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">Verify token &amp; fetch email</text>
+
+        <!-- Message 10: Google returns profile payload -->
+        <line x1="876" y1="472" x2="524" y2="472" stroke="#475569" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#flow-1-authentication-arr-muted)"/>
+        <rect x="642" y="459" width="116" height="15" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="0.8" stroke-opacity="0.08"/>
+        <text x="700" y="470" fill="#64748b" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">GoogleClaims: email, name</text>
+
+        <!-- Message 11: Set Cookie & Session Done -->
+        <line x1="516" y1="504" x2="104" y2="504" stroke="#16a34a" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#flow-1-authentication-arr-muted)"/>
+        <rect x="230" y="491" width="160" height="15" rx="3" fill="#ffffff" stroke="#16a34a" stroke-width="0.8"/>
+        <text x="310" y="502" fill="#16a34a" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">200 OK + Sync User &amp; Issue Cookie</text>
+
+      </svg>

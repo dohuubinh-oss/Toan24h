@@ -45,6 +45,20 @@ export async function registerUser(data: RegisterData) {
   return res
 }
 
+export async function verifyEmail(token: string) {
+  return await apiFetch('/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  })
+}
+
+export async function resendVerification(email: string) {
+  return await apiFetch('/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+}
+
 export async function loginWithGoogle(credential: string) {
   const res = await apiFetch('/auth/google', {
     method: 'POST',

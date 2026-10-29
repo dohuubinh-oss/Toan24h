@@ -34,21 +34,19 @@ export function ExamFilter() {
         </summary>
         <div className="mt-3 grid grid-cols-2 gap-2 pl-6">
           {grades.map(grade => (
-            <label key={grade.value} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1">
+            <label key={grade.value} className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1.5 select-none">
               <input 
                 className="text-primary focus:ring-primary h-4 w-4 cursor-pointer" 
                 type="radio"
                 name="filter_grade"
                 checked={currentGrade === grade.value}
-                onChange={() => {}}
-                onClick={(e) => { e.preventDefault(); setFilter('grade', grade.value); }}
+                onChange={() => setFilter('grade', grade.value)}
+                onClick={() => { if (currentGrade === grade.value) setFilter('grade', grade.value); }}
               /> <span className="truncate">{grade.label}</span>
             </label>
           ))}
         </div>
       </details>
-
-
 
       <details className="group px-3" open>
         <summary className="flex items-center justify-between cursor-pointer text-sm font-semibold py-1 hover:text-primary transition-colors list-none">
@@ -60,14 +58,14 @@ export function ExamFilter() {
         </summary>
         <div className="mt-3 space-y-2 pl-6">
           {durations.map(duration => (
-            <label key={duration} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1">
+            <label key={duration} className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1.5 select-none">
               <input 
                 className="text-primary focus:ring-primary h-4 w-4 cursor-pointer" 
                 type="radio" 
                 name="filter_duration"
                 checked={currentDuration === duration}
-                onChange={() => {}}
-                onClick={(e) => { e.preventDefault(); setFilter('duration', duration); }}
+                onChange={() => setFilter('duration', duration)}
+                onClick={() => { if (currentDuration === duration) setFilter('duration', duration); }}
               /> {duration}
             </label>
           ))}
@@ -84,14 +82,14 @@ export function ExamFilter() {
         </summary>
         <div className="mt-3 space-y-2 pl-6">
           {examTypes.map(type => (
-            <label key={type} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1">
+            <label key={type} className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1.5 select-none">
               <input 
                 className="text-primary focus:ring-primary h-4 w-4 cursor-pointer" 
                 type="radio" 
                 name="filter_exam_type"
                 checked={currentExamType === type}
-                onChange={() => {}}
-                onClick={(e) => { e.preventDefault(); setFilter('examType', type); }}
+                onChange={() => setFilter('examType', type)}
+                onClick={() => { if (currentExamType === type) setFilter('examType', type); }}
               /> {type}
             </label>
           ))}

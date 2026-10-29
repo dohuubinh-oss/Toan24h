@@ -57,12 +57,16 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
               <th className="px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center whitespace-nowrap">Phân loại</th>
               <th className="px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center whitespace-nowrap">Loại đề</th>
               <th 
-                className="px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
+                className="px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-center cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap select-none"
                 onClick={handleSort}
+                role="button"
+                tabIndex={0}
+                aria-label="Sắp xếp theo độ khó"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSort(); }}
               >
                 <div className="flex items-center justify-center gap-1">
                   Độ khó
-                  {sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : sortOrder === 'desc' ? <ArrowDown className="w-3 h-3" /> : <ArrowUpDown className="w-3 h-3" />}
+                  {sortOrder === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-primary" /> : sortOrder === 'desc' ? <ArrowDown className="w-3.5 h-3.5 text-primary" /> : <ArrowUpDown className="w-3.5 h-3.5" />}
                 </div>
               </th>
               <th className="px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right whitespace-nowrap">Thao tác</th>
@@ -80,12 +84,12 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded bg-primary/10 flex flex-shrink-0 items-center justify-center text-primary">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex flex-shrink-0 items-center justify-center text-primary">
                       <Calculator className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-slate-800 truncate">{exam.title}</p>
-                      <p className="text-xs text-slate-400">Mã đề: {exam.examCode || 'N/A'}</p>
+                      <p className="text-xs text-slate-400 font-mono">Mã đề: {exam.examCode || 'N/A'}</p>
                     </div>
                   </div>
                 </td>
@@ -116,34 +120,36 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
                   )}
                 </td>
                 <td className="px-3 py-3 text-center whitespace-nowrap">
-                  <span className="text-sm font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">{Number(exam.diffScore || 0).toFixed(1)}</span>
+                  <span className="text-sm font-semibold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200/60">{Number(exam.diffScore || 0).toFixed(1)}</span>
                 </td>
                 <td className="px-3 py-3 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end gap-1">
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-9 w-9 text-slate-400 hover:text-primary hover:bg-primary/10" 
-                      title="Chỉnh sửa"
+                      className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl cursor-pointer" 
+                      title="Chỉnh sửa đề thi"
+                      aria-label={`Chỉnh sửa đề thi ${exam.title}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         const qids = (exam.questionIds || []).join(',');
                         router.push(`/dashboard/exams/create?id=${exam.id}&qids=${qids}`);
                       }}
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Edit2 className="w-5 h-5" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-9 w-9 text-slate-400 hover:text-red-500 hover:bg-red-50" 
-                      title="Xóa"
+                      className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl cursor-pointer" 
+                      title="Xóa đề thi"
+                      aria-label={`Xóa đề thi ${exam.title}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (onDelete) onDelete(exam.id);
                       }}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </Button>
                   </div>
                 </td>

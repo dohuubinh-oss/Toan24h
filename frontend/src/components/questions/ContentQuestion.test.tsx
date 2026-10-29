@@ -29,16 +29,18 @@ describe('ContentQuestion Component', () => {
     expect(screen.getByText('Đoạn văn bản dẫn chung cho bài toán')).toBeInTheDocument();
   });
 
-  it('renders essay answer with KaTeX when isEssay is true and correctAnswer is provided with $', () => {
+  it('renders solution guide and does not render separate essay answer badge', () => {
     const { container } = render(
       <ContentQuestion
         content="Tìm nghiệm của phương trình $x^2 - 4 = 0$"
         isEssay={true}
         correctAnswer="$x = \pm 2$"
+        solution="Giải phương trình ta được $x = \pm 2$"
       />
     );
 
-    expect(screen.getByText('Đáp án tự luận:')).toBeInTheDocument();
+    expect(screen.queryByText('Đáp án tự luận:')).not.toBeInTheDocument();
+    expect(screen.getByText('HƯỚNG DẪN CHẤM / LỜI GIẢI MẪU:')).toBeInTheDocument();
     const katexElement = container.querySelector('.katex');
     expect(katexElement).toBeInTheDocument();
   });
@@ -57,7 +59,7 @@ describe('ContentQuestion Component', () => {
     expect(screen.getByText('B.')).toBeInTheDocument();
   });
 
-  it('renders sub-questions for group questions with essay answers', () => {
+  it('renders sub-questions for group questions with solution guide', () => {
     render(
       <ContentQuestion
         sharedContext="Cho biểu thức $P(x)$"
@@ -65,14 +67,16 @@ describe('ContentQuestion Component', () => {
           {
             content: "Tính giá trị của $P(1)$",
             isEssay: true,
-            correctAnswer: "$P(1) = 5$"
+            correctAnswer: "$P(1) = 5$",
+            solution: "Thay $x = 1$ vào $P(x)$ ta được $P(1) = 5$"
           }
         ]}
       />
     );
 
     expect(screen.getByText('Nội dung dẫn chung')).toBeInTheDocument();
-    expect(screen.getByText('Đáp án tự luận:')).toBeInTheDocument();
+    expect(screen.queryByText('Đáp án tự luận:')).not.toBeInTheDocument();
+    expect(screen.getByText('HƯỚNG DẪN CHẤM / LỜI GIẢI MẪU:')).toBeInTheDocument();
   });
 
   it('renders illustration diagram at the top for single questions', () => {

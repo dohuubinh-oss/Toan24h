@@ -38,7 +38,7 @@ describe('RegisterForm Component', () => {
     expect(screen.getByLabelText(/^Mật khẩu/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Xác nhận mật khẩu/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Mã giới thiệu \/ Khuyến mãi/i)).toBeInTheDocument()
-    expect(screen.getByPlaceholderText(/Nhập mã \(ví dụ: TOANVIP3M\)/i)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/Nhập mã \(ví dụ: CHAOMUNG1M\)/i)).toBeInTheDocument()
   })
 
   it('submits form without voucher code when left empty', async () => {
@@ -76,7 +76,7 @@ describe('RegisterForm Component', () => {
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'tranthib@gmail.com' } })
     fireEvent.change(screen.getByLabelText(/^Mật khẩu/i), { target: { value: 'StrongPass123@' } })
     fireEvent.change(screen.getByLabelText(/Xác nhận mật khẩu/i), { target: { value: 'StrongPass123@' } })
-    fireEvent.change(screen.getByPlaceholderText(/Nhập mã \(ví dụ: TOANVIP3M\)/i), { target: { value: 'TOANVIP3M' } })
+    fireEvent.change(screen.getByPlaceholderText(/Nhập mã \(ví dụ: CHAOMUNG1M\)/i), { target: { value: 'TOANVIP3M' } })
 
     fireEvent.click(screen.getByRole('button', { name: 'Đăng ký' }))
 

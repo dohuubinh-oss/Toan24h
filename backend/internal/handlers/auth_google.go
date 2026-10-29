@@ -129,11 +129,12 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 			}
 
 			user = models.User{
-				Email:    email,
-				FullName: fullName,
-				GoogleID: &claims.Sub,
-				Role:     "student",
-				Status:   "active",
+				Email:      email,
+				FullName:   fullName,
+				GoogleID:   &claims.Sub,
+				Role:       "student",
+				Status:     "active",
+				IsVerified: true, // Google đã xác thực email
 			}
 
 			if err := h.db.Create(&user).Error; err != nil {

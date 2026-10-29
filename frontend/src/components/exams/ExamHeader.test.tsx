@@ -8,11 +8,11 @@ describe('ExamHeader Component', () => {
     expect(screen.getByText('Kiểm tra & Hoàn thiện đề thi AI')).toBeInTheDocument()
   })
 
-  it('renders the publish button', () => {
+  it('renders the publish button and does not render unused download pdf button', () => {
     render(<ExamHeader title="Kiểm tra" />)
     const button = screen.getByRole('button', { name: /Lưu & Xuất bản/i })
     expect(button).toBeInTheDocument()
-    // Test that it has a11y touch target padding/height
     expect(button).toHaveClass('h-12')
+    expect(screen.queryByText(/Tải file PDF/i)).not.toBeInTheDocument()
   })
 })

@@ -1,16 +1,35 @@
 # Tài liệu Toàn bộ các Luồng hoạt động trong Hệ thống toan6789.vn (Application Flows)
 
-> **Cập nhật lần cuối:** 15/10/2026  
-> **Dự án:** toan6789.vn - Nền tảng Học và Luyện thi Toán THCS (Lớp 6, 7, 8, 9)
+> **Cập nhật lần cuối:** 28/10/2026  
+> **Dự án:** toan6789.vn - Nền tảng Học và Luyện thi Toán THCS (Lớp 6, 7, 8, 9)  
+> **Bộ Sơ đồ Trực quan (Diagram Design):** [Trang Tổng hợp Tương tác toan6789-flows.html](file:///Users/modeptrai/Desktop/toan6789.vn/docs/toan6789-flows.html) | [Thư mục Sơ đồ diagrams/](file:///Users/modeptrai/Desktop/toan6789.vn/docs/diagrams/)
 
 ---
 
 ## Mục lục
-1. [Luồng Xác thực & Tài khoản (Authentication & Account Flow)](#1-luồng-xác-thực--tài-khoản-authentication--account-flow)
-2. [Luồng Học sinh (Student Experience Flow)](#2-luồng-học-sinh-student-experience-flow)
-3. [Luồng Thanh toán & Gói cước tự động (Payment & VIP Flow)](#3-luồng-thanh-toán--gói-cước-tự-động-payment--vip-flow)
-4. [Luồng Giáo viên & Quản trị viên (Teacher / Admin Flow)](#4-luồng-giáo-viên--quản-trị-viên-teacher--admin-flow)
-5. [Luồng Tiện ích Đa thiết bị & Thông báo (Cross-Device & Notification Flow)](#5-luồng-tiện-ích-đa-thiết-bị--thông-báo-cross-device--notification-flow)
+1. [Bộ Sơ đồ Trực quan Chuẩn Editorial (Diagram Design Suite)](#0-bộ-sơ-đồ-trực-quan-chuẩn-editorial-diagram-design-suite)
+2. [Luồng Xác thực & Tài khoản (Authentication & Account Flow)](#1-luồng-xác-thực--tài-khoản-authentication--account-flow)
+3. [Luồng Học sinh (Student Experience Flow)](#2-luồng-học-sinh-student-experience-flow)
+4. [Luồng Thanh toán & Gói cước tự động (Payment & VIP Flow)](#3-luồng-thanh-toán--gói-cước-tự-động-payment--vip-flow)
+5. [Luồng Giáo viên & Quản trị viên (Teacher / Admin Flow)](#4-luồng-giáo-viên--quản-trị-viên-teacher--admin-flow)
+6. [Luồng Tiện ích Đa thiết bị & Thông báo (Cross-Device & Notification Flow)](#5-luồng-tiện-ích-đa-thiết-bị--thông-báo-cross-device--notification-flow)
+
+---
+
+## 0. Bộ Sơ đồ Trực quan Chuẩn Editorial (Diagram Design Suite)
+
+Toàn bộ các luồng cốt lõi đã được số hóa thành sơ đồ tương tác và đồ họa vector SVG theo chuẩn nhận diện **Modern Academic** (`#2563EB` Royal Blue, `#0F172A` Ink, font `Lexend`):
+
+| # | Luồng Nghiệp vụ | Loại Sơ đồ | File HTML | File SVG |
+|:---|:---|:---|:---|:---|
+| 01 | **Xác thực & Phiên làm việc (Auth)** | Sequence | [Xem HTML](file:///Users/modeptrai/Desktop/toan6789.vn/docs/diagrams/flow-1-authentication.html) | [Tải SVG](file:///Users/modeptrai/Desktop/toan6789.vn/docs/diagrams/flow-1-authentication.svg) |
+| 02 | **Phòng thi & Chống Gian lận (Anti-Cheat)** | Sequence + Queue | [Xem HTML](file:///Users/modeptrai/Desktop/toan6789.vn/docs/diagrams/flow-2-student-exam.html) | [Tải SVG](file:///Users/modeptrai/Desktop/toan6789.vn/docs/diagrams/flow-2-student-exam.svg) |
+| 03 | **Pipeline Soạn đề, OCR & Mobile QR** | Process Pipeline | [Xem HTML](file:///Users/modeptrai/Desktop/toan6789.vn/docs/diagrams/flow-3-teacher-ai-pipeline.html) | [Tải SVG](file:///Users/modeptrai/Desktop/toan6789.vn/docs/diagrams/flow-3-teacher-ai-pipeline.svg) |
+| 04 | **Vòng đời Chấm thi & Phúc khảo** | State Machine | [Xem HTML](file:///Users/modeptrai/Desktop/toan6789.vn/docs/diagrams/flow-4-appeals-lifecycle.html) | [Tải SVG](file:///Users/modeptrai/Desktop/toan6789.vn/docs/diagrams/flow-4-appeals-lifecycle.svg) |
+| 05 | **Thanh toán VietQR PayOS Tự động** | Sequence | [Xem HTML](file:///Users/modeptrai/Desktop/toan6789.vn/docs/diagrams/flow-5-payos-payment.html) | [Tải SVG](file:///Users/modeptrai/Desktop/toan6789.vn/docs/diagrams/flow-5-payos-payment.svg) |
+| 06 | **Cổng Tổng hợp Tất cả các Luồng** | Interactive Hub | [Mở Hub Tổng hợp](file:///Users/modeptrai/Desktop/toan6789.vn/docs/toan6789-flows.html) | — |
+
+---
 
 ---
 

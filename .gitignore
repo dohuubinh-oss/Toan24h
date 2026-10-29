@@ -44,6 +44,9 @@ Thumbs.db
 docs/*
 !docs/superpowers/
 !docs/toan6789-architecture.*
+!docs/toan6789-flows.html
+!docs/diagrams/
+!docs/application-flows.md
 fileExample/
 fileExamples/
 

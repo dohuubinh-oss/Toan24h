@@ -48,11 +48,15 @@ export default function RegisterForm() {
         voucherCode: data.voucherCode?.trim() || undefined
       })
       if (res?.freeMonths && res.freeMonths > 0) {
-        toast.success(`Đăng ký thành công! Bạn nhận được ${res.freeMonths} tháng VIP miễn phí. Vui lòng đăng nhập.`)
+        toast.success(`Đăng ký thành công! Bạn nhận được ${res.freeMonths} tháng VIP miễn phí. Vui lòng kích hoạt email để bắt đầu.`)
       } else {
-        toast.success('Đăng ký thành công! Vui lòng đăng nhập.')
+        toast.success('Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.')
       }
-      router.push('/login?registered=true')
+      if (res?.requireEmailVerification) {
+        router.push(`/verify-email?email=${encodeURIComponent(data.identity)}`)
+      } else {
+        router.push('/login?registered=true')
+      }
     } catch (error: any) {
       let msg = error.message
       if (msg.includes('Email already in use') || msg.includes('email')) {
@@ -200,14 +204,11 @@ export default function RegisterForm() {
               <Input
                 {...register('voucherCode')}
                 id="voucherCode"
-                placeholder="Nhập mã (ví dụ: TOANVIP3M)"
+                placeholder="Nhập mã (ví dụ: CHAOMUNG1M)"
                 type="text"
                 className="uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal font-medium"
               />
             </div>
-            <p className="text-xs text-slate-500 mt-1.5">
-              Nhập mã từ thầy cô hoặc đối tác Affiliate để nhận thêm thời hạn VIP miễn phí.
-            </p>
           </div>
 
           <Button

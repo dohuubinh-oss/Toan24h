@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phòng thi &amp; Chống Gian lận · toan6789.vn</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper: #ffffff;
+      --color-paper-2: #f8fafc;
+      --color-ink: #0f172a;
+      --color-muted: #475569;
+      --color-soft: #64748b;
+      --color-rule: rgba(15, 23, 42, 0.12);
+      --color-rule-solid: #cbd5e1;
+      --color-accent: #2563eb;
+      --color-accent-tint: rgba(37, 99, 235, 0.08);
+      --color-link: #1d4ed8;
+      --color-danger: #ef4444;
+      --color-success: #16a34a;
+      --font-sans: 'Lexend', system-ui, sans-serif;
+      --font-serif: 'Lexend', serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-paper: #0f172a;
+        --color-paper-2: #1e293b;
+        --color-ink: #f8fafc;
+        --color-muted: #94a3b8;
+        --color-soft: #64748b;
+        --color-rule: rgba(248, 250, 252, 0.12);
+        --color-rule-solid: #334155;
+        --color-accent: #60a5fa;
+        --color-accent-tint: rgba(96, 165, 250, 0.12);
+        --color-link: #93c5fd;
+        --color-danger: #f87171;
+        --color-success: #4ade80;
+      }
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      min-height: 100vh;
+      padding: 3rem 2rem;
+      color: var(--color-ink);
+      line-height: 1.5;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; }
+    .header-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.85rem, 3.2vw + 1rem, 2.75rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      font-size: 0.975rem;
+      line-height: 1.55;
+      color: var(--color-muted);
+      max-width: 72ch;
+    }
+    .diagram-container {
+      background: var(--color-paper-2);
+      border-radius: 10px;
+      border: 1px solid var(--color-rule);
+      padding: 1.5rem;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    svg {
+      width: 100%;
+      min-width: 960px;
+      display: block;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+    @media (max-width: 860px) { .cards { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--color-paper);
+      border-radius: 8px;
+      border: 1px solid var(--color-rule);
+      padding: 1.25rem;
+    }
+    .card .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.accent { background: var(--color-accent); }
+    .card-dot.danger { background: var(--color-danger); }
+    .card-dot.success { background: var(--color-success); }
+    .card h3 { font-size: 0.925rem; font-weight: 600; }
+    .card p, .card ul { color: var(--color-muted); font-size: 0.825rem; line-height: 1.6; list-style: none; }
+    .card li { margin-bottom: 0.35rem; padding-left: 0.9rem; position: relative; }
+    .card li::before { content: '—'; position: absolute; left: 0; color: var(--color-soft); font-size: 0.75rem; }
+    .footer {
+      margin-top: 2rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--color-rule);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      color: var(--color-soft);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <p class="header-eyebrow">Luồng 02 · Student Exam &amp; Anti-Cheat Telemetry</p>
+      <h1>Phòng thi Thực chiến &amp; Giám sát Chống gian lận</h1>
+      <p class="subtitle">Quy trình cấp phát đề bảo mật từ Redis Cache, giám sát chuyển tab bất đồng bộ qua Redis Queue và chấm điểm Server-side tốc độ cao.</p>
+    </div>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="flow2-title flow2-desc">
+        <title id="flow2-title">Sơ đồ Luồng Thi Trực tuyến &amp; Anti-Cheat toan6789.vn</title>
+        <desc id="flow2-desc">Sơ đồ tương tác thời gian thực giữa Thí sinh, Giao diện phòng thi Fullscreen, Go Backend, Redis Queue và PostgreSQL Worker khi thi và nộp bài.</desc>
+        <defs>
+          <pattern id="grid-dots-2" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.8" fill="rgba(15, 23, 42, 0.08)"/>
+          </pattern>
+          <marker id="arr-muted-2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#475569"/>
+          </marker>
+          <marker id="arr-link-2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#1d4ed8"/>
+          </marker>
+          <marker id="arr-accent-2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+          </marker>
+          <marker id="arr-danger-2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#ef4444"/>
+          </marker>
+          <marker id="arr-open-2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polyline points="0 0, 8 3, 0 6" fill="none" stroke="#ef4444" stroke-width="1.2"/>
+          </marker>
+        </defs>
+
+        <!-- Canvas Background -->
+        <rect width="100%" height="100%" fill="#ffffff"/>
+        <rect width="100%" height="100%" fill="url(#grid-dots-2)" opacity="0.65"/>
+
+        <!-- Lifelines -->
+        <line x1="90" y1="84" x2="90" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+        <line x1="280" y1="84" x2="280" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+        <line x1="490" y1="84" x2="490" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+        <line x1="700" y1="84" x2="700" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+        <line x1="880" y1="84" x2="880" y2="570" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4,4"/>
+
+        <!-- Activation Bars -->
+        <rect x="86" y="120" width="8" height="430" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+        <rect x="276" y="128" width="8" height="412" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+        <rect x="486" y="136" width="8" height="394" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+        <rect x="696" y="150" width="8" height="230" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+        <rect x="876" y="324" width="8" height="196" rx="2" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.8"/>
+
+        <!-- Actor Headers -->
+        <!-- Actor 1: Thí sinh -->
+        <rect x="30" y="32" width="120" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="90" y="52" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">Thí sinh</text>
+        <text x="90" y="67" fill="#64748b" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">Student Browser</text>
+
+        <!-- Actor 2: Exam Room UI -->
+        <rect x="216" y="32" width="128" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="280" y="52" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">Phòng thi Fullscreen</text>
+        <text x="280" y="67" fill="#64748b" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">/exam/[id]/take</text>
+
+        <!-- Actor 3: Go API Engine -->
+        <rect x="426" y="32" width="128" height="48" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="490" y="52" fill="#2563eb" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">Go Exam API</text>
+        <text x="490" y="67" fill="#1d4ed8" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">Chấm thi &amp; Queue Ingest</text>
+
+        <!-- Actor 4: Redis Engine -->
+        <rect x="636" y="32" width="128" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="700" y="52" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">Redis In-Memory</text>
+        <text x="700" y="67" fill="#64748b" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">Cache đề &amp; LPUSH Queue</text>
+
+        <!-- Actor 5: PostgreSQL & Worker -->
+        <rect x="816" y="32" width="128" height="48" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="880" y="52" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600" text-anchor="middle">Postgres &amp; Worker</text>
+        <text x="880" y="67" fill="#64748b" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">audit_logs &amp; submissions</text>
+
+        <!-- Phase 1: Nạp đề thi bảo mật -->
+        <line x1="94" y1="136" x2="276" y2="136" stroke="#1d4ed8" stroke-width="1.2" marker-end="url(#arr-link-2)"/>
+        <rect x="136" y="123" width="100" height="15" rx="3" fill="#ffffff" stroke="rgba(15,23,42,0.08)" stroke-width="0.8"/>
+        <text x="186" y="134" fill="#1d4ed8" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">Bắt đầu bài thi</text>
+
+        <line x1="284" y1="152" x2="486" y2="152" stroke="#475569" stroke-width="1.2" marker-end="url(#arr-muted-2)"/>
+        <rect x="336" y="139" width="110" height="15" rx="3" fill="#ffffff" stroke="rgba(15,23,42,0.08)" stroke-width="0.8"/>
+        <text x="391" y="150" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">GET /api/v1/exams/:id</text>
+
+        <line x1="494" y1="168" x2="696" y2="168" stroke="#475569" stroke-width="1.2" marker-end="url(#arr-muted-2)"/>
+        <rect x="548" y="155" width="102" height="15" rx="3" fill="#ffffff" stroke="rgba(15,23,42,0.08)" stroke-width="0.8"/>
+        <text x="599" y="166" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">GET exam:cached:{id}</text>
+
+        <line x1="696" y1="192" x2="284" y2="192" stroke="#2563eb" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#arr-accent-2)"/>
+        <rect x="410" y="179" width="168" height="15" rx="3" fill="#ffffff" stroke="#2563eb" stroke-width="0.8"/>
+        <text x="494" y="190" fill="#2563eb" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">Trả đề thi (Giấu correct_option)</text>
+
+        <!-- Phase 2: Anti-Cheat Telemetry (Frame) -->
+        <rect x="74" y="216" width="830" height="168" rx="6" fill="rgba(239, 68, 68, 0.02)" stroke="rgba(239, 68, 68, 0.2)" stroke-width="1"/>
+        <rect x="74" y="216" width="46" height="18" rx="2" fill="#ffffff" stroke="rgba(239, 68, 68, 0.2)" stroke-width="1"/>
+        <text x="97" y="228" fill="#ef4444" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">OPT</text>
+        <text x="130" y="229" fill="#ef4444" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="500">[Phát hiện sự kiện Rời tab / Mất Focus / Thu nhỏ cửa sổ]</text>
+
+        <!-- Async Beacon Event -->
+        <line x1="94" y1="250" x2="276" y2="250" stroke="#ef4444" stroke-width="1.2" marker-end="url(#arr-danger-2)"/>
+        <rect x="132" y="237" width="108" height="15" rx="3" fill="#ffffff" stroke="#ef4444" stroke-width="0.8"/>
+        <text x="186" y="248" fill="#ef4444" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">Chuyển Tab / Blur</text>
+
+        <line x1="284" y1="272" x2="486" y2="272" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arr-open-2)"/>
+        <rect x="318" y="259" width="144" height="15" rx="3" fill="#ffffff" stroke="#ef4444" stroke-width="0.8"/>
+        <text x="390" y="270" fill="#ef4444" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">Async POST /notifications/cheat</text>
+
+        <!-- Push to Redis Queue -->
+        <line x1="494" y1="294" x2="696" y2="294" stroke="#475569" stroke-width="1.2" marker-end="url(#arr-muted-2)"/>
+        <rect x="546" y="281" width="106" height="15" rx="3" fill="#ffffff" stroke="rgba(15,23,42,0.08)" stroke-width="0.8"/>
+        <text x="599" y="292" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">LPUSH exam:cheat:queue</text>
+
+        <!-- Immediate 200 OK without blocking -->
+        <line x1="486" y1="316" x2="284" y2="316" stroke="#16a34a" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arr-muted-2)"/>
+        <rect x="336" y="303" width="116" height="15" rx="3" fill="#ffffff" stroke="#16a34a" stroke-width="0.8"/>
+        <text x="394" y="314" fill="#16a34a" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">200 OK (&lt; 2ms, No I/O Lock)</text>
+
+        <!-- Worker Batch Drain -->
+        <line x1="876" y1="344" x2="704" y2="344" stroke="#475569" stroke-width="1.2" marker-end="url(#arr-muted-2)"/>
+        <rect x="740" y="331" width="108" height="15" rx="3" fill="#ffffff" stroke="rgba(15,23,42,0.08)" stroke-width="0.8"/>
+        <text x="794" y="342" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">RPOP Batch (Mỗi 2s)</text>
+
+        <path d="M 884 358 H 914 V 378 H 884" fill="none" stroke="#475569" stroke-width="1.2" marker-end="url(#arr-muted-2)"/>
+        <text x="760" y="372" fill="#64748b" font-size="8" font-family="'JetBrains Mono', monospace">Bulk Insert audit_logs</text>
+
+        <!-- Phase 3: Nộp bài & Chấm điểm Tức thì -->
+        <line x1="94" y1="410" x2="486" y2="410" stroke="#1d4ed8" stroke-width="1.4" marker-end="url(#arr-link-2)"/>
+        <rect x="230" y="397" width="148" height="15" rx="3" fill="#ffffff" stroke="#1d4ed8" stroke-width="0.8"/>
+        <text x="304" y="408" fill="#1d4ed8" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">POST /api/v1/exams/:id/submit</text>
+
+        <!-- In-memory scoring -->
+        <path d="M 494 426 H 524 V 446 H 494" fill="none" stroke="#2563eb" stroke-width="1.2" marker-end="url(#arr-accent-2)"/>
+        <text x="532" y="440" fill="#2563eb" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600">In-Memory Auto Scoring</text>
+
+        <!-- Save submission in PostgreSQL -->
+        <line x1="494" y1="464" x2="876" y2="464" stroke="#475569" stroke-width="1.2" marker-end="url(#arr-muted-2)"/>
+        <rect x="632" y="451" width="138" height="15" rx="3" fill="#ffffff" stroke="rgba(15,23,42,0.08)" stroke-width="0.8"/>
+        <text x="701" y="462" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">INSERT INTO submissions</text>
+
+        <!-- Update Leaderboard Cache -->
+        <line x1="494" y1="492" x2="696" y2="492" stroke="#475569" stroke-width="1.2" marker-end="url(#arr-muted-2)"/>
+        <rect x="540" y="479" width="126" height="15" rx="3" fill="#ffffff" stroke="rgba(15,23,42,0.08)" stroke-width="0.8"/>
+        <text x="603" y="490" fill="#475569" font-size="8.5" font-family="'JetBrains Mono', monospace" text-anchor="middle">ZADD leaderboard:weekly</text>
+
+        <!-- Final Return: Headline Result -->
+        <line x1="486" y1="524" x2="94" y2="524" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#arr-accent-2)"/>
+        <rect x="220" y="511" width="170" height="15" rx="3" fill="#ffffff" stroke="#2563eb" stroke-width="1"/>
+        <text x="305" y="522" fill="#2563eb" font-size="8.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">200 OK: Trả bảng điểm &amp; Lời giải chi tiết</text>
+
+      </svg>
+    </div>
+
+    <!-- Technical Takeaways -->
+    <div class="cards">
+      <div class="card">
+        <p class="eyebrow">Bảo mật Đề thi</p>
+        <div class="card-header">
+          <div class="card-dot accent"></div>
+          <h3>Triệt Tiêu Gian Lận Inspect Element</h3>
+        </div>
+        <p>Thuộc tính <code>correct_option</code> tuyệt đối không bao giờ được gửi qua API học sinh. Mọi thao tác so khớp kết quả được thực hiện hoàn toàn ở Server (Backend Go in-memory), ngăn ngừa học sinh xem trộm đáp án qua Network tab.</p>
+      </div>
+
+      <div class="card">
+        <p class="eyebrow">Xử lý Tải Ghi Spike Write</p>
+        <div class="card-header">
+          <div class="card-dot danger"></div>
+          <h3>Asynchronous Batching với Redis Queue</h3>
+        </div>
+        <p>Khi 1,000+ học sinh cùng thi, các sự kiện vi phạm chuyển tab được đẩy vào Redis Queue qua lệnh <code>LPUSH</code> siêu tốc (&lt; 2ms). Background Worker gom theo cụm (100 logs hoặc mỗi 2s) mới ghi vào PostgreSQL để không làm nghẽn I/O cơ sở dữ liệu.</p>
+      </div>
+
+      <div class="card">
+        <p class="eyebrow">Trải nghiệm Phòng thi</p>
+        <div class="card-header">
+          <div class="card-dot success"></div>
+          <h3>Đồng hồ Thời gian thực &amp; Autosave</h3>
+        </div>
+        <p>Client tự động kích hoạt chế độ Fullscreen, liên tục lưu trạng thái bài thi vào Local Cache kết hợp Server Autosave. Khi hết giờ, bài thi sẽ tự động được gửi về Server và chuyển trang xem lời giải bước-từng-bước (KaTeX).</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Dự án: toan6789.vn · Hệ thống Quản lý và Thi Trắc nghiệm Toán THCS</span>
+      <span>Chuẩn thiết kế: Modern Academic (Google Material Inspired)</span>
+    </div>
+  </div>
+</body>
+</html>

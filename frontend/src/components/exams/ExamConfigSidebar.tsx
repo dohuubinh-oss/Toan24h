@@ -1,4 +1,5 @@
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { Settings2, ChevronDown, Grid, Lightbulb } from 'lucide-react'
 import { Label } from '../ui/Label'
 import { Input } from '../ui/Input'
@@ -17,6 +18,7 @@ interface ExamConfigSidebarProps {
 }
 
 export default function ExamConfigSidebar({ config, onChange, questions, errors = {} }: ExamConfigSidebarProps) {
+  const router = useRouter();
   const { diffScore, matrix, diffLabel, totalNB, totalTH, totalVD, totalVDC } = calculateExamDifficulty(questions);
   const topics = Object.keys(matrix);
   const [isLectureModalOpen, setIsLectureModalOpen] = React.useState(false);
@@ -92,7 +94,7 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
                   className={cn(
                     "flex-1 py-2.5 text-sm font-medium rounded-lg transition-all",
                     config.cate === 'practice' 
-                      ? "bg-white text-indigo-600 shadow-sm" 
+                      ? "bg-white text-primary shadow-sm font-semibold" 
                       : "text-slate-500 hover:text-slate-700"
                   )}
                 >
@@ -207,7 +209,7 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
                   {selectedLectureName ? "Đổi" : "Chọn"}
                 </Button>
               </div>
-              <p className="text-[11px] text-slate-500 ml-1 leading-relaxed">
+              <p className="text-xs text-slate-500 ml-1 leading-relaxed">
                 Liên kết đề thi với bài giảng (ví dụ: &quot;Kiểm tra giữa kì 1&quot;) để học sinh làm bài trực tiếp từ bài giảng tương ứng.
               </p>
             </div>
@@ -284,8 +286,12 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
               <p className="text-xs text-slate-600 leading-relaxed font-medium mb-4">
                 Ma trận đề thi hiện tại đang được tính toán trực tiếp từ dữ liệu câu hỏi. Bạn có thể thay đổi cấu trúc câu hỏi để ma trận cân bằng hơn.
               </p>
-              <Button className="w-full h-12 text-sm font-bold shadow-sm">
-                Tạo thêm câu hỏi
+              <Button 
+                type="button"
+                onClick={() => router.push('/dashboard/questions')}
+                className="w-full h-12 text-sm font-bold shadow-sm rounded-xl cursor-pointer"
+              >
+                Chọn thêm câu hỏi từ Ngân hàng
               </Button>
             </div>
           </div>

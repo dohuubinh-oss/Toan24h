@@ -29,9 +29,11 @@ function QuestionsPageContent() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [totalVisible, setTotalVisible] = useState(0);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   
   const loadQuestions = async () => {
     setIsFiltering(true);
+    setLoadError(null);
     try {
       const page = parseInt(searchParams.get('page') || '1');
       const currentGrade = searchParams.get('grade') || undefined;
@@ -52,13 +54,14 @@ function QuestionsPageContent() {
 
       setQuestions(response.data || []);
       setTotalVisible(response.total || 0);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to load questions:", error);
       setQuestions([]);
       setTotalVisible(0);
+      setLoadError(error?.message || "Không thể tải danh sách câu hỏi. Vui lòng kiểm tra lại kết nối mạng!");
     } finally {
-        setIsFiltering(false);
-      }
+      setIsFiltering(false);
+    }
   };
 
   useEffect(() => {
@@ -136,7 +139,7 @@ function QuestionsPageContent() {
             
             <Link 
               href="/dashboard/questions/create" 
-              className="px-4 py-2 bg-indigo-500 text-white font-medium rounded-lg hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2 shadow-sm"
+              className="px-4 py-2 bg-primary text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-sm min-h-[44px]"
             >
               <Plus size={18} />
               Thêm câu hỏi
@@ -211,7 +214,7 @@ function QuestionsPageContent() {
                             <button
                               onClick={() => q.id && handleSelectReplacement(q.id)}
                               title="Bấm để đổi thành câu hỏi này"
-                              className="px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 shadow-md bg-indigo-600 hover:bg-indigo-700 text-white active:scale-95 cursor-pointer"
+                              className="px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 shadow-md bg-primary hover:bg-blue-700 text-white active:scale-95 cursor-pointer min-h-[40px]"
                             >
                               <CheckCircle2 className="w-4 h-4 text-emerald-300" />
                               <span>Chọn thay thế câu này</span>
@@ -247,7 +250,23 @@ function QuestionsPageContent() {
                   );
                 })}
             
-            {questions.length === 0 && (
+            {loadError ? (
+              <div className="bg-white rounded-2xl border border-red-200/80 p-12 flex flex-col items-center justify-center text-center space-y-3 shadow-xs">
+                <div className="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-1">
+                  <RefreshCw className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-slate-800">Không thể tải dữ liệu câu hỏi</h3>
+                <p className="text-xs text-slate-500 max-w-md">{loadError}</p>
+                <button
+                  type="button"
+                  onClick={loadQuestions}
+                  className="mt-2 px-5 py-2.5 bg-primary hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer min-h-[40px]"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Thử lại</span>
+                </button>
+              </div>
+            ) : questions.length === 0 ? (
               <div className="bg-white rounded-xl border border-slate-200/60 p-16 flex flex-col items-center justify-center text-slate-500 text-center">
                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                   <Search className="w-8 h-8 text-slate-300" />
@@ -255,7 +274,7 @@ function QuestionsPageContent() {
                 <p className="text-base font-semibold text-slate-700">Không tìm thấy câu hỏi</p>
                 <p className="text-sm mt-1">Hãy thử thay đổi bộ lọc hoặc từ khoá tìm kiếm.</p>
               </div>
-            )}
+            ) : null}
           </>
           )}
         </div>

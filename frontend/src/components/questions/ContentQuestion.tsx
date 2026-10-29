@@ -177,18 +177,6 @@ export default function ContentQuestion({
               )}
             </div>
           )}
-          {/* Essay Answer / Đáp án tự luận */}
-          {(qIsEssay || (!qOptions || qOptions.length === 0)) && qCorrect && showCorrectBadge && (
-            <div className="mb-6 p-4 rounded-xl border border-emerald-200 bg-emerald-50/60 shadow-xs">
-              <div className="flex items-center gap-2 mb-2 text-emerald-800 font-bold text-xs uppercase tracking-wider">
-                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>{qIsEssay ? 'Đáp án tự luận:' : 'Đáp án chính xác:'}</span>
-              </div>
-              <div className="text-base font-semibold text-slate-800 overflow-x-auto">
-                <MathText content={qCorrect} />
-              </div>
-            </div>
-          )}
 
           {/* Solution */}
           <SolutionGuideSection solution={qSolution} isSubQuestion={isSubQuestion} />

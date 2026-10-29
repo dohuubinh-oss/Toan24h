@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 580" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="flow3-title flow3-desc" id="flow-3-teacher-ai-pipeline-root">
+        <title id="flow3-title">Pipeline Soạn đề và Trích xuất AI toan6789.vn</title>
+        <desc id="flow3-desc">Sơ đồ Process / Data Flow mô tả 4 giai đoạn: Tiếp nhận dữ liệu, Động cơ AI &amp; OCR, Ngân hàng câu hỏi và Lắp ráp đề thi hoàn chỉnh.</desc>
+        <defs>
+      <style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;family=Noto+Sans+TC:wght@400;500;600&amp;family=Noto+Serif+TC:wght@400&amp;display=swap');
+      #flow-3-teacher-ai-pipeline-root { --color-paper: #ffffff;
+      --color-paper-2: #f8fafc;
+      --color-ink: #0f172a;
+      --color-muted: #475569;
+      --color-soft: #64748b;
+      --color-rule: rgba(15, 23, 42, 0.12);
+      --color-rule-solid: #cbd5e1;
+      --color-accent: #2563eb;
+      --color-accent-tint: rgba(37, 99, 235, 0.08);
+      --color-link: #1d4ed8;
+      --color-success: #16a34a;
+      --color-purple: #7c3aed;
+      --font-sans: 'Lexend', system-ui, sans-serif;
+      --font-serif: 'Lexend', serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace; }
+      @media (prefers-color-scheme: dark) {
+#flow-3-teacher-ai-pipeline-root { --color-paper: #0f172a;
+        --color-paper-2: #1e293b;
+        --color-ink: #f8fafc;
+        --color-muted: #94a3b8;
+        --color-soft: #64748b;
+        --color-rule: rgba(248, 250, 252, 0.12);
+        --color-rule-solid: #334155;
+        --color-accent: #60a5fa;
+        --color-accent-tint: rgba(96, 165, 250, 0.12);
+        --color-link: #93c5fd;
+        --color-success: #4ade80;
+        --color-purple: #a78bfa; }
+}
+      #flow-3-teacher-ai-pipeline-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #flow-3-teacher-ai-pipeline-root .container { max-width: 1200px; margin: 0 auto; }
+      #flow-3-teacher-ai-pipeline-root .header-eyebrow { font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      margin-bottom: 0.5rem; }
+      #flow-3-teacher-ai-pipeline-root .subtitle { font-size: 0.975rem;
+      line-height: 1.55;
+      color: var(--color-muted);
+      max-width: 72ch; }
+      #flow-3-teacher-ai-pipeline-root .diagram-container { background: var(--color-paper-2);
+      border-radius: 10px;
+      border: 1px solid var(--color-rule);
+      padding: 1.5rem;
+      overflow-x: auto;
+      max-width: 100%; }
+      #flow-3-teacher-ai-pipeline-root .card-header { display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--color-rule); }
+      #flow-3-teacher-ai-pipeline-root .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+      #flow-3-teacher-ai-pipeline-root .card-dot.accent { background: var(--color-accent); }
+      #flow-3-teacher-ai-pipeline-root .card-dot.purple { background: var(--color-purple); }
+      #flow-3-teacher-ai-pipeline-root .card-dot.success { background: var(--color-success); }</style>
+          <pattern id="flow-3-teacher-ai-pipeline-grid-dots-3" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.8" fill="#0f172a" fill-opacity="0.08"/>
+          </pattern>
+          <marker id="flow-3-teacher-ai-pipeline-arr-muted-3" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#475569"/>
+          </marker>
+          <marker id="flow-3-teacher-ai-pipeline-arr-link-3" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#1d4ed8"/>
+          </marker>
+          <marker id="flow-3-teacher-ai-pipeline-arr-accent-3" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+          </marker>
+        </defs>
+
+        <!-- Canvas Background -->
+        <rect width="100%" height="100%" fill="#ffffff"/>
+        <rect width="100%" height="100%" fill="url(#flow-3-teacher-ai-pipeline-grid-dots-3)" opacity="0.65"/>
+
+        <!-- Stage Columns (4 stages across width) -->
+        <!-- Stage 1: Ingestion -->
+        <rect x="24" y="24" width="216" height="532" rx="8" fill="#0f172a" stroke="#0f172a" stroke-width="1" fill-opacity="0.02" stroke-opacity="0.12"/>
+        <rect x="36" y="34" width="24" height="20" rx="3" fill="#0f172a"/>
+        <text x="48" y="48" fill="#ffffff" font-size="9" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">01</text>
+        <text x="68" y="49" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600">ĐA NGUỒN TIẾP NHẬN</text>
+        <text x="36" y="70" fill="#64748b" font-size="8.5" font-family="'JetBrains Mono', monospace">Ingress: Mobile QR, OCR &amp; Bulk</text>
+
+        <!-- Stage 2: AI Processing (Focal Stage) -->
+        <rect x="264" y="24" width="216" height="532" rx="8" fill="#2563eb" stroke="#2563eb" stroke-width="1.4" fill-opacity="0.03"/>
+        <rect x="276" y="34" width="24" height="20" rx="3" fill="#2563eb"/>
+        <text x="288" y="48" fill="#ffffff" font-size="9" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">02</text>
+        <text x="308" y="49" fill="#2563eb" font-size="12" font-family="'Lexend', sans-serif" font-weight="600">XỬ LÝ AI &amp; HÌNH HỌC</text>
+        <text x="276" y="70" fill="#1d4ed8" font-size="8.5" font-family="'JetBrains Mono', monospace">Refinement &amp; SVG Geometry</text>
+
+        <!-- Stage 3: Question Bank -->
+        <rect x="504" y="24" width="216" height="532" rx="8" fill="#0f172a" stroke="#0f172a" stroke-width="1" fill-opacity="0.02" stroke-opacity="0.12"/>
+        <rect x="516" y="34" width="24" height="20" rx="3" fill="#0f172a"/>
+        <text x="528" y="48" fill="#ffffff" font-size="9" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">03</text>
+        <text x="548" y="49" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600">NGÂN HÀNG CÂU HỎI</text>
+        <text x="516" y="70" fill="#64748b" font-size="8.5" font-family="'JetBrains Mono', monospace">Taxonomy: Khối 6-9 · 4 Mức độ</text>
+
+        <!-- Stage 4: Exam Builder -->
+        <rect x="744" y="24" width="192" height="532" rx="8" fill="#0f172a" stroke="#0f172a" stroke-width="1" fill-opacity="0.02" stroke-opacity="0.12"/>
+        <rect x="756" y="34" width="24" height="20" rx="3" fill="#0f172a"/>
+        <text x="768" y="48" fill="#ffffff" font-size="9" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">04</text>
+        <text x="788" y="49" fill="#0f172a" font-size="12" font-family="'Lexend', sans-serif" font-weight="600">LẮP RÁP ĐỀ THI</text>
+        <text x="756" y="70" fill="#64748b" font-size="8.5" font-family="'JetBrains Mono', monospace">Assembly, Shuffle &amp; PDF</text>
+
+        <!-- Nodes in Stage 1 -->
+        <!-- Node 1.1: Mobile QR Camera Sync -->
+        <rect x="40" y="96" width="184" height="88" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <rect x="48" y="104" width="56" height="15" rx="3" fill="#eff6ff"/>
+        <text x="76" y="115" fill="#2563eb" font-size="7.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">MOBILE QR</text>
+        <text x="48" y="136" fill="#0f172a" font-size="11" font-family="'Lexend', sans-serif" font-weight="600">Đồng bộ Camera ĐT</text>
+        <text x="48" y="152" fill="#475569" font-size="9" font-family="'JetBrains Mono', monospace">POST /mobile-upload/:id</text>
+        <text x="48" y="168" fill="#64748b" font-size="8" font-family="'Lexend', sans-serif">Chụp hình viết tay thẳng lên web</text>
+
+        <!-- Node 1.2: AI OCR File Upload -->
+        <rect x="40" y="200" width="184" height="88" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <rect x="48" y="208" width="52" height="15" rx="3" fill="#eff6ff"/>
+        <text x="74" y="219" fill="#2563eb" font-size="7.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">OCR SCAN</text>
+        <text x="48" y="240" fill="#0f172a" font-size="11" font-family="'Lexend', sans-serif" font-weight="600">Trích xuất Ảnh Đề bài</text>
+        <text x="48" y="256" fill="#475569" font-size="9" font-family="'JetBrains Mono', monospace">POST /api/v1/ocr</text>
+        <text x="48" y="272" fill="#64748b" font-size="8" font-family="'Lexend', sans-serif">AI nhận diện công thức LaTeX</text>
+
+        <!-- Node 1.3: Manual KaTeX Editor -->
+        <rect x="40" y="304" width="184" height="88" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <rect x="48" y="312" width="60" height="15" rx="3" fill="#f1f5f9"/>
+        <text x="78" y="323" fill="#475569" font-size="7.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">MANUAL UI</text>
+        <text x="48" y="344" fill="#0f172a" font-size="11" font-family="'Lexend', sans-serif" font-weight="600">Trình soạn KaTeX Trực quan</text>
+        <text x="48" y="360" fill="#475569" font-size="9" font-family="'JetBrains Mono', monospace">LaTeX Math Expression</text>
+        <text x="48" y="376" fill="#64748b" font-size="8" font-family="'Lexend', sans-serif">Hỗ trợ phân số, căn thức, ma trận</text>
+
+        <!-- Node 1.4: Bulk JSON Import -->
+        <rect x="40" y="408" width="184" height="88" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <rect x="48" y="416" width="60" height="15" rx="3" fill="#f1f5f9"/>
+        <text x="78" y="427" fill="#475569" font-size="7.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">BULK JSON</text>
+        <text x="48" y="448" fill="#0f172a" font-size="11" font-family="'Lexend', sans-serif" font-weight="600">Nhập dữ liệu hàng loạt</text>
+        <text x="48" y="464" fill="#475569" font-size="9" font-family="'JetBrains Mono', monospace">POST /questions/bulk</text>
+        <text x="48" y="480" fill="#64748b" font-size="8" font-family="'Lexend', sans-serif">Nạp 50-100 câu hỏi trong 1 click</text>
+
+        <!-- Nodes in Stage 2 (AI Engine) -->
+        <!-- Node 2.1: Extract AI Questions (Focal) -->
+        <rect x="280" y="148" width="184" height="110" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>
+        <rect x="288" y="156" width="70" height="15" rx="3" fill="#eff6ff"/>
+        <text x="323" y="167" fill="#2563eb" font-size="7.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">AI PARSER</text>
+        <text x="288" y="188" fill="#2563eb" font-size="11.5" font-family="'Lexend', sans-serif" font-weight="600">Trích xuất Câu hỏi AI</text>
+        <text x="288" y="206" fill="#1d4ed8" font-size="9" font-family="'JetBrains Mono', monospace">POST /questions/extract-ai</text>
+        <text x="288" y="224" fill="#475569" font-size="8" font-family="'Lexend', sans-serif">Bóc tách Đề, 4 Đáp án A/B/C/D,</text>
+        <text x="288" y="238" fill="#475569" font-size="8" font-family="'Lexend', sans-serif">Lời giải chi tiết &amp; Khối lớp</text>
+
+        <!-- Node 2.2: Refine Geometry SVG Diagram -->
+        <rect x="280" y="316" width="184" height="110" rx="6" fill="#ffffff" stroke="#7c3aed" stroke-width="1.2"/>
+        <rect x="288" y="324" width="76" height="15" rx="3" fill="#f5f3ff"/>
+        <text x="326" y="335" fill="#7c3aed" font-size="7.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">SVG GEOMETRY</text>
+        <text x="288" y="356" fill="#0f172a" font-size="11.5" font-family="'Lexend', sans-serif" font-weight="600">Tinh chỉnh Hình học SVG</text>
+        <text x="288" y="374" fill="#7c3aed" font-size="9" font-family="'JetBrains Mono', monospace">/questions/refine-diagram-svg</text>
+        <text x="288" y="392" fill="#475569" font-size="8" font-family="'Lexend', sans-serif">Chuẩn hóa hình học vector,</text>
+        <text x="288" y="406" fill="#475569" font-size="8" font-family="'Lexend', sans-serif">đỉnh tam giác, đường tròn sắc nét</text>
+
+        <!-- Nodes in Stage 3 (Question Bank Taxonomy) -->
+        <!-- Node 3.1: Taxonomy Classification -->
+        <rect x="520" y="148" width="184" height="130" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <rect x="528" y="156" width="78" height="15" rx="3" fill="#f1f5f9"/>
+        <text x="567" y="167" fill="#475569" font-size="7.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">CLASSIFICATION</text>
+        <text x="528" y="188" fill="#0f172a" font-size="11" font-family="'Lexend', sans-serif" font-weight="600">Phân loại &amp; Gắn Thẻ</text>
+        <text x="528" y="206" fill="#64748b" font-size="8.5" font-family="'Lexend', sans-serif">• Khối lớp: Lớp 6, 7, 8, 9</text>
+        <text x="528" y="222" fill="#64748b" font-size="8.5" font-family="'Lexend', sans-serif">• Chuyên đề: Đại số, Hình, Thống kê</text>
+        <text x="528" y="238" fill="#64748b" font-size="8.5" font-family="'Lexend', sans-serif">• 4 Cấp độ nhận thức</text>
+        <text x="528" y="254" fill="#2563eb" font-size="8.5" font-family="'JetBrains Mono', monospace">POST /questions (GORM DB)</text>
+
+        <!-- Node 3.2: Reported Question Review -->
+        <rect x="520" y="316" width="184" height="100" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <rect x="528" y="324" width="76" height="15" rx="3" fill="#fef2f2"/>
+        <text x="566" y="335" fill="#ef4444" font-size="7.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">REPORT AUDIT</text>
+        <text x="528" y="356" fill="#0f172a" font-size="11" font-family="'Lexend', sans-serif" font-weight="600">Rà soát Báo cáo Sai sót</text>
+        <text x="528" y="374" fill="#475569" font-size="9" font-family="'JetBrains Mono', monospace">GET /questions/reported</text>
+        <text x="528" y="392" fill="#64748b" font-size="8" font-family="'Lexend', sans-serif">Học sinh phản hồi → Sửa &amp; Duyệt</text>
+
+        <!-- Nodes in Stage 4 (Exam Assembly) -->
+        <!-- Node 4.1: Exam Builder -->
+        <rect x="752" y="148" width="176" height="130" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+        <rect x="760" y="156" width="70" height="15" rx="3" fill="#f1f5f9"/>
+        <text x="795" y="167" fill="#475569" font-size="7.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">BUILDER</text>
+        <text x="760" y="188" fill="#0f172a" font-size="11" font-family="'Lexend', sans-serif" font-weight="600">Lắp ráp &amp; Xáo trộn</text>
+        <text x="760" y="206" fill="#64748b" font-size="8.5" font-family="'Lexend', sans-serif">• Cấu hình thời gian thi</text>
+        <text x="760" y="222" fill="#64748b" font-size="8.5" font-family="'Lexend', sans-serif">• Xáo trộn thứ tự đề &amp; đáp án</text>
+        <text x="760" y="238" fill="#64748b" font-size="8.5" font-family="'Lexend', sans-serif">• Orphan Check dọn rác</text>
+        <text x="760" y="254" fill="#2563eb" font-size="8.5" font-family="'JetBrains Mono', monospace">POST /exams</text>
+
+        <!-- Node 4.2: Delivery: Online & PDF -->
+        <rect x="752" y="316" width="176" height="100" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+        <rect x="760" y="324" width="62" height="15" rx="3" fill="#f0fdf4"/>
+        <text x="791" y="335" fill="#16a34a" font-size="7.5" font-family="'JetBrains Mono', monospace" font-weight="600" text-anchor="middle">PUBLISH</text>
+        <text x="760" y="356" fill="#0f172a" font-size="11" font-family="'Lexend', sans-serif" font-weight="600">Phát hành &amp; Xuất PDF</text>
+        <text x="760" y="374" fill="#16a34a" font-size="9" font-family="'JetBrains Mono', monospace">Headless Chromium PDF</text>
+        <text x="760" y="392" fill="#64748b" font-size="8" font-family="'Lexend', sans-serif">Học sinh thi hoặc in đề giấy</text>
+
+        <!-- Connection Arrows -->
+        <!-- Ingestion to AI -->
+        <line x1="224" y1="140" x2="280" y2="180" stroke="#2563eb" stroke-width="1.2" marker-end="url(#flow-3-teacher-ai-pipeline-arr-accent-3)"/>
+        <line x1="224" y1="244" x2="280" y2="200" stroke="#2563eb" stroke-width="1.2" marker-end="url(#flow-3-teacher-ai-pipeline-arr-accent-3)"/>
+        <line x1="224" y1="348" x2="280" y2="356" stroke="#475569" stroke-width="1.2" marker-end="url(#flow-3-teacher-ai-pipeline-arr-muted-3)"/>
+        <line x1="224" y1="452" x2="520" y2="220" stroke="#475569" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#flow-3-teacher-ai-pipeline-arr-muted-3)"/>
+
+        <!-- AI to Bank -->
+        <line x1="464" y1="200" x2="520" y2="200" stroke="#2563eb" stroke-width="1.5" marker-end="url(#flow-3-teacher-ai-pipeline-arr-accent-3)"/>
+        <line x1="464" y1="370" x2="520" y2="240" stroke="#475569" stroke-width="1.2" marker-end="url(#flow-3-teacher-ai-pipeline-arr-muted-3)"/>
+
+        <!-- Bank to Builder -->
+        <line x1="704" y1="200" x2="752" y2="200" stroke="#2563eb" stroke-width="1.5" marker-end="url(#flow-3-teacher-ai-pipeline-arr-accent-3)"/>
+        <line x1="840" y1="278" x2="840" y2="316" stroke="#16a34a" stroke-width="1.4" marker-end="url(#flow-3-teacher-ai-pipeline-arr-muted-3)"/>
+
+      </svg>

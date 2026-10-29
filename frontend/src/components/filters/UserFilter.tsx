@@ -7,7 +7,11 @@ import { useSidebarFilter } from '@/hooks/useSidebarFilter';
 
 export function UserFilter() {
   const { currentRole, setFilter } = useSidebarFilter();
-  const roles = ['Học sinh', 'Giáo viên'];
+  const roles = [
+    { label: 'Học sinh', value: 'student' },
+    { label: 'Giáo viên', value: 'teacher' },
+    { label: 'Affiliate', value: 'affiliate' },
+  ];
 
   return (
     <FilterWrapper searchPlaceholder="Tìm kiếm theo tên, email...">
@@ -21,15 +25,19 @@ export function UserFilter() {
         </summary>
         <div className="mt-3 space-y-2 pl-6">
           {roles.map(role => (
-            <label key={role} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1">
+            <label key={role.value} className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1">
               <input 
                 className="text-primary focus:ring-primary h-4 w-4 cursor-pointer" 
                 type="radio" 
                 name="filter_role"
-                checked={currentRole === role}
-                onChange={() => {}}
-                onClick={() => setFilter('role', role)}
-              /> {role}
+                checked={currentRole === role.value}
+                onChange={() => setFilter('role', role.value)}
+                onClick={() => {
+                  if (currentRole === role.value) {
+                    setFilter('role', role.value);
+                  }
+                }}
+              /> {role.label}
             </label>
           ))}
         </div>

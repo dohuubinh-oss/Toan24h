@@ -75,7 +75,7 @@ export default function JsonInputCard({
           <Code2 className="text-primary w-5 h-5" />
           <h2 className="text-xs font-bold text-slate-800 uppercase tracking-tight">{title}</h2>
           {badge && (
-            <span className="px-1.5 py-0.5 bg-blue-100 text-primary text-[9px] font-bold rounded uppercase">
+            <span className="px-2 py-0.5 bg-blue-50 text-primary border border-blue-200/60 text-xs font-bold rounded-lg uppercase tracking-wider">
               {badge}
             </span>
           )}
@@ -87,10 +87,10 @@ export default function JsonInputCard({
               type="button"
               disabled={disabled}
               onClick={onAiExtract}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 hover:text-indigo-900 border border-indigo-200/80 rounded-lg transition-colors cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-xl transition-colors cursor-pointer shadow-2xs min-h-[36px]"
               title="Tải ảnh để AI tự động bóc tách"
             >
-              <Upload className="w-3.5 h-3.5 text-indigo-600" />
+              <Upload className="w-3.5 h-3.5 text-primary" />
               <span>{aiButtonText || 'Tải ảnh câu hỏi'}</span>
             </button>
           )}
@@ -100,7 +100,7 @@ export default function JsonInputCard({
               type="button"
               disabled={disabled}
               onClick={handleCopyPrompt}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl transition-colors cursor-pointer shadow-2xs min-h-[36px]"
               title="Sao chép prompt chuẩn để gửi cho AI (ChatGPT, Claude, Gemini...)"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-600" />}
@@ -128,7 +128,7 @@ export default function JsonInputCard({
           <button
             type="button"
             disabled={disabled}
-            className="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all shadow-md shadow-primary/30 disabled:opacity-50"
+            className="bg-primary hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-md shadow-primary/20 disabled:opacity-50 min-h-[40px] cursor-pointer"
             onClick={handleProcess}
           >
             <Settings2 className="w-4 h-4" />

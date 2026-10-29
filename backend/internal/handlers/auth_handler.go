@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
@@ -95,13 +97,19 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		userExpiresAt = &exp
 	}
 
+	verificationToken := uuid.New().String()
+	verificationExpires := time.Now().Add(24 * time.Hour)
+
 	user := models.User{
-		Email:        req.Email,
-		PasswordHash: hashedPassword,
-		FullName:     req.FullName,
-		Role:         role,
-		Grade:        req.Grade,
-		ExpiresAt:    userExpiresAt,
+		Email:                      req.Email,
+		PasswordHash:               hashedPassword,
+		FullName:                   req.FullName,
+		Role:                       role,
+		Grade:                      req.Grade,
+		ExpiresAt:                  userExpiresAt,
+		IsVerified:                 false, // Bắt buộc kích hoạt qua email mới dùng được
+		VerificationToken:          &verificationToken,
+		VerificationTokenExpiresAt: &verificationExpires,
 	}
 
 	err = h.db.Transaction(func(tx *gorm.DB) error {
@@ -132,7 +140,19 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	resp := gin.H{"message": "User registered successfully", "id": user.ID}
+	// Gửi email kích hoạt tài khoản
+	frontendURL := "http://localhost:3000"
+	if config.Env != nil && config.Env.FrontendURL != "" {
+		frontendURL = strings.TrimRight(config.Env.FrontendURL, "/")
+	}
+	verifyLink := fmt.Sprintf("%s/verify-email?token=%s", frontendURL, verificationToken)
+	_ = h.emailService.SendVerificationEmail(user.Email, user.FullName, verifyLink)
+
+	resp := gin.H{
+		"message":                  "User registered successfully",
+		"id":                       user.ID,
+		"requireEmailVerification": true,
+	}
 	if voucher != nil && voucher.FreeMonths > 0 {
 		resp["freeMonths"] = voucher.FreeMonths
 	}
@@ -162,6 +182,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	if user.Status == "locked" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Account is locked"})
+		return
+	}
+
+	if !user.IsVerified {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":        "Tài khoản chưa được kích hoạt qua email. Vui lòng kiểm tra email để kích hoạt tài khoản.",
+			"isUnverified": true,
+			"email":        user.Email,
+		})
 		return
 	}
 
@@ -513,5 +542,97 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Đổi mật khẩu thành công"})
+}
+
+type VerifyEmailRequest struct {
+	Token string `json:"token"`
+}
+
+// VerifyEmail xử lý kích hoạt tài khoản qua liên kết email
+func (h *AuthHandler) VerifyEmail(c *gin.Context) {
+	var req VerifyEmailRequest
+	_ = c.ShouldBindJSON(&req)
+
+	token := strings.TrimSpace(req.Token)
+	if token == "" {
+		token = strings.TrimSpace(c.Query("token"))
+	}
+
+	if token == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã kích hoạt không hợp lệ"})
+		return
+	}
+
+	var user models.User
+	if err := h.db.Where("verification_token = ?", token).First(&user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã kích hoạt không tồn tại hoặc tài khoản đã được kích hoạt trước đó."})
+		return
+	}
+
+	if user.VerificationTokenExpiresAt != nil && time.Now().After(*user.VerificationTokenExpiresAt) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã kích hoạt đã hết hạn. Vui lòng yêu cầu gửi lại email kích hoạt."})
+		return
+	}
+
+	// Đánh dấu tài khoản đã kích hoạt
+	if err := h.db.Model(&user).Updates(map[string]interface{}{
+		"is_verified":                   true,
+		"verification_token":            nil,
+		"verification_token_expires_at": nil,
+	}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể kích hoạt tài khoản: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Kích hoạt tài khoản thành công! Bây giờ bạn có thể đăng nhập.",
+		"email":   user.Email,
+	})
+}
+
+type ResendVerificationRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+// ResendVerificationEmail xử lý gửi lại liên kết kích hoạt tài khoản
+func (h *AuthHandler) ResendVerificationEmail(c *gin.Context) {
+	var req ResendVerificationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email không hợp lệ"})
+		return
+	}
+
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+
+	var user models.User
+	if err := h.db.Where("email = ?", email).First(&user).Error; err != nil {
+		c.JSON(http.StatusOK, gin.H{"message": "Nếu email tồn tại, liên kết kích hoạt mới đã được gửi."})
+		return
+	}
+
+	if user.IsVerified {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Tài khoản này đã được kích hoạt trước đó. Bạn có thể đăng nhập ngay."})
+		return
+	}
+
+	newToken := uuid.New().String()
+	newExpires := time.Now().Add(24 * time.Hour)
+
+	if err := h.db.Model(&user).Updates(map[string]interface{}{
+		"verification_token":            newToken,
+		"verification_token_expires_at": newExpires,
+	}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi khi tạo liên kết kích hoạt"})
+		return
+	}
+
+	frontendURL := "http://localhost:3000"
+	if config.Env != nil && config.Env.FrontendURL != "" {
+		frontendURL = strings.TrimRight(config.Env.FrontendURL, "/")
+	}
+	verifyLink := fmt.Sprintf("%s/verify-email?token=%s", frontendURL, newToken)
+	_ = h.emailService.SendVerificationEmail(user.Email, user.FullName, verifyLink)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Đã gửi liên kết kích hoạt mới đến email của bạn. Vui lòng kiểm tra hộp thư."})
 }
 

@@ -1,5 +1,6 @@
 import React from 'react'
-import { ListOrdered, CheckCircle2 } from 'lucide-react'
+import { ListOrdered, CheckCircle2, FileQuestion, Plus } from 'lucide-react'
+import Link from 'next/link'
 import { Question } from '../../types/question'
 import QuestionCard from '../questions/QuestionCard'
 import ContentQuestion from '../questions/ContentQuestion'
@@ -38,6 +39,27 @@ export default function ExamQuestionList({ questions, onRemoveQuestion, onSwapQu
           Danh sách câu hỏi ({questions.length} câu)
         </h2>
       </div>
+
+      {questions.length === 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center flex flex-col items-center justify-center space-y-4 shadow-xs">
+          <div className="w-16 h-16 rounded-2xl bg-blue-50 text-primary flex items-center justify-center shadow-inner">
+            <FileQuestion className="w-8 h-8" />
+          </div>
+          <div className="max-w-md space-y-2">
+            <h3 className="text-base font-bold text-slate-800">Chưa có câu hỏi nào trong đề thi</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Thầy cô hãy truy cập <strong>Ngân hàng câu hỏi</strong>, tích chọn các câu hỏi cần đưa vào đề thi, sau đó bấm <strong>"Tạo đề thi"</strong> từ thanh tác vụ nổi bên dưới.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/questions"
+            className="mt-2 px-5 py-2.5 bg-primary hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer min-h-[44px]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Đến Ngân hàng câu hỏi chọn câu</span>
+          </Link>
+        </div>
+      )}
 
       {multipleChoiceQuestions.length > 0 && (
         <div className="space-y-4">

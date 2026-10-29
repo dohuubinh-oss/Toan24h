@@ -433,7 +433,11 @@ function CreateQuestionContent() {
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200 w-full">
         <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard/questions" className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500">
+            <Link 
+              href="/dashboard/questions" 
+              aria-label="Quay lại danh sách câu hỏi"
+              className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center hover:bg-slate-100 rounded-xl transition-colors text-slate-500 cursor-pointer"
+            >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-3">
@@ -442,7 +446,7 @@ function CreateQuestionContent() {
           </div>
           
           <div className="flex items-center gap-3">
-            <Button onClick={handleSave} disabled={isSaving || questionBlocks.length === 0} className="px-6 flex items-center gap-2 shadow-sm shadow-primary/20">
+            <Button onClick={handleSave} disabled={isSaving || questionBlocks.length === 0} className="min-h-[44px] px-6 flex items-center gap-2 shadow-sm shadow-primary/20 rounded-xl font-bold text-xs">
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {isSaving ? "Đang lưu..." : (editId ? "Cập nhật" : "Lưu vào ngân hàng")}
             </Button>
@@ -466,6 +470,21 @@ function CreateQuestionContent() {
               onPrev={handlePrev}
               initialValue={extractedJson}
             />
+
+            {totalBlocks === 0 && !editId && (
+              <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-5 flex items-start gap-3.5 shadow-xs">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div className="space-y-1 text-slate-700">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-primary">Quy trình số hóa nhanh</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Bấm <strong>"Tải ảnh câu hỏi"</strong> phía trên (hoặc nhấn <strong>Ctrl+V</strong> trong hộp thoại) hoặc dán mã <strong>JSON</strong> để hệ thống tự động bóc tách toàn bộ câu hỏi. Sau khi bóc tách xong, thầy cô có thể xem và chỉnh sửa trực tiếp các chi tiết chưa ưng ý tại đây trước khi lưu.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div ref={editorRef} className="scroll-mt-24">
               <QuestionEditorSection 
                 currentBlock={currentBlock}
@@ -492,59 +511,64 @@ function CreateQuestionContent() {
 
       {/* Floating Action Bar (Navigation Controls) */}
       {totalBlocks > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white border border-slate-200 shadow-2xl rounded-full px-4 py-2.5 flex items-center gap-3 z-50 animate-in slide-in-from-bottom-10 fade-in">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white border border-slate-200/80 shadow-2xl rounded-2xl px-3 py-2 flex items-center gap-2 sm:gap-3 z-50 animate-in slide-in-from-bottom-6 max-w-[calc(100vw-24px)] overflow-x-auto">
           <button 
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 disabled:opacity-30 disabled:hover:bg-transparent" 
+            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center hover:bg-slate-100 rounded-xl transition-colors text-slate-600 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer shrink-0" 
             onClick={handlePrevBlock}
             disabled={currentBlockIndex === 0}
             title="Câu lớn trước đó"
+            aria-label="Câu lớn trước đó"
           >
             <ChevronsLeft className="w-5 h-5" />
           </button>
           <button 
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors border border-transparent disabled:opacity-30" 
+            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center hover:bg-slate-100 rounded-xl transition-colors text-slate-600 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer shrink-0" 
             onClick={handlePrev}
             disabled={isFirstQuestion}
             title="Câu trước"
+            aria-label="Câu trước"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           
-          <div className="px-6 py-1 flex items-center gap-3 border-x border-slate-200">
-            <span className="text-sm font-black text-primary uppercase tracking-widest">
+          <div className="px-3 sm:px-5 py-1 flex items-center gap-2 sm:gap-3 border-x border-slate-200 shrink-0">
+            <span className="text-sm font-black text-primary uppercase tracking-wider whitespace-nowrap">
               Câu {currentBlockIndex + 1}
             </span>
             {isGroup && (
-              <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-black rounded uppercase tracking-widest border border-red-200 hidden sm:inline-block">
-                Câu hỏi chùm ({currentSubIndex}/{totalSubInBlock})
+              <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded-lg uppercase tracking-wider border border-red-200 hidden sm:inline-block whitespace-nowrap">
+                Chùm ({currentSubIndex}/{totalSubInBlock})
               </span>
             )}
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
               / {totalBlocks}
             </span>
           </div>
           
           <button 
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors border border-transparent disabled:opacity-30"
+            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center hover:bg-slate-100 rounded-xl transition-colors text-slate-600 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer shrink-0"
             onClick={handleNext}
             disabled={isLastQuestion}
             title="Câu tiếp theo"
+            aria-label="Câu tiếp theo"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
           <button 
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 disabled:opacity-30 disabled:hover:bg-transparent" 
+            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center hover:bg-slate-100 rounded-xl transition-colors text-slate-600 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer shrink-0" 
             onClick={handleNextBlock}
             disabled={currentBlockIndex === totalBlocks - 1}
             title="Câu lớn tiếp theo"
+            aria-label="Câu lớn tiếp theo"
           >
             <ChevronsRight className="w-5 h-5" />
           </button>
           
-          <div className="w-px h-6 bg-slate-200 mx-2"></div>
+          <div className="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
           <button 
-            className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors" 
+            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer shrink-0" 
             title="Xóa câu này"
+            aria-label="Xóa câu này"
             onClick={handleDeleteCurrentQuestion}
           >
             <Trash2 className="w-5 h-5" />

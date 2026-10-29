@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/config"
@@ -45,9 +46,46 @@ func main() {
 		&models.Notification{},
 		&models.Transaction{},
 		&models.XPTransaction{},
+		&models.Voucher{},
+		&models.VoucherUsage{},
 	); err != nil {
 		log.Fatalf("Auto Migrate failed: %v", err)
 	}
+
+	// Khởi tạo mã khuyến mãi 1 tháng VIP cho học sinh mới có thời hạn tháng 10, 11, 12 năm 2026 (Hết hạn 31/12/2026)
+	voucherExpiresAt := time.Date(2026, 12, 31, 23, 59, 59, 0, time.Local)
+	var countVoucher int64
+	config.DB.Model(&models.Voucher{}).Where("code = ?", "CHAOMUNG1M").Count(&countVoucher)
+	if countVoucher == 0 {
+		config.DB.Create(&models.Voucher{
+			Code:        "CHAOMUNG1M",
+			FreeMonths:  1,
+			MaxUses:     0, // 0 = Không giới hạn lượt sử dụng
+			ExpiresAt:   &voucherExpiresAt,
+			IsActive:    true,
+		})
+	} else {
+		config.DB.Model(&models.Voucher{}).Where("code = ?", "CHAOMUNG1M").Update("expires_at", &voucherExpiresAt)
+	}
+
+	config.DB.Model(&models.Voucher{}).Where("code = ?", "VIP1THANG").Count(&countVoucher)
+	if countVoucher == 0 {
+		config.DB.Create(&models.Voucher{
+			Code:        "VIP1THANG",
+			FreeMonths:  1,
+			MaxUses:     0,
+			ExpiresAt:   &voucherExpiresAt,
+			IsActive:    true,
+		})
+	} else {
+		config.DB.Model(&models.Voucher{}).Where("code = ?", "VIP1THANG").Update("expires_at", &voucherExpiresAt)
+	}
+
+	// 2.3. Khởi chạy Cronjob dọn dẹp các voucher đã hết hạn định kỳ 1 tháng 1 lần
+	services.StartVoucherCleanupWorker(config.DB, 30*24*time.Hour)
+
+	// Đảm bảo các tài khoản admin/teacher có sẵn luôn được kích hoạt email
+	config.DB.Model(&models.User{}).Where("role IN ?", []string{"admin", "teacher"}).Update("is_verified", true)
 
 	// Đảm bảo ràng buộc khoá ngoại câu hỏi con tự động CASCADE khi xoá câu hỏi cha
 	config.DB.Exec(`

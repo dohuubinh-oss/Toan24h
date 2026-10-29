@@ -293,8 +293,8 @@ function QuestionEditorSection({
         </div>
         <div className="p-8 space-y-6">
           <div className="space-y-2">
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <Lightbulb className="w-4 h-4" /> Gợi ý
+            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+              <Lightbulb className="w-4 h-4 text-amber-500" /> Gợi ý
             </label>
             <RichTextEditor
               hideToolbar={true}
@@ -304,7 +304,7 @@ function QuestionEditorSection({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
               <Zap className="w-4 h-4 text-amber-500" /> Lời giải ngắn
             </label>
             <RichTextEditor
@@ -319,8 +319,8 @@ function QuestionEditorSection({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <Brain className="w-4 h-4" /> Phương pháp tổng quát
+            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+              <Brain className="w-4 h-4 text-blue-600" /> Phương pháp tổng quát
             </label>
             <RichTextEditor
               hideToolbar={true}
@@ -330,8 +330,8 @@ function QuestionEditorSection({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 text-red-500">
-              <AlertCircle className="w-4 h-4" /> Lỗi thường gặp
+            <label className="text-xs font-bold text-red-500 uppercase tracking-wider flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-500" /> Lỗi thường gặp
             </label>
             <RichTextEditor
               hideToolbar={true}

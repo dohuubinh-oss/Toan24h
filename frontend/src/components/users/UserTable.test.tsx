@@ -44,14 +44,20 @@ describe('UserTable', () => {
     expect(screen.queryByText('tháng')).not.toBeInTheDocument()
   })
 
-  it('allows locking user', () => {
+  it('allows locking user via ConfirmModal', () => {
     const handleSoftDelete = vi.fn()
-    window.confirm = vi.fn(() => true)
     render(<UserTable users={mockUsers} onSoftDelete={handleSoftDelete} />)
 
     const lockButtons = screen.getAllByTitle('Khóa tài khoản')
     expect(lockButtons.length).toBe(2)
     fireEvent.click(lockButtons[0])
+
+    expect(screen.getByText('Khóa tài khoản người dùng')).toBeInTheDocument()
+    expect(screen.getByText(/Hành động này sẽ khóa tài khoản của "Nguyen Van A"/i)).toBeInTheDocument()
+
+    const confirmButton = screen.getByRole('button', { name: 'Khóa tài khoản' })
+    fireEvent.click(confirmButton)
+
     expect(handleSoftDelete).toHaveBeenCalledWith('1', 'Nguyen Van A')
   })
 

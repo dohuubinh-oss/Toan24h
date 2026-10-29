@@ -45,52 +45,74 @@ export default function QuestionCard({
                 type="checkbox" 
                 checked={isSelected}
                 onChange={onToggle}
+                aria-label={`Chọn câu hỏi ID ${id}`}
               />
             )}
             <div className="flex items-center gap-2 flex-wrap">
               {grade !== undefined && grade !== null && grade !== '' && grade !== 0 && (
-                <Badge variant="default" className="text-[10px] uppercase tracking-wider">
+                <Badge variant="default" className="text-xs uppercase tracking-wider font-semibold">
                   LỚP {grade}
                 </Badge>
               )}
               {topic && (
-                <Badge variant="info" className="text-[10px] uppercase tracking-wider">
+                <Badge variant="info" className="text-xs uppercase tracking-wider font-semibold">
                   {topic}
                 </Badge>
               )}
               {difficulty && (
-                <Badge variant={DIFFICULTY_BADGE_VARIANTS[difficulty] || 'info'} className="text-[10px] uppercase tracking-wider">
+                <Badge variant={DIFFICULTY_BADGE_VARIANTS[difficulty] || 'info'} className="text-xs uppercase tracking-wider font-semibold">
                   {difficulty}
                 </Badge>
               )}
               {typeQuestion && (
-                <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-slate-300 text-slate-600 bg-white">
+                <Badge variant="outline" className="text-xs uppercase tracking-wider font-semibold border-slate-300 text-slate-700 bg-white">
                   {typeQuestion === 'group' ? 'CÂU HỎI CHÙM' : 'CÂU ĐƠN'}
                 </Badge>
               )}
               {type && (
-                <Badge variant="outline" className="text-[10px] uppercase tracking-wider border-primary/30 text-primary bg-primary/5">
+                <Badge variant="outline" className="text-xs uppercase tracking-wider font-semibold border-primary/30 text-primary bg-primary/5">
                   {type}
                 </Badge>
               )}
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+              <span className="text-xs text-slate-500 font-mono font-medium uppercase tracking-wider">
                 ID: {id}
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             {onSwap && (
-              <Button variant="ghost" size="icon" className="w-10 h-10 text-slate-400 hover:text-amber-600 hover:bg-amber-50" title="Đổi câu hỏi" onClick={onSwap}>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl" 
+                title="Đổi câu hỏi" 
+                aria-label={`Đổi câu hỏi ${id}`}
+                onClick={onSwap}
+              >
                 <RefreshCw className="w-5 h-5" />
               </Button>
             )}
             {onEdit && (
-              <Button variant="ghost" size="icon" className="w-10 h-10 text-slate-400 hover:text-primary hover:bg-primary/10" title="Chỉnh sửa" onClick={onEdit}>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl" 
+                title="Chỉnh sửa" 
+                aria-label={`Chỉnh sửa câu hỏi ${id}`}
+                onClick={onEdit}
+              >
                 <Edit2 className="w-5 h-5" />
               </Button>
             )}
             {onDelete && (
-              <Button variant="ghost" size="icon" className="w-10 h-10 text-slate-400 hover:text-red-500 hover:bg-red-500/10" title="Xóa" onClick={onDelete}>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl" 
+                title="Xóa" 
+                aria-label={`Xóa câu hỏi ${id}`}
+                onClick={onDelete}
+              >
                 <Trash2 className="w-5 h-5" />
               </Button>
             )}

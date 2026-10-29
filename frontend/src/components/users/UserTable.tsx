@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { LockKeyhole, Users, Calendar, UserCog, X } from 'lucide-react'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
+import { ConfirmModal } from '../ui/ConfirmModal'
 import { getAvatarInitial } from '@/lib/utils'
 
 export type User = {
@@ -29,10 +30,16 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
   const [now] = React.useState(() => Date.now())
   const [roleModalUser, setRoleModalUser] = useState<User | null>(null)
   const [selectedRole, setSelectedRole] = useState<string>('teacher')
+  const [userToLock, setUserToLock] = useState<User | null>(null)
 
-  const handleDelete = (id: string, name: string) => {
-    if (window.confirm(`Hành động này sẽ khóa tài khoản của người dùng. Bạn có chắc chắn muốn khóa người dùng ${name}?`)) {
-      onSoftDelete(id, name);
+  const handleOpenLockModal = (user: User) => {
+    setUserToLock(user)
+  }
+
+  const handleConfirmLock = () => {
+    if (userToLock) {
+      onSoftDelete(userToLock.id, userToLock.name)
+      setUserToLock(null)
     }
   }
 
@@ -105,7 +112,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
   }
 
   return (
-    <div className="p-6 overflow-x-auto">
+    <div className="p-4 sm:p-6 overflow-x-auto">
       <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden min-w-[1000px]">
         <table className="w-full text-left">
           <thead>
@@ -168,8 +175,9 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50" 
+                        className="min-w-[40px] min-h-[40px] text-slate-400 hover:text-indigo-600 hover:bg-indigo-50" 
                         title="Phân quyền (Teacher / Affiliate)"
+                        aria-label={`Phân quyền cho ${user.name}`}
                         onClick={() => handleOpenRoleModal(user)}
                       >
                         <UserCog className="w-4 h-4" />
@@ -178,9 +186,10 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="text-slate-400 hover:text-rose-600 hover:bg-rose-100" 
+                      className="min-w-[40px] min-h-[40px] text-slate-400 hover:text-rose-600 hover:bg-rose-100" 
                       title="Khóa tài khoản"
-                      onClick={() => handleDelete(user.id, user.name)}
+                      aria-label={`Khóa tài khoản ${user.name}`}
+                      onClick={() => handleOpenLockModal(user)}
                     >
                       <LockKeyhole className="w-4 h-4" />
                     </Button>
@@ -203,6 +212,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
               </div>
               <button 
                 onClick={() => setRoleModalUser(null)}
+                aria-label="Đóng cửa sổ"
                 className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -224,7 +234,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-800 text-sm">Giáo viên (Teacher)</span>
-                    <span className="px-2 py-0.5 text-[11px] font-semibold rounded bg-purple-100 text-purple-700">Hoa hồng 50%</span>
+                    <span className="px-2 py-0.5 text-xs font-semibold rounded bg-purple-100 text-purple-700">Hoa hồng 50%</span>
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
                     Có quyền biên soạn câu hỏi, tạo đề thi, bài giảng. Hưởng 50% hoa hồng khi học sinh dùng mã voucher.
@@ -246,7 +256,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-800 text-sm">Affiliate (Cộng tác viên)</span>
-                    <span className="px-2 py-0.5 text-[11px] font-semibold rounded bg-amber-100 text-amber-700">Hoa hồng 30%</span>
+                    <span className="px-2 py-0.5 text-xs font-semibold rounded bg-amber-100 text-amber-700">Hoa hồng 30%</span>
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
                     Vai trò giới thiệu học sinh và hưởng 30% hoa hồng khi học sinh đăng ký hoặc nâng cấp.
@@ -266,6 +276,18 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
           </div>
         </div>
       )}
+
+      {/* Lock Account Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!userToLock}
+        onClose={() => setUserToLock(null)}
+        onConfirm={handleConfirmLock}
+        title="Khóa tài khoản người dùng"
+        description={`Hành động này sẽ khóa tài khoản của "${userToLock?.name}". Người dùng này sẽ không thể đăng nhập vào hệ thống. Bạn có chắc chắn muốn tiếp tục?`}
+        confirmText="Khóa tài khoản"
+        cancelText="Hủy"
+        isDestructive={true}
+      />
     </div>
   )
 }

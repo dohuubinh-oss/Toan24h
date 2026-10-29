@@ -145,4 +145,16 @@ describe('QuestionsPage', () => {
       expect(screen.getByText('Không tìm thấy câu hỏi')).toBeInTheDocument()
     })
   })
+
+  it('renders error state with retry button when API fails', async () => {
+    vi.spyOn(api, 'getQuestions').mockRejectedValueOnce(new Error('Mạng bị lỗi'))
+
+    render(<QuestionsPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Không thể tải dữ liệu câu hỏi')).toBeInTheDocument()
+      expect(screen.getByText('Mạng bị lỗi')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Thử lại/i })).toBeInTheDocument()
+    })
+  })
 })

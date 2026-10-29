@@ -71,13 +71,15 @@ func setupAuthTestEnv(t *testing.T) (*gin.Engine, *gorm.DB, func()) {
 	authHandler := handlers.NewAuthHandler(db)
 	r.POST("/api/v1/auth/register", authHandler.Register)
 	r.POST("/api/v1/auth/login", authHandler.Login)
+	r.POST("/api/v1/auth/verify-email", authHandler.VerifyEmail)
+	r.POST("/api/v1/auth/resend-verification", authHandler.ResendVerificationEmail)
 	r.POST("/api/v1/auth/refresh", authHandler.Refresh)
 
 	return r, db, cleanup
 }
 
 func TestAuthRegisterAndLogin(t *testing.T) {
-	r, _, cleanup := setupAuthTestEnv(t)
+	r, db, cleanup := setupAuthTestEnv(t)
 	defer cleanup()
 
 	// 1. Register
@@ -98,7 +100,7 @@ func TestAuthRegisterAndLogin(t *testing.T) {
 		t.Fatalf("Expected 201 Created for registration, got %d. Body: %s", w.Code, w.Body.String())
 	}
 
-	// 2. Login
+	// 2. Thử Login khi CHƯA kích hoạt email -> Mong đợi 403 Forbidden
 	loginBody := map[string]interface{}{
 		"email":    "test@student.com",
 		"password": "password123",
@@ -109,12 +111,44 @@ func TestAuthRegisterAndLogin(t *testing.T) {
 	loginW := httptest.NewRecorder()
 	r.ServeHTTP(loginW, loginReq)
 
-	if loginW.Code != http.StatusOK {
-		t.Fatalf("Expected 200 OK for login, got %d. Body: %s", loginW.Code, loginW.Body.String())
+	if loginW.Code != http.StatusForbidden {
+		t.Fatalf("Expected 403 Forbidden for unverified user, got %d. Body: %s", loginW.Code, loginW.Body.String())
+	}
+
+	// 3. Kích hoạt tài khoản qua VerifyEmail API
+	var registeredUser models.User
+	if err := db.Where("email = ?", "test@student.com").First(&registeredUser).Error; err != nil {
+		t.Fatalf("Failed to find registered user: %v", err)
+	}
+	if registeredUser.VerificationToken == nil || *registeredUser.VerificationToken == "" {
+		t.Fatalf("Expected verification token to be generated")
+	}
+
+	verifyBody := map[string]interface{}{
+		"token": *registeredUser.VerificationToken,
+	}
+	verifyBodyBytes, _ := json.Marshal(verifyBody)
+	verifyReq, _ := http.NewRequest("POST", "/api/v1/auth/verify-email", bytes.NewBuffer(verifyBodyBytes))
+	verifyReq.Header.Set("Content-Type", "application/json")
+	verifyW := httptest.NewRecorder()
+	r.ServeHTTP(verifyW, verifyReq)
+
+	if verifyW.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for verify-email, got %d. Body: %s", verifyW.Code, verifyW.Body.String())
+	}
+
+	// 4. Login lại SAU KHI đã kích hoạt -> Mong đợi 200 OK
+	loginReq2, _ := http.NewRequest("POST", "/api/v1/auth/login", bytes.NewBuffer(loginBodyBytes))
+	loginReq2.Header.Set("Content-Type", "application/json")
+	loginW2 := httptest.NewRecorder()
+	r.ServeHTTP(loginW2, loginReq2)
+
+	if loginW2.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for verified login, got %d. Body: %s", loginW2.Code, loginW2.Body.String())
 	}
 
 	var loginResp map[string]interface{}
-	json.Unmarshal(loginW.Body.Bytes(), &loginResp)
+	json.Unmarshal(loginW2.Body.Bytes(), &loginResp)
 	
 	accessToken, ok := loginResp["accessToken"].(string)
 	if !ok || accessToken == "" {
@@ -154,10 +188,11 @@ func TestForgotPasswordAndReset_GoogleUser(t *testing.T) {
 	// User created via Google (PasswordHash is empty)
 	googleSub := "google_999888"
 	googleUser := models.User{
-		Email:    "google_reset@example.com",
-		FullName: "Google User",
-		Role:     "student",
-		GoogleID: &googleSub,
+		Email:      "google_reset@example.com",
+		FullName:   "Google User",
+		Role:       "student",
+		GoogleID:   &googleSub,
+		IsVerified: true,
 	}
 	if err := db.Create(&googleUser).Error; err != nil {
 		t.Fatalf("Failed to create user: %v", err)

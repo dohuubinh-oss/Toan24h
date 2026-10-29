@@ -106,6 +106,46 @@ export default function AiQuestionExtractModal({
     })
   }
 
+  // Handle Clipboard Paste (Ctrl+V / Cmd+V)
+  const handlePasteEvent = (e: React.ClipboardEvent | ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    const imageFiles: File[] = []
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile()
+        if (file) {
+          imageFiles.push(file)
+        }
+      }
+    }
+
+    if (imageFiles.length > 0) {
+      e.preventDefault()
+      handleAddFiles(imageFiles)
+      toast.success(`Đã nhận diện và thêm ${imageFiles.length} ảnh từ Clipboard!`)
+    }
+  }
+
+  // Listen to window paste when modal is open
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement | null
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') && (target as HTMLInputElement).type === 'text') {
+        return
+      }
+      handlePasteEvent(e)
+    }
+
+    window.addEventListener('paste', handleGlobalPaste)
+    return () => {
+      window.removeEventListener('paste', handleGlobalPaste)
+    }
+  }, [isOpen])
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -280,7 +320,7 @@ export default function AiQuestionExtractModal({
     >
       <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 via-blue-600 to-primary text-white flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 bg-gradient-to-r from-blue-700 via-primary to-blue-600 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-amber-300 shadow-inner">
               <Sparkles className="w-5 h-5 animate-pulse" />
@@ -296,14 +336,15 @@ export default function AiQuestionExtractModal({
             type="button"
             onClick={onClose}
             disabled={isExtracting}
-            className="p-1.5 rounded-lg hover:bg-white/20 transition-colors text-white/90 hover:text-white disabled:opacity-40"
+            aria-label="Đóng hộp thoại"
+            className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl hover:bg-white/20 transition-colors text-white/90 hover:text-white disabled:opacity-40 flex items-center justify-center cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 space-y-5 overflow-y-auto">
+        <div className="p-6 space-y-5 overflow-y-auto" onPaste={handlePasteEvent}>
           {/* Error Banner */}
           {errorMessage && (
             <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2.5 animate-in fade-in">
@@ -359,8 +400,9 @@ export default function AiQuestionExtractModal({
                 Kéo thả nhiều ảnh đề thi vào đây, hoặc{' '}
                 <span className="text-primary hover:underline">bấm để chọn</span>
               </p>
-              <p className="text-xs text-slate-400 mt-1">
-                Hỗ trợ PNG, JPG, JPEG, WebP. Tối đa 10 ảnh (ví dụ Trang 1, Trang 2...).
+              <p className="text-xs text-slate-500 mt-1 flex items-center justify-center gap-1.5 flex-wrap">
+                <span>Hỗ trợ PNG, JPG, JPEG, WebP. Tối đa 10 ảnh.</span>
+                <span className="font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md">Bấm Ctrl+V để dán trực tiếp ảnh chụp</span>
               </p>
             </div>
           </div>
@@ -383,20 +425,20 @@ export default function AiQuestionExtractModal({
                         alt={item.file.name}
                         className="h-full w-full object-cover"
                       />
-                      <span className="absolute top-1.5 left-1.5 bg-slate-900/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md backdrop-blur-xs">
+                      <span className="absolute top-1.5 left-1.5 bg-slate-900/70 text-white text-xs font-semibold px-2 py-0.5 rounded-md backdrop-blur-xs">
                         Trang {index + 1}
                       </span>
                       <button
                         type="button"
-                        aria-label="Xóa ảnh"
+                        aria-label={`Xóa ảnh ${item.file.name}`}
                         onClick={(e) => {
                           e.stopPropagation()
                           handleRemoveImage(item.id)
                         }}
                         disabled={isExtracting}
-                        className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600 text-white opacity-90 hover:opacity-100 transition-opacity shadow-sm"
+                        className="absolute top-1.5 right-1.5 min-w-[36px] min-h-[36px] w-9 h-9 rounded-lg bg-rose-600 text-white flex items-center justify-center opacity-90 hover:opacity-100 transition-opacity shadow-sm cursor-pointer"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                     <div className="p-2 text-left">
@@ -406,7 +448,7 @@ export default function AiQuestionExtractModal({
                       >
                         {item.file.name}
                       </p>
-                      <p className="text-[10px] text-slate-400">
+                      <p className="text-xs text-slate-400">
                         {formatFileSize(item.file.size)}
                       </p>
                     </div>
@@ -418,15 +460,15 @@ export default function AiQuestionExtractModal({
 
           {/* Extraction In-Progress Indicator */}
           {isExtracting && (
-            <div className="p-4 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-2 animate-in fade-in">
-              <div className="flex items-center gap-2.5 text-indigo-700 font-semibold text-xs">
-                <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+            <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-2 animate-in fade-in">
+              <div className="flex items-center gap-2.5 text-primary font-semibold text-xs">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
                 <span>{statusMessage}</span>
               </div>
-              <div className="w-full bg-indigo-200/60 rounded-full h-1.5 overflow-hidden">
-                <div className="bg-indigo-600 h-1.5 rounded-full animate-pulse w-3/4"></div>
+              <div className="w-full bg-primary/20 rounded-full h-1.5 overflow-hidden">
+                <div className="bg-primary h-1.5 rounded-full animate-pulse w-3/4"></div>
               </div>
-              <p className="text-[11px] text-indigo-600/80">
+              <p className="text-xs text-slate-600">
                 Gemini Vision đang số hóa bảng biến thiên thành HTML và tự động cắt sơ đồ hình học sang ảnh temp.
               </p>
             </div>

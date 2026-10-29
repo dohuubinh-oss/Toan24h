@@ -21,6 +21,62 @@ describe('LectureCard and PracticeLectureCard', () => {
     expect(screen.getByText('Phương trình bậc nhất')).toBeInTheDocument()
   })
 
+  it('renders completed LectureCard with green styling and average score', () => {
+    render(
+      <LectureCard 
+        id="lec-completed"
+        title="Phương trình bậc nhất hai ẩn"
+        chapter="Đại số"
+        status="COMPLETED"
+        practiceCount={2}
+        averageScore={8.5}
+        grade="9"
+      />
+    )
+
+    expect(screen.getByText('Hoàn thành')).toBeInTheDocument()
+    expect(screen.getByText('8.5đ')).toBeInTheDocument()
+    const container = screen.getByRole('link')
+    expect(container.className).toContain('border-emerald-500')
+  })
+
+  it('renders in-progress LectureCard with blue primary border', () => {
+    render(
+      <LectureCard 
+        id="lec-progress"
+        title="Hệ hai phương trình bậc nhất hai ẩn"
+        chapter="Đại số"
+        status="PENDING"
+        practiceCount={3}
+        grade="9"
+      />
+    )
+
+    expect(screen.getByText('Đang học')).toBeInTheDocument()
+    const container = screen.getByRole('link')
+    expect(container.className).toContain('border-primary')
+  })
+
+  it('renders locked LectureCard with Lock icon and lock reason', () => {
+    render(
+      <LectureCard 
+        id="lec-locked"
+        title="Giải bài toán bằng cách lập hệ phương trình"
+        chapter="Đại số"
+        status="NOT_STARTED"
+        practiceCount={2}
+        isLocked={true}
+        lockReason="Cần hoàn thành bài trước để mở khóa"
+        grade="9"
+      />
+    )
+
+    expect(screen.getByText('Chưa mở khóa')).toBeInTheDocument()
+    expect(screen.getByText('Cần hoàn thành bài trước để mở khóa')).toBeInTheDocument()
+    // Khóa thì không nên là thẻ link thông thường chuyển trang
+    expect(screen.queryByRole('link')).toBeNull()
+  })
+
   it('renders PracticeLectureCard linking to lecture detail page when href is passed', () => {
     render(
       <PracticeLectureCard 

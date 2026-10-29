@@ -29,14 +29,14 @@ export function QuestionFilter() {
         </summary>
         <div className="mt-3 grid grid-cols-2 gap-2 pl-6">
           {grades.map(grade => (
-            <label key={grade.value} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1">
+            <label key={grade.value} className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1.5 select-none">
               <input 
                 className="text-primary focus:ring-primary h-4 w-4 cursor-pointer" 
                 type="radio"
                 name="filter_grade"
                 checked={currentGrade === grade.value}
-                onChange={() => {}}
-                onClick={(e) => { e.preventDefault(); setFilter('grade', grade.value); }}
+                onChange={() => setFilter('grade', grade.value)}
+                onClick={() => { if (currentGrade === grade.value) setFilter('grade', grade.value); }}
               /> <span className="truncate">{grade.label}</span>
             </label>
           ))}
@@ -77,14 +77,14 @@ export function QuestionFilter() {
         </summary>
         <div className="mt-3 space-y-2 pl-6">
           {types.map(type => (
-            <label key={type} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1">
+            <label key={type} className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1.5 select-none">
               <input 
                 className="text-primary focus:ring-primary h-4 w-4 cursor-pointer" 
                 type="radio" 
                 name="filter_type"
                 checked={currentType === type}
-                onChange={() => {}}
-                onClick={(e) => { e.preventDefault(); setFilter('type', type); }}
+                onChange={() => setFilter('type', type)}
+                onClick={() => { if (currentType === type) setFilter('type', type); }}
               /> {type}
             </label>
           ))}
@@ -101,14 +101,14 @@ export function QuestionFilter() {
         </summary>
         <div className="mt-3 space-y-2 pl-6">
           {difficulties.map(diff => (
-            <label key={diff} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1">
+            <label key={diff} className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 cursor-pointer hover:text-primary transition-colors py-1.5 select-none">
               <input 
                 className="text-primary focus:ring-primary h-4 w-4 cursor-pointer" 
                 type="radio" 
                 name="filter_diff"
                 checked={currentDifficulty === diff}
-                onChange={() => {}}
-                onClick={(e) => { e.preventDefault(); setFilter('difficulty', diff); }}
+                onChange={() => setFilter('difficulty', diff)}
+                onClick={() => { if (currentDifficulty === diff) setFilter('difficulty', diff); }}
               /> {diff}
             </label>
           ))}

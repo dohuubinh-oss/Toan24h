@@ -1,12 +1,13 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { ShortItem } from '@/data/blogData'
 import MathText from '@/components/ui/MathText'
 import { extractYouTubeVideoId, isImageUrl, getMediaThumbnail } from '@/lib/youtubeUtils'
 import { 
-  Play, BookOpen, Sparkles, Layers, Share2, Check,
-  Image as ImageIcon 
+  Play, BookOpen, Layers, Check, Bookmark, ArrowRight,
+  Image as ImageIcon, ChevronLeft, ChevronRight 
 } from 'lucide-react'
 
 export interface ShortsPlaylistStageProps {
@@ -21,7 +22,7 @@ export function ShortsPlaylistStage({
   authorName = 'Ban biên tập Toan6789'
 }: ShortsPlaylistStageProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [copied, setCopied] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   const total = shorts.length
   const currentShort = shorts[currentIndex] || null
@@ -69,13 +70,13 @@ export function ShortsPlaylistStage({
   const isImage = isImageUrl(currentShort.youtubeUrl || currentShort.imageUrl) || (!currentShort.videoId && !!currentShort.youtubeUrl)
   const mediaUrl = currentShort.imageUrl || currentShort.youtubeUrl || ''
 
-  const handleCopyNotes = () => {
-    if (currentShort.notes && navigator.clipboard) {
+  const handleSaveNotebook = () => {
+    if (currentShort.notes && typeof navigator !== 'undefined' && navigator.clipboard) {
       const cleanText = currentShort.notes.replace(/<[^>]+>/g, '').trim()
       navigator.clipboard.writeText(cleanText)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
     }
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
   }
 
   const effectiveVideoId = currentShort.videoId || extractYouTubeVideoId(currentShort.youtubeUrl || '')
@@ -89,11 +90,11 @@ export function ShortsPlaylistStage({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-slate-50/60 p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-xs">
         
         {/* Left Column: 9:16 Shorts / Image Player (5 cols on lg) */}
-        <div className="lg:col-span-5 flex flex-col items-center">
+        <div className="lg:col-span-5 flex flex-col items-center gap-3">
           <div className="w-full max-w-[340px] aspect-[9/16] bg-slate-950 rounded-2xl sm:rounded-3xl overflow-hidden relative shadow-md border-4 border-slate-800 flex flex-col justify-between">
             {/* Top brand header overlay */}
             <div className="absolute top-0 inset-x-0 p-3 z-20 bg-gradient-to-b from-black/80 via-black/40 to-transparent flex items-center justify-between pointer-events-none">
-              <span className="text-[11px] font-bold text-white tracking-wider flex items-center gap-1.5">
+              <span className="text-xs font-bold text-white tracking-wider flex items-center gap-1.5">
                 {isImage ? (
                   <>
                     <ImageIcon className="w-3.5 h-3.5 text-blue-400" />
@@ -106,7 +107,7 @@ export function ShortsPlaylistStage({
                   </>
                 )}
               </span>
-              <span className="text-[10px] font-semibold text-white/90 bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full">
+              <span className="text-xs font-semibold text-white/95 bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full">
                 {currentIndex + 1} / {total}
               </span>
             </div>
@@ -140,59 +141,97 @@ export function ShortsPlaylistStage({
               )}
             </div>
 
-            {/* Bottom floating title overlay (navigation buttons removed per user request) */}
+            {/* Bottom floating title overlay */}
             <div className="absolute bottom-0 inset-x-0 p-3.5 z-20 bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-none">
               <div className="text-white text-xs sm:text-sm font-bold line-clamp-2 leading-snug drop-shadow-sm">
                 {currentShort.title}
               </div>
             </div>
           </div>
+
+          {/* Quick Prev / Next Controls under player for mobile & desktop */}
+          <div className="flex items-center justify-between w-full max-w-[340px] px-1">
+            <button
+              type="button"
+              onClick={handlePrev}
+              disabled={total <= 1}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-primary hover:border-primary/40 text-xs font-bold transition-all shadow-2xs min-h-[40px] disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+              aria-label="Xem video hoặc ảnh trước đó"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Phần trước</span>
+            </button>
+
+            <span className="text-xs font-bold text-slate-600 bg-white/80 border border-slate-200/80 px-3 py-1.5 rounded-lg">
+              {currentIndex + 1} / {total}
+            </span>
+
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={total <= 1}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 text-xs font-bold transition-all shadow-xs min-h-[40px] disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+              aria-label="Xem video hoặc ảnh tiếp theo"
+            >
+              <span>Phần tiếp</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Right Column: Synchronized Math Notes & Cheatsheet (7 cols on lg) */}
         <div className="lg:col-span-7 flex flex-col justify-between bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-7 border border-slate-200/80 shadow-xs">
           <div className="space-y-4">
-            {/* Header of Notes */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            {/* Header of Notes: Matching shorts-blog-layout.html */}
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
               <div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-primary/10 text-primary">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  GHI CHÚ ĐỒNG BỘ • {isImage ? 'ẢNH' : 'MẸO'} SỐ {currentIndex + 1}
+                <span className="badge-tag">
+                  GHI CHÚ BÀI HỌC (ĐỒNG BỘ THEO VIDEO)
                 </span>
-                <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mt-1 leading-snug">
+                <h3 className="text-lg sm:text-xl font-extrabold text-slate-800 mt-1 leading-snug">
                   {currentShort.title}
                 </h3>
               </div>
 
               <button
                 type="button"
-                onClick={handleCopyNotes}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:text-primary hover:border-primary/40 text-xs font-semibold bg-slate-50 transition-all cursor-pointer min-h-[38px]"
+                onClick={handleSaveNotebook}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700 hover:text-primary hover:border-primary/40 text-xs font-semibold bg-white hover:bg-slate-50 transition-all cursor-pointer min-h-[40px] shadow-2xs shrink-0"
               >
-                {copied ? (
+                {saved ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-600 font-bold">Đã sao chép</span>
+                    <span className="text-emerald-600 font-bold">Đã lưu sổ tay</span>
                   </>
                 ) : (
                   <>
-                    <Share2 className="w-3.5 h-3.5" />
-                    <span>Sao chép ghi chú</span>
+                    <Bookmark className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Lưu sổ tay</span>
                   </>
                 )}
               </button>
             </div>
 
-            {/* Note Content Body with automatic Markdown + LaTeX MathText */}
-            <div className="prose max-w-none text-slate-800 text-sm sm:text-base leading-relaxed [&_strong]:text-primary [&_code]:bg-slate-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-md [&_code]:text-primary [&_code]:font-mono">
+            {/* Note Content Body with step-box, formula-highlight, and LaTeX MathText */}
+            <div className="text-slate-800 text-sm leading-relaxed [&_.step-box_strong]:text-primary [&_.step-box_p]:text-slate-700 [&_code]:bg-slate-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-md [&_code]:text-primary [&_code]:font-mono">
               <MathText content={currentShort.notes || '<p class="text-slate-400 italic">Chưa có ghi chú cho nội dung này.</p>'} />
             </div>
           </div>
 
-          {/* Footer of Notes column */}
-          <div className="pt-4 mt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-            <span>Mẹo: Bấm vào danh sách video bên dưới hoặc dùng phím <strong>&larr;</strong> / <strong>&rarr;</strong> để chuyển nhanh</span>
-            <span className="text-slate-500 font-medium">{authorName}</span>
+          {/* Action button at bottom & Micro Footer (matching shorts-blog-layout.html) */}
+          <div className="space-y-3 pt-5 mt-4 border-t border-slate-100">
+            <Link
+              href="/practices"
+              className="w-full min-h-[44px] rounded-xl bg-primary hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>Luyện tập 3 câu tương tự</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 pt-1">
+              <span>Mẹo: Bấm vào danh sách video bên dưới hoặc dùng phím <strong>&larr;</strong> / <strong>&rarr;</strong> để chuyển nhanh</span>
+              <span className="text-slate-500 font-medium">{authorName}</span>
+            </div>
           </div>
         </div>
 
@@ -204,7 +243,7 @@ export function ShortsPlaylistStage({
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-primary" />
             <h4 className="text-xs sm:text-sm font-bold text-slate-800 uppercase tracking-wider">
-              Danh sách video & bài học trong chuyên đề ({total})
+              Danh sách video trong chuyên đề ({total})
             </h4>
           </div>
           <span className="text-xs text-slate-400 hidden sm:inline">Bấm vào thẻ để chuyển nhanh</span>
@@ -219,8 +258,17 @@ export function ShortsPlaylistStage({
               <div
                 key={item.id || idx}
                 data-testid={`rail-item-${idx}`}
+                role="button"
+                tabIndex={0}
+                aria-label={`Chuyển đến phần ${idx + 1}: ${item.title}`}
                 onClick={() => setCurrentIndex(idx)}
-                className={`min-w-[140px] max-w-[140px] p-2 rounded-xl border transition-all cursor-pointer flex flex-col justify-between shrink-0 ${
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setCurrentIndex(idx)
+                  }
+                }}
+                className={`min-w-[140px] max-w-[140px] p-2 rounded-xl border transition-all cursor-pointer flex flex-col justify-between shrink-0 focus:outline-none focus:ring-2 focus:ring-primary ${
                   isActive
                     ? 'border-primary bg-primary/5 shadow-xs ring-2 ring-primary/20'
                     : 'border-slate-200 hover:border-primary/40 bg-white hover:bg-slate-50'
@@ -243,7 +291,7 @@ export function ShortsPlaylistStage({
                         )}
                       </div>
                     </div>
-                    <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-sm bg-black/70 text-white text-[9px] font-bold">
+                    <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/75 text-white text-xs font-bold leading-none">
                       #{idx + 1}
                     </span>
                   </div>
@@ -253,7 +301,7 @@ export function ShortsPlaylistStage({
                   </p>
                 </div>
 
-                <span className="text-[10px] text-slate-400 mt-2 block font-medium">
+                <span className="text-xs text-slate-500 mt-2 block font-medium">
                   {itemIsImage ? 'Hình ảnh' : (item.duration || 'Shorts')}
                 </span>
               </div>

@@ -44,7 +44,7 @@ export interface BlogPost {
 
 export const BLOG_CATEGORIES: { id: string; label: string }[] = [
   { id: 'all', label: 'Tất cả bài viết' },
-  { id: 'Bi-Quyet-Thi', label: 'Bí quyết thi THPT' },
+  { id: 'Bi-Quyet-Thi', label: 'Bí quyết thi vào 10' },
   { id: 'Tin-Tuc', label: 'Tin tức & Sự kiện' },
   { id: 'Toan-6', label: 'Toán lớp 6' },
   { id: 'Toan-7', label: 'Toán lớp 7' },
@@ -56,48 +56,43 @@ export const BLOG_CATEGORIES: { id: string; label: string }[] = [
 export const BLOG_POSTS: BlogPost[] = [
   {
     id: '1',
-    slug: '5-phuong-phap-giai-nhanh-toan-tich-phan-bang-casio',
-    title: '5 Phương pháp giải nhanh Tích phân bằng máy tính CASIO fx-580VN X',
-    content: `Tích phân là một trong những phần kiến thức trọng tâm và chiếm tỉ lệ điểm số cao trong đề thi THPT Quốc gia môn Toán. Việc kết hợp giữa tư duy toán học tự luận và kỹ năng sử dụng máy tính bỏ túi CASIO fx-580VN X sẽ giúp học sinh tối ưu hóa thời gian làm bài.
+    slug: '5-meo-bam-may-casio-giai-nhanh-toan-9-thi-vao-10',
+    title: '5 Mẹo bấm máy tính CASIO fx-580VN X giải nhanh Toán 9 ôn thi vào 10',
+    content: `Kỳ thi tuyển sinh vào lớp 10 môn Toán đòi hỏi học sinh không chỉ nắm chắc kiến thức tự luận mà còn phải tối ưu thời gian làm bài. Việc kết hợp máy tính cầm tay CASIO fx-580VN X đúng cách giúp các em kiểm tra nhanh kết quả rút gọn, nghiệm hệ phương trình và ứng dụng Định lý Vi-et.
 
-### 1. Kỹ thuật tính Tích phân hàm ẩn bằng phép thế số thực
+### 1. Kiểm tra nghiệm phương trình bậc hai và Định lý Vi-et
 
-Đối với các bài toán cho phương trình hàm như:
-\\[ \\int_{0}^{1} f(x) dx = 5 \\]
-và yêu cầu tính tích phân biến đổi:
-\\[ I = \\int_{0}^{\\frac{\\pi}{2}} f(\\sin x) \\cdot \\cos x \\, dx \\]
+Đối với phương trình bậc hai:
+\\[ ax^2 + bx + c = 0 \\quad (a \\neq 0) \\]
+Bấm **MENU &rarr; 9 &rarr; 2 &rarr; 2**, nhập hệ số \\(a, b, c\\). Máy tính không chỉ hiển thị ngay nghiệm \\(x_1, x_2\\) mà còn cho giá trị nhỏ nhất / lớn nhất của parabol, giúp giải nhanh các bài toán cực trị đại số.
 
-Ta có thể áp dụng phương pháp đổi biến số đơn giản:
-Đặt \\( t = \\sin x \\Rightarrow dt = \\cos x \\, dx \\). 
-Khi \\( x = 0 \\Rightarrow t = 0 \\), khi \\( x = \\frac{\\pi}{2} \\Rightarrow t = 1 \\).
+Theo Định lý Vi-et:
+\\[ S = x_1 + x_2 = -\\frac{b}{a}, \\quad P = x_1 x_2 = \\frac{c}{a} \\]
+Học sinh có thể lưu nghiệm vào biến nhớ **STO &rarr; A** và **STO &rarr; B** để tính nhanh giá trị các biểu thức đối xứng phức tạp như \\(A^2 + B^2\\) hoặc \\(A^3 + B^3\\).
 
-Do đó:
-\\[ I = \\int_{0}^{1} f(t) dt = 5 \\]
+### 2. Kỹ thuật gán số (CALC) kiểm tra rút gọn biểu thức chứa căn
 
-### 2. Sử dụng tính năng SOLVE tìm tiệm cận và điểm cực trị
+Với bài toán rút gọn biểu thức chứa căn thức bậc hai:
+1. Nhập biểu thức đề bài \\(P\\) trừ đi biểu thức kết quả rút gọn \\(P'\\).
+2. Bấm phím **CALC**, chọn một giá trị thỏa mãn điều kiện xác định (ví dụ \\(x = 25\\) hoặc \\(x = 9\\)).
+3. Nếu kết quả màn hình hiển thị bằng **0**, phép biến đổi của em đã hoàn toàn chính xác!
 
-Khi gặp các bài toán liên quan đến thể tích khối tròn xoay quanh trục \\(Ox\\):
-\\[ V = \\pi \\int_{a}^{b} [f(x)]^2 dx \\]
+### 3. Lời khuyên từ thầy cô Toan6789
 
-Học sinh có thể nhập trực tiếp biểu thức vào máy tính CASIO và bấm tích phân xác định trong chế độ Radian.
-
-### 3. Lời khuyên từ thầy cô Toan24h
-
-- **Luôn chuyển máy tính về đơn vị Radian (Shift + Menu + 2 + 2)** trước khi tính các bài toán tích phân lượng giác.
-- Kiểm tra lại các khoảng xác định của hàm số để tránh bấm máy sai miền xác định.
-- Kết hợp công cụ **Chấm điểm AI Toan24h** để tự kiểm tra bước giải chi tiết và phát hiện lỗi sai trong bài thi thử.`,
+- Luôn viết đầy đủ các bước lập luận, điều kiện xác định trước khi ghi kết quả.
+- Dùng tính năng **Chấm điểm AI Toan6789** để được phát hiện sớm các lỗi trừ điểm ngớ ngẩn (thiếu điều kiện, sai dấu) trong quá trình luyện đề thi thử.`,
     category: 'Bi-Quyet-Thi',
-    categoryLabel: 'Bí quyết thi THPT',
+    categoryLabel: 'Bí quyết thi vào 10',
     coverImage: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=1200',
     author: {
       name: 'ThS. Nguyễn Văn An',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-      role: 'Chuyên gia Chuyên môn Toán Toan24h'
+      role: 'Tổ trưởng Chuyên môn Toán Toan6789'
     },
     publishedAt: '12 Tháng 9, 2026',
     readTime: '6 phút đọc',
     featured: true,
-    tags: ['Tích phân', 'CASIO', 'Ôn thi THPT', 'Mẹo giải nhanh']
+    tags: ['Casio fx-580VNX', 'Toán 9', 'Thi vào 10', 'Mẹo giải nhanh']
   },
   {
     id: 'shorts-casio-580vnx',
@@ -113,17 +108,24 @@ Học sinh có thể nhập trực tiếp biểu thức vào máy tính CASIO v�
         videoId: 'dQw4w9WgXcQ',
         title: 'Mẹo 1: Bấm máy tìm cực trị hàm bậc 3 trong 5 giây',
         duration: '0:45',
-        notes: `### Mẹo bấm máy tính tìm cực trị hàm bậc ba
-Cho hàm số bậc ba:
-$$y = ax^3 + bx^2 + cx + d \\quad (a \\neq 0)$$
-
-**Các bước thao tác trên Casio fx-580VNX:**
-1. Bấm **MENU** $\\rightarrow$ **9** (Phương trình/Hệ PT) $\\rightarrow$ **2** (Phương trình) $\\rightarrow$ **3** (Bậc 3).
-2. Nhập lần lượt các hệ số $a, b, c, d$.
-3. Bấm **=** liên tiếp bỏ qua các nghiệm $x_1, x_2, x_3$.
-4. Màn hình hiện:
-   - **Cực đại của hàm số:** Giá trị $x_{CĐ}$ và $y_{CĐ}$.
-   - **Cực tiểu của hàm số:** Giá trị $x_{CT}$ và $y_{CT}$.`
+        notes: `<div class="step-box">
+  <strong class="text-primary text-[13px] uppercase font-bold tracking-wider">BƯỚC 1: DẠNG TOÁN & ĐỀ BÀI</strong>
+  <p class="text-sm text-slate-700 mt-1">
+    Cho hàm số bậc ba: $y = ax^3 + bx^2 + cx + d \\quad (a \\neq 0)$ có 2 điểm cực trị $x_1, x_2$.
+  </p>
+  <div class="formula-highlight math-font">
+    y = \\left(\\frac{2c}{3} - \\frac{2b^2}{9a}\\right)x + \\left(d - \\frac{bc}{9a}\\right)
+  </div>
+</div>
+<div class="step-box" style="border-left-color: #10B981;">
+  <strong style="color: #059669;" class="text-[13px] uppercase font-bold tracking-wider">BƯỚC 2: MẸO BẤM MÁY TRONG 15 GIÂY</strong>
+  <p class="text-sm text-slate-700 mt-1">
+    Nhập lệnh <strong>MENU &rarr; 9 &rarr; 2 &rarr; 3</strong> trên fx-580VNX, nhập hệ số và ấn phím <strong>=</strong> liên tiếp để đọc ngay tọa độ cực trị ($x_{CĐ}, y_{CĐ}$) và ($x_{CT}, y_{CT}$).
+  </p>
+</div>
+<div class="callout-warning">
+  <strong>Lưu ý quan trọng:</strong> Luôn kiểm tra hệ số $a \\neq 0$ và xem màn hình máy tính có hiển thị đủ 2 cực trị trước khi kết luận.
+</div>`
       },
       {
         id: 'short-2',
@@ -131,16 +133,24 @@ $$y = ax^3 + bx^2 + cx + d \\quad (a \\neq 0)$$
         videoId: 'jNQXAC9IVRw',
         title: 'Mẹo 2: Giải hệ phương trình bậc nhất hai ẩn & kiểm tra nghiệm vô số',
         duration: '0:52',
-        notes: `### Giải hệ phương trình bậc nhất 2 ẩn
-Hệ phương trình:
-$$\\begin{cases} a_1 x + b_1 y = c_1 \\\\ a_2 x + b_2 y = c_2 \\end{cases}$$
-
-**Thao tác máy tính:**
-- Bấm **MENU** $\\rightarrow$ **9** $\\rightarrow$ **1** (Hệ phương trình) $\\rightarrow$ **2** (Số ẩn là 2).
-- Nhập $a_1, b_1, c_1$ và $a_2, b_2, c_2$.
-- Nếu màn hình báo:
-  - **Vô nghiệm (No Solution)**: $\\frac{a_1}{a_2} = \\frac{b_1}{b_2} \\neq \\frac{c_1}{c_2}$.
-  - **Vô số nghiệm (Infinite Solutions)**: $\\frac{a_1}{a_2} = \\frac{b_1}{b_2} = \\frac{c_1}{c_2}$.`
+        notes: `<div class="step-box">
+  <strong class="text-primary text-[13px] uppercase font-bold tracking-wider">BƯỚC 1: NHẬN DIỆN HỆ PHƯƠNG TRÌNH</strong>
+  <p class="text-sm text-slate-700 mt-1">
+    Hệ 2 phương trình bậc nhất 2 ẩn dạng chuẩn:
+  </p>
+  <div class="formula-highlight math-font">
+    \\begin{cases} a_1 x + b_1 y = c_1 \\\\ a_2 x + b_2 y = c_2 \\end{cases}
+  </div>
+</div>
+<div class="step-box" style="border-left-color: #10B981;">
+  <strong style="color: #059669;" class="text-[13px] uppercase font-bold tracking-wider">BƯỚC 2: THAO TÁC CASIO 580VNX</strong>
+  <p class="text-sm text-slate-700 mt-1">
+    Bấm <strong>MENU &rarr; 9 &rarr; 1 &rarr; 2</strong>, sau đó nhập lần lượt các hệ số $a_1, b_1, c_1$ và $a_2, b_2, c_2$.
+  </p>
+</div>
+<div class="callout-warning">
+  <strong>Biện luận nhanh:</strong> Nếu màn hình báo <em>No Solution</em> thì hệ vô nghiệm; nếu báo <em>Infinite Solutions</em> thì hệ có vô số nghiệm.
+</div>`
       },
       {
         id: 'short-3',
@@ -148,15 +158,25 @@ $$\\begin{cases} a_1 x + b_1 y = c_1 \\\\ a_2 x + b_2 y = c_2 \\end{cases}$$
         videoId: 'kJQP7kiw5Fk',
         title: 'Mẹo 3: Tìm nhanh BCNN và ƯCLN phân tích thừa số nguyên tố',
         duration: '0:38',
-        notes: `### Phân tích ra thừa số nguyên tố (FACT)
-Ví dụ phân tích số $1260$:
-1. Gõ $1260$ $\\rightarrow$ bấm **=**.
-2. Bấm tổ hợp phím: **SHIFT** + **FACT** (phím dấu độ phút giây $\\circ'''$).
-3. Kết quả: $1260 = 2^2 \\times 3^2 \\times 5 \\times 7$.
-
-**Tính ƯCLN (GCD) và BCNN (LCM):**
-- **ƯCLN**: Bấm **ALPHA** + **(x)** ($GCD$) $\\rightarrow$ nhập $a$ $\\rightarrow$ bấm **SHIFT** + **)** (dấu phẩy) $\\rightarrow$ nhập $b$ $\\rightarrow$ **)** $\\rightarrow$ **=**.
-- **BCNN**: Bấm **ALPHA** + **(÷)** ($LCM$).`
+        notes: `<div class="step-box">
+  <strong class="text-primary text-[13px] uppercase font-bold tracking-wider">BƯỚC 1: PHÂN TÍCH THỪA SỐ NGUYÊN TỐ (FACT)</strong>
+  <p class="text-sm text-slate-700 mt-1">
+    Nhập số cần phân tích (ví dụ $1260$) &rarr; bấm phím <strong>=</strong> &rarr; bấm tổ hợp <strong>SHIFT + FACT</strong> (phím dấu độ phút giây $\\circ '''$).
+  </p>
+  <div class="formula-highlight math-font">
+    1260 = 2^2 \\times 3^2 \\times 5 \\times 7
+  </div>
+</div>
+<div class="step-box" style="border-left-color: #10B981;">
+  <strong style="color: #059669;" class="text-[13px] uppercase font-bold tracking-wider">BƯỚC 2: TÍNH NHANH GCD (ƯCLN) VÀ LCM (BCNN)</strong>
+  <p class="text-sm text-slate-700 mt-1">
+    - <strong>ƯCLN:</strong> Bấm <strong>ALPHA + (x)</strong> $(GCD) \\rightarrow a \\rightarrow$ <strong>SHIFT + )</strong> (,) $\\rightarrow b \\rightarrow$ <strong>) =</strong><br/>
+    - <strong>BCNN:</strong> Bấm <strong>ALPHA + (÷)</strong> $(LCM) \\rightarrow a \\rightarrow$ <strong>SHIFT + )</strong> (,) $\\rightarrow b \\rightarrow$ <strong>) =</strong>
+  </p>
+</div>
+<div class="callout-warning">
+  <strong>Mẹo thi vào 10:</strong> Áp dụng để rút gọn phân số chứa căn hoặc phân tích đa thức thành nhân tử siêu tốc.
+</div>`
       }
     ]),
     category: 'Meo-Casio',
@@ -243,34 +263,34 @@ Học sinh có thể xem hình minh họa 3D tương tác ngay tại phần **B�
   },
   {
     id: '4',
-    slug: 'chien-thuat-phan-bo-thoi-gian-lam-bai-thi-toan-thpt',
-    title: 'Chiến thuật phân bố thời gian 90 phút làm bài thi Toán THPT hiệu quả nhất',
-    content: `Với 50 câu hỏi trắc nghiệm trong thời gian 90 phút, trung bình học sinh chỉ có **1.8 phút** cho mỗi câu. Việc phân bổ thời gian hợp lý chính là chìa khóa để đạt điểm số tối đa.
+    slug: 'chien-thuat-phan-bo-thoi-gian-lam-bai-thi-toan-vao-10',
+    title: 'Chiến thuật phân bổ 120 phút làm bài thi Toán tuyển sinh vào 10 đạt điểm 9+',
+    content: `Đề thi tuyển sinh vào lớp 10 môn Toán thường có thời gian 120 phút với cấu trúc 5 bài tự luận chuẩn. Việc phân bổ thời gian hợp lý chính là chìa khóa vàng giúp học sinh giành trọn điểm số mà không bị mất điểm oan ở các câu cơ bản.
 
-### Quy tắc 3 Vòng Làm Bài Siêu Tốc
+### Quy tắc 4 Chặng Thời Gian Vàng
 
-1. **Vòng 1 (0 - 25 phút):** Giải quyết 30 câu hỏi nhận biết, thông hiểu (mục tiêu 6 điểm). Làm đến đâu tô chắc đáp án đến đó.
-2. **Vòng 2 (25 - 60 phút):** Tập trung vào 12 câu vận dụng (câu 31 đến 42). Sử dụng máy tính CASIO và các mẹo tính nhanh.
-3. **Vòng 3 (60 - 85 phút):** Đăng ký chinh phục 8 câu vận dụng cao (câu 43 đến 50).
-4. **5 phút cuối:** Kiểm tra lại phiếu trả lời trắc nghiệm, đảm bảo không bỏ trống câu nào.`,
+1. **Chặng 1 (0 - 30 phút) - Quét sạch 5.0 điểm cơ bản:** Hoàn thành trọn vẹn Bài 1 (Rút gọn biểu thức chứa căn thức) và Bài 2 (Giải bài toán bằng cách lập phương trình/hệ phương trình). Đảm bảo kiểm tra kỹ điều kiện xác định và đối chiếu nghiệm.
+2. **Chặng 2 (30 - 65 phút) - Chinh phục mốc 7.5 điểm:** Xử lý Bài 3 (Hệ phương trình và Phương trình bậc hai với tham số $m$, ứng dụng Định lý Vi-et).
+3. **Chặng 3 (65 - 105 phút) - Đột phá Hình học (Bài 4):** Giải quyết câu a (chứng minh tứ giác nội tiếp) và câu b (chứng minh hệ thức hình học / tam giác đồng dạng).
+4. **Chặng 4 (105 - 120 phút) - Về đích & Rà soát:** Dành 10 phút thử sức câu hình c hoặc bài 5 (Bất đẳng thức / Giá trị nhỏ nhất, lớn nhất). 5 phút cuối cùng kiểm tra lại đơn vị, kết luận và số báo danh.`,
     category: 'Bi-Quyet-Thi',
-    categoryLabel: 'Bí quyết thi THPT',
+    categoryLabel: 'Bí quyết thi vào 10',
     coverImage: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=1200',
     author: {
       name: 'ThS. Nguyễn Văn An',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
-      role: 'Chuyên gia Chuyên môn Toán Toan24h'
+      role: 'Tổ trưởng Chuyên môn Toán Toan6789'
     },
     publishedAt: '05 Tháng 9, 2026',
-    readTime: '4 phút đọc',
+    readTime: '5 phút đọc',
     featured: false,
-    tags: ['Kỹ năng thi', 'Phân bổ thời gian', 'Thi THPT', 'Kinh nghiệm']
+    tags: ['Kỹ năng thi', 'Phân bổ thời gian', 'Thi vào 10', 'Kinh nghiệm']
   },
   {
     id: '5',
-    slug: 'toan24h-ra-mat-tinh-nang-cham-nhan-xet-ai-moi',
-    title: 'Toan24h cập nhật giao diện Chấm điểm & Nhận xét AI mượt mà chuẩn Modern Academic',
-    content: `Toan24h vừa chính thức phát hành bản cập nhật giao diện mới theo chuẩn thiết kế **Modern Academic (Google Material Inspired)**.
+    slug: 'toan6789-ra-mat-tinh-nang-cham-nhan-xet-ai-moi',
+    title: 'Toan6789 cập nhật giao diện Chấm điểm & Nhận xét AI mượt mà chuẩn Modern Academic',
+    content: `Toan6789 vừa chính thức phát hành bản cập nhật giao diện mới theo chuẩn thiết kế **Modern Academic**.
 
 ### Những tính năng nổi bật trong bản cập nhật:
 
@@ -282,29 +302,210 @@ Học sinh có thể xem hình minh họa 3D tương tác ngay tại phần **B�
     categoryLabel: 'Tin tức & Sự kiện',
     coverImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=1200',
     author: {
-      name: 'Ban Biên Tập Toan24h',
+      name: 'Ban Biên Tập Toan6789',
       avatar: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?auto=format&fit=crop&q=80&w=200',
       role: 'Đội ngũ Phát triển Sản phẩm'
     },
     publishedAt: '01 Tháng 9, 2026',
     readTime: '3 phút đọc',
     featured: false,
-    tags: ['Cập nhật', 'Toan24h', 'Giao diện mới', 'AI Grader']
+    tags: ['Cập nhật', 'Toan6789', 'Giao diện mới', 'AI Grader']
+  },
+  {
+    id: '6',
+    slug: 'phuong-phap-tim-ucln-bcnn-toan-6-kntt',
+    title: 'Phương pháp tìm ƯCLN và BCNN Toán 6 cực nhanh kèm sơ đồ phân tích thừa số nguyên tố',
+    content: `Ước chung lớn nhất (ƯCLN) và Bội chung nhỏ nhất (BCNN) là hai khái niệm nền tảng trong chương trình Toán 6 (Bộ sách Kết nối tri thức & Cánh diều).
+
+### 1. Quy tắc 3 bước tìm ƯCLN và BCNN
+
+1. **Phân tích mỗi số ra thừa số nguyên tố:**
+   - Ví dụ: \\(24 = 2^3 \\cdot 3\\) và \\(36 = 2^2 \\cdot 3^2\\).
+2. **Chọn thừa số nguyên tố:**
+   - Đối với **ƯCLN**: Chọn các thừa số nguyên tố **chung**, lấy số mũ **nhỏ nhất**:
+     \\[ \\text{ƯCLN}(24, 36) = 2^2 \\cdot 3 = 12 \\]
+   - Đối với **BCNN**: Chọn các thừa số nguyên tố **chung và riêng**, lấy số mũ **lớn nhất**:
+     \\[ \\text{BCNN}(24, 36) = 2^3 \\cdot 3^2 = 72 \\]
+3. **Mẹo kiểm tra bằng tích:**
+   \\[ \\text{ƯCLN}(a, b) \\cdot \\text{BCNN}(a, b) = a \\cdot b \\]
+
+### 2. Ứng dụng giải bài toán thực tế chia tổ và chu kỳ gặp nhau
+Học sinh lớp 6 cần chú ý các từ khóa: "chia đều", "nhiều nhất" thường gắn với bài toán tìm ƯCLN; "cùng một lúc", "lần tiếp theo" thường gắn với tìm BCNN.`,
+    category: 'Toan-6',
+    categoryLabel: 'Toán lớp 6',
+    coverImage: 'https://images.unsplash.com/photo-1596495578065-6e0763fa1178?auto=format&fit=crop&q=80&w=1200',
+    author: {
+      name: 'Cô Hoàng Thu Thảo',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
+      role: 'Giáo viên Toán THCS Toan6789'
+    },
+    publishedAt: '25 Tháng 8, 2026',
+    readTime: '4 phút đọc',
+    featured: false,
+    tags: ['Toán 6', 'ƯCLN', 'BCNN', 'Số học THCS']
+  },
+  {
+    id: '7',
+    slug: 'chinh-phuc-so-huu-ti-so-thuc-toan-7',
+    title: 'Chinh phục số hữu tỉ, số vô tỉ và căn bậc hai số học trong chương trình Toán 7 mới',
+    content: `Chương trình Toán 7 mở rộng tập hợp số từ tập số tự nhiên \\(\\mathbb{N}\\), số nguyên \\(\\mathbb{Z}\\) sang tập số hữu tỉ \\(\\mathbb{Q}\\) và số thực \\(\\mathbb{R}\\).
+
+### 1. Phân biệt Số hữu tỉ và Số vô tỉ
+- **Số hữu tỉ (\\(\\mathbb{Q}\\)):** Biểu diễn được dưới dạng phân số \\(\\frac{a}{b}\\) với \\(a, b \\in \\mathbb{Z}, b \\neq 0\\). Ví dụ: \\(0.75 = \\frac{3}{4}\\), \\(-2.5 = -\\frac{5}{2}\\).
+- **Số vô tỉ (\\(\\mathbb{I}\\)):** Số thập phân vô hạn không tuần hoàn. Điển hình là căn bậc hai không chính phương như \\(\\sqrt{2} \\approx 1.4142...\\), \\(\\pi \\approx 3.1415...\\).
+
+### 2. Căn bậc hai số học
+Căn bậc hai số học của một số \\(a \\ge 0\\) là số \\(x \\ge 0\\) sao cho \\(x^2 = a\\), ký hiệu là \\(\\sqrt{a}\\).
+\\[ \\sqrt{a^2} = |a| \\]`,
+    category: 'Toan-7',
+    categoryLabel: 'Toán lớp 7',
+    coverImage: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&q=80&w=1200',
+    author: {
+      name: 'ThS. Nguyễn Văn An',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+      role: 'Tổ trưởng Chuyên môn Toán Toan6789'
+    },
+    publishedAt: '20 Tháng 8, 2026',
+    readTime: '5 phút đọc',
+    featured: false,
+    tags: ['Toán 7', 'Số hữu tỉ', 'Số thực', 'Căn bậc hai']
+  },
+  {
+    id: '8',
+    slug: 'tuyet-chieu-7-hang-dang-thuc-dang-nho-toan-8',
+    title: 'Tuyệt chiêu ghi nhớ 7 Hằng đẳng thức đáng nhớ & Phân tích đa thức thành nhân tử Toán 8',
+    content: `7 Hằng đẳng thức đáng nhớ là "xương sống" của Đại số lớp 8 và là công cụ không thể thiếu khi giải phương trình lớp 9.
+
+### 7 Hằng đẳng thức cốt lõi:
+1. \\( (a + b)^2 = a^2 + 2ab + b^2 \\)
+2. \\( (a - b)^2 = a^2 - 2ab + b^2 \\)
+3. \\( a^2 - b^2 = (a - b)(a + b) \\)
+4. \\( (a + b)^3 = a^3 + 3a^2b + 3ab^2 + b^3 \\)
+5. \\( (a - b)^3 = a^3 - 3a^2b + 3ab^2 - b^3 \\)
+6. \\( a^3 + b^3 = (a + b)(a^2 - ab + b^2) \\)
+7. \\( a^3 - b^3 = (a - b)(a^2 + ab + b^2) \\)
+
+### Mẹo thêm bớt hạng tử
+Khi gặp đa thức bậc 4 dạng đối xứng \\(x^4 + 4y^4\\), thêm bớt \\(4x^2y^2\\) để xuất hiện hằng đẳng thức hiệu hai bình phương.`,
+    category: 'Toan-8',
+    categoryLabel: 'Toán lớp 8',
+    coverImage: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=1200',
+    author: {
+      name: 'Cô Trần Minh Anh',
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200',
+      role: 'Giảng viên Hình học & Đại số'
+    },
+    publishedAt: '15 Tháng 8, 2026',
+    readTime: '6 phút đọc',
+    featured: false,
+    tags: ['Toán 8', 'Hằng đẳng thức', 'Đại số 8', 'Phân tích đa thức']
+  },
+  {
+    id: '9',
+    slug: 'phuong-phap-ve-duong-phu-tu-giac-noi-tiep-toan-9',
+    title: 'Phương pháp kẻ đường phụ chứng minh Tứ giác nội tiếp đường tròn ăn trọn điểm thi vào 10',
+    content: `Trong cấu trúc đề thi tuyển sinh vào lớp 10, câu Hình học luôn chiếm từ 3.0 đến 3.5 điểm. Câu chứng minh tứ giác nội tiếp là câu "cho điểm" bắt buộc phải làm nhanh và chuẩn xác.
+
+### 4 Dấu hiệu nhận biết Tứ giác nội tiếp:
+1. **Tổng hai góc đối bằng 180°:** \\(\\widehat{A} + \\widehat{C} = 180^\\circ\\) hoặc \\(\\widehat{B} + \\widehat{D} = 180^\\circ\\).
+2. **Hai đỉnh kề cùng nhìn một cạnh:** Hai đỉnh cùng nhìn đoạn thẳng nối hai đỉnh còn lại dưới hai góc bằng nhau.
+3. **Góc ngoài tại một đỉnh bằng góc trong tại đỉnh đối:**
+4. **Bốn đỉnh cách đều một điểm cố định.**
+
+### 3 Đường phụ quen thuộc:
+- Nối tâm đường tròn với tiếp điểm để tạo góc vuông \\(90^\\circ\\).
+- Kẻ tiếp tuyến chung hoặc dây cung chung khi hai đường tròn cắt nhau.
+- Kẻ đường kính để tạo góc nội tiếp chắn nửa đường tròn bằng \\(90^\\circ\\).`,
+    category: 'Toan-9',
+    categoryLabel: 'Toán lớp 9',
+    coverImage: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=1200',
+    author: {
+      name: 'ThS. Nguyễn Văn An',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+      role: 'Tổ trưởng Chuyên môn Toán Toan6789'
+    },
+    publishedAt: '10 Tháng 8, 2026',
+    readTime: '7 phút đọc',
+    featured: false,
+    tags: ['Toán 9', 'Tứ giác nội tiếp', 'Hình học 9', 'Thi vào 10']
+  },
+  {
+    id: '10',
+    slug: 'ky-thuat-bam-may-casio-fx880btg-toan-thcs',
+    title: 'Kỹ thuật bấm máy tính Casio fx-880BTG và fx-580VNX tính nhanh bảng tần số & xác suất THCS',
+    content: `Bộ Giáo Dục đã đưa nội dung Thống kê và Xác suất vào đề thi Toán tuyển sinh THCS với các chỉ số: Số trung bình, Trung vị, Mốt, và Tứ phân vị.
+
+### 1. Thao tác trên Casio fx-580VN X:
+- Bấm **MENU &rarr; 6 (Thống kê)**.
+- Chọn **1: 1-Variable** để nhập dữ liệu mẫu số liệu.
+- Bấm **OPTN &rarr; 2: 1-Variable Calc** để màn hình hiển thị toàn bộ:
+  - Trung bình cộng \\(\\bar{x}\\).
+  - Trung vị \\(Med\\).
+  - Tứ phân vị \\(Q_1, Q_2, Q_3\\).
+  - Độ lệch chuẩn \\(\\sigma_x\\).
+
+### 2. Thao tác trên Casio fx-880BTG:
+- Sử dụng phím **HOME &rarr; Statistics &rarr; 1-Variable**.
+- Dùng tính năng MathBox để mô phỏng xác suất gieo xúc xắc và tung đồng xu trực quan.`,
+    category: 'Meo-Casio',
+    categoryLabel: 'Mẹo Casio',
+    coverImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200',
+    author: {
+      name: 'Thầy Trần Đình Bình',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200',
+      role: 'Chuyên gia Máy tính Cầm tay THCS'
+    },
+    publishedAt: '05 Tháng 8, 2026',
+    readTime: '5 phút đọc',
+    featured: false,
+    tags: ['Casio fx-880BTG', 'Casio fx-580VNX', 'Thống kê THCS', 'Mẹo Casio']
+  },
+  {
+    id: '11',
+    slug: 'cam-nang-10-bai-toan-thuc-te-hay-gap-thi-vao-10',
+    title: 'Cẩm nang ôn thi vào 10: Tổng hợp 10 dạng toán thực tế ứng dụng hàm số bậc nhất và hình học',
+    content: `Toán thực tế chiếm từ 1.0 đến 1.5 điểm trong đề thi vào 10 tại Hà Nội, TP.HCM, Đà Nẵng và nhiều tỉnh thành.
+
+### Các dạng toán thực tế trọng điểm:
+1. **Bài toán kinh tế & Giá tiền điện/nước/cước taxi:** Mô hình hàm số bậc nhất từng khúc \\(y = ax + b\\).
+2. **Bài toán nồng độ dung dịch & Hỗn hợp hóa học:** Lập hệ phương trình bảo toàn khối lượng chất tan.
+3. **Bài toán hình học thực tế:** Tính chiều cao tòa nhà, tháp truyền hình bằng tỉ số lượng giác góc nâng / góc hạ; Tính thể tích bồn nước hình trụ, hình nón, hình cầu.
+4. **Bài toán lãi suất và tăng trưởng dân số:** Ứng dụng công thức lãi kép.
+
+Học sinh cần rèn luyện kỹ năng đọc hiểu đề bài, chuyển đổi ngôn ngữ đời sống sang ngôn ngữ ký hiệu toán học chính xác.`,
+    category: 'Bi-Quyet-Thi',
+    categoryLabel: 'Bí quyết thi vào 10',
+    coverImage: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=1200',
+    author: {
+      name: 'ThS. Nguyễn Văn An',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+      role: 'Tổ trưởng Chuyên môn Toán Toan6789'
+    },
+    publishedAt: '01 Tháng 8, 2026',
+    readTime: '6 phút đọc',
+    featured: false,
+    tags: ['Toán thực tế', 'Thi vào 10', 'Hàm số bậc nhất', 'Hình học thực tế']
   }
 ]
 
-const LOCAL_STORAGE_KEY = 'toan24h_custom_blog_posts'
+const LOCAL_STORAGE_KEY = 'toan6789_custom_blog_posts'
+const LEGACY_STORAGE_KEY = 'toan24h_custom_blog_posts'
 
 export function getBlogPosts(): BlogPost[] {
   if (typeof window === 'undefined') {
     return BLOG_POSTS
   }
   try {
-    const customPostsStr = localStorage.getItem(LOCAL_STORAGE_KEY)
+    const customPostsStr = localStorage.getItem(LOCAL_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY)
     if (customPostsStr) {
       const customPosts: BlogPost[] = JSON.parse(customPostsStr)
-      // Merge custom posts at the top of default list
-      return [...customPosts, ...BLOG_POSTS]
+      if (Array.isArray(customPosts)) {
+        // Deduplicate: custom posts override default posts with matching id or slug
+        const customIds = new Set(customPosts.map(p => String(p.id)))
+        const customSlugs = new Set(customPosts.map(p => p.slug))
+        const remainingDefaults = BLOG_POSTS.filter(p => !customIds.has(String(p.id)) && !customSlugs.has(p.slug))
+        return [...customPosts, ...remainingDefaults]
+      }
     }
   } catch (e) {
     console.error('Error reading custom blog posts from localStorage', e)
@@ -315,7 +516,7 @@ export function getBlogPosts(): BlogPost[] {
 export function addBlogPost(post: BlogPost): BlogPost {
   if (typeof window !== 'undefined') {
     try {
-      const customPostsStr = localStorage.getItem(LOCAL_STORAGE_KEY)
+      const customPostsStr = localStorage.getItem(LOCAL_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY)
       let existing: BlogPost[] = customPostsStr ? JSON.parse(customPostsStr) : []
       
       if (post.featured) {
@@ -348,5 +549,60 @@ export function updateBlogPost(post: BlogPost): BlogPost {
 export function getBlogPostByIdOrSlug(idOrSlug: string): BlogPost | undefined {
   const allPosts = getBlogPosts()
   return allPosts.find(p => p.id === idOrSlug || p.slug === idOrSlug)
+}
+
+export function slugify(text: string): string {
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '')
+}
+
+export interface TocHeadingItem {
+  id: string
+  title: string
+  raw: string
+}
+
+export function extractH1Headings(rawContent: string): TocHeadingItem[] {
+  if (!rawContent) return []
+  const items: TocHeadingItem[] = []
+
+  // 1. Quét thẻ HTML <h1>: <h1 ...>Tiêu đề</h1>
+  const htmlRegex = /<h1(?:\s+id=["']([^"']+)["'])?[^>]*>(.*?)<\/h1>/gi
+  let match
+  while ((match = htmlRegex.exec(rawContent)) !== null) {
+    const rawTitle = match[2].replace(/<[^>]+>/g, '').trim()
+    if (rawTitle) {
+      const slugId = match[1] || slugify(rawTitle) || `heading-${items.length + 1}`
+      items.push({ id: slugId, title: rawTitle, raw: match[0] })
+    }
+  }
+
+  // 2. Quét Markdown # Tiêu đề (dòng bắt đầu bằng # kèm space)
+  const lines = rawContent.split('\n')
+  for (const line of lines) {
+    const trimmed = line.trim()
+    const mdMatch = trimmed.match(/^#\s+([^#].*)$/)
+    if (mdMatch) {
+      const rawTitle = mdMatch[1].trim()
+      if (rawTitle && !items.some(it => it.title === rawTitle)) {
+        items.push({
+          id: slugify(rawTitle) || `heading-${items.length + 1}`,
+          title: rawTitle,
+          raw: line
+        })
+      }
+    }
+  }
+
+  return items
 }
 

@@ -57,4 +57,12 @@ describe('ExamQuestionList Component', () => {
     render(<ExamQuestionList questions={mockQuestions} />)
     expect(screen.getByText(/Tìm tất cả các giá trị thực của tham số/i)).toBeInTheDocument()
   })
+
+  it('renders friendly empty state when questions list is empty', () => {
+    render(<ExamQuestionList questions={[]} />)
+    expect(screen.getByText('Chưa có câu hỏi nào trong đề thi')).toBeInTheDocument()
+    const link = screen.getByRole('link', { name: /Đến Ngân hàng câu hỏi chọn câu/i })
+    expect(link).toBeInTheDocument()
+    expect(link).toHaveAttribute('href', '/dashboard/questions')
+  })
 })

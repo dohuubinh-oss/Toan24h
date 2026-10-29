@@ -190,4 +190,25 @@ describe('AiQuestionExtractModal Component', () => {
     expect(screen.getByText(/Vui lòng chọn ít nhất 1 ảnh đề thi/i)).toBeInTheDocument()
     expect(api.apiFetch).not.toHaveBeenCalled()
   })
+
+  it('supports pasting image from clipboard (Ctrl+V)', async () => {
+    renderComponent()
+
+    const pastedFile = new File(['pasted image data'], 'pasted_screenshot.png', { type: 'image/png' })
+    const clipboardData = {
+      items: [
+        {
+          type: 'image/png',
+          getAsFile: () => pastedFile,
+        },
+      ],
+    }
+
+    fireEvent.paste(window, { clipboardData })
+
+    await waitFor(() => {
+      expect(screen.getByText('pasted_screenshot.png')).toBeInTheDocument()
+      expect(screen.getByText(/Đã chọn 1\/10 ảnh/i)).toBeInTheDocument()
+    })
+  })
 })

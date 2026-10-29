@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tài liệu Tổng hợp Các Luồng Nghiệp vụ · toan6789.vn</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper: #ffffff;
+      --color-paper-2: #f8fafc;
+      --color-ink: #0f172a;
+      --color-muted: #475569;
+      --color-soft: #64748b;
+      --color-rule: rgba(15, 23, 42, 0.12);
+      --color-rule-solid: #cbd5e1;
+      --color-accent: #2563eb;
+      --color-accent-tint: rgba(37, 99, 235, 0.08);
+      --color-link: #1d4ed8;
+      --color-success: #16a34a;
+      --color-warning: #d97706;
+      --color-danger: #ef4444;
+      --font-sans: 'Lexend', system-ui, sans-serif;
+      --font-serif: 'Lexend', serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-paper: #0f172a;
+        --color-paper-2: #1e293b;
+        --color-ink: #f8fafc;
+        --color-muted: #94a3b8;
+        --color-soft: #64748b;
+        --color-rule: rgba(248, 250, 252, 0.12);
+        --color-rule-solid: #334155;
+        --color-accent: #60a5fa;
+        --color-accent-tint: rgba(96, 165, 250, 0.12);
+        --color-link: #93c5fd;
+        --color-success: #4ade80;
+        --color-warning: #fbbf24;
+        --color-danger: #f87171;
+      }
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      min-height: 100vh;
+      padding: 3rem 2rem;
+      color: var(--color-ink);
+      line-height: 1.5;
+    }
+    .container { max-width: 1240px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; }
+    .header-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 3.5vw + 1rem, 3rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin-bottom: 0.6rem;
+    }
+    .subtitle {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: var(--color-muted);
+      max-width: 80ch;
+    }
+
+    /* Tab Controls (Pure CSS) */
+    .tab-input { display: none; }
+    .tabs-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1.75rem 0 1.25rem 0;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .tab-label {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.55rem 1rem;
+      border-radius: 6px;
+      border: 1px solid var(--color-rule);
+      background: var(--color-paper);
+      color: var(--color-muted);
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+      user-select: none;
+    }
+    .tab-label:hover {
+      background: var(--color-paper-2);
+      color: var(--color-ink);
+      border-color: var(--color-rule-solid);
+    }
+
+    /* Active Tab Styling */
+    #tab-flow1:checked ~ .tabs-nav label[for="tab-flow1"],
+    #tab-flow2:checked ~ .tabs-nav label[for="tab-flow2"],
+    #tab-flow3:checked ~ .tabs-nav label[for="tab-flow3"],
+    #tab-flow4:checked ~ .tabs-nav label[for="tab-flow4"],
+    #tab-flow5:checked ~ .tabs-nav label[for="tab-flow5"],
+    #tab-arch:checked ~ .tabs-nav label[for="tab-arch"] {
+      background: var(--color-accent);
+      color: #ffffff;
+      border-color: var(--color-accent);
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+    /* Tab Content Visibility */
+    .tab-pane {
+      display: none;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    #tab-flow1:checked ~ #pane-flow1,
+    #tab-flow2:checked ~ #pane-flow2,
+    #tab-flow3:checked ~ #pane-flow3,
+    #tab-flow4:checked ~ #pane-flow4,
+    #tab-flow5:checked ~ #pane-flow5,
+    #tab-arch:checked ~ #pane-arch {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Diagram Wrapper */
+    .diagram-panel {
+      background: var(--color-paper-2);
+      border-radius: 12px;
+      border: 1px solid var(--color-rule);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .panel-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--color-rule);
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .panel-meta h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--color-ink);
+    }
+    .panel-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .action-btn {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      text-decoration: none;
+      border: 1px solid var(--color-rule-solid);
+      background: var(--color-paper);
+      color: var(--color-muted);
+      transition: all 0.15s ease;
+    }
+    .action-btn:hover {
+      background: var(--color-accent);
+      color: #ffffff;
+      border-color: var(--color-accent);
+    }
+    .diagram-scroll {
+      overflow-x: auto;
+      max-width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--color-rule);
+      background: #ffffff;
+    }
+    svg {
+      width: 100%;
+      min-width: 960px;
+      display: block;
+    }
+
+    /* Cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+    }
+    @media (max-width: 860px) { .cards { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--color-paper);
+      border-radius: 8px;
+      border: 1px solid var(--color-rule);
+      padding: 1.25rem;
+    }
+    .card .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.accent { background: var(--color-accent); }
+    .card-dot.success { background: var(--color-success); }
+    .card-dot.warning { background: var(--color-warning); }
+    .card-dot.danger { background: var(--color-danger); }
+    .card h3 { font-size: 0.925rem; font-weight: 600; }
+    .card p, .card ul { color: var(--color-muted); font-size: 0.825rem; line-height: 1.6; list-style: none; }
+    .card li { margin-bottom: 0.35rem; padding-left: 0.9rem; position: relative; }
+    .card li::before { content: '—'; position: absolute; left: 0; color: var(--color-soft); font-size: 0.75rem; }
+
+    /* Footer */
+    .footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--color-rule);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--color-soft);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <p class="header-eyebrow">Dự án toan6789.vn · Hệ thống Sơ đồ Luồng Ứng dụng</p>
+      <h1>Sơ đồ Các Luồng Nghiệp vụ (Application Flows)</h1>
+      <p class="subtitle">Bộ sơ đồ trực quan chuẩn Editorial Design System &amp; Modern Academic, bao quát toàn diện các luồng hoạt động chính từ Xác thực, Phòng thi trực tuyến, Pipeline AI/OCR đến Phúc khảo và Cổng thanh toán VietQR.</p>
+    </div>
+
+    <!-- Hidden Radio Inputs for Pure CSS Tabs -->
+    <input type="radio" name="flow-tab" id="tab-flow1" class="tab-input" checked>
+    <input type="radio" name="flow-tab" id="tab-flow2" class="tab-input">
+    <input type="radio" name="flow-tab" id="tab-flow3" class="tab-input">
+    <input type="radio" name="flow-tab" id="tab-flow4" class="tab-input">
+    <input type="radio" name="flow-tab" id="tab-flow5" class="tab-input">
+    <input type="radio" name="flow-tab" id="tab-arch" class="tab-input">
+
+    <!-- Tab Bar -->
+    <div class="tabs-nav">
+      <label for="tab-flow1" class="tab-label">01. Xác thực &amp; Phiên (Auth)</label>
+      <label for="tab-flow2" class="tab-label">02. Phòng thi &amp; Chống Gian lận</label>
+      <label for="tab-flow3" class="tab-label">03. Pipeline Soạn đề &amp; AI</label>
+      <label for="tab-flow4" class="tab-label">04. Chấm thi &amp; Phúc khảo</label>
+      <label for="tab-flow5" class="tab-label">05. Thanh toán VietQR PayOS</label>
+      <label for="tab-arch" class="tab-label">06. Kiến trúc Tổng quan</label>
+    </div>
+
+    <!-- PANE 1: AUTHENTICATION -->
+    <div id="pane-flow1" class="tab-pane">
+      <div class="diagram-panel">
+        <div class="panel-meta">
+          <div>
+            <h2>Luồng 01: Xác thực, Cấp quyền &amp; Quản lý Phiên làm việc</h2>
+            <p style="font-size: 0.85rem; color: var(--color-muted);">Sequence Diagram: Đăng nhập mật khẩu, Google OAuth 2.0, Telegram QR và Stateless JWT Cookie.</p>
+          </div>
+          <div class="panel-actions">
+            <a href="diagrams/flow-1-authentication.html" target="_blank" class="action-btn">Mở Toàn Màn Hình ↗</a>
+            <a href="diagrams/flow-1-authentication.svg" target="_blank" class="action-btn">Tải file SVG ↓</a>
+          </div>
+        </div>
+        <div class="diagram-scroll">
+          <object data="diagrams/flow-1-authentication.svg" type="image/svg+xml" style="width: 100%; min-width: 960px; display: block;"></object>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <p class="eyebrow">Bảo mật Cookie</p>
+            <div class="card-header">
+              <div class="card-dot accent"></div>
+              <h3>HttpOnly Cookie Chống XSS</h3>
+            </div>
+            <p>JWT Access Token được lưu trực tiếp trong <code>HttpOnly, Secure, SameSite=Lax</code> Cookie, không lưu ở localStorage nhằm ngăn ngừa đánh cắp token qua mã độc Javascript.</p>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Phân quyền RBAC</p>
+            <div class="card-header">
+              <div class="card-dot success"></div>
+              <h3>Middleware Kiểm soát Tầng Go</h3>
+            </div>
+            <p>Go Backend Middleware kiểm tra quyền (Student, Teacher, Admin, Affiliate) trên từng Endpoint. Học sinh không thể truy cập các API tạo đề hay duyệt bài tự luận.</p>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Tối ưu Trải nghiệm</p>
+            <div class="card-header">
+              <div class="card-dot warning"></div>
+              <h3>Google OAuth &amp; Telegram Sync</h3>
+            </div>
+            <p>Đăng nhập 1 chạm Google OAuth giúp học sinh vào thi nhanh chóng. Kênh Telegram dùng riêng để nhận kết quả thi và cảnh báo vi phạm về điện thoại phụ huynh.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 2: STUDENT EXAM -->
+    <div id="pane-flow2" class="tab-pane">
+      <div class="diagram-panel">
+        <div class="panel-meta">
+          <div>
+            <h2>Luồng 02: Phòng thi Thực chiến, Chống Gian lận &amp; Chấm điểm Tự động</h2>
+            <p style="font-size: 0.85rem; color: var(--color-muted);">Sequence &amp; Async Queue: Cấp đề từ Redis Cache, giám sát chuyển tab qua Redis Queue và chấm Server-side.</p>
+          </div>
+          <div class="panel-actions">
+            <a href="diagrams/flow-2-student-exam.html" target="_blank" class="action-btn">Mở Toàn Màn Hình ↗</a>
+            <a href="diagrams/flow-2-student-exam.svg" target="_blank" class="action-btn">Tải file SVG ↓</a>
+          </div>
+        </div>
+        <div class="diagram-scroll">
+          <object data="diagrams/flow-2-student-exam.svg" type="image/svg+xml" style="width: 100%; min-width: 960px; display: block;"></object>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <p class="eyebrow">Giấu Đáp án Đúng</p>
+            <div class="card-header">
+              <div class="card-dot accent"></div>
+              <h3>Triệt tiêu Gian lận DevTools</h3>
+            </div>
+            <p>API nạp đề chỉ gửi nội dung câu hỏi và danh sách đáp án A/B/C/D. Thuộc tính <code>correct_option</code> được giấu tuyệt đối và chỉ lưu trên Server để chấm in-memory.</p>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Chịu tải Ghi Cao</p>
+            <div class="card-header">
+              <div class="card-dot danger"></div>
+              <h3>Redis LPUSH Queue &amp; Worker Batch</h3>
+            </div>
+            <p>Khi hàng ngàn học sinh cùng thi, các sự kiện rời tab được đẩy vào Redis Queue trong &lt; 2ms. Background Worker gom batch (mỗi 2s hoặc 100 log) mới bulk insert vào Postgres.</p>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Lời giải Chi tiết</p>
+            <div class="card-header">
+              <div class="card-dot success"></div>
+              <h3>Công thức Toán KaTeX Sắc nét</h3>
+            </div>
+            <p>Ngay sau khi nộp bài, học sinh nhận ngay bảng điểm phân tích chính xác, xem lại phương pháp giải từng bước với công thức toán định dạng KaTeX chuẩn giáo khoa.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 3: TEACHER AI PIPELINE -->
+    <div id="pane-flow3" class="tab-pane">
+      <div class="diagram-panel">
+        <div class="panel-meta">
+          <div>
+            <h2>Luồng 03: Pipeline Soạn đề, Xử lý AI &amp; Đồng bộ Camera Mobile QR</h2>
+            <p style="font-size: 0.85rem; color: var(--color-muted);">Process Pipeline: Nhập đề đa nguồn, trích xuất AI, tinh chỉnh hình học SVG và phân loại ngân hàng câu hỏi.</p>
+          </div>
+          <div class="panel-actions">
+            <a href="diagrams/flow-3-teacher-ai-pipeline.html" target="_blank" class="action-btn">Mở Toàn Màn Hình ↗</a>
+            <a href="diagrams/flow-3-teacher-ai-pipeline.svg" target="_blank" class="action-btn">Tải file SVG ↓</a>
+          </div>
+        </div>
+        <div class="diagram-scroll">
+          <object data="diagrams/flow-3-teacher-ai-pipeline.svg" type="image/svg+xml" style="width: 100%; min-width: 960px; display: block;"></object>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <p class="eyebrow">Tiện ích Đột phá</p>
+            <div class="card-header">
+              <div class="card-dot accent"></div>
+              <h3>Chụp ảnh Điện thoại Không Dây</h3>
+            </div>
+            <p>Giáo viên quét mã QR trên màn hình máy tính bằng điện thoại, chụp ảnh bài làm viết tay hoặc hình vẽ và ảnh tự động tải lên hiển thị ngay trong bài tập mà không cần cáp nối.</p>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Động cơ AI</p>
+            <div class="card-header">
+              <div class="card-dot warning"></div>
+              <h3>Trích xuất Cấu trúc &amp; Chuẩn hóa SVG</h3>
+            </div>
+            <p>AI tự động bóc tách đề bài, 4 phương án, đáp án đúng và lời giải chi tiết. Biểu đồ hình học được tinh chỉnh thành mã SVG vector sắc nét không mờ hạt.</p>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Dọn rác CSDL</p>
+            <div class="card-header">
+              <div class="card-dot success"></div>
+              <h3>Check Orphan Questions &amp; Xuất PDF</h3>
+            </div>
+            <p>Hệ thống tự động phát hiện và dọn dẹp câu hỏi mồ côi. Đề thi có thể phát hành trực tuyến hoặc xuất bản thành tài liệu in ấn PDF bằng Headless Chromium.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 4: APPEALS LIFECYCLE -->
+    <div id="pane-flow4" class="tab-pane">
+      <div class="diagram-panel">
+        <div class="panel-meta">
+          <div>
+            <h2>Luồng 04: Vòng đời Chấm thi &amp; Xử lý Khiếu nại Phúc khảo</h2>
+            <p style="font-size: 0.85rem; color: var(--color-muted);">State Machine: Vòng lặp từ SUBMITTED, NEEDS_REVIEW, PUBLISHED, APPEAL_FILED đến FINALIZED.</p>
+          </div>
+          <div class="panel-actions">
+            <a href="diagrams/flow-4-appeals-lifecycle.html" target="_blank" class="action-btn">Mở Toàn Màn Hình ↗</a>
+            <a href="diagrams/flow-4-appeals-lifecycle.svg" target="_blank" class="action-btn">Tải file SVG ↓</a>
+          </div>
+        </div>
+        <div class="diagram-scroll">
+          <object data="diagrams/flow-4-appeals-lifecycle.svg" type="image/svg+xml" style="width: 100%; min-width: 960px; display: block;"></object>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <p class="eyebrow">Chấm thi Bổ sung</p>
+            <div class="card-header">
+              <div class="card-dot accent"></div>
+              <h3>Hỗ trợ Trắc nghiệm &amp; Tự luận</h3>
+            </div>
+            <p>Đề thi trắc nghiệm được chấm tự động trong vài mili-giây. Đối với phần tự luận, bài làm được đưa vào hàng đợi <code>NEEDS_REVIEW</code> để giáo viên chấm tay và ghi chú nhận xét.</p>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Quy trình Khiếu nại</p>
+            <div class="card-header">
+              <div class="card-dot warning"></div>
+              <h3>Đơn Phúc khảo &amp; Bằng chứng</h3>
+            </div>
+            <p>Học sinh gửi đơn khiếu nại kèm hình ảnh hoặc lập luận giải toán. Giáo viên tiếp nhận hồ sơ tại <code>/dashboard/appeals</code> để xem xét tính điểm lại.</p>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Cập nhật BXH</p>
+            <div class="card-header">
+              <div class="card-dot success"></div>
+              <h3>Đồng bộ Điểm &amp; Bắn Telegram</h3>
+            </div>
+            <p>Khi duyệt phúc khảo thành công, điểm số được cập nhật lại, bảng xếp hạng tuần được tái tính toán và tin nhắn chúc mừng được gửi thẳng về điện thoại phụ huynh.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 5: PAYOS PAYMENT -->
+    <div id="pane-flow5" class="tab-pane">
+      <div class="diagram-panel">
+        <div class="panel-meta">
+          <div>
+            <h2>Luồng 05: Thanh toán VietQR &amp; Kích hoạt VIP PayOS Tự động</h2>
+            <p style="font-size: 0.85rem; color: var(--color-muted);">Sequence Diagram: Tạo đơn Napas 24/7, xác thực chữ ký Webhook HMAC SHA256 và kích hoạt gói học tập.</p>
+          </div>
+          <div class="panel-actions">
+            <a href="diagrams/flow-5-payos-payment.html" target="_blank" class="action-btn">Mở Toàn Màn Hình ↗</a>
+            <a href="diagrams/flow-5-payos-payment.svg" target="_blank" class="action-btn">Tải file SVG ↓</a>
+          </div>
+        </div>
+        <div class="diagram-scroll">
+          <object data="diagrams/flow-5-payos-payment.svg" type="image/svg+xml" style="width: 100%; min-width: 960px; display: block;"></object>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <p class="eyebrow">Chuyển khoản Tức thì</p>
+            <div class="card-header">
+              <div class="card-dot accent"></div>
+              <h3>Mã VietQR Động Chuẩn Napas</h3>
+            </div>
+            <p>Mã QR chứa sẵn tài khoản, số tiền chính xác và mã đơn duy nhất. Phụ huynh chỉ cần quét mã trên App ngân hàng là giao dịch được khớp tự động trong 3 giây.</p>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Bảo mật Chữ ký</p>
+            <div class="card-header">
+              <div class="card-dot danger"></div>
+              <h3>HMAC SHA256 &amp; Idempotency</h3>
+            </div>
+            <p>Webhook được bảo vệ bằng chữ ký số HMAC SHA256. Hệ thống kiểm tra trùng lặp giao dịch (Idempotency check) nhằm ngăn ngừa tình trạng tấn công cộng dồn tiền 2 lần.</p>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Trải nghiệm Nâng cấp</p>
+            <div class="card-header">
+              <div class="card-dot success"></div>
+              <h3>Kích hoạt Tức thì &amp; Hiệu ứng Confetti</h3>
+            </div>
+            <p>Ngay khi Webhook báo <code>PAID</code>, hạn sử dụng được cộng vào tài khoản, màn hình thanh toán tự động chuyển sang trang chúc mừng có hiệu ứng pháo hoa rực rỡ.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE 6: ARCHITECTURE OVERVIEW -->
+    <div id="pane-arch" class="tab-pane">
+      <div class="diagram-panel">
+        <div class="panel-meta">
+          <div>
+            <h2>Luồng 06: Kiến trúc Tổng thể &amp; Phân tầng Dữ liệu Chịu Tải Cao</h2>
+            <p style="font-size: 0.85rem; color: var(--color-muted);">Architecture Diagram: Nginx Reverse Proxy, Next.js 16 App Router, Go Backend Goroutines, Redis &amp; PostgreSQL.</p>
+          </div>
+          <div class="panel-actions">
+            <a href="toan6789-architecture.html" target="_blank" class="action-btn">Mở Toàn Màn Hình ↗</a>
+            <a href="toan6789-architecture.svg" target="_blank" class="action-btn">Tải file SVG ↓</a>
+          </div>
+        </div>
+        <div class="diagram-scroll">
+          <object data="toan6789-architecture.svg" type="image/svg+xml" style="width: 100%; min-width: 960px; display: block;"></object>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <p class="eyebrow">Edge &amp; Ingress</p>
+            <div class="card-header">
+              <div class="card-dot accent"></div>
+              <h3>Nginx Reverse Proxy &amp; SSL</h3>
+            </div>
+            <p>Điều hướng traffic, nén file tĩnh Gzip/Brotli, cấu hình Rate Limiting chống DDoS và điều phối request giữa Next.js Frontend và Go Backend API.</p>
+          </div>
+          <div class="card">
+            <p class="eyebrow">High Concurrency</p>
+            <div class="card-header">
+              <div class="card-dot warning"></div>
+              <h3>Golang Lightweight Goroutines</h3>
+            </div>
+            <p>Bộ nhớ thấp, xử lý đồng thời 1,000+ kết nối học sinh thi cùng lúc mà không bị nghẽn thread. Chấm thi in-memory đạt hiệu năng tính bằng micro-giây.</p>
+          </div>
+          <div class="card">
+            <p class="eyebrow">Data Persistence</p>
+            <div class="card-header">
+              <div class="card-dot success"></div>
+              <h3>PostgreSQL + Redis Hybrid</h3>
+            </div>
+            <p>PostgreSQL đảm bảo toàn vẹn dữ liệu ACID. Redis đảm nhiệm Pre-warming đề thi, Session store và Message Queue cho Audit log chống gian lận.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Dự án: toan6789.vn · Hệ thống Quản lý và Thi Trắc nghiệm Toán THCS</span>
+      <span>Hệ thống Thiết kế: Modern Academic (Google Material Inspired) · Powered by Diagram Design</span>
+    </div>
+  </div>
+</body>
+</html>
