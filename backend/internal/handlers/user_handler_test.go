@@ -51,7 +51,7 @@ func setupUserHandlerTestEnv(t *testing.T) (*gin.Engine, *gorm.DB, func()) {
 		t.Fatalf("Failed to connect to test db: %v", err)
 	}
 
-	err = db.AutoMigrate(&models.User{})
+	err = db.AutoMigrate(&models.User{}, &models.Voucher{})
 	if err != nil {
 		t.Fatalf("Failed to migrate: %v", err)
 	}
@@ -83,6 +83,7 @@ func setupUserHandlerTestEnv(t *testing.T) (*gin.Engine, *gorm.DB, func()) {
 	{
 		users := api.Group("/users")
 		{
+			users.GET("/me", userHandler.GetProfile)
 			users.PUT("/:id/role", middleware.RoleMiddleware("admin"), userHandler.UpdateUserRole)
 		}
 	}
@@ -184,6 +185,107 @@ func TestUpdateUserRole(t *testing.T) {
 
 		if w.Code != http.StatusBadRequest {
 			t.Fatalf("Expected 400 Bad Request, got %d", w.Code)
+		}
+	})
+}
+
+func TestGetProfile_ReferralAndCommission(t *testing.T) {
+	r, db, cleanup := setupUserHandlerTestEnv(t)
+	defer cleanup()
+
+	teacherUser := models.User{
+		ID:                      uuid.New(),
+		Email:                   "teacher_profile@toan6789.vn",
+		FullName:                "Teacher Profile",
+		Role:                    "teacher",
+		Status:                  "active",
+		CommissionBalance:       180000,
+		TotalCommissionReceived: 1500000,
+	}
+	studentUser := models.User{
+		ID:       uuid.New(),
+		Email:    "student_profile@toan6789.vn",
+		FullName: "Student Profile",
+		Role:     "student",
+		Status:   "active",
+	}
+
+	db.Create(&teacherUser)
+	db.Create(&studentUser)
+
+	teacherToken, _ := utils.GenerateAccessToken(teacherUser.ID, teacherUser.Role, "")
+	studentToken, _ := utils.GenerateAccessToken(studentUser.ID, studentUser.Role, "")
+
+	t.Run("Teacher GetProfile auto-generates referral code and returns commission fields", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/v1/users/me", nil)
+		req.Header.Set("Authorization", "Bearer "+teacherToken)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("Expected 200, got %d. Body: %s", w.Code, w.Body.String())
+		}
+
+		var res struct {
+			Data struct {
+				ID                      string  `json:"id"`
+				Email                   string  `json:"email"`
+				Role                    string  `json:"role"`
+				ReferralCode            *string `json:"referralCode"`
+				CommissionBalance       int64   `json:"commissionBalance"`
+				TotalCommissionReceived int64   `json:"totalCommissionReceived"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal(w.Body.Bytes(), &res); err != nil {
+			t.Fatalf("Failed to parse json: %v", err)
+		}
+
+		if res.Data.ReferralCode == nil || len(*res.Data.ReferralCode) != 8 || (*res.Data.ReferralCode)[:2] != "GT" {
+			t.Errorf("Expected referral code starting with GT (length 8), got %+v", res.Data.ReferralCode)
+		}
+		if res.Data.CommissionBalance != 180000 {
+			t.Errorf("Expected CommissionBalance 180000, got %d", res.Data.CommissionBalance)
+		}
+		if res.Data.TotalCommissionReceived != 1500000 {
+			t.Errorf("Expected TotalCommissionReceived 1500000, got %d", res.Data.TotalCommissionReceived)
+		}
+
+		// Verify voucher exists in DB
+		var voucher models.Voucher
+		if err := db.Where("code = ?", *res.Data.ReferralCode).First(&voucher).Error; err != nil {
+			t.Fatalf("Expected voucher in DB for referral code, got error: %v", err)
+		}
+		if voucher.CommissionPercent != 60 {
+			t.Errorf("Expected voucher commission 60%%, got %v", voucher.CommissionPercent)
+		}
+	})
+
+	t.Run("Student GetProfile does not generate referral code", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/v1/users/me", nil)
+		req.Header.Set("Authorization", "Bearer "+studentToken)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("Expected 200, got %d. Body: %s", w.Code, w.Body.String())
+		}
+
+		var res struct {
+			Data struct {
+				ReferralCode            *string `json:"referralCode"`
+				CommissionBalance       int64   `json:"commissionBalance"`
+				TotalCommissionReceived int64   `json:"totalCommissionReceived"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal(w.Body.Bytes(), &res); err != nil {
+			t.Fatalf("Failed to parse json: %v", err)
+		}
+
+		if res.Data.ReferralCode != nil {
+			t.Errorf("Expected nil referral code for student, got %v", *res.Data.ReferralCode)
+		}
+		if res.Data.CommissionBalance != 0 {
+			t.Errorf("Expected 0 CommissionBalance, got %d", res.Data.CommissionBalance)
 		}
 	})
 }

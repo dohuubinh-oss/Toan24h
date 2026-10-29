@@ -21,6 +21,12 @@ import {
   GraduationCap,
   Users,
   Unlink,
+  Gift,
+  Copy,
+  Check,
+  Share2,
+  Percent,
+  Coins,
 } from 'lucide-react'
 import TelegramLoginWidget from '@/components/auth/TelegramLoginWidget'
 import { apiFetch, uploadUserAvatar } from '@/lib/api'
@@ -32,7 +38,7 @@ interface UserProfile {
   id: string
   email: string
   fullName: string
-  role: 'student' | 'teacher' | 'admin' | string
+  role: 'student' | 'teacher' | 'admin' | 'affiliate' | string
   grade?: string
   points?: number
   status?: string
@@ -43,6 +49,9 @@ interface UserProfile {
   telegramUsername2?: string
   telegramAvt2?: string
   expiresAt?: string
+  referralCode?: string
+  commissionBalance?: number
+  totalCommissionReceived?: number
   createdAt?: string
 }
 
@@ -61,6 +70,35 @@ export default function ProfilePage() {
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Referral / Affiliate copy states
+  const [copiedCode, setCopiedCode] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
+
+  const handleCopyCode = async () => {
+    if (!user?.referralCode) return
+    try {
+      await navigator.clipboard.writeText(user.referralCode)
+      setCopiedCode(true)
+      toast.success('Đã sao chép mã giới thiệu!')
+      setTimeout(() => setCopiedCode(false), 2000)
+    } catch {
+      toast.error('Không thể sao chép mã')
+    }
+  }
+
+  const handleCopyLink = async () => {
+    if (!user?.referralCode) return
+    const link = `https://toan6789.vn/register?ref=${user.referralCode}`
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopiedLink(true)
+      toast.success('Đã sao chép link đăng ký!')
+      setTimeout(() => setCopiedLink(false), 2000)
+    } catch {
+      toast.error('Không thể sao chép link')
+    }
+  }
 
   const handleAvatarFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -287,12 +325,28 @@ export default function ProfilePage() {
   const roleLabelMap: Record<string, { label: string; bg: string; text: string }> = {
     admin: { label: 'Quản trị viên', bg: 'bg-rose-100', text: 'text-rose-700' },
     teacher: { label: 'Giáo viên', bg: 'bg-indigo-100', text: 'text-indigo-700' },
+    affiliate: { label: 'Đối tác Affiliate', bg: 'bg-amber-100', text: 'text-amber-700' },
     student: { label: 'Học sinh', bg: 'bg-emerald-100', text: 'text-emerald-700' },
   }
   const roleBadge = roleLabelMap[user.role] || {
     label: user.role,
     bg: 'bg-slate-100',
     text: 'text-slate-700',
+  }
+
+  const isPartner = user.role === 'admin' || user.role === 'teacher' || user.role === 'affiliate'
+
+  const getCommissionRate = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 70
+      case 'teacher':
+        return 60
+      case 'affiliate':
+        return 30
+      default:
+        return 0
+    }
   }
 
   const isVipActive = user.expiresAt && new Date(user.expiresAt) > new Date()
@@ -489,6 +543,101 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Partner & Referral Program Section */}
+        {isPartner && (
+          <div className="pt-2 pb-8 border-t border-slate-100">
+            <div className="bg-gradient-to-br from-white via-emerald-50/20 to-teal-50/30 rounded-2xl p-5 sm:p-6 border border-emerald-200/80 shadow-sm">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-emerald-100/80">
+                <div className="flex items-start sm:items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                    <Gift className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-lg font-bold text-slate-900">Mã Giới Thiệu & Hoa Hồng Đối Tác</h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                        Chương trình Đối tác & Giới thiệu
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Chia sẻ mã giới thiệu để nhận hoa hồng trọn đời khi học sinh đăng ký gói học
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-start sm:self-auto bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-xl border border-emerald-200/60 text-xs font-bold shrink-0">
+                  <Percent className="w-4 h-4 text-emerald-600" />
+                  <span>Tỷ lệ hoa hồng: {getCommissionRate(user.role)}%</span>
+                </div>
+              </div>
+
+              {/* Referral Code & Action Buttons */}
+              <div className="my-5 p-4 bg-white rounded-xl border border-slate-200/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Mã của bạn:
+                  </span>
+                  <span className="px-3.5 py-1.5 bg-slate-900 text-white font-mono text-base font-bold tracking-wider rounded-lg shadow-sm selection:bg-emerald-500">
+                    {user.referralCode || 'Đang cập nhật...'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2.5 flex-wrap w-full md:w-auto">
+                  <button
+                    type="button"
+                    onClick={handleCopyCode}
+                    disabled={!user.referralCode}
+                    className="flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-600" />}
+                    <span>{copiedCode ? 'Đã sao chép' : 'Sao chép mã'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    disabled={!user.referralCode}
+                    className="flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-sm shadow-emerald-600/20 cursor-pointer disabled:opacity-50"
+                  >
+                    {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                    <span>{copiedLink ? 'Đã sao chép' : 'Sao chép link đăng ký'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Commission Stats 2 Columns */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-white rounded-xl p-4 border border-emerald-100/90 shadow-sm flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-semibold text-slate-500">Hoa hồng tháng này (chờ chốt)</span>
+                    <Coins className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div className="my-1">
+                    <span className="text-2xl font-black text-emerald-600 font-mono tracking-tight">
+                      {new Intl.NumberFormat('vi-VN').format(user.commissionBalance || 0)} đ
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">Tự động chốt sổ vào ngày 01 hàng tháng</p>
+                </div>
+
+                <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-semibold text-slate-500">Tổng hoa hồng đã nhận</span>
+                    <Award className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <div className="my-1">
+                    <span className="text-2xl font-black text-slate-900 font-mono tracking-tight">
+                      {new Intl.NumberFormat('vi-VN').format(user.totalCommissionReceived || 0)} đ
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">Lũy kế các tháng trước đã thanh toán</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Security & Telegram Linking Section */}
         <div className="space-y-6 pt-4 border-t border-slate-100">

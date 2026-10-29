@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import ProfilePage from './page'
 import * as api from '@/lib/api'
@@ -30,6 +30,13 @@ vi.mock('react-hot-toast', () => ({
 
 // Mock window.confirm
 global.confirm = vi.fn(() => true)
+
+// Mock navigator.clipboard
+Object.assign(navigator, {
+  clipboard: {
+    writeText: vi.fn().mockResolvedValue(undefined),
+  },
+})
 
 describe('ProfilePage Component - Dual Telegram', () => {
   beforeEach(() => {
@@ -108,5 +115,130 @@ describe('ProfilePage Component - Dual Telegram', () => {
         body: JSON.stringify({ slot: 2 }),
       })
     })
+  })
+})
+
+describe('ProfilePage Component - Partner & Referral Program', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorage.clear()
+  })
+
+  it('renders partner card with referral code, commission rates and balance for teacher', async () => {
+    const mockTeacher = {
+      id: 'teacher-123',
+      email: 'teacher@example.com',
+      fullName: 'Thầy Nguyễn Văn B',
+      role: 'teacher',
+      grade: '9',
+      points: 500,
+      referralCode: 'GT123456',
+      commissionBalance: 180000,
+      totalCommissionReceived: 1500000,
+    }
+
+    vi.mocked(api.apiFetch).mockResolvedValueOnce({
+      data: mockTeacher,
+    } as any)
+
+    render(<ProfilePage />)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Mã Giới Thiệu & Hoa Hồng Đối Tác/i)).toBeInTheDocument()
+      expect(screen.getByText('GT123456')).toBeInTheDocument()
+      expect(screen.getByText(/60%/)).toBeInTheDocument()
+      expect(screen.getByText(/180\.000\s*đ/)).toBeInTheDocument()
+      expect(screen.getByText(/1\.500\.000\s*đ/)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Sao chép mã/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Sao chép link đăng ký/i })).toBeInTheDocument()
+    })
+
+    // Test copy referral code
+    const copyCodeBtn = screen.getByRole('button', { name: /Sao chép mã/i })
+    await act(async () => {
+      fireEvent.click(copyCodeBtn)
+    })
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('GT123456')
+
+    // Test copy referral registration link
+    const copyLinkBtn = screen.getByRole('button', { name: /Sao chép link đăng ký/i })
+    await act(async () => {
+      fireEvent.click(copyLinkBtn)
+    })
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('https://toan6789.vn/register?ref=GT123456')
+  })
+
+  it('renders correct commission rates for admin (70%) and affiliate (30%)', async () => {
+    const mockAdmin = {
+      id: 'admin-123',
+      email: 'admin@example.com',
+      fullName: 'Quản Trị Viên',
+      role: 'admin',
+      referralCode: 'GTADMIN1',
+      commissionBalance: 500000,
+      totalCommissionReceived: 2000000,
+    }
+
+    vi.mocked(api.apiFetch).mockResolvedValueOnce({
+      data: mockAdmin,
+    } as any)
+
+    const { unmount } = render(<ProfilePage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('GTADMIN1')).toBeInTheDocument()
+      expect(screen.getByText(/70%/)).toBeInTheDocument()
+    })
+
+    unmount()
+
+    const mockAffiliate = {
+      id: 'aff-123',
+      email: 'affiliate@example.com',
+      fullName: 'Đối Tác Affiliate',
+      role: 'affiliate',
+      referralCode: 'GTAFF123',
+      commissionBalance: 100000,
+      totalCommissionReceived: 300000,
+    }
+
+    vi.mocked(api.apiFetch).mockResolvedValueOnce({
+      data: mockAffiliate,
+    } as any)
+
+    render(<ProfilePage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('GTAFF123')).toBeInTheDocument()
+      expect(screen.getByText(/30%/)).toBeInTheDocument()
+    })
+  })
+
+  it('hides partner card completely when user is a student', async () => {
+    const mockStudent = {
+      id: 'student-123',
+      email: 'student@example.com',
+      fullName: 'Học sinh C',
+      role: 'student',
+      grade: '8',
+      points: 100,
+      referralCode: null,
+      commissionBalance: 0,
+      totalCommissionReceived: 0,
+    }
+
+    vi.mocked(api.apiFetch).mockResolvedValueOnce({
+      data: mockStudent,
+    } as any)
+
+    render(<ProfilePage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Học sinh C')).toBeInTheDocument()
+    })
+
+    expect(screen.queryByText(/Mã Giới Thiệu & Hoa Hồng Đối Tác/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Sao chép mã/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Sao chép link đăng ký/i })).not.toBeInTheDocument()
   })
 })

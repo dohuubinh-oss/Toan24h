@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
+	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"gorm.io/gorm"
 )
@@ -190,23 +191,33 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
+	// Tự động cấp mã referral nếu role là admin, teacher hoặc affiliate mà chưa có mã
+	if user.Role == "admin" || user.Role == "teacher" || user.Role == "affiliate" {
+		if user.ReferralCode == nil || strings.TrimSpace(*user.ReferralCode) == "" {
+			_, _ = services.EnsureUserReferralCode(h.db, &user)
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"data": gin.H{
-			"id":                user.ID,
-			"email":             user.Email,
-			"fullName":          user.FullName,
-			"role":              user.Role,
-			"grade":             user.Grade,
-			"points":            user.Points,
-			"status":            user.Status,
-			"telegramId":        user.TelegramID,
-			"telegramUsername":  user.TelegramUser,
-			"telegramAvt":       user.TelegramAvt,
-			"telegramId2":       user.TelegramID2,
-			"telegramUsername2": user.TelegramUser2,
-			"telegramAvt2":      user.TelegramAvt2,
-			"expiresAt":         user.ExpiresAt,
-			"createdAt":         user.CreatedAt,
+			"id":                      user.ID,
+			"email":                   user.Email,
+			"fullName":                user.FullName,
+			"role":                    user.Role,
+			"grade":                   user.Grade,
+			"points":                  user.Points,
+			"status":                  user.Status,
+			"telegramId":              user.TelegramID,
+			"telegramUsername":        user.TelegramUser,
+			"telegramAvt":             user.TelegramAvt,
+			"telegramId2":             user.TelegramID2,
+			"telegramUsername2":       user.TelegramUser2,
+			"telegramAvt2":            user.TelegramAvt2,
+			"expiresAt":               user.ExpiresAt,
+			"referralCode":            user.ReferralCode,
+			"commissionBalance":       user.CommissionBalance,
+			"totalCommissionReceived": user.TotalCommissionReceived,
+			"createdAt":               user.CreatedAt,
 		},
 	})
 }
