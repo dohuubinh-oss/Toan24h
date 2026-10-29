@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -88,6 +90,9 @@ func (h *WebhookHandler) HandlePayOSWebhook(c *gin.Context) {
 	// Wrap in DB Transaction to prevent race conditions
 	var updatedUser models.User
 	var updatedPlan string
+	var processedTx models.Transaction
+	var alreadyCompleted bool
+
 	err = h.DB.Transaction(func(db *gorm.DB) error {
 		var tx models.Transaction
 		if err := db.Set("gorm:query_option", "FOR UPDATE").First(&tx, "order_code = ?", payload.Data.OrderCode).Error; err != nil {
@@ -96,6 +101,7 @@ func (h *WebhookHandler) HandlePayOSWebhook(c *gin.Context) {
 
 		if tx.Status == "completed" {
 			// Idempotent: already completed
+			alreadyCompleted = true
 			return nil
 		}
 
@@ -139,12 +145,19 @@ func (h *WebhookHandler) HandlePayOSWebhook(c *gin.Context) {
 		}
 
 		updatedPlan = tx.Plan
+		processedTx = tx
 		return nil
 	})
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": -1, "message": err.Error(), "data": nil})
 		return
+	}
+
+	// Process lifetime commission if student was referred by a partner/teacher/admin
+	// Any commission error is logged and must NOT fail or rollback VIP activation
+	if !alreadyCompleted && updatedUser.ReferrerID != nil && *updatedUser.ReferrerID != uuid.Nil {
+		h.processCommission(processedTx, updatedUser)
 	}
 
 	// Send Telegram notification if user has linked Telegram (Slot 1 or Slot 2)
@@ -182,4 +195,91 @@ func (h *WebhookHandler) HandlePayOSWebhook(c *gin.Context) {
 		"message": "success",
 		"data":    nil,
 	})
+}
+
+// processCommission calculates and credits commission to the referrer in a safe, idempotent manner
+func (h *WebhookHandler) processCommission(tx models.Transaction, student models.User) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[Webhook PayOS] Panic recovered during commission processing for orderCode %d: %v", tx.OrderCode, r)
+		}
+	}()
+
+	if h.DB == nil || student.ReferrerID == nil || *student.ReferrerID == uuid.Nil {
+		return
+	}
+
+	// 1. Check idempotency: do not award commission twice for the same orderCode
+	var existingCount int64
+	if err := h.DB.Model(&models.CommissionTransaction{}).Where("order_code = ?", tx.OrderCode).Count(&existingCount).Error; err != nil {
+		log.Printf("[Webhook PayOS] Error checking existing commission for orderCode %d: %v", tx.OrderCode, err)
+		return
+	}
+	if existingCount > 0 {
+		return
+	}
+
+	// 2. Query referrer
+	var referrer models.User
+	if err := h.DB.First(&referrer, "id = ?", *student.ReferrerID).Error; err != nil {
+		log.Printf("[Webhook PayOS] Referrer %s not found: %v", *student.ReferrerID, err)
+		return
+	}
+
+	// 3. Check referrer status: must be active
+	if referrer.Status != "active" {
+		log.Printf("[Webhook PayOS] Referrer %s is not active (status: %s)", referrer.ID, referrer.Status)
+		return
+	}
+
+	// 4. Check eligible role: admin, teacher, or affiliate
+	role := strings.ToLower(strings.TrimSpace(referrer.Role))
+	if role != "admin" && role != "teacher" && role != "affiliate" {
+		log.Printf("[Webhook PayOS] Referrer %s role %s is not eligible for commission", referrer.ID, referrer.Role)
+		return
+	}
+
+	// 5. Determine commission rate based on role (teacher: 60%, admin: 70%, affiliate: 30%)
+	rate := services.GetCommissionRateByRole(role)
+
+	// 6. Calculate commission amount
+	commissionAmount := int(float64(tx.Amount) * float64(rate) / 100.0)
+
+	// 7. Atomic update within DB transaction
+	err := h.DB.Transaction(func(commDB *gorm.DB) error {
+		// Re-check idempotency inside transaction
+		var countInside int64
+		if err := commDB.Model(&models.CommissionTransaction{}).Where("order_code = ?", tx.OrderCode).Count(&countInside).Error; err != nil {
+			return err
+		}
+		if countInside > 0 {
+			return nil
+		}
+
+		// Update referrer CommissionBalance
+		if err := commDB.Model(&models.User{}).Where("id = ?", referrer.ID).
+			Update("commission_balance", gorm.Expr("commission_balance + ?", commissionAmount)).Error; err != nil {
+			return err
+		}
+
+		// Insert CommissionTransaction
+		commTx := models.CommissionTransaction{
+			OrderCode:        tx.OrderCode,
+			ReferrerID:       referrer.ID,
+			StudentID:        student.ID,
+			StudentAmount:    tx.Amount,
+			CommissionRate:   rate,
+			CommissionAmount: commissionAmount,
+			Status:           "pending",
+		}
+		if err := commDB.Create(&commTx).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.Printf("[Webhook PayOS] Failed to save commission for orderCode %d: %v", tx.OrderCode, err)
+	}
 }
