@@ -27,7 +27,13 @@ func setupSettlementTestDB(t *testing.T) (*gorm.DB, func()) {
 			defer cancel()
 			if err := sqlDB.PingContext(ctx); err == nil {
 				_ = db.AutoMigrate(&models.User{}, &models.CommissionTransaction{})
-				return db, func() {}
+				// Reset any residual pending commission balances from other integration tests
+				db.Model(&models.User{}).Where("commission_balance > 0").Update("commission_balance", 0)
+				db.Where("status = ?", "pending").Delete(&models.CommissionTransaction{})
+				return db, func() {
+					db.Where("email LIKE ?", "%@test.com").Delete(&models.User{})
+					db.Where("order_code IN (1001, 1002, 1003)").Delete(&models.CommissionTransaction{})
+				}
 			}
 		}
 	}
