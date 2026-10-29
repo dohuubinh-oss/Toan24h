@@ -92,6 +92,9 @@ func main() {
 	// 2.3. Khởi chạy Cronjob dọn dẹp các voucher đã hết hạn định kỳ 1 tháng 1 lần
 	services.StartVoucherCleanupWorker(config.DB, 30*24*time.Hour)
 
+	// 2.4. Khởi chạy Cronjob chốt sổ hoa hồng định kỳ 00:00:00 ngày 1 hàng tháng
+	services.StartMonthlySettlementCronJob(config.DB)
+
 	// Đảm bảo các tài khoản admin/teacher có sẵn luôn được kích hoạt email
 	config.DB.Model(&models.User{}).Where("role IN ?", []string{"admin", "teacher"}).Update("is_verified", true)
 
