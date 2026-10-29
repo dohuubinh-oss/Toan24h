@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Gift } from 'lucide-react'
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
@@ -27,15 +27,27 @@ export default function RegisterForm() {
   const [errorMessage, setErrorMessage] = useState('')
 
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const refParam = searchParams.get('ref') || ''
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors }
   } = useForm<RegisterFormValues>({
-    mode: 'onTouched'
+    mode: 'onTouched',
+    defaultValues: {
+      voucherCode: refParam ? refParam.toUpperCase() : ''
+    }
   })
+
+  useEffect(() => {
+    if (refParam) {
+      setValue('voucherCode', refParam.toUpperCase())
+    }
+  }, [refParam, setValue])
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true)
@@ -231,7 +243,10 @@ export default function RegisterForm() {
         </div>
 
         <div className="grid gap-4">
-          <GoogleSignInButton onSuccess={handleGoogleSuccess} />
+          <GoogleSignInButton
+            onSuccess={handleGoogleSuccess}
+            refCode={watch('voucherCode')?.trim() || refParam.trim()}
+          />
         </div>
 
         {/* Footer */}

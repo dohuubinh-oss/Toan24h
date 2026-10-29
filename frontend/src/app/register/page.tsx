@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import type { Metadata } from 'next'
 import LoginBranding from '../../components/auth/LoginBranding'
 import RegisterForm from '../../components/auth/RegisterForm'
@@ -15,7 +15,9 @@ export default function RegisterPage() {
   return (
     <div className="flex w-full min-h-screen bg-white">
       <LoginBranding />
-      <RegisterForm />
+      <Suspense fallback={<div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white" />}>
+        <RegisterForm />
+      </Suspense>
     </div>
   )
 }

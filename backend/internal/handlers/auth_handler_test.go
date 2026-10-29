@@ -74,6 +74,7 @@ func setupAuthTestEnv(t *testing.T) (*gin.Engine, *gorm.DB, func()) {
 	r.POST("/api/v1/auth/verify-email", authHandler.VerifyEmail)
 	r.POST("/api/v1/auth/resend-verification", authHandler.ResendVerificationEmail)
 	r.POST("/api/v1/auth/refresh", authHandler.Refresh)
+	r.POST("/api/v1/auth/google", authHandler.GoogleLogin)
 
 	return r, db, cleanup
 }
@@ -370,5 +371,224 @@ func TestRegisterWithVoucher(t *testing.T) {
 		}
 	})
 }
+
+func TestRegisterWithReferralVoucher(t *testing.T) {
+	r, db, cleanup := setupAuthTestEnv(t)
+	defer cleanup()
+
+	// 1. Create a referrer (teacher / partner)
+	referrer := models.User{
+		Email:      "partner@toan6789.vn",
+		FullName:   "Thay Giao Partner",
+		Role:       "teacher",
+		IsVerified: true,
+	}
+	if err := db.Create(&referrer).Error; err != nil {
+		t.Fatalf("Failed to create referrer: %v", err)
+	}
+
+	// 2. Create a GT referral voucher owned by this referrer
+	referralVoucher := models.Voucher{
+		Code:              "GT112233",
+		AffiliateID:       &referrer.ID,
+		FreeMonths:        1,
+		DiscountPercent:   0,
+		CommissionPercent: 60,
+		MaxUses:           0,
+		UsedCount:         0,
+		IsActive:          true,
+	}
+	if err := db.Create(&referralVoucher).Error; err != nil {
+		t.Fatalf("Failed to create voucher: %v", err)
+	}
+
+	t.Run("Standard registration with referral code sets ReferrerID and 1 month VIP", func(t *testing.T) {
+		registerBody := map[string]interface{}{
+			"email":       "student_referred@toan6789.vn",
+			"password":    "password123",
+			"fullName":    "Referred Student",
+			"role":        "student",
+			"grade":       "8",
+			"voucherCode": "GT112233",
+		}
+		bodyBytes, _ := json.Marshal(registerBody)
+		req, _ := http.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(bodyBytes))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusCreated {
+			t.Fatalf("Expected 201 Created, got %d. Body: %s", w.Code, w.Body.String())
+		}
+
+		var createdUser models.User
+		if err := db.Where("email = ?", "student_referred@toan6789.vn").First(&createdUser).Error; err != nil {
+			t.Fatalf("User not found: %v", err)
+		}
+
+		if createdUser.ReferrerID == nil || *createdUser.ReferrerID != referrer.ID {
+			t.Fatalf("Expected ReferrerID to be %v, got %v", referrer.ID, createdUser.ReferrerID)
+		}
+
+		if createdUser.ExpiresAt == nil {
+			t.Fatalf("Expected ExpiresAt to be set for 1 month VIP")
+		}
+		// Expect ~30 days
+		if createdUser.ExpiresAt.Before(time.Now().AddDate(0, 0, 25)) {
+			t.Fatalf("ExpiresAt is too soon: %v", createdUser.ExpiresAt)
+		}
+
+		// Voucher used count incremented
+		var v models.Voucher
+		db.First(&v, referralVoucher.ID)
+		if v.UsedCount != 1 {
+			t.Errorf("Expected UsedCount to be 1, got %d", v.UsedCount)
+		}
+
+		// VoucherUsage created
+		var usage models.VoucherUsage
+		if err := db.Where("voucher_id = ? AND user_id = ?", referralVoucher.ID, createdUser.ID).First(&usage).Error; err != nil {
+			t.Errorf("Expected VoucherUsage to be recorded: %v", err)
+		}
+		if usage.AffiliateID == nil || *usage.AffiliateID != referrer.ID {
+			t.Errorf("Expected VoucherUsage.AffiliateID to be %v, got %v", referrer.ID, usage.AffiliateID)
+		}
+	})
+
+	t.Run("Self-referral does not grant VIP and does not set ReferrerID", func(t *testing.T) {
+		registerBody := map[string]interface{}{
+			"email":       "partner@toan6789.vn",
+			"password":    "password123",
+			"fullName":    "Partner Self",
+			"voucherCode": "GT112233",
+		}
+		bodyBytes, _ := json.Marshal(registerBody)
+		req, _ := http.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(bodyBytes))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusConflict {
+			t.Fatalf("Expected 409 Conflict for existing email, got %d", w.Code)
+		}
+	})
+}
+
+func TestGoogleLoginWithReferralCode(t *testing.T) {
+	r, db, cleanup := setupAuthTestEnv(t)
+	defer cleanup()
+
+	// 1. Create a referrer
+	referrer := models.User{
+		Email:      "partner_google@toan6789.vn",
+		FullName:   "Partner For Google",
+		Role:       "teacher",
+		IsVerified: true,
+	}
+	if err := db.Create(&referrer).Error; err != nil {
+		t.Fatalf("Failed to create referrer: %v", err)
+	}
+
+	// 2. Create GT referral voucher
+	refVoucher := models.Voucher{
+		Code:              "GT998877",
+		AffiliateID:       &referrer.ID,
+		FreeMonths:        1,
+		DiscountPercent:   0,
+		CommissionPercent: 60,
+		MaxUses:           0,
+		UsedCount:         0,
+		IsActive:          true,
+	}
+	if err := db.Create(&refVoucher).Error; err != nil {
+		t.Fatalf("Failed to create voucher: %v", err)
+	}
+
+	// Mock VerifyGoogleIDToken
+	origVerify := handlers.VerifyGoogleIDToken
+	defer func() { handlers.VerifyGoogleIDToken = origVerify }()
+
+	t.Run("New student Google login with RefCode binds ReferrerID and grants 1 month VIP", func(t *testing.T) {
+		handlers.VerifyGoogleIDToken = func(credential string) (*handlers.GoogleClaims, error) {
+			return &handlers.GoogleClaims{
+				Sub:           "google_sub_new_student_123",
+				Email:         "new_student_google@example.com",
+				EmailVerified: true,
+				Name:          "New Student Google",
+			}, nil
+		}
+
+		loginBody := map[string]interface{}{
+			"credential": "dummy_credential",
+			"refCode":    "GT998877",
+		}
+		bodyBytes, _ := json.Marshal(loginBody)
+		req, _ := http.NewRequest("POST", "/api/v1/auth/google", bytes.NewBuffer(bodyBytes))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("Expected 200 OK, got %d. Body: %s", w.Code, w.Body.String())
+		}
+
+		var createdUser models.User
+		if err := db.Where("email = ?", "new_student_google@example.com").First(&createdUser).Error; err != nil {
+			t.Fatalf("User not found in DB: %v", err)
+		}
+
+		if createdUser.ReferrerID == nil || *createdUser.ReferrerID != referrer.ID {
+			t.Fatalf("Expected ReferrerID to be %v, got %v", referrer.ID, createdUser.ReferrerID)
+		}
+
+		if createdUser.ExpiresAt == nil {
+			t.Fatalf("Expected ExpiresAt to be set for 1 month VIP")
+		}
+
+		var updatedVoucher models.Voucher
+		db.First(&updatedVoucher, refVoucher.ID)
+		if updatedVoucher.UsedCount != 1 {
+			t.Errorf("Expected UsedCount to be 1, got %d", updatedVoucher.UsedCount)
+		}
+
+		var usage models.VoucherUsage
+		if err := db.Where("voucher_id = ? AND user_id = ?", refVoucher.ID, createdUser.ID).First(&usage).Error; err != nil {
+			t.Errorf("Expected VoucherUsage to be recorded: %v", err)
+		}
+	})
+
+	t.Run("Existing user Google login with RefCode does not re-apply voucher or rebind ReferrerID", func(t *testing.T) {
+		handlers.VerifyGoogleIDToken = func(credential string) (*handlers.GoogleClaims, error) {
+			return &handlers.GoogleClaims{
+				Sub:           "google_sub_new_student_123",
+				Email:         "new_student_google@example.com",
+				EmailVerified: true,
+				Name:          "New Student Google",
+			}, nil
+		}
+
+		loginBody := map[string]interface{}{
+			"credential": "dummy_credential",
+			"refCode":    "GT998877",
+		}
+		bodyBytes, _ := json.Marshal(loginBody)
+		req, _ := http.NewRequest("POST", "/api/v1/auth/google", bytes.NewBuffer(bodyBytes))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("Expected 200 OK, got %d. Body: %s", w.Code, w.Body.String())
+		}
+
+		// Voucher used count should still be 1, NOT 2
+		var updatedVoucher models.Voucher
+		db.First(&updatedVoucher, refVoucher.ID)
+		if updatedVoucher.UsedCount != 1 {
+			t.Errorf("Expected UsedCount to remain 1, got %d", updatedVoucher.UsedCount)
+		}
+	})
+}
+
 
 

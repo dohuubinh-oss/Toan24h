@@ -92,9 +92,28 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	role := "student"
 
 	var userExpiresAt *time.Time
-	if voucher != nil && voucher.FreeMonths > 0 {
-		exp := time.Now().AddDate(0, voucher.FreeMonths, 0)
-		userExpiresAt = &exp
+	var referrerID *uuid.UUID
+	isSelfReferral := false
+
+	if voucher != nil {
+		if voucher.AffiliateID != nil {
+			var affiliate models.User
+			if err := h.db.Select("id, email").First(&affiliate, "id = ?", *voucher.AffiliateID).Error; err == nil {
+				if strings.EqualFold(affiliate.Email, req.Email) {
+					isSelfReferral = true
+				}
+			}
+		}
+
+		if !isSelfReferral {
+			if voucher.FreeMonths > 0 {
+				exp := time.Now().AddDate(0, voucher.FreeMonths, 0)
+				userExpiresAt = &exp
+			}
+			if voucher.AffiliateID != nil {
+				referrerID = voucher.AffiliateID
+			}
+		}
 	}
 
 	verificationToken := uuid.New().String()
@@ -107,6 +126,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Role:                       role,
 		Grade:                      req.Grade,
 		ExpiresAt:                  userExpiresAt,
+		ReferrerID:                 referrerID,
 		IsVerified:                 false, // Bắt buộc kích hoạt qua email mới dùng được
 		VerificationToken:          &verificationToken,
 		VerificationTokenExpiresAt: &verificationExpires,
@@ -117,7 +137,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 			return err
 		}
 
-		if voucher != nil {
+		if voucher != nil && !isSelfReferral {
 			if err := tx.Model(&models.Voucher{}).Where("id = ?", voucher.ID).Update("used_count", gorm.Expr("used_count + 1")).Error; err != nil {
 				return err
 			}
@@ -131,6 +151,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 				return err
 			}
 		}
+
+		_, _ = services.EnsureUserReferralCode(tx, &user)
 
 		return nil
 	})
@@ -153,7 +175,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		"id":                       user.ID,
 		"requireEmailVerification": true,
 	}
-	if voucher != nil && voucher.FreeMonths > 0 {
+	if voucher != nil && !isSelfReferral && voucher.FreeMonths > 0 {
 		resp["freeMonths"] = voucher.FreeMonths
 	}
 

@@ -8,6 +8,7 @@ interface GoogleSignInButtonProps {
   onSuccess?: (user: any) => void
   text?: string
   className?: string
+  refCode?: string
 }
 
 declare global {
@@ -20,9 +21,15 @@ export default function GoogleSignInButton({
   onSuccess,
   text = 'Tiếp tục với Google',
   className = '',
+  refCode,
 }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const googleBtnContainerRef = useRef<HTMLDivElement>(null)
+  const refCodeRef = useRef(refCode)
+
+  useEffect(() => {
+    refCodeRef.current = refCode
+  }, [refCode])
 
   const handleCredentialResponse = async (response: any) => {
     if (!response || !response.credential) {
@@ -32,7 +39,7 @@ export default function GoogleSignInButton({
 
     setIsLoading(true)
     try {
-      const res = await loginWithGoogle(response.credential)
+      const res = await loginWithGoogle(response.credential, refCodeRef.current)
       if (res && res.user) {
         toast.success(`Đăng nhập Google thành công! Xin chào ${res.user.fullName || 'bạn'}`)
         if (onSuccess) {

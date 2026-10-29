@@ -4,9 +4,13 @@ import RegisterForm from './RegisterForm'
 import * as authApi from '@/lib/authApi'
 
 // Mock dependencies
+const mockGetSearchParams = vi.fn()
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
+  }),
+  useSearchParams: () => ({
+    get: (key: string) => mockGetSearchParams(key),
   }),
 }))
 
@@ -18,7 +22,11 @@ vi.mock('react-hot-toast', () => ({
 }))
 
 vi.mock('./GoogleSignInButton', () => ({
-  default: () => <button type="button">Mock Google Sign In</button>,
+  default: ({ refCode }: { refCode?: string }) => (
+    <button type="button" data-testid="mock-google-btn" data-refcode={refCode || ''}>
+      Mock Google Sign In
+    </button>
+  ),
 }))
 
 vi.mock('@/lib/authApi', () => ({
@@ -88,5 +96,23 @@ describe('RegisterForm Component', () => {
         voucherCode: 'TOANVIP3M',
       })
     })
+  })
+
+  it('prefills voucherCode input from URL query param ?ref=GT123456', () => {
+    mockGetSearchParams.mockImplementation((k: string) => (k === 'ref' ? 'GT123456' : null))
+
+    render(<RegisterForm />)
+
+    const voucherInput = screen.getByPlaceholderText(/Nhập mã \(ví dụ: CHAOMUNG1M\)/i) as HTMLInputElement
+    expect(voucherInput.value).toBe('GT123456')
+  })
+
+  it('passes refCode prop to GoogleSignInButton when URL has ref param', () => {
+    mockGetSearchParams.mockImplementation((k: string) => (k === 'ref' ? 'GT999888' : null))
+
+    render(<RegisterForm />)
+
+    const googleBtn = screen.getByTestId('mock-google-btn')
+    expect(googleBtn).toHaveAttribute('data-refcode', 'GT999888')
   })
 })

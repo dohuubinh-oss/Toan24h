@@ -59,10 +59,13 @@ export async function resendVerification(email: string) {
   })
 }
 
-export async function loginWithGoogle(credential: string) {
+export async function loginWithGoogle(credential: string, refCode?: string) {
   const res = await apiFetch('/auth/google', {
     method: 'POST',
-    body: JSON.stringify({ credential })
+    body: JSON.stringify({
+      credential,
+      ...(refCode ? { refCode: refCode.trim() } : {}),
+    })
   })
   syncAuthSession(res)
   return res

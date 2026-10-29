@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
+	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"gorm.io/gorm"
 )
@@ -27,6 +29,7 @@ type GoogleClaims struct {
 
 type GoogleLoginRequest struct {
 	Credential string `json:"credential" binding:"required"`
+	RefCode    string `json:"refCode"`
 }
 
 // defaultVerifyGoogleIDToken verifies the Google ID token using Google's tokeninfo endpoint
@@ -128,6 +131,39 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 				fullName = email
 			}
 
+			var userExpiresAt *time.Time
+			var referrerID *uuid.UUID
+			var appliedVoucher *models.Voucher
+
+			cleanRefCode := strings.ToUpper(strings.TrimSpace(req.RefCode))
+			if cleanRefCode != "" {
+				var v models.Voucher
+				if err := h.db.Where("UPPER(code) = ?", cleanRefCode).First(&v).Error; err == nil {
+					if v.IsValid() {
+						isSelfReferral := false
+						if v.AffiliateID != nil {
+							var affiliate models.User
+							if err := h.db.Select("id, email").First(&affiliate, "id = ?", *v.AffiliateID).Error; err == nil {
+								if strings.EqualFold(affiliate.Email, email) {
+									isSelfReferral = true
+								}
+							}
+						}
+
+						if !isSelfReferral {
+							appliedVoucher = &v
+							if v.FreeMonths > 0 {
+								exp := time.Now().AddDate(0, v.FreeMonths, 0)
+								userExpiresAt = &exp
+							}
+							if v.AffiliateID != nil {
+								referrerID = v.AffiliateID
+							}
+						}
+					}
+				}
+			}
+
 			user = models.User{
 				Email:      email,
 				FullName:   fullName,
@@ -135,9 +171,35 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 				Role:       "student",
 				Status:     "active",
 				IsVerified: true, // Google đã xác thực email
+				ExpiresAt:  userExpiresAt,
+				ReferrerID: referrerID,
 			}
 
-			if err := h.db.Create(&user).Error; err != nil {
+			err = h.db.Transaction(func(tx *gorm.DB) error {
+				if err := tx.Create(&user).Error; err != nil {
+					return err
+				}
+
+				if appliedVoucher != nil {
+					if err := tx.Model(&models.Voucher{}).Where("id = ?", appliedVoucher.ID).Update("used_count", gorm.Expr("used_count + 1")).Error; err != nil {
+						return err
+					}
+
+					usage := models.VoucherUsage{
+						VoucherID:   appliedVoucher.ID,
+						UserID:      user.ID,
+						AffiliateID: appliedVoucher.AffiliateID,
+					}
+					if err := tx.Create(&usage).Error; err != nil {
+						return err
+					}
+				}
+
+				_, _ = services.EnsureUserReferralCode(tx, &user)
+				return nil
+			})
+
+			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo tài khoản người dùng: " + err.Error()})
 				return
 			}
@@ -190,8 +252,9 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 			"grade":     user.Grade,
 			"points":    user.Points,
 			"status":    user.Status,
-			"googleId":  user.GoogleID,
-			"expiresAt": user.ExpiresAt,
+			"googleId":   user.GoogleID,
+			"expiresAt":  user.ExpiresAt,
+			"referrerId": user.ReferrerID,
 		},
 	})
 }
