@@ -53,6 +53,13 @@ func main() {
 		log.Fatalf("Auto Migrate failed: %v", err)
 	}
 
+	// 2.2.1. Cấp mã giới thiệu GT... cho tài khoản Admin, Teacher, Affiliate cũ chưa có mã
+	if migratedCount, err := services.MigrateExistingAffiliateCodes(config.DB); err != nil {
+		log.Printf("[MIGRATION WARNING] Failed to migrate affiliate codes: %v", err)
+	} else if migratedCount > 0 {
+		log.Printf("[MIGRATION] Successfully generated GT referral codes for %d users", migratedCount)
+	}
+
 	// Khởi tạo mã khuyến mãi 1 tháng VIP cho học sinh mới có thời hạn tháng 10, 11, 12 năm 2026 (Hết hạn 31/12/2026)
 	voucherExpiresAt := time.Date(2026, 12, 31, 23, 59, 59, 0, time.Local)
 	var countVoucher int64
