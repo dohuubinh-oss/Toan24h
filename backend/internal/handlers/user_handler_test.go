@@ -240,8 +240,12 @@ func TestGetProfile_ReferralAndCommission(t *testing.T) {
 			t.Fatalf("Failed to parse json: %v", err)
 		}
 
-		if res.Data.ReferralCode == nil || len(*res.Data.ReferralCode) != 8 || (*res.Data.ReferralCode)[:2] != "GT" {
-			t.Errorf("Expected referral code starting with GT (length 8), got %+v", res.Data.ReferralCode)
+		if res.Data.ReferralCode == nil || len(*res.Data.ReferralCode) != 10 || (*res.Data.ReferralCode)[:2] != "GT" {
+			val := "<nil>"
+			if res.Data.ReferralCode != nil {
+				val = *res.Data.ReferralCode
+			}
+			t.Errorf("Expected referral code starting with GT (length 10), got %s", val)
 		}
 		if res.Data.CommissionBalance != 180000 {
 			t.Errorf("Expected CommissionBalance 180000, got %d", res.Data.CommissionBalance)

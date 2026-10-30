@@ -2,6 +2,13 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import ExamConfigSidebar from './ExamConfigSidebar'
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+}))
+
 describe('ExamConfigSidebar Component', () => {
   const mockConfig = {
     title: 'Đề thi thử',
