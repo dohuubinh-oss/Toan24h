@@ -68,18 +68,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
       console.error('Failed to restore exam state', e)
     }
     setIsRestored(true)
-
-    // Check penalty ngay khi quay lại nếu đã vi phạm từ trang bài giảng hoặc trước đó
-    if (restoredCheatCount >= 3 || restoredTotalTime > 300000) {
-        import('@/lib/api').then(mod => mod.sendCheatWarning(id, 3));
-        toast.error("Bài làm đã bị thu hồi và HỦY KẾT QUẢ do vi phạm quy chế thi. (Đã gửi cảnh báo qua Telegram đã liên kết)");
-        sessionStorage.removeItem(`exam_state_${id}`);
-        sessionStorage.removeItem(`exam_end_time_${id}`);
-        router.back();
-    } else if (restoredCheatCount > 0) {
-        setShowCheatModal(true)
-    }
-  }, [id, router, toast])
+  }, [id])
 
   // Lưu state vào sessionStorage mỗi khi thay đổi
   useEffect(() => {
@@ -146,6 +135,22 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
     }
     fetchExamData()
   }, [id, toast])
+
+  // Kiểm tra cảnh báo gian lận sau khi khôi phục state từ sessionStorage (chỉ áp dụng cho exam thi thử)
+  useEffect(() => {
+    if (!exam || !isRestored) return
+    if (exam.cate === 'practice') return
+
+    if (cheatCount >= 3 || totalAwayTimeRef.current > 300000) {
+      import('@/lib/api').then(mod => mod.sendCheatWarning(id, 3))
+      toast.error("Bài làm đã bị thu hồi và HỦY KẾT QUẢ do vi phạm quy chế thi. (Đã gửi cảnh báo qua Telegram đã liên kết)")
+      sessionStorage.removeItem(`exam_state_${id}`)
+      sessionStorage.removeItem(`exam_end_time_${id}`)
+      router.back()
+    } else if (cheatCount > 0) {
+      setShowCheatModal(true)
+    }
+  }, [exam, isRestored, cheatCount, id, router, toast])
 
   const totalAwayTimeRef = React.useRef(0);
   const leaveStartTimeRef = React.useRef<number | null>(null);
@@ -297,6 +302,12 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   // Countdown timer logic
   useEffect(() => {
     if (!exam) return
+
+    // Chế độ Luyện tập (practice): Không giới hạn thời gian và không tự động nộp bài
+    if (exam.cate === 'practice') {
+      setSecondsLeft(null)
+      return
+    }
 
     const durationMinutes = exam.duration && exam.duration > 0 ? Number(exam.duration) : 45
     const durationMs = durationMinutes * 60 * 1000
