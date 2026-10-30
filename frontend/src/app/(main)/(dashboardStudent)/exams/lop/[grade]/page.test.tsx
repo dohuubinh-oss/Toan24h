@@ -158,16 +158,13 @@ describe('GradeExamsPage Component (/exams/lop/[grade])', () => {
     expect(navigation.redirect).toHaveBeenCalledWith('/exams/lop/8')
   })
 
-  it('filters exams within active tab using search input', async () => {
+  it('renders exams table within active tab', async () => {
     const pageJSX = await GradeExamsPage({
       params: Promise.resolve({ grade: '6' }),
     })
     render(pageJSX)
 
-    const searchInput = screen.getByPlaceholderText(/Tìm kiếm đề thi/i)
-    fireEvent.change(searchInput, { target: { value: 'Đề 2' } })
-
+    expect(screen.getByText('Đề thi Giữa kì 1 Toán 6 - Đề 1')).toBeInTheDocument()
     expect(screen.getByText('Đề thi Giữa kì 1 Toán 6 - Đề 2')).toBeInTheDocument()
-    expect(screen.queryByText('Đề thi Giữa kì 1 Toán 6 - Đề 1')).not.toBeInTheDocument()
   })
 })

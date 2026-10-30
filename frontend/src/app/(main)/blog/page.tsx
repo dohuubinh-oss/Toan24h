@@ -49,10 +49,6 @@ export default function BlogListPage() {
         } catch (_) {}
       }
       setIsAdminOrTeacher(roleMatch)
-
-      if (role === 'student' && grade && ['6', '7', '8', '9'].includes(grade)) {
-        setSelectedCategory(`Toan-${grade}`)
-      }
     } catch (_) {}
   }, [])
 

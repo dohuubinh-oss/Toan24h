@@ -110,9 +110,7 @@ describe('BlogDetailPage', () => {
     expect(screen.getByRole('link', { name: 'Góc học tập & Blog' })).toHaveAttribute('href', '/blog')
 
     // Sidebar widgets
-    expect(screen.getByText('Chuyên gia & Tác giả')).toBeInTheDocument()
     expect(screen.getByText('Trọng tâm bài giảng')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Vào phòng thi thử ngay/i })).toHaveAttribute('href', '/practices')
     expect(screen.getByText('Bài viết liên quan')).toBeInTheDocument()
 
     // Previous / Next post navigation

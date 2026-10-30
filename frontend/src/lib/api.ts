@@ -669,10 +669,14 @@ export async function submitTeacherGradingReview(submissionId: string, payload: 
   return response
 }
 
-export async function getWeeklyLeaderboard(grade?: string): Promise<any> {
+export async function getWeeklyLeaderboard(grade?: string, token?: string): Promise<any> {
   try {
     const query = grade ? `?grade=${encodeURIComponent(grade)}` : '';
-    const response = await apiFetch(`/leaderboard${query}`);
+    const headers: any = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await apiFetch(`/leaderboard${query}`, { headers, cache: 'no-store' });
     if (response && response.status === 'success' && response.data) {
       return response.data;
     }

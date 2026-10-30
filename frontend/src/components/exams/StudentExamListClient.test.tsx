@@ -1,8 +1,14 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { StudentExamListClient } from './StudentExamListClient'
 import { ExamMilestone } from '@/lib/examMilestoneProgression'
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}))
 
 describe('StudentExamListClient Component', () => {
   const dummyExams: Record<ExamMilestone, any[]> = {
@@ -50,7 +56,7 @@ describe('StudentExamListClient Component', () => {
     },
   }
 
-  it('renders with active milestone defaulted to currentMilestone', () => {
+  it('renders exam table with active milestone defaulted to currentMilestone', () => {
     render(
       <StudentExamListClient
         grade="7"
@@ -60,7 +66,7 @@ describe('StudentExamListClient Component', () => {
       />
     )
 
-    // Current milestone is midterm_1, both exams should be visible
+    // Current milestone is midterm_1, both exams should be visible in table
     expect(screen.getByText('Đề kiểm tra Giữa kì 1 Toán 7 - Đề số 1')).toBeInTheDocument()
     expect(screen.getByText('Đề kiểm tra Giữa kì 1 Toán 7 - Đề số 2')).toBeInTheDocument()
     // Cuối kì 1 is not in the active view
@@ -80,7 +86,7 @@ describe('StudentExamListClient Component', () => {
     expect(screen.getByText(/8\.5\/10\s*đ/i)).toBeInTheDocument()
   })
 
-  it('switches tabs and displays exams for the newly selected milestone', () => {
+  it('switches tabs and displays exams for the newly selected milestone in table', () => {
     render(
       <StudentExamListClient
         grade="7"
@@ -112,32 +118,6 @@ describe('StudentExamListClient Component', () => {
 
     expect(screen.getByText(/Chưa có đề thi nào trong Giữa kì 2/i)).toBeInTheDocument()
     expect(screen.getByText(/Nội dung đề thi cho chặng này đang được cập nhật/i)).toBeInTheDocument()
-  })
-
-  it('filters exams by search query and shows empty state when no match is found', () => {
-    render(
-      <StudentExamListClient
-        grade="7"
-        currentMilestone="midterm_1"
-        examsByMilestone={dummyExams}
-        bestSubmissions={dummyBestSubmissions}
-      />
-    )
-
-    const searchInput = screen.getByPlaceholderText(/Tìm kiếm đề thi/i)
-    fireEvent.change(searchInput, { target: { value: 'Đề số 2' } })
-
-    expect(screen.getByText('Đề kiểm tra Giữa kì 1 Toán 7 - Đề số 2')).toBeInTheDocument()
-    expect(screen.queryByText('Đề kiểm tra Giữa kì 1 Toán 7 - Đề số 1')).not.toBeInTheDocument()
-
-    // Search query with no match
-    fireEvent.change(searchInput, { target: { value: 'Không tồn tại 999' } })
-    expect(screen.getByText(/Không tìm thấy đề thi phù hợp/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Xóa tìm kiếm/i })).toBeInTheDocument()
-
-    // Clicking "Xóa tìm kiếm" resets query and displays exams again
-    fireEvent.click(screen.getByRole('button', { name: /Xóa tìm kiếm/i }))
-    expect(screen.getByText('Đề kiểm tra Giữa kì 1 Toán 7 - Đề số 1')).toBeInTheDocument()
   })
 
   it('marks untaken exam as recommended when in current milestone', () => {

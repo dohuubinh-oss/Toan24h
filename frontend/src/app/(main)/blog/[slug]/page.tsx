@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { 
   ArrowLeft, ArrowRight, Calendar, Clock, Share2, Sparkles, BookOpen, 
-  ChevronRight, Award, List, CheckCircle2, FileQuestion 
+  ChevronRight, List, CheckCircle2 
 } from 'lucide-react'
 import { getBlogPosts, BlogPost, extractH1Headings } from '@/data/blogData'
 import MathText from '@/components/ui/MathText'
@@ -289,35 +289,6 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
 
           {/* Right Sticky Sidebar (4 Cols) */}
           <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
-            
-            {/* Author Card Widget */}
-            <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs space-y-3.5">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
-                <Award className="w-4 h-4 text-primary" />
-                <span>Chuyên gia & Tác giả</span>
-              </h3>
-              <div className="flex items-start gap-3 pt-1">
-                {post.author.avatar ? (
-                  <img 
-                    src={post.author.avatar} 
-                    alt={post.author.name}
-                    className="w-14 h-14 rounded-2xl object-cover border-2 border-primary/20 shrink-0"
-                  />
-                ) : (
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-lg uppercase shrink-0">
-                    {getAvatarInitial(post.author.name)}
-                  </div>
-                )}
-                <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-slate-900">{post.author.name}</h4>
-                  <p className="text-xs text-primary font-semibold">{post.author.role}</p>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Đội ngũ giáo viên chuyên môn Toán THCS & Ban biên tập Toan6789.vn.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* Quick Table of Contents / Highlights Widget */}
             <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs space-y-3">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
@@ -370,29 +341,6 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
                   </li>
                 </ul>
               )}
-            </div>
-
-            {/* Recommended Exam Widget */}
-            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 rounded-3xl p-5 text-white shadow-sm space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-slate-950">
-                  ĐỀ THI ĐỀ XUẤT
-                </span>
-                <Sparkles className="w-4 h-4 text-amber-400" />
-              </div>
-              <h4 className="text-sm font-bold text-white line-clamp-2">
-                Bộ Đề Thi Thử Vào 10 Chuyên Đề: {post.categoryLabel}
-              </h4>
-              <p className="text-xs text-slate-300">
-                Kiểm tra năng lực thực tế, nhận điểm số và đáp án phân tích chi tiết từng bước.
-              </p>
-              <Link
-                href="/practices"
-                className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs transition-all shadow-xs cursor-pointer min-h-[40px]"
-              >
-                <FileQuestion className="w-4 h-4" />
-                <span>Vào phòng thi thử ngay</span>
-              </Link>
             </div>
 
             {/* Related Articles in Sidebar */}

@@ -1,11 +1,13 @@
 export type BlogCategoryType = 
   | 'Bi-Quyet-Thi' 
   | 'Tin-Tuc' 
+  | 'Meo-Casio'
+  | 'Meo-Tinh-Nhanh'
+  | 'Giai-Toan-Dung-Hinh'
   | 'Toan-6' 
   | 'Toan-7' 
   | 'Toan-8' 
-  | 'Toan-9' 
-  | 'Meo-Casio'
+  | 'Toan-9'
 
 export type BlogPostType = 'standard' | 'shorts_playlist'
 
@@ -46,11 +48,9 @@ export const BLOG_CATEGORIES: { id: string; label: string }[] = [
   { id: 'all', label: 'Tất cả bài viết' },
   { id: 'Bi-Quyet-Thi', label: 'Bí quyết thi vào 10' },
   { id: 'Tin-Tuc', label: 'Tin tức & Sự kiện' },
-  { id: 'Toan-6', label: 'Toán lớp 6' },
-  { id: 'Toan-7', label: 'Toán lớp 7' },
-  { id: 'Toan-8', label: 'Toán lớp 8' },
-  { id: 'Toan-9', label: 'Toán lớp 9' },
   { id: 'Meo-Casio', label: 'Mẹo Casio' },
+  { id: 'Meo-Tinh-Nhanh', label: 'Mẹo tính nhanh' },
+  { id: 'Giai-Toan-Dung-Hinh', label: 'Giải toán dùng hình' },
 ]
 
 export const BLOG_POSTS: BlogPost[] = [
@@ -248,8 +248,8 @@ Khoảng cách từ điểm \\(M(x_0, y_0, z_0)\\) đến mặt phẳng \\((P): 
 ### Bí quyết dựng hình trên Toan6789
 
 Học sinh có thể xem hình minh họa 3D tương tác ngay tại phần **Bài giảng lý thuyết theo khối lớp** trên Toan6789 để hình dung trực quan góc giữa đường thẳng và mặt phẳng.`,
-    category: 'Toan-8',
-    categoryLabel: 'Toán lớp 8',
+    category: 'Giai-Toan-Dung-Hinh',
+    categoryLabel: 'Giải toán dùng hình',
     coverImage: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&q=80&w=1200',
     author: {
       name: 'Cô Trần Minh Anh',
@@ -331,8 +331,8 @@ Học sinh có thể xem hình minh họa 3D tương tác ngay tại phần **B�
 
 ### 2. Ứng dụng giải bài toán thực tế chia tổ và chu kỳ gặp nhau
 Học sinh lớp 6 cần chú ý các từ khóa: "chia đều", "nhiều nhất" thường gắn với bài toán tìm ƯCLN; "cùng một lúc", "lần tiếp theo" thường gắn với tìm BCNN.`,
-    category: 'Toan-6',
-    categoryLabel: 'Toán lớp 6',
+    category: 'Meo-Tinh-Nhanh',
+    categoryLabel: 'Mẹo tính nhanh',
     coverImage: 'https://images.unsplash.com/photo-1596495578065-6e0763fa1178?auto=format&fit=crop&q=80&w=1200',
     author: {
       name: 'Cô Hoàng Thu Thảo',
@@ -357,8 +357,8 @@ Học sinh lớp 6 cần chú ý các từ khóa: "chia đều", "nhiều nhất
 ### 2. Căn bậc hai số học
 Căn bậc hai số học của một số \\(a \\ge 0\\) là số \\(x \\ge 0\\) sao cho \\(x^2 = a\\), ký hiệu là \\(\\sqrt{a}\\).
 \\[ \\sqrt{a^2} = |a| \\]`,
-    category: 'Toan-7',
-    categoryLabel: 'Toán lớp 7',
+    category: 'Meo-Tinh-Nhanh',
+    categoryLabel: 'Mẹo tính nhanh',
     coverImage: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&q=80&w=1200',
     author: {
       name: 'ThS. Nguyễn Văn An',
@@ -387,8 +387,8 @@ Căn bậc hai số học của một số \\(a \\ge 0\\) là số \\(x \\ge 0\\
 
 ### Mẹo thêm bớt hạng tử
 Khi gặp đa thức bậc 4 dạng đối xứng \\(x^4 + 4y^4\\), thêm bớt \\(4x^2y^2\\) để xuất hiện hằng đẳng thức hiệu hai bình phương.`,
-    category: 'Toan-8',
-    categoryLabel: 'Toán lớp 8',
+    category: 'Giai-Toan-Dung-Hinh',
+    categoryLabel: 'Giải toán dùng hình',
     coverImage: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=1200',
     author: {
       name: 'Cô Trần Minh Anh',
@@ -416,8 +416,8 @@ Khi gặp đa thức bậc 4 dạng đối xứng \\(x^4 + 4y^4\\), thêm bớt 
 - Nối tâm đường tròn với tiếp điểm để tạo góc vuông \\(90^\\circ\\).
 - Kẻ tiếp tuyến chung hoặc dây cung chung khi hai đường tròn cắt nhau.
 - Kẻ đường kính để tạo góc nội tiếp chắn nửa đường tròn bằng \\(90^\\circ\\).`,
-    category: 'Toan-9',
-    categoryLabel: 'Toán lớp 9',
+    category: 'Giai-Toan-Dung-Hinh',
+    categoryLabel: 'Giải toán dùng hình',
     coverImage: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=1200',
     author: {
       name: 'ThS. Nguyễn Văn An',

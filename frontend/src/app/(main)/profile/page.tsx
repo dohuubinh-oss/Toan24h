@@ -15,7 +15,6 @@ import {
   KeyRound,
   Eye,
   EyeOff,
-  Lock,
   Camera,
   Loader2,
   GraduationCap,
@@ -29,6 +28,7 @@ import {
   Coins,
 } from 'lucide-react'
 import TelegramLoginWidget from '@/components/auth/TelegramLoginWidget'
+import GradeChangeContactModal from '@/components/profile/GradeChangeContactModal'
 import { apiFetch, uploadUserAvatar } from '@/lib/api'
 import { logout } from '@/lib/authApi'
 import { getAvatarInitial } from '@/lib/utils'
@@ -69,6 +69,9 @@ export default function ProfilePage() {
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Grade change contact modal state
+  const [isGradeContactModalOpen, setIsGradeContactModalOpen] = useState(false)
 
   // Referral / Affiliate copy states
   const [copiedCode, setCopiedCode] = useState(false)
@@ -415,20 +418,24 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex-1 min-w-[220px]">
-            <div className="flex items-center gap-2.5 flex-wrap mb-1">
-              <h2 className="text-2xl font-bold text-slate-900">{user.fullName || 'Người dùng'}</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-1">{user.fullName || 'Người dùng'}</h2>
+            <p className="text-slate-500 text-sm">{user.email || 'Chưa cập nhật email'}</p>
+            <div className="flex items-center gap-2 flex-wrap mt-2.5">
               <span
                 className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${roleBadge.bg} ${roleBadge.text}`}
               >
                 {roleBadge.label}
               </span>
               {user.grade && (
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                  {user.grade === 'chuyen' ? 'Thi chuyên' : `Lớp ${user.grade}`}
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-200/80">
+                  {user.grade === 'chuyen'
+                    ? 'Toán Chuyên'
+                    : user.grade === 'tot_nghiep'
+                    ? 'Đã tốt nghiệp'
+                    : `Toán Lớp ${user.grade}`}
                 </span>
               )}
             </div>
-            <p className="text-slate-500 text-sm">{user.email || 'Chưa cập nhật email'}</p>
           </div>
 
           {/* Account Status Card */}
@@ -485,20 +492,19 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 flex items-start sm:items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+          <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
               <BookOpen className="w-6 h-6" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs text-slate-500 font-medium">Khối lớp học tập</p>
-                <span className="inline-flex items-center gap-1 text-xs text-slate-500 font-medium bg-slate-200/70 px-2 py-0.5 rounded-full" title="Khối lớp cố định theo năm học">
-                  <Lock className="w-3 h-3 text-slate-500" />
-                  <span>Cố định</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-bold bg-blue-50 text-blue-700 border border-blue-200/80">
+              <p className="text-xs text-slate-500 font-medium">Khối lớp</p>
+              <div className="mt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsGradeContactModalOpen(true)}
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 hover:border-blue-300 transition-all cursor-pointer shadow-xs active:scale-95"
+                  title="Nhấn để xem thông tin liên hệ Admin xin thay đổi khối lớp"
+                >
                   {user.grade === 'chuyen'
                     ? 'Thi chuyên'
                     : user.grade === 'tot_nghiep'
@@ -506,35 +512,8 @@ export default function ProfilePage() {
                     : user.grade
                     ? `Lớp ${user.grade}`
                     : 'Chưa cập nhật'}
-                </span>
-                <span className="text-xs text-slate-400">
-                  (Lên lớp ngày 25/5)
-                </span>
+                </button>
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                Đổi khối lớp?{' '}
-                <a
-                  href={`https://t.me/toan6789_admin?text=${encodeURIComponent(
-                    `Xin chào Admin toan6789.vn, tôi muốn yêu cầu đổi khối lớp cho tài khoản: ${user.email} (Lớp hiện tại: ${user.grade || 'chưa rõ'})`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 font-semibold underline underline-offset-2"
-                >
-                  Nhắn Telegram Admin
-                </a>{' '}
-                hoặc{' '}
-                <a
-                  href={`mailto:admin@toan6789.vn?subject=${encodeURIComponent(
-                    `Yêu cầu đổi khối lớp - ${user.email}`
-                  )}&body=${encodeURIComponent(
-                    `Kính gửi Admin toan6789.vn,\n\nTôi muốn yêu cầu hỗ trợ chuyển đổi khối lớp cho tài khoản:\n- Email: ${user.email}\n- Họ và tên: ${user.fullName}\n- Khối lớp hiện tại: ${user.grade}\n- Khối lớp muốn chuyển sang: [Điền lớp mong muốn]\n- Lý do: [Điền lý do]\n\nXin cảm ơn!`
-                  )}`}
-                  className="text-blue-600 hover:text-blue-700 font-semibold underline underline-offset-2"
-                >
-                  Email
-                </a>
-              </p>
             </div>
           </div>
 
@@ -870,6 +849,15 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Popup thông tin liên hệ Admin xin thay đổi khối lớp */}
+      <GradeChangeContactModal
+        isOpen={isGradeContactModalOpen}
+        onClose={() => setIsGradeContactModalOpen(false)}
+        userEmail={user.email}
+        userName={user.fullName}
+        currentGrade={user.grade}
+      />
     </div>
   )
 }

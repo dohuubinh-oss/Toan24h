@@ -21,15 +21,15 @@ export default function StudentDashboardHeader({ user }: Props) {
           )}
         </div>
         <div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-800">{user.greeting}, {user.name}!</h2>
-            {user.grade && (
-              <span className="bg-primary/10 text-primary border border-primary/20 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                {user.grade === 'chuyen' ? 'Toán Chuyên' : `Toán Lớp ${user.grade}`}
-              </span>
-            )}
             {user.isPro && (
               <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs">PRO</span>
+            )}
+            {user.grade && (
+              <span className="bg-blue-50 text-blue-600 border border-blue-200/80 text-xs font-bold px-3 py-1 rounded-full shadow-2xs">
+                {user.grade === 'chuyen' ? 'Toán Chuyên' : `Toán Lớp ${user.grade}`}
+              </span>
             )}
           </div>
         </div>

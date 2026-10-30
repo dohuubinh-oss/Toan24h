@@ -37,7 +37,7 @@ export function LectureConcept({ basicConcept }: LectureConceptProps) {
           <div className="flex flex-col h-full">
             <div className="flex-grow rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-6">
               <MathText 
-                className="prose max-w-none text-slate-800 [&_img]:w-full [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-xl [&_img]:object-contain [&_img]:my-4 [&_img]:shadow-xs"
+                className="prose max-w-none text-slate-800 [&_img]:!w-full [&_img]:!min-w-full [&_img]:!max-w-full [&_img]:!h-auto [&_img]:block [&_img]:rounded-xl [&_img]:my-4 [&_img]:shadow-xs [&_p:has(img)]:w-full"
                 content={basicConcept}
               />
             </div>

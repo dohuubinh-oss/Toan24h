@@ -21,7 +21,13 @@ export default function StudentLeaderboard({ leaderboard, currentUser }: Props) 
         <Trophy className="text-amber-500" size={20} />
       </div>
       <div className="space-y-3">
-        {leaderboard.map((user) => {
+        {leaderboard.length === 0 ? (
+          <div className="text-center py-4 px-3 bg-slate-50/60 rounded-xl border border-dashed border-slate-200">
+            <p className="text-xs font-semibold text-slate-600">Chưa có dữ liệu thi đua tuần này</p>
+            <p className="text-xs text-slate-400 mt-0.5">Làm bài tập hoặc giải đề thi để ghi danh dẫn đầu!</p>
+          </div>
+        ) : (
+          leaderboard.map((user) => {
           let rankBadge = <span className="font-bold w-5 text-center text-slate-400">{user.rank}</span>
           let rankBg = 'hover:bg-slate-50'
 
@@ -48,7 +54,8 @@ export default function StudentLeaderboard({ leaderboard, currentUser }: Props) 
               </div>
             </div>
           )
-        })}
+        })
+        )}
 
         {/* Current User Bar */}
         <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-blue-50 to-amber-50 border border-amber-300/70 rounded-xl shadow-xs mt-4">

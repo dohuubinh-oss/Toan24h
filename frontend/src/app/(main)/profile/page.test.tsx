@@ -242,7 +242,7 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
     expect(screen.queryByRole('button', { name: /Sao chép link đăng ký/i })).not.toBeInTheDocument()
   })
 
-  it('renders locked grade badge with automatic promotion info and no combobox', async () => {
+  it('renders grade badge and opens contact modal when clicked', async () => {
     const mockStudent = {
       id: 'student-grade5',
       email: 'grade5@example.com',
@@ -261,10 +261,15 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
     await waitFor(() => {
       expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
       expect(screen.getAllByText('Lớp 5').length).toBeGreaterThanOrEqual(1)
-      expect(screen.getByText('Cố định')).toBeInTheDocument()
-      expect(screen.getByText(/Lên lớp ngày 25\/5/i)).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: /Nhắn Telegram Admin/i })).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: /Email/i })).toBeInTheDocument()
     })
+
+    // Click grade badge to open contact modal
+    const gradeBtn = screen.getByRole('button', { name: 'Lớp 5' })
+    await act(async () => {
+      fireEvent.click(gradeBtn)
+    })
+
+    expect(screen.getByRole('heading', { name: /Yêu cầu Đổi Khối lớp/i })).toBeInTheDocument()
+    expect(screen.getByText(/@toan6789_admin/i)).toBeInTheDocument()
   })
 })

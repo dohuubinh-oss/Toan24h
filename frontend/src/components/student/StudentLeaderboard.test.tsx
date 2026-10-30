@@ -28,4 +28,9 @@ describe('StudentLeaderboard Component', () => {
     expect(screen.getByText(/Đường đua tuần/i)).toBeInTheDocument()
     expect(screen.getByText(/Chốt 00:00 Thứ 2/i)).toBeInTheDocument()
   })
+
+  it('renders empty leaderboard state when no competitors yet', () => {
+    render(<StudentLeaderboard leaderboard={[]} currentUser={mockStudentDashboardData.currentUserRank} />)
+    expect(screen.getByText(/Chưa có dữ liệu thi đua tuần này/i)).toBeInTheDocument()
+  })
 })

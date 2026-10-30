@@ -142,9 +142,15 @@ export async function deductPoints(amount: number) {
   return res
 }
 
-export async function getUserProfile() {
+export async function getUserProfile(token?: string) {
+  const headers: any = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
   const res = await apiFetch('/users/me', {
-    method: 'GET'
+    method: 'GET',
+    headers,
+    cache: 'no-store',
   })
   if (res && res.data) {
     if (typeof window !== 'undefined') {

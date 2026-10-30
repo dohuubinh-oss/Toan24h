@@ -360,6 +360,15 @@ function CreateBlogPostContent() {
       case 'Tin-Tuc':
         setCategoryLabel('Tin tức & Sự kiện')
         break
+      case 'Meo-Casio':
+        setCategoryLabel('Mẹo Casio')
+        break
+      case 'Meo-Tinh-Nhanh':
+        setCategoryLabel('Mẹo tính nhanh')
+        break
+      case 'Giai-Toan-Dung-Hinh':
+        setCategoryLabel('Giải toán dùng hình')
+        break
       case 'Toan-6':
         setCategoryLabel('Toán lớp 6')
         break
@@ -371,9 +380,6 @@ function CreateBlogPostContent() {
         break
       case 'Toan-9':
         setCategoryLabel('Toán lớp 9')
-        break
-      case 'Meo-Casio':
-        setCategoryLabel('Mẹo Casio')
         break
     }
   }
@@ -1241,11 +1247,9 @@ ${tocListHtml}
                     >
                       <option value="Bi-Quyet-Thi">Bí quyết thi vào 10</option>
                       <option value="Tin-Tuc">Tin tức & Sự kiện</option>
-                      <option value="Toan-6">Toán lớp 6</option>
-                      <option value="Toan-7">Toán lớp 7</option>
-                      <option value="Toan-8">Toán lớp 8</option>
-                      <option value="Toan-9">Toán lớp 9</option>
                       <option value="Meo-Casio">Mẹo Casio</option>
+                      <option value="Meo-Tinh-Nhanh">Mẹo tính nhanh</option>
+                      <option value="Giai-Toan-Dung-Hinh">Giải toán dùng hình</option>
                     </select>
                   </div>
 
@@ -1259,43 +1263,6 @@ ${tocListHtml}
                       {postType === 'shorts_playlist' ? `${shortsList.length} Shorts` : 'Bài viết chuẩn'}
                     </span>
                   </div>
-                </div>
-              </div>
-
-              {/* Card 2: Cover Image Settings Box */}
-              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-                <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4 text-primary" />
-                    <span>Ảnh bìa đại diện</span>
-                  </h3>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold flex items-center gap-1 border border-blue-100">
-                    <Sparkles className="w-3 h-3 text-primary" />
-                    Tự động
-                  </span>
-                </div>
-                
-                <div className="p-5 space-y-3.5">
-                  <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-2xs group">
-                    <img
-                      src={autoCoverImage}
-                      alt="Xem trước ảnh bìa bài viết"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = DEFAULT_COVER_IMAGE
-                      }}
-                    />
-                    <div className="absolute top-2.5 left-2.5 z-10">
-                      <span className="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-xs text-white text-xs font-semibold shadow-xs flex items-center gap-1.5">
-                        <ImageIcon className="w-3 h-3 text-blue-300" />
-                        {coverImageSourceLabel}
-                      </span>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    {coverImageDescription}
-                  </p>
                 </div>
               </div>
 
