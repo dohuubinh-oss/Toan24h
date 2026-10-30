@@ -23,8 +23,14 @@ export default function GradeSelectionModal({ show }: GradeSelectionModalProps =
   const [isOpen, setIsOpen] = useState(false)
   const [selectedGrade, setSelectedGrade] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [promoMonths, setPromoMonths] = useState<string | null>(null)
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('promo_reward_months')
+      if (stored) setPromoMonths(stored)
+    }
+
     if (show !== undefined) {
       setIsOpen(show)
       return
@@ -103,6 +109,12 @@ export default function GradeSelectionModal({ show }: GradeSelectionModalProps =
         <h2 id="grade-selection-title" className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
           Chào mừng bạn! 🎉
         </h2>
+        {promoMonths && (
+          <div className="mb-4 py-2 px-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-xl text-amber-900 text-xs font-bold inline-flex items-center gap-2 shadow-xs">
+            <span>🎁</span>
+            <span>Bạn đã nhận được {promoMonths} tháng VIP miễn phí từ mã giới thiệu!</span>
+          </div>
+        )}
         <p className="text-slate-600 text-sm leading-relaxed max-w-md mx-auto mb-6">
           Vui lòng chọn khối lớp của bạn để chúng tôi có thể cá nhân hóa bài học phù hợp nhất.
         </p>

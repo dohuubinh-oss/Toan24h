@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle2, AlertCircle, Mail, ArrowRight, Loader2, Send } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Mail, ArrowRight, Loader2, Send, Gift } from 'lucide-react';
 import { verifyEmail, resendVerification } from '@/lib/authApi';
 import { Button } from '@/components/ui/Button';
 
@@ -11,6 +11,15 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const emailParam = searchParams.get('email') || '';
+  const promoMonthsParam = searchParams.get('promoMonths');
+  const [promoMonths, setPromoMonths] = useState<string | null>(promoMonthsParam);
+
+  useEffect(() => {
+    if (!promoMonths && typeof window !== 'undefined') {
+      const stored = localStorage.getItem('promo_reward_months');
+      if (stored) setPromoMonths(stored);
+    }
+  }, [promoMonths]);
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'missing' | 'waiting'>(
     token ? 'loading' : emailParam ? 'waiting' : 'missing'
@@ -89,6 +98,17 @@ function VerifyEmailContent() {
             <h2 className="text-2xl font-bold text-slate-900">
               Kích hoạt tài khoản thành công! 🎉
             </h2>
+            {promoMonths && (
+              <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl flex items-center gap-3 text-left shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                  <Gift className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-amber-900">Tặng {promoMonths} tháng VIP miễn phí 🎉</p>
+                  <p className="text-xs text-amber-700">Mã giới thiệu đã kích hoạt thành công! Hãy đăng nhập để trải nghiệm ngay.</p>
+                </div>
+              </div>
+            )}
             <p className="text-sm text-slate-600 leading-relaxed max-w-sm mx-auto">
               Tài khoản của bạn đã sẵn sàng. Hãy đăng nhập để bắt đầu hành trình học tập và làm bài tập ngay hôm nay.
             </p>
@@ -116,6 +136,17 @@ function VerifyEmailContent() {
             <h2 className="text-2xl font-bold text-slate-900">
               Kiểm tra hộp thư của bạn 📩
             </h2>
+            {promoMonths && (
+              <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl flex items-center gap-3 text-left shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                  <Gift className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-amber-900">Ưu đãi {promoMonths} tháng VIP đang chờ bạn</p>
+                  <p className="text-xs text-amber-700">Mã giới thiệu đã được ghi nhận. Gói VIP sẽ kích hoạt ngay khi bạn bấm xác nhận email.</p>
+                </div>
+              </div>
+            )}
             <p className="text-sm text-slate-600 leading-relaxed max-w-sm mx-auto">
               Chúng tôi đã gửi liên kết kích hoạt đến địa chỉ{' '}
               <strong className="text-slate-900 font-semibold">{emailParam}</strong>. Vui lòng mở email và nhấn vào nút kích hoạt (kể cả mục Thư rác/Spam).

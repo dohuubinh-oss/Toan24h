@@ -123,6 +123,8 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 	var user models.User
 	result := h.db.Where("email = ?", email).First(&user)
 
+	var appliedVoucher *models.Voucher
+
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// Auto create new student user
@@ -133,7 +135,6 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 
 			var userExpiresAt *time.Time
 			var referrerID *uuid.UUID
-			var appliedVoucher *models.Voucher
 
 			cleanRefCode := strings.ToUpper(strings.TrimSpace(req.RefCode))
 			if cleanRefCode != "" {
@@ -242,21 +243,25 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 	// Set auth cookies
 	setAuthCookies(c, accessToken, refreshToken, user.Role, user.Grade, formatExpiresAt(user.ExpiresAt))
 
-	c.JSON(http.StatusOK, gin.H{
+	resp := gin.H{
 		"message":      "Đăng nhập với Google thành công",
 		"accessToken":  accessToken,
 		"refreshToken": refreshToken,
 		"user": gin.H{
-			"id":        user.ID,
-			"email":     user.Email,
-			"fullName":  user.FullName,
-			"role":      user.Role,
-			"grade":     user.Grade,
-			"points":    user.Points,
-			"status":    user.Status,
+			"id":         user.ID,
+			"email":      user.Email,
+			"fullName":   user.FullName,
+			"role":       user.Role,
+			"grade":      user.Grade,
+			"points":     user.Points,
+			"status":     user.Status,
 			"googleId":   user.GoogleID,
 			"expiresAt":  user.ExpiresAt,
 			"referrerId": user.ReferrerID,
 		},
-	})
+	}
+	if appliedVoucher != nil && appliedVoucher.FreeMonths > 0 {
+		resp["freeMonths"] = appliedVoucher.FreeMonths
+	}
+	c.JSON(http.StatusOK, resp)
 }

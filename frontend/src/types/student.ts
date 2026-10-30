@@ -10,6 +10,7 @@ export interface UserData {
   level: number
   xp: string
   streak: number
+  grade?: string
 }
 
 export interface TopicData {
@@ -32,6 +33,8 @@ export interface ProgressData {
   percentage: number
   actionText: string
   actionHref?: string
+  milestoneTitle?: string
+  milestoneStats?: string
 }
 
 export interface LeaderboardUser {

@@ -6,12 +6,13 @@ export const mockStudentDashboardData: StudentDashboardData = {
     name: 'Nam',
     initial: 'N',
     isPro: true,
-    planName: 'MathApp Pro',
-    greeting: 'Chào mừng trở lại',
+    planName: 'Toán 6789 VIP',
+    greeting: 'Chào bạn',
     subtitle: 'Cùng chinh phục mục tiêu hôm nay nhé!',
     level: 15,
     xp: '2,450',
     streak: 7,
+    grade: '8',
   },
   topics: [
     {
@@ -37,10 +38,10 @@ export const mockStudentDashboardData: StudentDashboardData = {
       progressBgClass: 'bg-green-500',
     },
     {
-      id: 'calculus',
-      title: 'Giải tích',
+      id: 'statistics',
+      title: 'Thống kê & Xác suất',
       stats: '6 Chương • 24 Bài học',
-      progress: 5,
+      progress: 25,
       icon: TrendingUp,
       color: 'purple',
       bgClass: 'bg-purple-100',
@@ -50,6 +51,8 @@ export const mockStudentDashboardData: StudentDashboardData = {
   ],
   progress: {
     tag: 'Đang học tiếp',
+    milestoneTitle: 'Chặng mục tiêu: Ôn thi Giữa kì 1',
+    milestoneStats: 'Hoàn thành 4/6 bài học • 1/2 đề thi thử',
     title: 'Phương trình bậc hai',
     description: 'Bạn đã hoàn thành 65% chương này. Chỉ còn 2 bài học nữa là đạt huy hiệu mới!',
     percentage: 65,

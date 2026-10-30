@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { BookOpen, Sparkles, X } from 'lucide-react';
 import { Lecture } from '@/types/lecture';
 import { LectureCard, PracticeLectureCard } from './LectureCard';
 import { LectureSidebar } from './LectureSidebar';
+import { useStudentLectureFilter } from '@/context/StudentLectureFilterContext';
 
 export interface GradeLectureListProps {
   lectures: Lecture[];
@@ -20,11 +21,20 @@ export function GradeLectureList({
   returnUrl,
   examId,
 }: GradeLectureListProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedChapter, setSelectedChapter] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState<
+  const contextFilter = useStudentLectureFilter();
+
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
+  const [localSelectedChapter, setLocalSelectedChapter] = useState('all');
+  const [localSelectedStatus, setLocalSelectedStatus] = useState<
     'all' | 'completed' | 'pending' | 'locked'
   >('all');
+
+  const searchQuery = contextFilter ? contextFilter.searchQuery : localSearchQuery;
+  const setSearchQuery = contextFilter ? contextFilter.setSearchQuery : setLocalSearchQuery;
+  const selectedChapter = contextFilter ? contextFilter.selectedChapter : localSelectedChapter;
+  const setSelectedChapter = contextFilter ? contextFilter.setSelectedChapter : setLocalSelectedChapter;
+  const selectedStatus = contextFilter ? contextFilter.selectedStatus : localSelectedStatus;
+  const setSelectedStatus = contextFilter ? contextFilter.setSelectedStatus : setLocalSelectedStatus;
 
   // Lấy danh sách các chuyên đề/chương duy nhất
   const chapters = useMemo(() => {
@@ -97,6 +107,17 @@ export function GradeLectureList({
     });
   }, [lectures, searchQuery, selectedChapter, selectedStatus]);
 
+  useEffect(() => {
+    if (contextFilter) {
+      contextFilter.setChapters(chapters);
+      contextFilter.setCounts(counts);
+      contextFilter.setIsAvailable(true);
+      return () => {
+        contextFilter.setIsAvailable(false);
+      };
+    }
+  }, [contextFilter, chapters, counts]);
+
   const hasActiveFilters =
     searchQuery.trim() !== '' ||
     selectedChapter !== 'all' ||
@@ -104,21 +125,23 @@ export function GradeLectureList({
 
   return (
     <div className="flex flex-col lg:flex-row items-start gap-7">
-      {/* Cột Trái: Sidemenu Bộ lọc & Chuyên đề */}
+      {/* Cột Trái: Sidemenu Bộ lọc & Chuyên đề (Ẩn trên desktop khi đã tích hợp vào Sidebar menu chính) */}
       {lectures.length > 0 && (
-        <LectureSidebar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedChapter={selectedChapter}
-          onChapterChange={setSelectedChapter}
-          chapters={chapters}
-          selectedStatus={selectedStatus}
-          onStatusChange={setSelectedStatus}
-          totalCount={counts.total}
-          completedCount={counts.completed}
-          pendingCount={counts.pending}
-          lockedCount={counts.locked}
-        />
+        <div className={contextFilter ? 'lg:hidden w-full' : 'w-full lg:w-72 xl:w-80 shrink-0'}>
+          <LectureSidebar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedChapter={selectedChapter}
+            onChapterChange={setSelectedChapter}
+            chapters={chapters}
+            selectedStatus={selectedStatus}
+            onStatusChange={setSelectedStatus}
+            totalCount={counts.total}
+            completedCount={counts.completed}
+            pendingCount={counts.pending}
+            lockedCount={counts.locked}
+          />
+        </div>
       )}
 
       {/* Cột Phải: Grid danh sách bài giảng */}

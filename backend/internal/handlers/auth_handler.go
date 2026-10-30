@@ -316,6 +316,15 @@ func (h *AuthHandler) UpdateGrade(c *gin.Context) {
 		return
 	}
 
+	// Khóa thay đổi khối lớp: Nếu học sinh đã có khối lớp, không cho phép tự ý đổi trên web.
+	// Tài khoản sẽ tự động lên lớp vào 25/5 hàng năm. Học sinh muốn đổi cần liên hệ Admin qua Telegram hoặc Email.
+	if user.Role == "student" && user.Grade != "" && user.Grade != req.Grade {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "Khối lớp đã được cố định theo năm học (tự động lên lớp vào 25/5). Vui lòng liên hệ Admin qua Telegram hoặc Email để thay đổi.",
+		})
+		return
+	}
+
 	user.Grade = req.Grade
 	if err := h.db.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update grade"})

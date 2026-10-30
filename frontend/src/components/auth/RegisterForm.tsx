@@ -60,12 +60,16 @@ export default function RegisterForm() {
         voucherCode: data.voucherCode?.trim() || undefined
       })
       if (res?.freeMonths && res.freeMonths > 0) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('promo_reward_months', String(res.freeMonths))
+        }
         toast.success(`Đăng ký thành công! Bạn nhận được ${res.freeMonths} tháng VIP miễn phí. Vui lòng kích hoạt email để bắt đầu.`)
       } else {
         toast.success('Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.')
       }
       if (res?.requireEmailVerification) {
-        router.push(`/verify-email?email=${encodeURIComponent(data.identity)}`)
+        const promoParam = res?.freeMonths ? `&promoMonths=${res.freeMonths}` : ''
+        router.push(`/verify-email?email=${encodeURIComponent(data.identity)}${promoParam}`)
       } else {
         router.push('/login?registered=true')
       }

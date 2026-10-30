@@ -59,7 +59,6 @@ export default function ProfilePage() {
   const router = useRouter()
   const [user, setUser] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isUpdatingGrade, setIsUpdatingGrade] = useState(false)
   const [linkStatus, setLinkStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   // Change password states (inline row)
@@ -169,29 +168,6 @@ export default function ProfilePage() {
 
     fetchProfile()
   }, [router])
-
-  // Change grade
-  const handleGradeChange = async (newGrade: string) => {
-    if (!newGrade || newGrade === user?.grade) return
-    setIsUpdatingGrade(true)
-    try {
-      const res = await apiFetch('/users/me/grade', {
-        method: 'PUT',
-        body: JSON.stringify({ grade: newGrade }),
-      })
-      if (res) {
-        const updated = { ...user, grade: res.grade || newGrade } as UserProfile
-        setUser(updated)
-        localStorage.setItem('user', JSON.stringify(updated))
-        document.cookie = `userGrade=${newGrade}; path=/; max-age=86400; SameSite=Lax`
-        toast.success(`Đã chuyển sang Lớp ${newGrade}`)
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Không thể cập nhật khối lớp')
-    } finally {
-      setIsUpdatingGrade(false)
-    }
-  }
 
   // Handle Telegram account link for slot 1 (Học sinh) or slot 2 (Phụ huynh)
   const handleTelegramSuccess = async (telegramUser: any, slot: 1 | 2 = 1) => {
@@ -417,7 +393,7 @@ export default function ProfilePage() {
               ) : (
                 <>
                   <Camera className="w-5 h-5 mb-0.5" />
-                  <span className="text-[10px] font-semibold">Đổi ảnh</span>
+                  <span className="text-xs font-semibold">Đổi ảnh</span>
                 </>
               )}
             </button>
@@ -448,7 +424,7 @@ export default function ProfilePage() {
               </span>
               {user.grade && (
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                  Lớp {user.grade}
+                  {user.grade === 'chuyen' ? 'Thi chuyên' : `Lớp ${user.grade}`}
                 </span>
               )}
             </div>
@@ -509,26 +485,56 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+          <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 flex items-start sm:items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
               <BookOpen className="w-6 h-6" />
             </div>
-            <div className="flex-1">
-              <p className="text-xs text-slate-500 font-medium">Khối lớp</p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <select
-                  value={user.grade || '8'}
-                  onChange={(e) => handleGradeChange(e.target.value)}
-                  disabled={isUpdatingGrade}
-                  className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-sm font-bold text-slate-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="6">Lớp 6</option>
-                  <option value="7">Lớp 7</option>
-                  <option value="8">Lớp 8</option>
-                  <option value="9">Lớp 9</option>
-                </select>
-                {isUpdatingGrade && <span className="text-[11px] text-blue-500">Đang lưu...</span>}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-slate-500 font-medium">Khối lớp học tập</p>
+                <span className="inline-flex items-center gap-1 text-xs text-slate-500 font-medium bg-slate-200/70 px-2 py-0.5 rounded-full" title="Khối lớp cố định theo năm học">
+                  <Lock className="w-3 h-3 text-slate-500" />
+                  <span>Cố định</span>
+                </span>
               </div>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-bold bg-blue-50 text-blue-700 border border-blue-200/80">
+                  {user.grade === 'chuyen'
+                    ? 'Thi chuyên'
+                    : user.grade === 'tot_nghiep'
+                    ? 'Đã tốt nghiệp'
+                    : user.grade
+                    ? `Lớp ${user.grade}`
+                    : 'Chưa cập nhật'}
+                </span>
+                <span className="text-xs text-slate-400">
+                  (Lên lớp ngày 25/5)
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Đổi khối lớp?{' '}
+                <a
+                  href={`https://t.me/toan6789_admin?text=${encodeURIComponent(
+                    `Xin chào Admin toan6789.vn, tôi muốn yêu cầu đổi khối lớp cho tài khoản: ${user.email} (Lớp hiện tại: ${user.grade || 'chưa rõ'})`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 font-semibold underline underline-offset-2"
+                >
+                  Nhắn Telegram Admin
+                </a>{' '}
+                hoặc{' '}
+                <a
+                  href={`mailto:admin@toan6789.vn?subject=${encodeURIComponent(
+                    `Yêu cầu đổi khối lớp - ${user.email}`
+                  )}&body=${encodeURIComponent(
+                    `Kính gửi Admin toan6789.vn,\n\nTôi muốn yêu cầu hỗ trợ chuyển đổi khối lớp cho tài khoản:\n- Email: ${user.email}\n- Họ và tên: ${user.fullName}\n- Khối lớp hiện tại: ${user.grade}\n- Khối lớp muốn chuyển sang: [Điền lớp mong muốn]\n- Lý do: [Điền lý do]\n\nXin cảm ơn!`
+                  )}`}
+                  className="text-blue-600 hover:text-blue-700 font-semibold underline underline-offset-2"
+                >
+                  Email
+                </a>
+              </p>
             </div>
           </div>
 
@@ -620,7 +626,7 @@ export default function ProfilePage() {
                       {new Intl.NumberFormat('vi-VN').format(user.commissionBalance || 0)} đ
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400">Tự động chốt sổ vào ngày 01 hàng tháng</p>
+                  <p className="text-xs text-slate-400">Tự động chốt sổ vào ngày 01 hàng tháng</p>
                 </div>
 
                 <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-sm flex flex-col justify-between">
@@ -633,7 +639,7 @@ export default function ProfilePage() {
                       {new Intl.NumberFormat('vi-VN').format(user.totalCommissionReceived || 0)} đ
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400">Lũy kế các tháng trước đã thanh toán</p>
+                  <p className="text-xs text-slate-400">Lũy kế các tháng trước đã thanh toán</p>
                 </div>
               </div>
             </div>
@@ -727,16 +733,16 @@ export default function ProfilePage() {
                       </div>
                       <div>
                         <h5 className="font-bold text-slate-900 text-sm">Telegram 1 (Học sinh)</h5>
-                        <span className="text-[10px] text-blue-600 font-semibold uppercase tracking-wider">Tài khoản chính</span>
+                        <span className="text-xs text-blue-600 font-semibold uppercase tracking-wider">Tài khoản chính</span>
                       </div>
                     </div>
 
                     {user.telegramId ? (
-                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" /> Đã kết nối
                       </span>
                     ) : (
-                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-slate-600">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-600">
                         Chưa liên kết
                       </span>
                     )}
@@ -760,13 +766,13 @@ export default function ProfilePage() {
                           <p className="text-xs font-bold text-slate-800">
                             {user.telegramUsername ? `@${user.telegramUsername}` : `ID: ${user.telegramId}`}
                           </p>
-                          <p className="text-[10px] text-slate-400">ID: {user.telegramId}</p>
+                          <p className="text-xs text-slate-400">ID: {user.telegramId}</p>
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleUnlinkTelegram(1)}
-                        className="px-2.5 py-1 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors font-semibold flex items-center gap-1 cursor-pointer"
+                        className="min-h-[44px] px-3 py-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors font-semibold flex items-center gap-1 cursor-pointer"
                         title="Hủy liên kết Telegram Học sinh"
                       >
                         <Unlink className="w-3.5 h-3.5" />
@@ -799,16 +805,16 @@ export default function ProfilePage() {
                       </div>
                       <div>
                         <h5 className="font-bold text-slate-900 text-sm">Telegram 2 (Phụ huynh)</h5>
-                        <span className="text-[10px] text-purple-600 font-semibold uppercase tracking-wider">Đồng hành & Giám sát</span>
+                        <span className="text-xs text-purple-600 font-semibold uppercase tracking-wider">Đồng hành & Giám sát</span>
                       </div>
                     </div>
 
                     {user.telegramId2 ? (
-                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" /> Đã kết nối
                       </span>
                     ) : (
-                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-slate-600">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-600">
                         Chưa liên kết
                       </span>
                     )}
@@ -832,13 +838,13 @@ export default function ProfilePage() {
                           <p className="text-xs font-bold text-slate-800">
                             {user.telegramUsername2 ? `@${user.telegramUsername2}` : `ID: ${user.telegramId2}`}
                           </p>
-                          <p className="text-[10px] text-slate-400">ID: {user.telegramId2}</p>
+                          <p className="text-xs text-slate-400">ID: {user.telegramId2}</p>
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleUnlinkTelegram(2)}
-                        className="px-2.5 py-1 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors font-semibold flex items-center gap-1 cursor-pointer"
+                        className="min-h-[44px] px-3 py-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors font-semibold flex items-center gap-1 cursor-pointer"
                         title="Hủy liên kết Telegram Phụ huynh"
                       >
                         <Unlink className="w-3.5 h-3.5" />

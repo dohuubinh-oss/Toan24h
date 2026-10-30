@@ -6,7 +6,7 @@ import { mockStudentDashboardData } from '@/data/mockStudentData'
 describe('StudentDashboardHeader Component', () => {
   it('renders student greeting and pro badge', () => {
     render(<StudentDashboardHeader user={mockStudentDashboardData.user} />)
-    expect(screen.getByText(/Chào mừng trở lại/i)).toBeInTheDocument()
+    expect(screen.getByText(/Chào bạn/i)).toBeInTheDocument()
     expect(screen.getAllByText(/PRO/i)[0]).toBeInTheDocument()
   })
 
@@ -15,5 +15,11 @@ describe('StudentDashboardHeader Component', () => {
     expect(screen.getByText(/Cấp độ/i)).toBeInTheDocument()
     expect(screen.getByText(/XP/i)).toBeInTheDocument()
     expect(screen.getByText(/Chuỗi học/i)).toBeInTheDocument()
+  })
+
+  it('does not render planName or subtitle in header', () => {
+    render(<StudentDashboardHeader user={mockStudentDashboardData.user} />)
+    expect(screen.queryByText(/Toán 6789 VIP/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Cùng chinh phục mục tiêu/i)).not.toBeInTheDocument()
   })
 })

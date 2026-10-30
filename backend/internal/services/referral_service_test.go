@@ -19,6 +19,15 @@ import (
 	"gorm.io/gorm"
 )
 
+func TestGenerateReferralCodeFromID(t *testing.T) {
+	uid := uuid.MustParse("12345678-1234-1234-1234-12345678abcd")
+	code := services.GenerateReferralCodeFromID(uid)
+	assert.Equal(t, "GT5678ABCD", code)
+	assert.True(t, len(code) == 10)
+
+	assert.Equal(t, "", services.GenerateReferralCodeFromID(uuid.Nil))
+}
+
 func TestReferralCodeFormat_RandomGTCode(t *testing.T) {
 	gtRegex := regexp.MustCompile(`^GT\d{6}$`)
 

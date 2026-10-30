@@ -16,4 +16,10 @@ describe('StudentProgressCard Component', () => {
     const progressBar = screen.getByRole('progressbar')
     expect(progressBar).toBeInTheDocument()
   })
+
+  it('renders milestone tracker when provided', () => {
+    render(<StudentProgressCard progress={mockStudentDashboardData.progress} />)
+    expect(screen.getByText(/Chặng mục tiêu: Ôn thi Giữa kì 1/i)).toBeInTheDocument()
+    expect(screen.getByText(/Hoàn thành 4\/6 bài học • 1\/2 đề thi thử/i)).toBeInTheDocument()
+  })
 })

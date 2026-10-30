@@ -65,6 +65,12 @@ export default async function StudentDashboardPage() {
           level,
           xp: `${cur.weeklyXp || 0}`,
           streak: cur.currentStreak || 0,
+          grade: userGradeCookie || '8',
+        }
+      } else {
+        dashboardData.user = {
+          ...dashboardData.user,
+          grade: userGradeCookie || '8',
         }
       }
     }
@@ -81,15 +87,30 @@ export default async function StudentDashboardPage() {
       const score = Number(latestSub.totalScore) || 0
       const pct = Math.min(100, Math.max(10, Math.round((score / 10) * 100)))
 
+      let tag = 'Đang làm dở'
+      let description = 'Bạn có bài kiểm tra chưa hoàn thành. Hãy tiếp tục làm bài để ghi nhận điểm số nhé!'
+      let actionText = 'Tiếp tục làm bài'
+      let actionHref = `/exam/${latestSub.examId}/take`
+
+      if (isGraded && score >= 9.0) {
+        tag = 'Đã làm chủ'
+        description = `Xuất sắc! Bạn đạt ${score}/10 điểm ở đề này. Hãy chinh phục các đề kiểm tra tiếp theo để thăng hạng nhé!`
+        actionText = 'Chinh phục đề mới'
+        actionHref = userGradeCookie ? `/exams/lop/${userGradeCookie}` : '/exams'
+      } else if (isGraded) {
+        tag = 'Cần ôn luyện'
+        description = `Bạn đạt ${score}/10 điểm ở lần làm gần nhất. Hãy làm lại để bứt phá đạt điểm tối đa!`
+        actionText = 'Làm lại bài thi'
+        actionHref = `/exam/${latestSub.examId}/take`
+      }
+
       dashboardData.progress = {
-        tag: isGraded ? 'Đang học tiếp' : 'Đang làm dở',
+        tag,
         title: matchedExam?.title || 'Đề kiểm tra ôn luyện',
-        description: isGraded
-          ? `Bạn đạt ${score}/10 điểm ở lần làm gần nhất. Hãy làm lại để bứt phá đạt điểm tối đa!`
-          : 'Bạn có bài kiểm tra chưa hoàn thành. Hãy tiếp tục làm bài để ghi nhận điểm số nhé!',
+        description,
         percentage: pct,
-        actionText: isGraded ? 'Làm lại bài thi' : 'Tiếp tục làm bài',
-        actionHref: `/exam/${latestSub.examId}/take`,
+        actionText,
+        actionHref,
       }
     } else {
       const gradeExams = (examsData as any[]).filter(
@@ -213,7 +234,7 @@ export default async function StudentDashboardPage() {
         icon: Brain,
         bgClass: 'bg-primary/5',
         borderClass: 'border-primary/10',
-        shadowClass: 'shadow-[0_0_15px_-3px_rgba(37,99,235,0.2)]',
+        shadowClass: 'shadow-xs',
         textClass: 'text-primary',
         iconBorderClass: '',
         isLocked: totalSubs < 10,

@@ -8,7 +8,7 @@ describe('StudentTopics Component', () => {
     render(<StudentTopics topics={mockStudentDashboardData.topics} />)
     expect(screen.getByText(/Đại số/i)).toBeInTheDocument()
     expect(screen.getByText(/Hình học/i)).toBeInTheDocument()
-    expect(screen.getByText(/Giải tích/i)).toBeInTheDocument()
+    expect(screen.getByText(/Thống kê & Xác suất/i)).toBeInTheDocument()
   })
 
   it('renders continue buttons for topics', () => {

@@ -241,4 +241,30 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
     expect(screen.queryByRole('button', { name: /Sao chép mã/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Sao chép link đăng ký/i })).not.toBeInTheDocument()
   })
+
+  it('renders locked grade badge with automatic promotion info and no combobox', async () => {
+    const mockStudent = {
+      id: 'student-grade5',
+      email: 'grade5@example.com',
+      fullName: 'Học sinh Lớp 5',
+      role: 'student',
+      grade: '5',
+      points: 50,
+    }
+
+    vi.mocked(api.apiFetch).mockResolvedValueOnce({
+      data: mockStudent,
+    } as any)
+
+    render(<ProfilePage />)
+
+    await waitFor(() => {
+      expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+      expect(screen.getAllByText('Lớp 5').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText('Cố định')).toBeInTheDocument()
+      expect(screen.getByText(/Lên lớp ngày 25\/5/i)).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /Nhắn Telegram Admin/i })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /Email/i })).toBeInTheDocument()
+    })
+  })
 })

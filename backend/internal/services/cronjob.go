@@ -88,6 +88,9 @@ func StartCronJobs() {
 
 	// 4. Chốt sổ hoa hồng định kỳ vào 00:00:00 ngày 1 hàng tháng (GMT+7)
 	StartMonthlySettlementCronJob(config.DB)
+
+	// 5. Tự động thăng hạng lên lớp cho học sinh vào 00:00:00 ngày 25/5 hàng năm (GMT+7)
+	StartAnnualGradePromotionCronJob(config.DB)
 }
 
 // MoveDiagramTempToPermanent moves a diagram image from uploads/temp/ to uploads/diagrams/{submissionID}_{questionID}.{ext}

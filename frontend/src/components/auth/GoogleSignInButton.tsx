@@ -41,6 +41,11 @@ export default function GoogleSignInButton({
     try {
       const res = await loginWithGoogle(response.credential, refCodeRef.current)
       if (res && res.user) {
+        if (res.freeMonths && res.freeMonths > 0) {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('promo_reward_months', String(res.freeMonths))
+          }
+        }
         toast.success(`Đăng nhập Google thành công! Xin chào ${res.user.fullName || 'bạn'}`)
         if (onSuccess) {
           onSuccess(res.user)

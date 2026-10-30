@@ -22,4 +22,10 @@ describe('StudentLeaderboard Component', () => {
     expect(screen.getByText('P')).toBeInTheDocument()
     expect(screen.getByText('N')).toBeInTheDocument()
   })
+
+  it('renders weekly sprint boost card', () => {
+    render(<StudentLeaderboard leaderboard={mockStudentDashboardData.leaderboard} currentUser={mockStudentDashboardData.currentUserRank} />)
+    expect(screen.getByText(/Đường đua tuần/i)).toBeInTheDocument()
+    expect(screen.getByText(/Chốt 00:00 Thứ 2/i)).toBeInTheDocument()
+  })
 })

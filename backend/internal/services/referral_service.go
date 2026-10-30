@@ -9,6 +9,7 @@ import (
 	mrand "math/rand"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"gorm.io/gorm"
 )
@@ -52,6 +53,18 @@ func GetCommissionRateByRole(role string) float32 {
 	}
 }
 
+// GenerateReferralCodeFromID sinh mã giới thiệu trực tiếp từ GT + 8 ký tự cuối của User ID
+func GenerateReferralCodeFromID(userID uuid.UUID) string {
+	if userID == uuid.Nil {
+		return ""
+	}
+	idStr := userID.String()
+	if len(idStr) >= 8 {
+		return ReferralCodePrefix + strings.ToUpper(idStr[len(idStr)-8:])
+	}
+	return ReferralCodePrefix + strings.ToUpper(idStr)
+}
+
 // GenerateRandomGTCode sinh chuỗi mã ngẫu nhiên có định dạng GTxxxxxx (8 ký tự)
 func GenerateRandomGTCode() string {
 	n, err := rand.Int(rand.Reader, big.NewInt(1000000))
@@ -62,8 +75,7 @@ func GenerateRandomGTCode() string {
 	return fmt.Sprintf("%s%06d", ReferralCodePrefix, n.Int64())
 }
 
-// GenerateUniqueReferralCode sinh mã giới thiệu ngẫu nhiên GTxxxxxx không trùng lặp
-// Kiểm tra cả bảng vouchers (cột code) và users (cột referral_code), thử lại tối đa 5 lần.
+// GenerateUniqueReferralCode sinh mã giới thiệu cho user: ưu tiên dùng trực tiếp ID của user
 func GenerateUniqueReferralCode(db *gorm.DB) (string, error) {
 	for attempt := 1; attempt <= MaxGenerateAttempts; attempt++ {
 		code := GenerateRandomGTCode()
@@ -94,9 +106,8 @@ func GenerateUniqueReferralCode(db *gorm.DB) (string, error) {
 	return "", fmt.Errorf("failed to generate unique referral code after %d attempts", MaxGenerateAttempts)
 }
 
-// EnsureUserReferralCode đảm bảo user có ReferralCode và Voucher đối tác tương ứng
-// Thiết lập tỷ lệ hoa hồng đúng theo role (teacher 60%, admin 70%, affiliate 30%).
-// Đảm bảo Idempotent: nếu đã có mã và voucher, không tạo mã mới, chỉ cập nhật tỷ lệ nếu đổi role.
+// EnsureUserReferralCode đảm bảo user có ReferralCode từ ID và Voucher đối tác tương ứng
+// Định dạng mã: GT + 8 ký tự cuối của User ID (không cần random, không sợ trùng lặp)
 func EnsureUserReferralCode(db *gorm.DB, user *models.User) (*models.Voucher, error) {
 	if user == nil {
 		return nil, errors.New("user is required")
@@ -112,90 +123,54 @@ func EnsureUserReferralCode(db *gorm.DB, user *models.User) (*models.Voucher, er
 
 	targetCommission := GetCommissionRateByRole(user.Role)
 
-	// Trường hợp 1: Người dùng đã có ReferralCode
-	if user.ReferralCode != nil && strings.TrimSpace(*user.ReferralCode) != "" {
-		code := strings.ToUpper(strings.TrimSpace(*user.ReferralCode))
-
-		var voucher models.Voucher
-		err := db.Where("code = ?", code).First(&voucher).Error
-		if err == nil {
-			// Voucher đã tồn tại. Nếu user đổi vai trò (thay đổi tỷ lệ hoa hồng), cập nhật lại
-			if voucher.CommissionPercent != targetCommission {
-				if updateErr := db.Model(&voucher).Update("commission_percent", targetCommission).Error; updateErr != nil {
-					return nil, fmt.Errorf("failed to update voucher commission percent: %w", updateErr)
-				}
-				voucher.CommissionPercent = targetCommission
-			}
-			return &voucher, nil
-		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("failed to query existing voucher: %w", err)
-		}
-
-		// Voucher chưa tồn tại cho mã này, tạo mới
-		newVoucher := models.Voucher{
-			Code:              code,
-			AffiliateID:       &user.ID,
-			FreeMonths:        1,
-			DiscountPercent:   0,
-			CommissionPercent: targetCommission,
-			MaxUses:           0,
-			UsedCount:         0,
-			ExpiresAt:         nil,
-			IsActive:          true,
-		}
-		if createErr := db.Create(&newVoucher).Error; createErr != nil {
-			return nil, fmt.Errorf("failed to create voucher for existing referral code: %w", createErr)
-		}
-		if updateErr := db.Model(&newVoucher).Update("max_uses", 0).Error; updateErr != nil {
-			return nil, fmt.Errorf("failed to set voucher max_uses to 0: %w", updateErr)
-		}
-		newVoucher.MaxUses = 0
-		return &newVoucher, nil
+	// Sinh mã trực tiếp từ 8 ký tự cuối của User ID
+	code := GenerateReferralCodeFromID(user.ID)
+	if code == "" {
+		code = GenerateRandomGTCode()
 	}
 
-	// Trường hợp 2: Người dùng chưa có ReferralCode -> Sinh mã mới và tạo Voucher trong transaction
-	var createdVoucher *models.Voucher
-	err := db.Transaction(func(tx *gorm.DB) error {
-		code, err := GenerateUniqueReferralCode(tx)
-		if err != nil {
-			return err
-		}
-
-		// Cập nhật ReferralCode cho User
-		if err := tx.Model(&models.User{}).Where("id = ?", user.ID).Update("referral_code", code).Error; err != nil {
-			return fmt.Errorf("failed to update user referral code: %w", err)
-		}
+	// Cập nhật ReferralCode cho User nếu chưa có hoặc đang khác
+	if user.ReferralCode == nil || *user.ReferralCode != code {
 		user.ReferralCode = &code
-
-		// Tạo Voucher đối tác
-		v := models.Voucher{
-			Code:              code,
-			AffiliateID:       &user.ID,
-			FreeMonths:        1,
-			DiscountPercent:   0,
-			CommissionPercent: targetCommission,
-			MaxUses:           0,
-			UsedCount:         0,
-			ExpiresAt:         nil,
-			IsActive:          true,
+		if err := db.Model(&models.User{}).Where("id = ?", user.ID).Update("referral_code", code).Error; err != nil {
+			return nil, fmt.Errorf("failed to update user referral code: %w", err)
 		}
-		if err := tx.Create(&v).Error; err != nil {
-			return fmt.Errorf("failed to create voucher: %w", err)
-		}
-		// Đảm bảo max_uses = 0 (không giới hạn) không bị GORM ghi đè bởi tag default:100
-		if err := tx.Model(&v).Update("max_uses", 0).Error; err != nil {
-			return fmt.Errorf("failed to set voucher max_uses to 0: %w", err)
-		}
-		v.MaxUses = 0
-		createdVoucher = &v
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
-	return createdVoucher, nil
+	// Tạo/Cập nhật Voucher đối tác tương ứng để tương thích hệ thống voucher
+	var voucher models.Voucher
+	err := db.Where("code = ?", code).First(&voucher).Error
+	if err == nil {
+		if voucher.CommissionPercent != targetCommission {
+			if updateErr := db.Model(&voucher).Update("commission_percent", targetCommission).Error; updateErr != nil {
+				return nil, fmt.Errorf("failed to update voucher commission percent: %w", updateErr)
+			}
+			voucher.CommissionPercent = targetCommission
+		}
+		return &voucher, nil
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, fmt.Errorf("failed to query existing voucher: %w", err)
+	}
+
+	newVoucher := models.Voucher{
+		Code:              code,
+		AffiliateID:       &user.ID,
+		FreeMonths:        1,
+		DiscountPercent:   0,
+		CommissionPercent: targetCommission,
+		MaxUses:           0,
+		UsedCount:         0,
+		ExpiresAt:         nil,
+		IsActive:          true,
+	}
+	if createErr := db.Create(&newVoucher).Error; createErr != nil {
+		return nil, fmt.Errorf("failed to create voucher for referral code: %w", createErr)
+	}
+	if updateErr := db.Model(&newVoucher).Update("max_uses", 0).Error; updateErr != nil {
+		return nil, fmt.Errorf("failed to set voucher max_uses to 0: %w", updateErr)
+	}
+	newVoucher.MaxUses = 0
+	return &newVoucher, nil
 }
 
 // MigrateExistingAffiliateCodes quét tất cả các tài khoản admin, teacher, affiliate chưa có ReferralCode
