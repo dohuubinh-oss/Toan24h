@@ -32,11 +32,16 @@ export const MILESTONES_CONFIG: MilestoneInfo[] = [
       'Cuối kỳ 1',
       'Cuối kì I',
       'Cuối kỳ I',
+      'Học kì 1',
+      'Học kỳ 1',
+      'Học kì I',
+      'Học kỳ I',
       'final_1',
       'final 1',
       'final-1',
       'cuoi_ki_1',
       'ck1',
+      'hk1',
     ],
     order: 2,
   },
@@ -64,11 +69,16 @@ export const MILESTONES_CONFIG: MilestoneInfo[] = [
       'Cuối kỳ 2',
       'Cuối kì II',
       'Cuối kỳ II',
+      'Học kì 2',
+      'Học kỳ 2',
+      'Học kì II',
+      'Học kỳ II',
       'final_2',
       'final 2',
       'final-2',
       'cuoi_ki_2',
       'ck2',
+      'hk2',
     ],
     order: 4,
   },
@@ -136,7 +146,12 @@ export function getMilestoneForExam(exam: any): ExamMilestone {
       rawTitle.includes('cuối kỳ 1') ||
       rawTitle.includes('cuối kì i') ||
       rawTitle.includes('cuối kỳ i') ||
+      rawTitle.includes('học kì 1') ||
+      rawTitle.includes('học kỳ 1') ||
+      rawTitle.includes('học kì i') ||
+      rawTitle.includes('học kỳ i') ||
       rawTitle.includes('ck1') ||
+      rawTitle.includes('hk1') ||
       rawTitle.includes('final 1') ||
       rawTitle.includes('final_1')
     ) {
@@ -160,7 +175,12 @@ export function getMilestoneForExam(exam: any): ExamMilestone {
       rawTitle.includes('cuối kỳ 2') ||
       rawTitle.includes('cuối kì ii') ||
       rawTitle.includes('cuối kỳ ii') ||
+      rawTitle.includes('học kì 2') ||
+      rawTitle.includes('học kỳ 2') ||
+      rawTitle.includes('học kì ii') ||
+      rawTitle.includes('học kỳ ii') ||
       rawTitle.includes('ck2') ||
+      rawTitle.includes('hk2') ||
       rawTitle.includes('final 2') ||
       rawTitle.includes('final_2')
     ) {
@@ -185,8 +205,8 @@ export function getMilestoneForExam(exam: any): ExamMilestone {
 /**
  * Gom nhóm danh sách đề thi theo 5 chặng học.
  */
-export function groupExamsByMilestone(exams: any[]): Record<ExamMilestone, any[]> {
-  const grouped: Record<ExamMilestone, any[]> = {
+export function groupExamsByMilestone<T = any>(exams: T[]): Record<ExamMilestone, T[]> {
+  const grouped: Record<ExamMilestone, T[]> = {
     midterm_1: [],
     final_1: [],
     midterm_2: [],

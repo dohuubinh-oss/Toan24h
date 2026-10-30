@@ -48,9 +48,12 @@ describe('examMilestoneProgression', () => {
 
     it('falls back to exam.title when exam.type is missing or empty', () => {
       expect(getMilestoneForExam({ id: '1', title: 'Đề khảo sát Giữa kì 1 Toán 8' })).toBe('midterm_1');
-      expect(getMilestoneForExam({ id: '2', title: 'Đề thi học kì 1 (Cuối kì 1) năm 2024' })).toBe('final_1');
+      expect(getMilestoneForExam({ id: '2', title: 'Đề thi học kì 1 năm 2024' })).toBe('final_1');
+      expect(getMilestoneForExam({ id: '2b', title: 'Đề thi HK1 Toán 8' })).toBe('final_1');
       expect(getMilestoneForExam({ id: '3', title: 'Đề thi Giữa kì 2 lớp 7' })).toBe('midterm_2');
       expect(getMilestoneForExam({ id: '4', title: 'Đề kiểm tra Cuối kì 2 Toán 9' })).toBe('final_2');
+      expect(getMilestoneForExam({ id: '4b', title: 'Đề thi Học kỳ 2 Toán 9' })).toBe('final_2');
+      expect(getMilestoneForExam({ id: '4c', title: 'Đề thi HK2 Toán 6' })).toBe('final_2');
       expect(getMilestoneForExam({ id: '5', title: 'Chuyên đề Số nguyên tố' })).toBe('topics');
     });
 
