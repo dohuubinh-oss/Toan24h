@@ -125,6 +125,10 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         const examData = await getExamById(id)
         if (examData) {
           setExam(examData)
+          if (examData.cate === 'practice') {
+            setCheatCount(0)
+            setShowCheatModal(false)
+          }
           // Fetch questions
           if (examData.questionIds && examData.questionIds.length > 0) {
             const qRes = await getQuestions(1, 1000, { ids: examData.questionIds })
@@ -146,10 +150,16 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   const totalAwayTimeRef = React.useRef(0);
   const leaveStartTimeRef = React.useRef<number | null>(null);
   const checkIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+  const cheatCountRef = React.useRef(0);
+
+  useEffect(() => {
+    cheatCountRef.current = cheatCount;
+  }, [cheatCount]);
 
   // Lắng nghe sự kiện chống gian lận
   useEffect(() => {
     if (!exam) return;
+    if (exam.cate === 'practice') return;
 
     const enforceCheatPenalty = (count: number, totalTime: number) => {
       // Mức 3: Lần 3 hoặc tổng thời gian > 5 phút (300s = 300000ms)
@@ -183,7 +193,8 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
     const handleVisibilityChange = () => {
       if (document.hidden) {
         leaveStartTimeRef.current = Date.now();
-        const nextCount = cheatCount + 1;
+        const nextCount = cheatCountRef.current + 1;
+        cheatCountRef.current = nextCount;
         setCheatCount(nextCount);
         
         // Bắt đầu interval kiểm tra nếu học sinh không quay lại
@@ -219,7 +230,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           } catch(e) {}
         }
         
-        enforceCheatPenalty(cheatCount, totalAwayTimeRef.current);
+        enforceCheatPenalty(cheatCountRef.current, totalAwayTimeRef.current);
       }
     };
 
@@ -456,6 +467,51 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         points={userPoints}
         onBack={handleBack}
       />
+
+      {/* Mode Indicator Banner */}
+      <div 
+        role="status"
+        aria-live="polite"
+        className={`w-full border-b transition-colors ${
+          exam.cate === 'practice'
+            ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
+            : 'bg-amber-50/80 border-amber-200 text-amber-900'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
+          <div className="flex items-center gap-2 flex-wrap">
+            {exam.cate === 'practice' ? (
+              <>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Luyện tập
+                </span>
+                <span className="font-medium">
+                  Chế độ Luyện tập: Cho phép mở tab bài giảng tra cứu lý thuyết
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                  Thi thử
+                </span>
+                <span className="font-medium">
+                  Chế độ Thi thử: Giám sát tập trung, không rời phòng thi
+                </span>
+              </>
+            )}
+          </div>
+          {exam.cate === 'practice' && lectureUrl && (
+            <a
+              href={lectureUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-900 underline min-h-[44px] py-2 px-1 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded"
+            >
+              Mở bài giảng tra cứu lý thuyết ↗
+            </a>
+          )}
+        </div>
+      </div>
       <div className="flex-1 flex overflow-hidden relative pb-[88px] w-full">
         {/* Left Navigation Overlay */}
         {currentQuestionIndex > 0 && (
