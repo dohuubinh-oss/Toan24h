@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  LayoutDashboard, Database, ClipboardList, Users, BookOpen, Trophy, PenTool, MessageSquareWarning
+  LayoutDashboard, Database, ClipboardList, Users, BookOpen, MessageSquareWarning
 } from 'lucide-react';
 
 export type SidebarRole = 'student' | 'teacher' | 'admin';
@@ -17,7 +17,7 @@ export interface SidebarProps {
 const STUDENT_LINKS = [
   { href: '/student', icon: LayoutDashboard, label: 'Dashboard', matchPrefix: false },
   { href: '/lectures', icon: BookOpen, label: 'Bài giảng', matchPrefix: true },
-  { href: '/leaderboard', icon: Trophy, label: 'Bảng xếp hạng', matchPrefix: true },
+  { href: '/exams', icon: ClipboardList, label: 'Luyện đề thi', matchPrefix: true },
 ];
 
 const TEACHER_LINKS = [
@@ -55,7 +55,7 @@ export default function Sidebar({ role: initialRole, filterNode }: SidebarProps)
   const links = role === 'student' ? STUDENT_LINKS : (role === 'admin' ? ADMIN_LINKS : TEACHER_LINKS);
 
   return (
-    <aside className="w-64 border-r border-slate-200 hidden md:block bg-white shrink-0">
+    <aside className={`border-r border-slate-200 hidden md:block bg-white shrink-0 ${role === 'student' ? 'w-72 xl:w-80' : 'w-64'}`}>
       <nav className="p-4 space-y-6">
         <div className="space-y-1">
           {links.map(link => {
@@ -69,9 +69,9 @@ export default function Sidebar({ role: initialRole, filterNode }: SidebarProps)
               <Link 
                 key={link.href}
                 href={link.href} 
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${isActive ? 'bg-primary/5 text-primary border-r-4 border-primary font-bold' : 'text-slate-600 hover:bg-slate-50 font-medium'}`}
+                className={`flex items-center gap-3 min-h-[44px] px-3 py-2.5 rounded-xl transition-all ${isActive ? 'bg-primary/5 text-primary border-r-4 border-primary font-bold' : 'text-slate-600 hover:bg-slate-50 font-medium'}`}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-5 h-5" aria-hidden="true" />
                 <span className="text-sm">{link.label}</span>
               </Link>
             );

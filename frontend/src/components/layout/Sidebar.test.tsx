@@ -24,12 +24,17 @@ describe('Sidebar', () => {
     expect(screen.getByText('Báo lỗi/Kháng cáo')).toBeInTheDocument()
   })
 
-  it('renders student navigation links for student role', () => {
+  it('renders student navigation links for student role without leaderboard', () => {
     render(<Sidebar role="student" />)
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
     expect(screen.getByText('Bài giảng')).toBeInTheDocument()
-    expect(screen.queryByText('Đề thi')).not.toBeInTheDocument()
-    expect(screen.getByText('Bảng xếp hạng')).toBeInTheDocument()
+    expect(screen.getByText('Luyện đề thi')).toBeInTheDocument()
+    expect(screen.queryByText('Bảng xếp hạng')).not.toBeInTheDocument()
     expect(screen.queryByText('Quản lý người dùng')).not.toBeInTheDocument()
+
+    const links = screen.getAllByRole('link')
+    links.forEach((link) => {
+      expect(link).not.toHaveAttribute('href', '/leaderboard')
+    })
   })
 })
