@@ -24,7 +24,6 @@ import {
   Copy,
   Check,
   Share2,
-  Percent,
   Coins,
 } from 'lucide-react'
 import TelegramLoginWidget from '@/components/auth/TelegramLoginWidget'
@@ -316,19 +315,6 @@ export default function ProfilePage() {
 
   const isPartner = user.role === 'admin' || user.role === 'teacher' || user.role === 'affiliate'
 
-  const getCommissionRate = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 70
-      case 'teacher':
-        return 60
-      case 'affiliate':
-        return 30
-      default:
-        return 0
-    }
-  }
-
   const isVipActive = user.expiresAt && new Date(user.expiresAt) > new Date()
   const isAdminOrTeacher = user.role === 'admin' || user.role === 'teacher'
 
@@ -535,27 +521,12 @@ export default function ProfilePage() {
           <div className="pt-2 pb-8 border-t border-slate-100">
             <div className="bg-gradient-to-br from-white via-emerald-50/20 to-teal-50/30 rounded-2xl p-5 sm:p-6 border border-emerald-200/80 shadow-sm">
               {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-emerald-100/80">
-                <div className="flex items-start sm:items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                    <Gift className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-lg font-bold text-slate-900">Mã Giới Thiệu & Hoa Hồng Đối Tác</h3>
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                        Chương trình Đối tác & Giới thiệu
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Chia sẻ mã giới thiệu để nhận hoa hồng trọn đời khi học sinh đăng ký gói học
-                    </p>
-                  </div>
+              <div className="flex items-center gap-3 pb-5 border-b border-emerald-100/80">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Gift className="w-5 h-5" />
                 </div>
-
-                <div className="flex items-center gap-2 self-start sm:self-auto bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-xl border border-emerald-200/60 text-xs font-bold shrink-0">
-                  <Percent className="w-4 h-4 text-emerald-600" />
-                  <span>Tỷ lệ hoa hồng: {getCommissionRate(user.role)}%</span>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Mã Giới Thiệu & Hoa Hồng Đối Tác</h3>
                 </div>
               </div>
 

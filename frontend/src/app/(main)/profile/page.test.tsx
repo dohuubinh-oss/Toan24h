@@ -146,7 +146,6 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
     await waitFor(() => {
       expect(screen.getByText(/Mã Giới Thiệu & Hoa Hồng Đối Tác/i)).toBeInTheDocument()
       expect(screen.getByText('GT123456')).toBeInTheDocument()
-      expect(screen.getByText(/60%/)).toBeInTheDocument()
       expect(screen.getByText(/180\.000\s*đ/)).toBeInTheDocument()
       expect(screen.getByText(/1\.500\.000\s*đ/)).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /Sao chép mã/i })).toBeInTheDocument()
