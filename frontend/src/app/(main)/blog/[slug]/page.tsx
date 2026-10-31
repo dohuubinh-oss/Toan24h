@@ -289,8 +289,8 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
 
           {/* Right Sticky Sidebar (4 Cols) */}
           <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
-            {/* Quick Table of Contents / Highlights Widget */}
-            <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs space-y-3">
+            {/* Quick Table of Contents / Highlights Widget (Ẩn trên mobile theo yêu cầu) */}
+            <div className="hidden md:block bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs space-y-3">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2">
                 <List className="w-4 h-4 text-primary" />
                 <span>{isShortsPlaylist ? 'Danh sách bài học trong Playlist' : (postHeadings.length > 0 ? 'Mục lục bài viết (H1)' : 'Trọng tâm bài giảng')}</span>

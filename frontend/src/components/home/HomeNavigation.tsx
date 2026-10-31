@@ -143,7 +143,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
   }, [showNotifications])
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
+    <nav className={`sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-200/50 ${isMobileMenuOpen ? 'z-[99999]' : 'z-50'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
         {/* Left: Mobile Hamburger + Logo */}
         <div className="flex items-center gap-2 sm:gap-3">
@@ -318,16 +318,16 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
       {/* Mobile SideMenu Backdrop */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 transition-opacity lg:hidden"
+          className="fixed inset-0 z-[99998] bg-black/60 transition-opacity lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />
       )}
 
-      {/* Mobile SideMenu Drawer (Slide in from Left, Full Screen Width, 100% Opaque) */}
+      {/* Mobile SideMenu Drawer (Slide in from Left, Full Screen Width, 100% Opaque, Topmost Z-Index) */}
       <div
-        className={`fixed inset-0 z-50 w-full h-full bg-white flex flex-col justify-between transition-transform duration-300 ease-in-out lg:hidden overflow-hidden ${
-          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed inset-0 z-[99999] w-full h-full bg-white flex flex-col justify-between transition-transform duration-300 ease-in-out lg:hidden overflow-hidden ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
         }`}
         aria-hidden={!isMobileMenuOpen}
       >
