@@ -326,39 +326,51 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
 
       {/* Mobile SideMenu Drawer (Slide in from Left, Full Screen Width, 100% Opaque) */}
       <div
-        className={`fixed inset-0 z-50 w-full h-full bg-white flex flex-col transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed inset-0 z-50 w-full h-full bg-white flex flex-col justify-between transition-transform duration-300 ease-in-out lg:hidden overflow-hidden ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-hidden={!isMobileMenuOpen}
       >
-        {/* Profile Banner with Concentric Ripple Waves (Reference Image + DESIGN.md) */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white pt-10 pb-6 px-6 border-b border-slate-100 shrink-0">
-          {/* Concentric circular ripple motif per reference image & DESIGN.md */}
-          <svg
-            className="absolute -top-16 -right-16 w-80 h-80 pointer-events-none select-none text-primary"
-            viewBox="0 0 320 320"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <circle cx="230" cy="90" r="55" fill="currentColor" fillOpacity="0.08" />
-            <circle cx="230" cy="90" r="100" stroke="currentColor" strokeWidth="28" strokeOpacity="0.10" />
-            <circle cx="230" cy="90" r="148" stroke="currentColor" strokeWidth="32" strokeOpacity="0.07" />
-            <circle cx="230" cy="90" r="198" stroke="currentColor" strokeWidth="36" strokeOpacity="0.04" />
-          </svg>
+        {/* Concentric circular ripple motif centered on Avatar radiating down to menu body */}
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none select-none text-primary"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          aria-hidden="true"
+        >
+          {/* Subtle glow / wash around the avatar */}
+          <circle cx="56" cy="74" r="46" fill="currentColor" fillOpacity="0.08" />
 
+          {/* 1st ripple ring */}
+          <circle cx="56" cy="74" r="82" stroke="currentColor" strokeWidth="26" strokeOpacity="0.08" />
+
+          {/* 2nd ripple ring expanding across name and Home */}
+          <circle cx="56" cy="74" r="132" stroke="currentColor" strokeWidth="32" strokeOpacity="0.06" />
+
+          {/* 3rd ripple ring sweeping down across Explore & Events */}
+          <circle cx="56" cy="74" r="192" stroke="currentColor" strokeWidth="38" strokeOpacity="0.04" />
+
+          {/* 4th ripple ring extending through the menu body */}
+          <circle cx="56" cy="74" r="265" stroke="currentColor" strokeWidth="44" strokeOpacity="0.025" />
+
+          {/* 5th outer soft sweep */}
+          <circle cx="56" cy="74" r="350" stroke="currentColor" strokeWidth="52" strokeOpacity="0.015" />
+        </svg>
+
+        {/* Top Section: Avatar, User Info & Close Button */}
+        <div className="relative z-10 pt-10 px-6 shrink-0">
           {/* Close button in top-right */}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="absolute top-4 right-4 p-2.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-white/80 transition-colors cursor-pointer z-20"
+            className="absolute top-8 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer z-20"
             aria-label="Đóng menu"
           >
-            <X size={22} />
+            <X size={24} />
           </button>
 
-          {/* User Profile Info */}
-          <div className="relative z-10 flex items-center gap-4">
+          {/* User Profile Info with Avatar at center of concentric ripples */}
+          <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-primary to-blue-500 text-white flex items-center justify-center font-bold text-2xl uppercase shrink-0 shadow-md ring-4 ring-white">
               {isLoggedState && userName ? (
                 getAvatarInitial(userName)
@@ -366,7 +378,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                 <User size={28} />
               )}
             </div>
-            <div className="min-w-0 flex-1 pr-6">
+            <div className="min-w-0 flex-1 pr-8">
               <h2 className="text-xl font-bold text-primary tracking-tight truncate">
                 {isLoggedState ? userName : 'Chào bạn!'}
               </h2>
@@ -377,11 +389,11 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
           </div>
 
           {!isLoggedState && (
-            <div className="relative z-10 grid grid-cols-2 gap-2.5 mt-5">
+            <div className="grid grid-cols-2 gap-2.5 mt-5">
               <Link
                 href="/login"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="py-2.5 px-3 text-center text-xs font-bold rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 shadow-xs transition-all"
+                className="py-2.5 px-3 text-center text-xs font-bold rounded-xl border border-slate-200 text-slate-700 bg-white/90 hover:bg-slate-50 shadow-xs transition-all"
               >
                 Đăng nhập
               </Link>
@@ -396,8 +408,8 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
           )}
         </div>
 
-        {/* Navigation Items (styled matching reference image & DESIGN.md) */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 bg-white">
+        {/* Navigation Items: trải dài từ trên xuống, không sử dụng thanh trượt */}
+        <div className="relative z-10 flex-1 flex flex-col justify-evenly px-6 py-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-y-auto">
           {[
             { label: 'Trang chủ', href: '/', icon: Home },
             { label: 'Bài giảng lý thuyết', href: '/lectures', icon: BookOpen },
@@ -419,15 +431,15 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                 key={item.label}
                 href={item.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl min-h-[48px] text-[15px] transition-all ${
+                className={`flex items-center gap-4 py-3 px-2 rounded-2xl min-h-[48px] text-[16px] transition-all ${
                   isActive
-                    ? 'text-primary font-bold bg-primary/5'
-                    : 'text-slate-700 font-medium hover:text-primary hover:bg-slate-50'
+                    ? 'text-primary font-bold'
+                    : 'text-slate-700 font-medium hover:text-primary hover:bg-primary/5'
                 }`}
               >
                 <Icon
-                  size={20}
-                  className={`shrink-0 ${isActive ? 'text-primary' : 'text-slate-500'}`}
+                  size={22}
+                  className={`shrink-0 ${isActive ? 'text-primary' : 'text-slate-600'}`}
                 />
                 <span>{item.label}</span>
               </Link>
@@ -435,8 +447,8 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
           })}
         </div>
 
-        {/* Footer: Sign Out / Sign In */}
-        <div className="p-4 border-t border-slate-100 bg-white shrink-0">
+        {/* Footer: Sign Out / Sign In cố định góc dưới màn mobile */}
+        <div className="relative z-10 px-6 py-5 pb-8 border-t border-slate-100 bg-white shrink-0">
           {isLoggedState ? (
             <button
               type="button"
@@ -444,18 +456,18 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                 setIsMobileMenuOpen(false)
                 import('@/lib/authApi').then((m) => m.logout())
               }}
-              className="flex items-center gap-4 w-full px-4 py-3 rounded-2xl min-h-[48px] text-[15px] font-medium text-slate-700 hover:text-red-600 hover:bg-red-50/50 transition-colors cursor-pointer"
+              className="flex items-center gap-4 py-2 px-2 w-full text-[16px] font-medium text-slate-700 hover:text-red-600 transition-colors cursor-pointer text-left"
             >
-              <LogOut size={20} className="shrink-0 text-slate-500 hover:text-red-600" />
+              <LogOut size={22} className="shrink-0 text-slate-600 hover:text-red-600" />
               <span>Đăng xuất tài khoản</span>
             </button>
           ) : (
             <Link
               href="/login"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-4 w-full px-4 py-3 rounded-2xl min-h-[48px] text-[15px] font-semibold text-primary hover:bg-primary/5 transition-colors cursor-pointer"
+              className="flex items-center gap-4 py-2 px-2 w-full text-[16px] font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
             >
-              <LogIn size={20} className="shrink-0 text-primary" />
+              <LogIn size={22} className="shrink-0 text-primary" />
               <span>Đăng nhập tài khoản</span>
             </Link>
           )}
