@@ -1,7 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Lexend } from 'next/font/google'
-import Script from 'next/script'
 import GradeSelectionModal from '@/components/auth/GradeSelectionModal'
 import { ToastProvider } from '@/components/ui/ToastProvider'
 import { ImageViewerProvider } from '@/components/ui/ImageViewerProvider'
@@ -125,27 +124,31 @@ export default function RootLayout({
             }),
           }}
         />
+        {/* Performance measure patch to prevent Turbopack/DevTools negative timestamp warnings */}
+        <script
+          id="performance-measure-patch"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined' && window.performance && window.performance.measure) {
+                (function() {
+                  var origMeasure = window.performance.measure.bind(window.performance);
+                  window.performance.measure = function() {
+                    try {
+                      return origMeasure.apply(this, arguments);
+                    } catch (e) {
+                      if (e && e.message && e.message.indexOf('negative time stamp') !== -1) {
+                        return undefined;
+                      }
+                      throw e;
+                    }
+                  };
+                })();
+              }
+            `,
+          }}
+        />
       </head>
       <body className="bg-page-bg text-slate-900 min-h-screen flex flex-col font-sans">
-        <Script id="performance-measure-patch" strategy="beforeInteractive">
-          {`
-            if (typeof window !== 'undefined' && window.performance && window.performance.measure) {
-              (function() {
-                var origMeasure = window.performance.measure.bind(window.performance);
-                window.performance.measure = function() {
-                  try {
-                    return origMeasure.apply(this, arguments);
-                  } catch (e) {
-                    if (e && e.message && e.message.indexOf('negative time stamp') !== -1) {
-                      return undefined;
-                    }
-                    throw e;
-                  }
-                };
-              })();
-            }
-          `}
-        </Script>
         <ToastProvider>
           <ImageViewerProvider>
             <GradeSelectionModal />

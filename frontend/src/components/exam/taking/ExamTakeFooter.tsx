@@ -21,37 +21,48 @@ export default function ExamTakeFooter({
   totalCount,
 }: ExamTakeFooterProps) {
   return (
-    <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-6 z-[100] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <footer className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2.5 sm:px-6 sm:py-3.5 z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+        {/* Navigation buttons */}
+        <div className="flex items-center gap-1 sm:gap-3 min-w-0">
           <button
+            type="button"
             onClick={onPrev}
             disabled={!canGoPrev}
-            className="flex items-center gap-2 px-5 py-3 text-slate-600 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 text-slate-700 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap cursor-pointer shrink-0"
+            aria-label="Câu trước"
           >
-            <ChevronLeft className="w-5 h-5" />
-            Câu trước
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+            <span>Câu trước</span>
           </button>
-          <div className="h-6 w-px bg-slate-200"></div>
+          <div className="h-5 sm:h-6 w-px bg-slate-200 shrink-0" aria-hidden="true" />
           <button
+            type="button"
             onClick={onNext}
             disabled={!canGoNext}
-            className="flex items-center gap-2 px-5 py-3 text-slate-600 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 text-slate-700 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap cursor-pointer shrink-0"
+            aria-label="Câu tiếp theo"
           >
-            Câu tiếp theo
-            <ChevronRight className="w-5 h-5" />
+            <span>Câu tiếp theo</span>
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
           </button>
         </div>
-        <div className="flex items-center gap-6">
-          <p className="hidden sm:block text-slate-500 text-sm font-medium">
+
+        {/* Status & Submit button */}
+        <div className="flex items-center gap-2 sm:gap-5 shrink-0">
+          <p className="hidden md:block text-slate-500 text-xs sm:text-sm font-medium">
             Bạn đã trả lời {answeredCount}/{totalCount} câu hỏi
           </p>
+          <span className="hidden sm:inline md:hidden text-xs text-slate-500 font-semibold">
+            {answeredCount}/{totalCount} câu
+          </span>
           <button
+            type="button"
             onClick={onSubmit}
-            className="bg-primary hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-primary/25 transition-all flex items-center gap-2 active:scale-95"
+            className="bg-primary hover:bg-blue-700 text-white px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-xl font-bold shadow-md shadow-primary/25 transition-all flex items-center gap-1.5 sm:gap-2 active:scale-95 text-xs sm:text-sm whitespace-nowrap shrink-0 cursor-pointer"
           >
-            Nộp bài
-            <Send className="w-5 h-5" />
+            <span>Nộp bài</span>
+            <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
           </button>
         </div>
       </div>

@@ -523,12 +523,12 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           )}
         </div>
       </div>
-      <div className="flex-1 flex overflow-hidden relative pb-[88px] w-full">
+      <div className="flex-1 flex overflow-hidden relative pb-20 sm:pb-24 w-full">
         {/* Left Navigation Overlay */}
         {currentQuestionIndex > 0 && (
           <button 
             onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
-            className="absolute left-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-start pl-2 md:pl-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-r hover:from-slate-200/50 hover:to-transparent transition-all group"
+            className="absolute left-0 top-0 bottom-16 sm:bottom-20 w-12 md:w-24 z-10 flex items-center justify-start pl-2 md:pl-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-r hover:from-slate-200/50 hover:to-transparent transition-all group"
           >
             <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
               <ChevronLeft size={24} />
@@ -540,7 +540,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         {currentQuestionIndex < questions.length - 1 && (
           <button 
             onClick={handleNextWithCheck}
-            className="absolute right-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
+            className="absolute right-0 top-0 bottom-16 sm:bottom-20 w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
           >
             <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
               <ChevronRight size={24} />

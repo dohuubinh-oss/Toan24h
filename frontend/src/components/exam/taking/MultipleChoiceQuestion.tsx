@@ -133,9 +133,9 @@ export default function MultipleChoiceQuestion({
   }
 
   return (
-    <main className="flex-grow flex flex-row items-start justify-center p-6 sm:p-12 relative w-full">
-      <div className="w-full max-w-4xl space-y-8 transition-all duration-300">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-10 relative overflow-hidden">
+    <main className="flex-grow flex flex-row items-start justify-center p-3 sm:p-6 md:p-12 pb-24 sm:pb-32 relative w-full">
+      <div className="w-full max-w-4xl space-y-6 sm:space-y-8 transition-all duration-300">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-8 md:p-10 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary"></div>
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -257,7 +257,7 @@ export default function MultipleChoiceQuestion({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {options.map((option) => {
             const isSelected = selectedOptionId === option.id
             const isCorrect = correctOptionId === option.id
