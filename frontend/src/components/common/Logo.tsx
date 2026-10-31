@@ -20,7 +20,7 @@ interface LogoProps {
 export function LogoIcon({
   className = '',
   size = 'md',
-  priority = false,
+  priority = true,
 }: {
   className?: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
@@ -62,7 +62,7 @@ export default function Logo({
   showText = true,
   size = 'md',
   layout = 'horizontal',
-  priority = false,
+  priority = true,
 }: LogoProps) {
   const textSizes = {
     sm: 'text-xl',

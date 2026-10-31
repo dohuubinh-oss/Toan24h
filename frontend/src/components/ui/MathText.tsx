@@ -96,7 +96,7 @@ export default function MathText({ content, className = '' }: MathTextProps) {
       const isBlock = !!(b1 || b2);
       const math = decodeMathEntities(rawMath);
       try {
-        return katex.renderToString(math, { throwOnError: false, displayMode: isBlock });
+        return katex.renderToString(math, { throwOnError: false, displayMode: isBlock, strict: false });
       } catch (e) {
         return match;
       }
@@ -107,7 +107,7 @@ export default function MathText({ content, className = '' }: MathTextProps) {
     processed = processed.replace(unwrappedRegex, (match, innerText) => {
       try {
         const decoded = decodeMathEntities(innerText.trim());
-        const rendered = katex.renderToString(decoded, { throwOnError: false, displayMode: false });
+        const rendered = katex.renderToString(decoded, { throwOnError: false, displayMode: false, strict: false });
         if (rendered.includes('katex-error')) {
           return match;
         }
