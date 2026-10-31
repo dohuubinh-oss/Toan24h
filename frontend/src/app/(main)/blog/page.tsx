@@ -57,9 +57,19 @@ export default function BlogListPage() {
     return posts.find(post => post.featured) || posts[0]
   }, [posts])
 
+  // Điều kiện khu vực bài viết nổi bật được hiển thị (trên trang chủ blog, không tìm kiếm, không lọc danh mục)
+  const isFeaturedActive = Boolean(
+    featuredPost && searchQuery === '' && selectedCategory === 'all'
+  )
+
   // Filter posts
   const filteredPosts = useMemo(() => {
     return posts.filter(post => {
+      // Nếu bài viết đang hiển thị trên khu vực bài viết nổi bật, loại bỏ khỏi danh sách bài viết bên dưới
+      if (isFeaturedActive && featuredPost && post.id === featuredPost.id) {
+        return false
+      }
+
       const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory
       const matchesSearch = searchQuery.trim() === '' || 
         post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -67,7 +77,7 @@ export default function BlogListPage() {
 
       return matchesCategory && matchesSearch
     })
-  }, [posts, selectedCategory, searchQuery])
+  }, [posts, selectedCategory, searchQuery, isFeaturedActive, featuredPost])
 
   // Reset pagination when filter or search changes
   useEffect(() => {
@@ -171,7 +181,7 @@ export default function BlogListPage() {
         </div>
 
         {/* Featured Article Spotlight (Full Width) */}
-        {featuredPost && searchQuery === '' && selectedCategory === 'all' && currentPage === 1 && (
+        {isFeaturedActive && currentPage === 1 && (
           <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-xl hover:border-primary/30 transition-all duration-300 overflow-hidden group">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
               <div className="lg:col-span-7 relative h-64 sm:h-80 lg:h-full min-h-[320px] overflow-hidden bg-slate-100">

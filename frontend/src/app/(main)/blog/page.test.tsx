@@ -93,4 +93,17 @@ describe('BlogListPage with shorts playlist items', () => {
     expect(screen.getByLabelText('Trang trước')).toBeInTheDocument()
     expect(screen.getByLabelText('Trang sau')).toBeInTheDocument()
   })
+
+  it('does not display the featured post in the article list below when featured section is visible', () => {
+    render(<BlogListPage />)
+
+    // The featured section renders the featured post title
+    expect(screen.getByText('Tuyển tập 5 mẹo bấm máy Casio fx-580VNX')).toBeInTheDocument()
+
+    // The article list items (rendered inside <article> elements)
+    const articles = screen.getAllByRole('article')
+    expect(articles).toHaveLength(1)
+    expect(articles[0]).toHaveTextContent('Bí quyết ôn thi vào lớp 10 đạt điểm 9+')
+    expect(articles[0]).not.toHaveTextContent('Tuyển tập 5 mẹo bấm máy Casio fx-580VNX')
+  })
 })
