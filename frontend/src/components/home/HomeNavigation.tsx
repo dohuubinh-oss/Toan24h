@@ -17,7 +17,6 @@ import {
   BookOpen,
   Newspaper,
   FileText,
-  Gift,
   Info,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -423,12 +422,11 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
           <div className="relative z-10 flex-1 flex flex-col justify-evenly px-6 py-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-y-auto">
             {[
               { label: 'Trang chủ', href: '/', icon: Home },
-              { label: 'Bài giảng lý thuyết', href: '/lectures', icon: BookOpen },
-              { label: 'Luyện đề thi', href: '/exam', icon: FileText },
+              { label: 'Bài giảng', href: '/lectures', icon: BookOpen },
+              { label: 'Đề thi', href: '/exam', icon: FileText },
               { label: 'Góc học tập & Blog', href: '/blog', icon: Newspaper },
               ...(isLoggedState
                 ? [
-                    { label: 'Giới thiệu & Đối tác', href: '/profile?tab=referral', icon: Gift },
                     { label: 'Cài đặt & Tài khoản', href: '/profile', icon: Settings },
                   ]
                 : []),

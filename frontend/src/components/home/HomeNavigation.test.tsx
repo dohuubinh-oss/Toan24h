@@ -35,7 +35,8 @@ describe('HomeNavigation', () => {
     fireEvent.click(hamburgerBtn)
     expect(screen.getByRole('button', { name: /Đóng menu/i })).toBeInTheDocument()
     expect(screen.getByText('Học Toán THCS thông minh')).toBeInTheDocument()
-    expect(screen.getByText('Bài giảng lý thuyết')).toBeInTheDocument()
+    expect(screen.getAllByText('Bài giảng')[0]).toBeInTheDocument()
+    expect(screen.getByText('Đề thi')).toBeInTheDocument()
     expect(screen.getByText('Góc học tập & Blog')).toBeInTheDocument()
 
     // Click to close
@@ -53,9 +54,8 @@ describe('HomeNavigation', () => {
 
     expect(screen.getAllByText('Nguyễn Văn An')[0]).toBeInTheDocument()
     expect(screen.getAllByText('Toán 9')[0]).toBeInTheDocument()
-    expect(screen.getByText('Giới thiệu & Đối tác')).toBeInTheDocument()
     expect(screen.getByText('Cài đặt & Tài khoản')).toBeInTheDocument()
-    expect(screen.getByText('Luyện đề thi')).toBeInTheDocument()
+    expect(screen.getByText('Đề thi')).toBeInTheDocument()
     expect(screen.getByText('Về toan6789.vn')).toBeInTheDocument()
     expect(screen.getByText('Đăng xuất tài khoản')).toBeInTheDocument()
   })
