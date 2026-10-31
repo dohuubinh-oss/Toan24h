@@ -10,8 +10,8 @@ describe('HomeNavigation', () => {
 
   it('renders logo and navigation links', () => {
     render(<HomeNavigation />)
-    expect(screen.getByText(/Math/i)).toBeInTheDocument()
-    expect(screen.getByText(/AI/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Math/i)[0]).toBeInTheDocument()
+    expect(screen.getAllByText(/AI/i)[0]).toBeInTheDocument()
     expect(screen.getAllByText('Trang chủ')[0]).toBeInTheDocument()
     expect(screen.getAllByText('Đăng nhập')[0]).toBeInTheDocument()
     expect(screen.getByText('Học ngay')).toBeInTheDocument()

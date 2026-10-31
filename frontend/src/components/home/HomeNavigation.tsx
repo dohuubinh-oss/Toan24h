@@ -312,30 +312,31 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
       {/* Mobile SideMenu Backdrop */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs transition-opacity lg:hidden"
+          className="fixed inset-0 z-40 bg-black/60 transition-opacity lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />
       )}
 
-      {/* Mobile SideMenu Drawer (Slide in from Left) */}
+      {/* Mobile SideMenu Drawer (Slide in from Left, Full Screen Width, 100% Opaque) */}
       <div
-        className={`fixed top-0 bottom-0 left-0 z-50 w-72 max-w-[85vw] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed inset-0 z-50 w-full h-full bg-white flex flex-col transition-transform duration-300 ease-in-out lg:hidden ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
+        aria-hidden={!isMobileMenuOpen}
       >
         {/* Drawer Header */}
-        <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-100">
+        <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-100 bg-white">
           <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center">
             <Logo size="sm" />
           </Link>
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
             aria-label="Đóng menu"
           >
-            <X size={20} />
+            <X size={22} />
           </button>
         </div>
 
@@ -358,14 +359,14 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                 <Link
                   href="/login"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="py-2 px-3 text-center text-xs font-bold rounded-xl border border-slate-200 text-slate-700 hover:bg-white transition-all"
+                  className="py-2.5 px-3 text-center text-xs font-bold rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-all"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   href="/register"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="py-2 px-3 text-center text-xs font-bold rounded-xl bg-primary text-white shadow-xs hover:bg-primary/90 transition-all"
+                  className="py-2.5 px-3 text-center text-xs font-bold rounded-xl bg-primary text-white shadow-xs hover:bg-primary/90 transition-all"
                 >
                   Đăng ký
                 </Link>
@@ -375,7 +376,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
         </div>
 
         {/* Nav Links with Icons */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-1.5">
+        <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-white">
           <Link
             href="/"
             onClick={() => setIsMobileMenuOpen(false)}
@@ -414,7 +415,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
 
         {/* Footer with Logout */}
         {isLoggedState && (
-          <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+          <div className="p-4 border-t border-slate-100 bg-slate-50">
             <button
               type="button"
               onClick={() => {
