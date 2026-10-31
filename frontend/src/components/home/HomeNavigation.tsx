@@ -2,17 +2,22 @@
 
 import React, { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import {
   Bell,
   User,
   ChevronDown,
   LogOut,
+  LogIn,
   Settings,
   Menu,
   X,
   Home,
   BookOpen,
   Newspaper,
+  FileText,
+  Gift,
+  Info,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { apiFetch } from '@/lib/api'
@@ -32,6 +37,7 @@ interface Notification {
 }
 
 export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationProps) {
+  const pathname = usePathname() || '/'
   const [userName, setUserName] = useState('Học viên')
   const [userGrade, setUserGrade] = useState('Toán THCS')
   const [isLoggedState, setIsLoggedState] = useState(isLoggedIn)
@@ -325,110 +331,135 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
         }`}
         aria-hidden={!isMobileMenuOpen}
       >
-        {/* Drawer Header */}
-        <div className="p-4 sm:p-5 flex items-center justify-between border-b border-slate-100 bg-white">
-          <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center">
-            <Logo size="sm" />
-          </Link>
+        {/* Profile Banner with Concentric Ripple Waves (Reference Image + DESIGN.md) */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white pt-10 pb-6 px-6 border-b border-slate-100 shrink-0">
+          {/* Concentric circular ripple motif per reference image & DESIGN.md */}
+          <svg
+            className="absolute -top-16 -right-16 w-80 h-80 pointer-events-none select-none text-primary"
+            viewBox="0 0 320 320"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <circle cx="230" cy="90" r="55" fill="currentColor" fillOpacity="0.08" />
+            <circle cx="230" cy="90" r="100" stroke="currentColor" strokeWidth="28" strokeOpacity="0.10" />
+            <circle cx="230" cy="90" r="148" stroke="currentColor" strokeWidth="32" strokeOpacity="0.07" />
+            <circle cx="230" cy="90" r="198" stroke="currentColor" strokeWidth="36" strokeOpacity="0.04" />
+          </svg>
+
+          {/* Close button in top-right */}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="absolute top-4 right-4 p-2.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-white/80 transition-colors cursor-pointer z-20"
             aria-label="Đóng menu"
           >
             <X size={22} />
           </button>
+
+          {/* User Profile Info */}
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-primary to-blue-500 text-white flex items-center justify-center font-bold text-2xl uppercase shrink-0 shadow-md ring-4 ring-white">
+              {isLoggedState && userName ? (
+                getAvatarInitial(userName)
+              ) : (
+                <User size={28} />
+              )}
+            </div>
+            <div className="min-w-0 flex-1 pr-6">
+              <h2 className="text-xl font-bold text-primary tracking-tight truncate">
+                {isLoggedState ? userName : 'Chào bạn!'}
+              </h2>
+              <p className="text-xs font-medium text-slate-500 mt-0.5">
+                {isLoggedState ? (userGrade || 'Toán THCS') : 'Học Toán THCS thông minh'}
+              </p>
+            </div>
+          </div>
+
+          {!isLoggedState && (
+            <div className="relative z-10 grid grid-cols-2 gap-2.5 mt-5">
+              <Link
+                href="/login"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="py-2.5 px-3 text-center text-xs font-bold rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 shadow-xs transition-all"
+              >
+                Đăng nhập
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="py-2.5 px-3 text-center text-xs font-bold rounded-xl bg-primary text-white shadow-xs hover:bg-primary/90 transition-all"
+              >
+                Đăng ký
+              </Link>
+            </div>
+          )}
         </div>
 
-        {/* User Card in Drawer */}
-        <div className="p-4 bg-slate-50 border-b border-slate-100">
+        {/* Navigation Items (styled matching reference image & DESIGN.md) */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 bg-white">
+          {[
+            { label: 'Trang chủ', href: '/', icon: Home },
+            { label: 'Bài giảng lý thuyết', href: '/lectures', icon: BookOpen },
+            { label: 'Luyện đề thi', href: '/exam', icon: FileText },
+            { label: 'Góc học tập & Blog', href: '/blog', icon: Newspaper },
+            ...(isLoggedState
+              ? [
+                  { label: 'Giới thiệu & Đối tác', href: '/profile?tab=referral', icon: Gift },
+                  { label: 'Cài đặt & Tài khoản', href: '/profile', icon: Settings },
+                ]
+              : []),
+            { label: 'Về toan6789.vn', href: '/blog', icon: Info },
+          ].map((item) => {
+            const Icon = item.icon
+            const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl min-h-[48px] text-[15px] transition-all ${
+                  isActive
+                    ? 'text-primary font-bold bg-primary/5'
+                    : 'text-slate-700 font-medium hover:text-primary hover:bg-slate-50'
+                }`}
+              >
+                <Icon
+                  size={20}
+                  className={`shrink-0 ${isActive ? 'text-primary' : 'text-slate-500'}`}
+                />
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
+        </div>
+
+        {/* Footer: Sign Out / Sign In */}
+        <div className="p-4 border-t border-slate-100 bg-white shrink-0">
           {isLoggedState ? (
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-base uppercase shrink-0 border border-primary/20">
-                {userName ? getAvatarInitial(userName) : <User size={20} />}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-slate-900 truncate">{userName}</p>
-                <p className="text-xs text-primary font-medium">{userGrade}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <p className="text-xs text-slate-500 font-medium">Học Toán THCS thông minh</p>
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <Link
-                  href="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="py-2.5 px-3 text-center text-xs font-bold rounded-xl border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-all"
-                >
-                  Đăng nhập
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="py-2.5 px-3 text-center text-xs font-bold rounded-xl bg-primary text-white shadow-xs hover:bg-primary/90 transition-all"
-                >
-                  Đăng ký
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Nav Links with Icons */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-white">
-          <Link
-            href="/"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold text-slate-700 hover:bg-primary/10 hover:text-primary transition-colors"
-          >
-            <Home size={18} className="text-slate-400" />
-            <span>Trang chủ</span>
-          </Link>
-          <Link
-            href="/lectures"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold text-slate-700 hover:bg-primary/10 hover:text-primary transition-colors"
-          >
-            <BookOpen size={18} className="text-slate-400" />
-            <span>Bài giảng lý thuyết</span>
-          </Link>
-          <Link
-            href="/blog"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold text-slate-700 hover:bg-primary/10 hover:text-primary transition-colors"
-          >
-            <Newspaper size={18} className="text-slate-400" />
-            <span>Góc học tập & Blog</span>
-          </Link>
-          {isLoggedState && (
-            <Link
-              href="/profile"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold text-slate-700 hover:bg-primary/10 hover:text-primary transition-colors"
-            >
-              <User size={18} className="text-slate-400" />
-              <span>Trang cá nhân & Cài đặt</span>
-            </Link>
-          )}
-        </div>
-
-        {/* Footer with Logout */}
-        {isLoggedState && (
-          <div className="p-4 border-t border-slate-100 bg-slate-50">
             <button
               type="button"
               onClick={() => {
                 setIsMobileMenuOpen(false)
-                import('@/lib/authApi').then(m => m.logout())
+                import('@/lib/authApi').then((m) => m.logout())
               }}
-              className="flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+              className="flex items-center gap-4 w-full px-4 py-3 rounded-2xl min-h-[48px] text-[15px] font-medium text-slate-700 hover:text-red-600 hover:bg-red-50/50 transition-colors cursor-pointer"
             >
-              <LogOut size={18} />
+              <LogOut size={20} className="shrink-0 text-slate-500 hover:text-red-600" />
               <span>Đăng xuất tài khoản</span>
             </button>
-          </div>
-        )}
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-4 w-full px-4 py-3 rounded-2xl min-h-[48px] text-[15px] font-semibold text-primary hover:bg-primary/5 transition-colors cursor-pointer"
+            >
+              <LogIn size={20} className="shrink-0 text-primary" />
+              <span>Đăng nhập tài khoản</span>
+            </Link>
+          )}
+        </div>
       </div>
     </nav>
   )

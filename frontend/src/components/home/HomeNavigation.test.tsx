@@ -42,4 +42,21 @@ describe('HomeNavigation', () => {
     const closeBtn = screen.getByRole('button', { name: /Đóng menu/i })
     fireEvent.click(closeBtn)
   })
+
+  it('renders logged in mobile SideMenu items with referral, settings and logout', () => {
+    localStorage.setItem('user', JSON.stringify({ fullName: 'Nguyễn Văn An', role: 'student', grade: 9 }))
+    document.cookie = 'userRole=student'
+
+    render(<HomeNavigation isLoggedIn={true} />)
+    const hamburgerBtn = screen.getByRole('button', { name: /Mở menu điều hướng/i })
+    fireEvent.click(hamburgerBtn)
+
+    expect(screen.getAllByText('Nguyễn Văn An')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('Toán 9')[0]).toBeInTheDocument()
+    expect(screen.getByText('Giới thiệu & Đối tác')).toBeInTheDocument()
+    expect(screen.getByText('Cài đặt & Tài khoản')).toBeInTheDocument()
+    expect(screen.getByText('Luyện đề thi')).toBeInTheDocument()
+    expect(screen.getByText('Về toan6789.vn')).toBeInTheDocument()
+    expect(screen.getByText('Đăng xuất tài khoản')).toBeInTheDocument()
+  })
 })
