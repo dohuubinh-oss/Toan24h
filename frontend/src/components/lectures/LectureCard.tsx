@@ -18,6 +18,7 @@ export interface LectureCardProps {
   isLocked?: boolean;
   lockReason?: string;
   averageScore?: number;
+  priority?: boolean;
 }
 
 export function LectureCard({
@@ -34,6 +35,7 @@ export function LectureCard({
   isLocked = false,
   lockReason,
   averageScore,
+  priority = false,
 }: LectureCardProps) {
   const isCompleted = status === 'COMPLETED';
   const isInProgress = status === 'PENDING';
@@ -54,11 +56,12 @@ export function LectureCard({
           src={thumbnailUrl}
           alt={title}
           fill
+          priority={priority}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className={`object-cover transition-transform duration-500 ${
             isLocked ? 'filter grayscale-[25%]' : 'group-hover:scale-105'
           }`}
-          loading="lazy"
+          loading={priority ? 'eager' : 'lazy'}
           unoptimized={true}
         />
       ) : (
@@ -198,6 +201,7 @@ export interface PracticeLectureCardProps {
   practiceCount?: number;
   href?: string;
   thumbnailUrl?: string;
+  priority?: boolean;
 }
 
 export function PracticeLectureCard({
@@ -208,6 +212,7 @@ export function PracticeLectureCard({
   practiceCount = 0,
   href,
   thumbnailUrl,
+  priority = false,
 }: PracticeLectureCardProps) {
   const targetHref = href || (id ? `/lectures/lop/${grade}/${id}` : `/lectures`);
 
@@ -223,9 +228,10 @@ export function PracticeLectureCard({
             src={thumbnailUrl}
             alt={title}
             fill
+            priority={priority}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
             unoptimized={true}
           />
         ) : (

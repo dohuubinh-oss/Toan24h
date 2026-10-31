@@ -176,7 +176,8 @@ export function GradeLectureList({
 
         {/* Grid bài giảng */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredLectures.map((item) => {
+          {filteredLectures.map((item, index) => {
+            const isPriority = index < 2;
             if (item.isPracticeCard) {
               let lectureUrl = `/lectures/lop/${grade}/${item.id}`;
               if (returnUrl) {
@@ -194,6 +195,7 @@ export function GradeLectureList({
                   practiceCount={item.practiceCount}
                   href={lectureUrl}
                   thumbnailUrl={item.thumbnailUrl}
+                  priority={isPriority}
                 />
               );
             }
@@ -204,6 +206,7 @@ export function GradeLectureList({
                 grade={grade}
                 returnUrl={returnUrl}
                 examId={examId}
+                priority={isPriority}
                 {...item}
               />
             );
