@@ -163,7 +163,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(true)}
-            className="lg:hidden p-2 -ml-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="lg:hidden p-2 -ml-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="Mở menu điều hướng"
           >
             <Menu size={24} />
@@ -319,7 +319,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
               </div>
               <Link
                 href="/login"
-                className="sm:hidden px-3.5 py-1.5 rounded-full text-xs font-bold bg-primary text-white shadow-xs hover:bg-primary/90 transition-all"
+                className="sm:hidden min-h-[44px] inline-flex items-center justify-center px-4 py-2 rounded-full text-xs font-bold bg-primary text-white shadow-xs hover:bg-primary/90 transition-all"
               >
                 Đăng nhập
               </Link>
@@ -381,7 +381,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
             <button
               type="button"
               onClick={closeMobileMenu}
-              className="absolute top-8 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer z-20"
+              className="absolute top-8 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer z-20 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Đóng menu"
             >
               <X size={24} />
@@ -411,14 +411,14 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                 <Link
                   href="/login"
                   onClick={closeMobileMenu}
-                  className="py-2.5 px-3 text-center text-xs font-bold rounded-xl border border-slate-200 text-slate-700 bg-white/90 hover:bg-slate-50 shadow-xs transition-all"
+                  className="py-2.5 px-3 min-h-[44px] flex items-center justify-center text-center text-xs font-bold rounded-xl border border-slate-200 text-slate-700 bg-white/90 hover:bg-slate-50 shadow-xs transition-all"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   href="/register"
                   onClick={closeMobileMenu}
-                  className="py-2.5 px-3 text-center text-xs font-bold rounded-xl bg-primary text-white shadow-xs hover:bg-primary/90 transition-all"
+                  className="py-2.5 px-3 min-h-[44px] flex items-center justify-center text-center text-xs font-bold rounded-xl bg-primary text-white shadow-xs hover:bg-primary/90 transition-all"
                 >
                   Đăng ký
                 </Link>

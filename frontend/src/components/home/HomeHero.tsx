@@ -100,12 +100,18 @@ export default function HomeHero() {
             Chương trình chuẩn Bộ Giáo dục từ lớp 6-9. Cá nhân hóa lộ trình học tập, giúp bạn tiến bộ vượt bậc chỉ sau 30 ngày.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 mb-12">
-            <button className="px-8 py-4 bg-primary text-white rounded-xl font-bold text-lg shadow-xl shadow-primary/30 hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
+            <Link
+              href="/register"
+              className="px-8 py-4 bg-primary text-white rounded-xl font-bold text-lg shadow-xl shadow-primary/30 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 min-h-[48px] cursor-pointer"
+            >
               Bắt đầu miễn phí <ArrowRight className="w-5 h-5" />
-            </button>
-            <button className="px-8 py-4 bg-white rounded-xl font-bold text-lg border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 text-slate-800">
+            </Link>
+            <Link
+              href="/exams"
+              className="px-8 py-4 bg-white rounded-xl font-bold text-lg border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 text-slate-800 min-h-[48px] cursor-pointer shadow-xs"
+            >
               Xem demo
-            </button>
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-4 py-6 border-t border-slate-200">
@@ -142,17 +148,21 @@ export default function HomeHero() {
           <div className="relative bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-[0_10px_30px_-10px_rgba(37,99,235,0.12)] border border-slate-100">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className="text-xl font-bold text-slate-900">Chào {studentName}! 👋</h3>
+                <h2 className="text-xl font-bold text-slate-900">Chào {studentName}! 👋</h2>
                 <p className="text-sm text-slate-500">Tiếp tục giải đề Toán {selectedGrade}</p>
               </div>
               <div className="flex gap-4">
-                <div className="flex items-center gap-1 bg-orange-100 px-3 py-1 rounded-full text-orange-600 font-bold">
+                <div className="flex items-center gap-1 bg-orange-100 px-3 py-1 rounded-full text-orange-800 font-bold">
                   <Flame className="w-4 h-4" />
                   <span>12</span>
                 </div>
-                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
+                <button
+                  type="button"
+                  aria-label="Xem thông báo"
+                  className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
+                >
                   <Bell className="w-5 h-5 text-slate-600" />
-                </div>
+                </button>
               </div>
             </div>
 
@@ -184,7 +194,7 @@ export default function HomeHero() {
                     key={gradeNum}
                     type="button"
                     onClick={() => setSelectedGrade(gradeNum)}
-                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
+                    className={`flex-1 py-2.5 px-2 min-h-[44px] rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       selectedGrade === gradeNum
                         ? 'bg-primary text-white shadow-md'
                         : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -197,17 +207,17 @@ export default function HomeHero() {
 
               <div className="flex items-center justify-between gap-2 mb-3">
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-400/30">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                   {currentExam.badge}
                 </div>
-                <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
+                <span className="text-xs font-medium text-slate-300 flex items-center gap-1">
                   <Users className="w-3.5 h-3.5 text-blue-400" /> {currentExam.submissions}
                 </span>
               </div>
 
-              <h4 className="text-base font-bold text-white mb-2 leading-snug">
+              <h3 className="text-base font-bold text-white mb-2 leading-snug">
                 {currentExam.title}
-              </h4>
+              </h3>
 
               <div className="grid grid-cols-2 gap-2 mb-4 text-xs text-slate-300">
                 <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5">
@@ -224,20 +234,20 @@ export default function HomeHero() {
                 <div className="flex items-center gap-2">
                   <Link
                     href={currentExam.examUrl}
-                    className="px-4 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-lg shadow-primary/25 transition-all"
+                    className="px-4 py-2.5 min-h-[44px] bg-primary hover:bg-primary/90 text-white font-bold rounded-xl flex items-center gap-1.5 border border-blue-400/30 transition-all cursor-pointer"
                   >
                     <span>Học ngay</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                   <Link
                     href={currentExam.examUrl}
-                    className="px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-300 font-semibold rounded-xl border border-white/10 transition-colors"
+                    className="px-3 py-2.5 min-h-[44px] bg-white/5 hover:bg-white/10 text-slate-300 font-semibold rounded-xl border border-white/10 transition-colors flex items-center cursor-pointer"
                   >
                     Xem bài giảng
                   </Link>
                 </div>
                 <div className="text-right hidden sm:block">
-                  <p className="text-[10px] text-slate-400">Điểm TB</p>
+                  <p className="text-xs text-slate-400">Điểm TB</p>
                   <p className="text-xs font-bold text-amber-400">{currentExam.avgScore}</p>
                 </div>
               </div>
@@ -250,7 +260,7 @@ export default function HomeHero() {
             </div>
             <div>
               <p className="text-sm font-bold text-slate-900">Tăng 2.5 điểm</p>
-              <p className="text-[10px] text-slate-500">Trung bình sau 2 tuần</p>
+              <p className="text-xs text-slate-500">Trung bình sau 2 tuần</p>
             </div>
           </div>
         </div>

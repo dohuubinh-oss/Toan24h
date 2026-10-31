@@ -31,7 +31,7 @@ export const HOME_PRICING_PLANS: HomePricingPlan[] = [
     theme: 'blue',
     description: 'Lựa chọn phổ biến nhất cho giai đoạn ôn tập và bứt phá điểm số.',
     features: [
-      'Toàn bộ quyền lợi gói 1 tháng',
+      'Không giới hạn làm đề thi và bài giảng lý thuyết',
       'Ngân hàng 50.000+ câu hỏi phân loại theo độ khó',
       'Hệ thống gợi ý bài tập khắc phục điểm yếu',
       'Ưu tiên hỗ trợ giải đáp thắc mắc 24/7',
@@ -92,7 +92,7 @@ export default function HomePricing() {
                       className={`px-4 py-1 text-white text-xs font-black rounded-full shadow-md uppercase tracking-wider ${
                         isBlue
                           ? 'bg-blue-600'
-                          : 'bg-emerald-600'
+                          : 'bg-emerald-700'
                       }`}
                     >
                       {plan.topBadge}
@@ -122,7 +122,7 @@ export default function HomePricing() {
                         {plan.price.toLocaleString('vi-VN')}đ
                       </span>
                       {plan.originalPrice && (
-                        <span className="text-base font-semibold text-slate-400 line-through">
+                        <span className="text-base font-semibold text-slate-500 line-through">
                           {plan.originalPrice.toLocaleString('vi-VN')}đ
                         </span>
                       )}
@@ -152,10 +152,10 @@ export default function HomePricing() {
                 <div className="pt-4">
                   <Link
                     href="/upgrade"
-                    className={`w-full py-4 px-6 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2.5 cursor-pointer shadow-lg active:scale-98 ${
+                    className={`w-full py-4 px-6 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2.5 cursor-pointer shadow-lg active:scale-98 min-h-[48px] ${
                       isBlue
                         ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/25'
-                        : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/25'
+                        : 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-700/25'
                     }`}
                   >
                     <Sparkles className="w-5 h-5" />

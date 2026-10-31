@@ -1,5 +1,6 @@
 import React from 'react'
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import HomeNavigation from '../components/home/HomeNavigation'
 import HomeHero from '../components/home/HomeHero'
 import HomeFeatures from '../components/home/HomeFeatures'
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-primary/30">
+    <div className="min-h-screen bg-white font-sans selection:bg-primary/30">
       <HomeNavigation />
 
       <main>
@@ -29,11 +30,15 @@ export default function HomePage() {
       <HomeFooter />
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-8 right-8 z-50">
-        <button className="w-16 h-16 bg-primary text-white rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
-          <Sparkles className="w-8 h-8" />
-        </button>
-        <div className="absolute -top-12 right-0 bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xl">
+      <div className="fixed bottom-6 right-6 z-50 group">
+        <Link
+          href="/lectures"
+          aria-label="Hỏi đáp AI Toán học và làm bài ngay"
+          className="w-14 h-14 sm:w-16 sm:h-16 bg-primary text-white rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer"
+        >
+          <Sparkles className="w-7 h-7 sm:w-8 sm:h-8" />
+        </Link>
+        <div className="absolute -top-10 right-0 bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           Hỏi AI ngay! ✨
         </div>
       </div>
