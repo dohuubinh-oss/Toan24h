@@ -108,7 +108,7 @@ export default function HomeHero() {
             </button>
           </div>
 
-          <div className="flex items-center gap-4 py-6 border-t border-slate-200">
+          <div className="hidden md:flex items-center gap-4 py-6 border-t border-slate-200">
             <div className="flex -space-x-3">
               <Image
                 alt="Student 1"
@@ -137,7 +137,7 @@ export default function HomeHero() {
           </div>
         </div>
 
-        <div className="relative">
+        <div className="hidden lg:block relative">
           <div className="absolute -top-10 -left-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl opacity-50"></div>
           <div className="relative bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-[0_10px_30px_-10px_rgba(37,99,235,0.12)] border border-slate-100">
             <div className="flex items-center justify-between mb-8">

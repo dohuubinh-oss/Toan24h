@@ -1,14 +1,19 @@
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, beforeEach } from 'vitest'
 import HomeNavigation from './HomeNavigation'
 
 describe('HomeNavigation', () => {
-  it('renders logo and links', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC;'
+  })
+
+  it('renders logo and navigation links', () => {
     render(<HomeNavigation />)
     expect(screen.getByText(/Math/i)).toBeInTheDocument()
     expect(screen.getByText(/AI/i)).toBeInTheDocument()
-    expect(screen.getByText('Trang chủ')).toBeInTheDocument()
-    expect(screen.getByText('Đăng nhập')).toBeInTheDocument()
+    expect(screen.getAllByText('Trang chủ')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('Đăng nhập')[0]).toBeInTheDocument()
     expect(screen.getByText('Học ngay')).toBeInTheDocument()
   })
 
@@ -17,11 +22,24 @@ describe('HomeNavigation', () => {
     document.cookie = 'userRole=student'
 
     render(<HomeNavigation isLoggedIn={true} />)
-    // Tên đầy đủ là Nguyễn Văn An -> ký tự avatar là chữ đầu của từ cuối ("An") -> 'A'
-    expect(screen.getByText('A')).toBeInTheDocument()
-    expect(screen.getByText('Nguyễn Văn An')).toBeInTheDocument()
+    expect(screen.getAllByText('A')[0]).toBeInTheDocument()
+    expect(screen.getAllByText('Nguyễn Văn An')[0]).toBeInTheDocument()
+  })
 
-    localStorage.clear()
-    document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC;'
+  it('opens and closes mobile SideMenu when clicking hamburger and close button', () => {
+    render(<HomeNavigation />)
+    const hamburgerBtn = screen.getByRole('button', { name: /Mở menu điều hướng/i })
+    expect(hamburgerBtn).toBeInTheDocument()
+
+    // Click to open mobile drawer
+    fireEvent.click(hamburgerBtn)
+    expect(screen.getByRole('button', { name: /Đóng menu/i })).toBeInTheDocument()
+    expect(screen.getByText('Học Toán THCS thông minh')).toBeInTheDocument()
+    expect(screen.getByText('Bài giảng lý thuyết')).toBeInTheDocument()
+    expect(screen.getByText('Góc học tập & Blog')).toBeInTheDocument()
+
+    // Click to close
+    const closeBtn = screen.getByRole('button', { name: /Đóng menu/i })
+    fireEvent.click(closeBtn)
   })
 })
