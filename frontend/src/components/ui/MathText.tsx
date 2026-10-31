@@ -90,31 +90,47 @@ export default function MathText({ content, className = '' }: MathTextProps) {
       return `<img${before}src="${fullUrl}"`;
     });
 
-    // 3. Thay thế các công thức $$...$$, \[...\], $...$, \(...\) bằng chuỗi HTML của KaTeX
+    // 3. Thay thế các công thức $$...$$, \[...\], $...$, \(...\) bằng chuỗi placeholder tạm thời
+    // nhằm bảo vệ hoàn toàn MathML/HTML của KaTeX không bị regex ở bước 4 can thiệp lặp lại
+    const mathPlaceholders: string[] = [];
     processed = processed.replace(/\$\$([\s\S]*?)\$\$|\\\[([\s\S]*?)\\\]|\$([^$]+)\$|\\\(([\s\S]*?)\\\)/g, (match, b1, b2, i1, i2) => {
       const rawMath = b1 || b2 || i1 || i2;
       const isBlock = !!(b1 || b2);
       const math = decodeMathEntities(rawMath);
       try {
-        return katex.renderToString(math, { throwOnError: false, displayMode: isBlock, strict: false });
+        const rendered = katex.renderToString(math, { throwOnError: false, displayMode: isBlock, strict: false });
+        const idx = mathPlaceholders.length;
+        mathPlaceholders.push(rendered);
+        return `%%%KATEX_MATH_${idx}%%%`;
       } catch (e) {
         return match;
       }
     });
 
-    // 4. Also convert any unwrapped LaTeX commands remaining inside HTML text (e.g. <p>\frac{1}{2}</p>, <p>\hat{A}</p>)
+    // 4. Xử lý các lệnh LaTeX chưa có dấu bọc $ nằm lẫn trong văn bản HTML thuần (ví dụ <p>-\dfrac{1}{5} x^4 y^5</p>)
+    // Vì công thức đã render trước đó ở dạng placeholder, bước này tuyệt đối KHÔNG bao giờ match nhầm vào <annotation> MathML
     const unwrappedRegex = new RegExp(`>([^<]*?\\\\(?:${LATEX_COMMANDS})[^<]*?)<`, 'g');
     processed = processed.replace(unwrappedRegex, (match, innerText) => {
+      if (innerText.includes('%%%KATEX_MATH_')) {
+        return match;
+      }
       try {
         const decoded = decodeMathEntities(innerText.trim());
         const rendered = katex.renderToString(decoded, { throwOnError: false, displayMode: false, strict: false });
         if (rendered.includes('katex-error')) {
           return match;
         }
-        return `>${rendered}<`;
+        const idx = mathPlaceholders.length;
+        mathPlaceholders.push(rendered);
+        return `>%%%KATEX_MATH_${idx}%%%<`;
       } catch {
         return match;
       }
+    });
+
+    // 5. Khôi phục toàn bộ HTML KaTeX đã render vào đúng vị trí duy nhất một lần
+    processed = processed.replace(/%%%KATEX_MATH_(\d+)%%%/g, (_, idx) => {
+      return mathPlaceholders[Number(idx)] || '';
     });
 
     return processed;

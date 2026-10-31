@@ -418,8 +418,8 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
             )}
           </div>
 
-          {/* Navigation Items: trải dài từ trên xuống, không sử dụng thanh trượt */}
-          <div className="relative z-10 flex-1 flex flex-col justify-evenly px-6 py-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-y-auto">
+          {/* Navigation Items: các link có chiều cao cố định 48px, khoảng cách gọn gàng */}
+          <div className="relative z-10 flex-1 flex flex-col justify-start gap-1.5 px-6 pt-6 pb-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overflow-y-auto">
             {[
               { label: 'Trang chủ', href: '/', icon: Home },
               { label: 'Bài giảng', href: '/lectures', icon: BookOpen },
@@ -440,10 +440,10 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                   key={item.label}
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center gap-4 py-3 px-2 rounded-2xl min-h-[48px] text-[16px] transition-all ${
+                  className={`flex items-center gap-4 h-12 px-3.5 rounded-2xl text-[16px] transition-all ${
                     isActive
-                      ? 'text-primary font-bold'
-                      : 'text-slate-700 font-medium hover:text-primary hover:bg-primary/5'
+                      ? 'text-primary font-bold bg-primary/10'
+                      : 'text-slate-700 font-medium hover:text-primary hover:bg-slate-50'
                   }`}
                 >
                   <Icon
