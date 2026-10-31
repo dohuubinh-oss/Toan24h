@@ -63,7 +63,9 @@ export default function HomeFeatures() {
                   </div>
                   <div className="text-slate-600 text-xs pt-1 flex items-start gap-1">
                     <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                    <span>Hệ thức Viète: $x_1+x_2=5$ và $x_1 \cdot x_2=6$.</span>
+                    <div className="flex-1">
+                      <MathText content="Hệ thức Viète: $x_1 + x_2 = 5$ và $x_1 \cdot x_2 = 6$." />
+                    </div>
                   </div>
                 </div>
               </div>

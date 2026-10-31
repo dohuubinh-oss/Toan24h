@@ -10,4 +10,10 @@ describe('HomeFeatures', () => {
     expect(screen.getByText('Học tập Game hóa')).toBeInTheDocument()
     expect(screen.getByText('Bám sát lộ trình Bộ GD')).toBeInTheDocument()
   })
+
+  it('renders math showcases with Viète formula', () => {
+    render(<HomeFeatures />)
+    expect(screen.getByText(/Hệ thức Viète/i)).toBeInTheDocument()
+    expect(screen.getByText(/Phương trình bậc 2/i)).toBeInTheDocument()
+  })
 })
