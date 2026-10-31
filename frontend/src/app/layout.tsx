@@ -88,25 +88,6 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning className={`${lexend.variable}`}>
       <head>
-        <Script id="performance-measure-patch" strategy="beforeInteractive">
-          {`
-            if (typeof window !== 'undefined' && window.performance && window.performance.measure) {
-              (function() {
-                var origMeasure = window.performance.measure.bind(window.performance);
-                window.performance.measure = function() {
-                  try {
-                    return origMeasure.apply(this, arguments);
-                  } catch (e) {
-                    if (e && e.message && e.message.indexOf('negative time stamp') !== -1) {
-                      return undefined;
-                    }
-                    throw e;
-                  }
-                };
-              })();
-            }
-          `}
-        </Script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
@@ -146,6 +127,25 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-page-bg text-slate-900 min-h-screen flex flex-col font-sans">
+        <Script id="performance-measure-patch" strategy="beforeInteractive">
+          {`
+            if (typeof window !== 'undefined' && window.performance && window.performance.measure) {
+              (function() {
+                var origMeasure = window.performance.measure.bind(window.performance);
+                window.performance.measure = function() {
+                  try {
+                    return origMeasure.apply(this, arguments);
+                  } catch (e) {
+                    if (e && e.message && e.message.indexOf('negative time stamp') !== -1) {
+                      return undefined;
+                    }
+                    throw e;
+                  }
+                };
+              })();
+            }
+          `}
+        </Script>
         <ToastProvider>
           <ImageViewerProvider>
             <GradeSelectionModal />
