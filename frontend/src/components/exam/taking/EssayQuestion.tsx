@@ -827,9 +827,9 @@ export default function EssayQuestion({
   const effectiveSolutionGuide = activeSubQ?.solution_guide || solution_guide
 
   return (
-    <main className="flex-1 flex overflow-hidden relative transition-all duration-500">
+    <main className="flex-1 flex flex-col lg:flex-row overflow-x-hidden relative transition-all duration-500 pb-28 sm:pb-32 lg:pb-0">
       {/* Left Pane: Problem & Geometry */}
-      <div className="w-1/2 overflow-y-auto p-8 border-r border-slate-200 bg-white">
+      <div className="w-full lg:w-1/2 overflow-y-auto p-4 sm:p-8 border-b lg:border-b-0 lg:border-r border-slate-200 bg-white">
         <div className="max-w-xl ml-auto">
           <div className="flex items-center justify-between mb-6">
             <span className="px-3 py-1 bg-primary/10 text-primary text-sm font-bold rounded-lg uppercase">
@@ -912,7 +912,7 @@ export default function EssayQuestion({
       </div>
 
       {/* Right Pane: Solution Editor */}
-      <div className="w-1/2 overflow-y-auto bg-slate-50">
+      <div className="w-full lg:w-1/2 overflow-y-auto bg-slate-50 p-4 sm:p-6 pb-20 lg:pb-6">
         {renderEditors()}
       </div>
 

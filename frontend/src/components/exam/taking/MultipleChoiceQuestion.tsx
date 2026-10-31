@@ -133,7 +133,7 @@ export default function MultipleChoiceQuestion({
   }
 
   return (
-    <main className="flex-grow flex flex-row items-start justify-center p-3 sm:p-6 md:p-12 pb-24 sm:pb-32 relative w-full">
+    <main className="flex-grow flex flex-row items-start justify-center p-3 sm:p-6 md:p-12 pb-32 sm:pb-36 relative w-full">
       <div className="w-full max-w-4xl space-y-6 sm:space-y-8 transition-all duration-300">
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-8 md:p-10 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary"></div>
@@ -283,7 +283,7 @@ export default function MultipleChoiceQuestion({
                 key={option.id}
                 disabled={readonly}
                 onClick={() => handleOptionClick(option.id)}
-                className={`flex items-center p-5 rounded-xl border-2 transition-all text-left relative ${borderClass} ${bgClass} ${readonly ? 'cursor-default' : 'cursor-pointer active:scale-[0.99]'}`}
+                className={`flex items-center p-3.5 sm:p-5 rounded-xl border-2 transition-all text-left relative min-h-[52px] ${borderClass} ${bgClass} ${readonly ? 'cursor-default' : 'cursor-pointer active:scale-[0.99]'}`}
               >
                 <div className="flex items-center gap-4 flex-1">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${

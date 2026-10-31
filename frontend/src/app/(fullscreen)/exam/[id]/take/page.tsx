@@ -523,7 +523,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           )}
         </div>
       </div>
-      <div className="flex-1 flex overflow-hidden relative pb-20 sm:pb-24 w-full">
+      <div className="flex-1 flex flex-col relative w-full overflow-x-hidden min-h-0">
         {/* Left Navigation Overlay */}
         {currentQuestionIndex > 0 && (
           <button 

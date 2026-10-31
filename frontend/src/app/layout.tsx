@@ -124,29 +124,6 @@ export default function RootLayout({
             }),
           }}
         />
-        {/* Performance measure patch to prevent Turbopack/DevTools negative timestamp warnings */}
-        <script
-          id="performance-measure-patch"
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (typeof window !== 'undefined' && window.performance && window.performance.measure) {
-                (function() {
-                  var origMeasure = window.performance.measure.bind(window.performance);
-                  window.performance.measure = function() {
-                    try {
-                      return origMeasure.apply(this, arguments);
-                    } catch (e) {
-                      if (e && e.message && e.message.indexOf('negative time stamp') !== -1) {
-                        return undefined;
-                      }
-                      throw e;
-                    }
-                  };
-                })();
-              }
-            `,
-          }}
-        />
       </head>
       <body className="bg-page-bg text-slate-900 min-h-screen flex flex-col font-sans">
         <ToastProvider>

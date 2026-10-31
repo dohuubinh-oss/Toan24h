@@ -32,15 +32,15 @@ export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubm
   }, [isOpen])
 
   return (
-    <div ref={sidebarRef} className={`absolute top-0 bottom-0 right-0 flex items-center z-[10000] transition-transform duration-400 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+    <div ref={sidebarRef} className={`absolute top-0 bottom-0 right-0 z-[10000] transition-transform duration-400 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
       <button
         data-testid="qmap-toggle-btn"
         onClick={() => setIsOpen(!isOpen)}
-        className="absolute left-[-40px] w-10 h-24 bg-white border border-r-0 border-slate-200 rounded-l-xl shadow-lg flex items-center justify-center hover:w-12 active:scale-95 transition-all cursor-pointer"
+        className="absolute left-[-36px] sm:left-[-40px] top-20 sm:top-1/2 sm:-translate-y-1/2 w-9 sm:w-10 h-16 sm:h-24 bg-white border border-r-0 border-slate-200 rounded-l-xl shadow-lg flex items-center justify-center hover:w-12 active:scale-95 transition-all cursor-pointer"
         aria-label="Toggle Question Map"
       >
         <div className="text-slate-500 select-none">
-          {isOpen ? <X className="w-6 h-6" /> : <LayoutGrid className="w-6 h-6" />}
+          {isOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <LayoutGrid className="w-5 h-5 sm:w-6 sm:h-6" />}
         </div>
       </button>
 

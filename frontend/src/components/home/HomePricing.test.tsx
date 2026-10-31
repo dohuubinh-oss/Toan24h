@@ -26,4 +26,12 @@ describe('HomePricing Component', () => {
       expect(link).toHaveAttribute('href', '/upgrade')
     })
   })
+
+  it('renders parent trust banner with Telegram reporting and VietQR activation', () => {
+    render(<HomePricing />)
+    expect(screen.getByText(/An tâm đồng hành cùng phụ huynh & học sinh/i)).toBeInTheDocument()
+    expect(screen.getByText(/Kích hoạt VietQR tức thì trong 3s/i)).toBeInTheDocument()
+    expect(screen.getByText(/Báo cáo Telegram cho phụ huynh/i)).toBeInTheDocument()
+    expect(screen.getByText(/Cam kết bảo đảm chất lượng/i)).toBeInTheDocument()
+  })
 })
