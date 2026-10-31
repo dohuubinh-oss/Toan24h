@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, Flame, Bell, TrendingUp, Clock, FileText, Users } from 'lucide-react'
+import { ArrowRight, Flame, Bell, TrendingUp, Clock, FileText, Users, Play, X } from 'lucide-react'
 
 interface GradeExamInfo {
   grade: number
@@ -17,6 +17,16 @@ interface GradeExamInfo {
 }
 
 const GRADE_EXAMS: Record<number, GradeExamInfo> = {
+  5: {
+    grade: 5,
+    badge: 'Toán 5 • Luyện thi vào 6 CLC',
+    title: 'Đề thi khảo sát năng lực Toán vào Lớp 6 Chất lượng cao',
+    duration: '45 phút',
+    questionCount: '25 câu',
+    submissions: '850+ lượt thi',
+    avgScore: '8.4 / 10',
+    examUrl: '/lectures/lop/5',
+  },
   6: {
     grade: 6,
     badge: 'Toán 6 • Khảo sát định kỳ',
@@ -62,6 +72,7 @@ const GRADE_EXAMS: Record<number, GradeExamInfo> = {
 export default function HomeHero() {
   const [selectedGrade, setSelectedGrade] = useState<number>(9)
   const [studentName, setStudentName] = useState<string>('Minh')
+  const [isVideoOpen, setIsVideoOpen] = useState<boolean>(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -76,7 +87,7 @@ export default function HomeHero() {
           }
           if (user.grade) {
             const g = parseInt(user.grade, 10)
-            if (g >= 6 && g <= 9) {
+            if (g >= 5 && g <= 9) {
               setSelectedGrade(g)
             }
           }
@@ -86,6 +97,22 @@ export default function HomeHero() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsVideoOpen(false)
+    }
+    if (isVideoOpen) {
+      window.addEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [isVideoOpen])
 
   const currentExam = GRADE_EXAMS[selectedGrade] || GRADE_EXAMS[9]
 
@@ -97,21 +124,23 @@ export default function HomeHero() {
             Luyện Toán thông minh, bứt phá <span className="text-primary italic">điểm 9+</span>
           </h1>
           <p className="text-xl text-slate-600 mb-10 leading-relaxed max-w-lg">
-            Chương trình chuẩn Bộ Giáo dục từ lớp 6-9. Cá nhân hóa lộ trình học tập, giúp bạn tiến bộ vượt bậc chỉ sau 30 ngày.
+            Chương trình chuẩn Bộ Giáo dục từ lớp 5 đến lớp 9. Cá nhân hóa lộ trình học tập, giúp bạn tiến bộ vượt bậc chỉ sau 30 ngày.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 mb-12">
             <Link
               href="/register"
               className="px-8 py-4 bg-primary text-white rounded-xl font-bold text-lg shadow-xl shadow-primary/30 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 min-h-[48px] cursor-pointer"
             >
-              Bắt đầu miễn phí <ArrowRight className="w-5 h-5" />
+              Bắt đầu <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link
-              href="/exams"
-              className="px-8 py-4 bg-white rounded-xl font-bold text-lg border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 text-slate-800 min-h-[48px] cursor-pointer shadow-xs"
+            <button
+              type="button"
+              onClick={() => setIsVideoOpen(true)}
+              className="px-8 py-4 bg-white rounded-xl font-bold text-lg border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 text-slate-800 min-h-[48px] cursor-pointer shadow-xs active:scale-98"
             >
-              Xem demo
-            </Link>
+              <Play className="w-4 h-4 fill-slate-700 text-slate-700" />
+              <span>Xem demo</span>
+            </button>
           </div>
 
           <div className="hidden md:flex items-center gap-4 py-6 border-t border-slate-200">
@@ -189,7 +218,7 @@ export default function HomeHero() {
 
               {/* Grade selector tabs */}
               <div className="flex items-center gap-1.5 p-1 bg-white/10 rounded-xl mb-4">
-                {[6, 7, 8, 9].map((gradeNum) => (
+                {[5, 6, 7, 8, 9].map((gradeNum) => (
                   <button
                     key={gradeNum}
                     type="button"
@@ -265,6 +294,48 @@ export default function HomeHero() {
           </div>
         </div>
       </div>
+
+      {/* YouTube Demo Video Modal */}
+      {isVideoOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setIsVideoOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Video giới thiệu nền tảng toan6789.vn"
+        >
+          <div
+            className="relative w-full max-w-4xl bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-white/15 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-slate-900 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                <span className="text-xs sm:text-sm font-semibold text-white truncate">
+                  Video giới thiệu toan6789.vn - Nền tảng học Toán Lớp 5 - 9
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsVideoOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                aria-label="Đóng video"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="relative aspect-video w-full bg-black">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/2wCZ5F6oNz0?autoplay=1&rel=0"
+                title="Video giới thiệu toan6789.vn"
+                className="absolute inset-0 w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
