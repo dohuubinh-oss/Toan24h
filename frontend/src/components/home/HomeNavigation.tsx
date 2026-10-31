@@ -431,7 +431,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
             {[
               { label: 'Trang chủ', href: '/', icon: Home },
               { label: 'Bài giảng', href: '/lectures', icon: BookOpen },
-              { label: 'Đề thi', href: '/exam', icon: FileText },
+              { label: 'Đề thi', href: '/exams', icon: FileText },
               { label: 'Góc học tập & Blog', href: '/blog', icon: Newspaper },
               ...(isLoggedState
                 ? [
