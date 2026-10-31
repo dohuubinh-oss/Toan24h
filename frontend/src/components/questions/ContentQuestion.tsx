@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, ZoomIn } from 'lucide-react';
 import DOMPurify from 'isomorphic-dompurify';
 import MathText from '../ui/MathText';
 import SolutionGuideSection from './SolutionGuideSection';
@@ -99,11 +99,11 @@ export default function ContentQuestion({
     }
 
     return (
-      <div className="my-3 flex justify-center" data-testid="question-illustration">
-        <div className="max-w-[540px] w-full flex items-center justify-center overflow-hidden py-1">
+      <div className="my-3 flex flex-col items-center justify-center" data-testid="question-illustration">
+        <div className="max-w-[540px] w-full flex items-center justify-center overflow-hidden py-1 relative">
           {isSvg ? (
             <div 
-              className="w-full flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-[380px] [&>svg]:h-auto [&>svg]:w-auto [&>svg]:mx-auto [&>svg>rect:first-child]:fill-transparent [&>svg>rect:first-child]:stroke-none"
+              className="w-full flex items-center justify-center [&>svg]:max-w-full [&>svg]:max-h-[380px] [&>svg]:h-auto [&>svg]:w-auto [&>svg]:mx-auto [&>svg>rect:first-child]:fill-transparent [&>svg>rect:first-child]:stroke-none cursor-zoom-in"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(finalSvg) }} 
             />
           ) : (
@@ -115,9 +115,13 @@ export default function ContentQuestion({
                 const container = e.currentTarget.closest('[data-testid="question-illustration"]');
                 if (container) (container as HTMLElement).style.display = 'none';
               }}
-              className="max-w-full max-h-[380px] h-auto w-auto object-contain mx-auto"
+              className="max-w-full max-h-[380px] h-auto w-auto object-contain mx-auto cursor-zoom-in rounded-lg hover:opacity-95 transition-opacity"
             />
           )}
+        </div>
+        <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-400 font-medium md:hidden pointer-events-none select-none">
+          <ZoomIn size={12} className="text-primary shrink-0" />
+          <span>Chạm vào ảnh để xem toàn màn hình và phóng to</span>
         </div>
       </div>
     );

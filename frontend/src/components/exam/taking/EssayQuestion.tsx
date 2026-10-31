@@ -311,7 +311,8 @@ function EditorItem({
                           : `/${aiFeedback.diagramResult.studentDiagramUrl || aiFeedback.diagramResult.student_diagram_url || aiFeedback.studentDiagramUrl}`
                       }
                       alt="Ảnh hình vẽ bài làm"
-                      className="max-h-48 rounded-lg object-contain"
+                      title="Chạm để xem toàn màn hình và phóng to"
+                      className="max-h-48 rounded-lg object-contain cursor-zoom-in hover:opacity-95 transition-opacity"
                     />
                   </div>
                 </div>

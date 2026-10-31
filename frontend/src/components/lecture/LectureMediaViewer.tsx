@@ -1,6 +1,7 @@
 'use client'
 import React, { useState } from 'react'
-import { X, Maximize2 } from 'lucide-react'
+import { Maximize2 } from 'lucide-react'
+import ImageViewerModal from '@/components/ui/ImageViewerModal'
 
 interface LectureMediaViewerProps {
   mediaType: 'image' | 'youtube'
@@ -79,25 +80,13 @@ export default function LectureMediaViewer({ mediaType, url }: LectureMediaViewe
             />
           </div>
 
-          {/* Lightbox */}
-          {isLightboxOpen && (
-            <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200">
-              <button 
-                data-testid="lightbox-close"
-                onClick={() => setIsLightboxOpen(false)}
-                className="absolute top-4 right-4 md:top-8 md:right-8 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-              >
-                <X size={24} />
-              </button>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                data-testid="lightbox-image"
-                src={url} 
-                alt="Enlarged view" 
-                className="max-w-full max-h-full object-contain rounded-lg"
-              />
-            </div>
-          )}
+          {/* Fullscreen Zoomable Lightbox */}
+          <ImageViewerModal
+            isOpen={isLightboxOpen}
+            src={url}
+            alt="Hình ảnh bài giảng"
+            onClose={() => setIsLightboxOpen(false)}
+          />
         </>
       )}
     </div>

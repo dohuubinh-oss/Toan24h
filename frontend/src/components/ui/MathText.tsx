@@ -124,7 +124,7 @@ export default function MathText({ content, className = '' }: MathTextProps) {
     const cleanHtml = DOMPurify.sanitize(renderedHtml);
     return (
       <div 
-        className={`latex-font ${className}`}
+        className={`latex-font [&_img]:cursor-zoom-in [&_img]:rounded-lg [&_img:hover]:opacity-95 ${className}`}
         dangerouslySetInnerHTML={{ __html: cleanHtml }}
       />
     );

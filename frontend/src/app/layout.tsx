@@ -4,6 +4,7 @@ import { Lexend } from 'next/font/google'
 import Script from 'next/script'
 import GradeSelectionModal from '@/components/auth/GradeSelectionModal'
 import { ToastProvider } from '@/components/ui/ToastProvider'
+import { ImageViewerProvider } from '@/components/ui/ImageViewerProvider'
 
 const lexend = Lexend({ 
   subsets: ['latin', 'vietnamese'],
@@ -146,8 +147,10 @@ export default function RootLayout({
       </head>
       <body className="bg-page-bg text-slate-900 min-h-screen flex flex-col font-sans">
         <ToastProvider>
-          <GradeSelectionModal />
-          {children}
+          <ImageViewerProvider>
+            <GradeSelectionModal />
+            {children}
+          </ImageViewerProvider>
         </ToastProvider>
       </body>
     </html>
