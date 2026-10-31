@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { createPortal } from 'react-dom'
 import { usePathname } from 'next/navigation'
@@ -46,6 +46,13 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const lastNotificationIdRef = useRef<string | null>(null)
+
+  const closeMobileMenu = useCallback(() => {
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
+    setIsMobileMenuOpen(false)
+  }, [])
 
   useEffect(() => {
     setMounted(true)
@@ -329,7 +336,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
         {isMobileMenuOpen && (
           <div
             className="fixed inset-0 z-[99998] bg-black/60 transition-opacity lg:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={closeMobileMenu}
             aria-hidden="true"
           />
         )}
@@ -340,6 +347,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
             isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
           }`}
           aria-hidden={!isMobileMenuOpen}
+          inert={!isMobileMenuOpen}
         >
           {/* Concentric circular ripple motif centered on Avatar radiating down to menu body */}
           <svg
@@ -372,7 +380,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
             {/* Close button in top-right */}
             <button
               type="button"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={closeMobileMenu}
               className="absolute top-8 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer z-20"
               aria-label="Đóng menu"
             >
@@ -402,14 +410,14 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
               <div className="grid grid-cols-2 gap-2.5 mt-5">
                 <Link
                   href="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={closeMobileMenu}
                   className="py-2.5 px-3 text-center text-xs font-bold rounded-xl border border-slate-200 text-slate-700 bg-white/90 hover:bg-slate-50 shadow-xs transition-all"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   href="/register"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={closeMobileMenu}
                   className="py-2.5 px-3 text-center text-xs font-bold rounded-xl bg-primary text-white shadow-xs hover:bg-primary/90 transition-all"
                 >
                   Đăng ký
@@ -439,7 +447,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                 <Link
                   key={item.label}
                   href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={closeMobileMenu}
                   className={`flex items-center gap-4 h-12 px-3.5 rounded-2xl text-[16px] transition-all ${
                     isActive
                       ? 'text-primary font-bold bg-primary/10'
@@ -462,7 +470,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
               <button
                 type="button"
                 onClick={() => {
-                  setIsMobileMenuOpen(false)
+                  closeMobileMenu()
                   import('@/lib/authApi').then((m) => m.logout())
                 }}
                 className="flex items-center gap-4 py-2 px-2 w-full text-[16px] font-medium text-slate-700 hover:text-red-600 transition-colors cursor-pointer text-left"
@@ -473,7 +481,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
             ) : (
               <Link
                 href="/login"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={closeMobileMenu}
                 className="flex items-center gap-4 py-2 px-2 w-full text-[16px] font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
               >
                 <LogIn size={22} className="shrink-0 text-primary" />
