@@ -92,18 +92,6 @@ export default function QuestionSettingsSidebar({
                 <span className="text-red-500 font-bold">*</span>
                 <span className="text-xs text-slate-400 font-normal">(bắt buộc)</span>
               </Label>
-              {currentQuestion?.gg_drive && (currentQuestion.gg_drive.startsWith('http://') || currentQuestion.gg_drive.startsWith('https://')) && (
-                <a
-                  href={currentQuestion.gg_drive}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Mở tài liệu trên Google Drive"
-                  className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold hover:underline"
-                >
-                  <span>Mở Drive</span>
-                  <ExternalLink size={12} />
-                </a>
-              )}
             </div>
             <div className="flex items-center gap-2">
               <Input

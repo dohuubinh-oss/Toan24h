@@ -6,7 +6,6 @@ import * as api from '@/lib/api'
 vi.mock('@/lib/api', () => ({
   getPendingAppeals: vi.fn(),
   getReportedQuestions: vi.fn(),
-  getNeedsReviewSubmissions: vi.fn(),
   resolveAppeal: vi.fn(),
   resolveReportedQuestion: vi.fn(),
 }))
@@ -51,21 +50,10 @@ describe('AppealsPage', () => {
     },
   ]
 
-  const mockReviews = [
-    {
-      submissionId: 'sub-2',
-      examName: 'Thi thử vào 10 năm 2026',
-      studentName: 'Trần Văn Nam',
-      studentEmail: 'nam@example.com',
-      submittedAt: '2026-05-15T10:00:00Z',
-    },
-  ]
-
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(api.getPendingAppeals).mockResolvedValue(mockAppeals)
     vi.mocked(api.getReportedQuestions).mockResolvedValue(mockReports)
-    vi.mocked(api.getNeedsReviewSubmissions).mockResolvedValue(mockReviews)
   })
 
   it('renders page header, breadcrumbs, and tabs with counts', async () => {
@@ -76,7 +64,7 @@ describe('AppealsPage', () => {
 
     expect(screen.getByRole('button', { name: /^Kháng cáo/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Báo cáo lỗi câu hỏi/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Cần duyệt chấm/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Cần duyệt chấm/i })).not.toBeInTheDocument()
 
     // Default tab is appeals
     expect(await screen.findByText('Đề kiểm tra 1 tiết Đại số')).toBeInTheDocument()
@@ -94,13 +82,12 @@ describe('AppealsPage', () => {
     expect(await screen.findByText(/Đề bài thiếu độ dài cạnh BC/i)).toBeInTheDocument()
     expect(screen.getByText(/Cho tam giác ABC/i)).toBeInTheDocument()
 
-    // Switch to Reviews tab
-    const reviewsTab = screen.getByRole('button', { name: /Cần duyệt chấm/i })
-    fireEvent.click(reviewsTab)
+    // Switch back to Appeals tab
+    const appealsTab = screen.getByRole('button', { name: /^Kháng cáo/i })
+    fireEvent.click(appealsTab)
 
-    expect(await screen.findByText('Trần Văn Nam')).toBeInTheDocument()
-    expect(screen.getByText('Thi thử vào 10 năm 2026')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Chấm ngay/i })).toBeInTheDocument()
+    expect(await screen.findByText('Đề kiểm tra 1 tiết Đại số')).toBeInTheDocument()
+    expect(screen.getByText(/Em làm đúng nhưng AI trừ 0.5 điểm/i)).toBeInTheDocument()
   })
 
   it('opens and resolves appeal modal', async () => {
@@ -170,7 +157,6 @@ describe('AppealsPage', () => {
   it('renders friendly empty state when there are no items', async () => {
     vi.mocked(api.getPendingAppeals).mockResolvedValue([])
     vi.mocked(api.getReportedQuestions).mockResolvedValue([])
-    vi.mocked(api.getNeedsReviewSubmissions).mockResolvedValue([])
 
     render(<AppealsPage />)
 

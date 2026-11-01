@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { 
   Loader2, MessageSquareWarning, Check, X, AlertTriangle, Edit, 
-  ClipboardList, ChevronRight, RefreshCw, AlertCircle, CheckCircle2,
+  ChevronRight, RefreshCw, AlertCircle, CheckCircle2,
   ChevronDown, ChevronUp, Sparkles, BookOpen
 } from 'lucide-react'
 import MathText from '@/components/ui/MathText'
@@ -12,15 +12,14 @@ import { toast } from '@/components/ui/ToastProvider'
 import { Button } from '@/components/ui/Button'
 import { 
   getPendingAppeals, resolveAppeal, getReportedQuestions, 
-  resolveReportedQuestion, getNeedsReviewSubmissions 
+  resolveReportedQuestion 
 } from '@/lib/api'
 
 export default function AppealsPage() {
-  const [activeTab, setActiveTab] = useState<'appeals' | 'reports' | 'reviews'>('appeals')
+  const [activeTab, setActiveTab] = useState<'appeals' | 'reports'>('appeals')
   
   const [appeals, setAppeals] = useState<any[]>([])
   const [reportedQuestions, setReportedQuestions] = useState<any[]>([])
-  const [needsReviewSubmissions, setNeedsReviewSubmissions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -57,14 +56,12 @@ export default function AppealsPage() {
     setError(null)
 
     try {
-      const [appealsData, reportsData, reviewsData] = await Promise.all([
+      const [appealsData, reportsData] = await Promise.all([
         getPendingAppeals(),
-        getReportedQuestions(),
-        getNeedsReviewSubmissions()
+        getReportedQuestions()
       ])
       setAppeals(appealsData || [])
       setReportedQuestions(reportsData || [])
-      setNeedsReviewSubmissions(reviewsData || [])
       if (isManual) {
         toast.success('Đã cập nhật danh sách mới nhất!')
       }
@@ -157,7 +154,7 @@ export default function AppealsPage() {
             Quản lý Báo lỗi & Kháng cáo
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Duyệt khiếu nại điểm thi AI, xử lý phản ánh lỗi đề bài và thẩm định bài thi tự luận.
+            Duyệt khiếu nại điểm thi AI và xử lý phản ánh lỗi đề bài trong hệ thống.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -230,87 +227,11 @@ export default function AppealsPage() {
             {reportedQuestions.length}
           </span>
         </button>
-
-        <button
-          onClick={() => setActiveTab('reviews')}
-          className={`flex items-center gap-2 py-3 px-5 font-semibold text-sm border-b-2 transition-all whitespace-nowrap min-h-[44px] ${
-            activeTab === 'reviews'
-              ? 'border-indigo-600 text-indigo-600 font-bold'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <ClipboardList className="w-4 h-4" />
-          <span>Cần duyệt chấm</span>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-            activeTab === 'reviews'
-              ? 'bg-indigo-100 text-indigo-700'
-              : 'bg-slate-100 text-slate-600'
-          }`}>
-            {needsReviewSubmissions.length}
-          </span>
-        </button>
       </div>
 
       {/* Main Content Area */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        {activeTab === 'reviews' ? (
-          needsReviewSubmissions.length === 0 ? (
-            <div className="p-12 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-800 mb-1">Không có bài thi cần duyệt chấm</h3>
-              <p className="text-sm text-slate-500 max-w-sm">
-                Tất cả các bài thi tự luận đã được hoàn tất chấm điểm và phản hồi tới học sinh.
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left min-w-[800px]">
-                <thead className="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                  <tr>
-                    <th className="px-6 py-4">Bài thực hành</th>
-                    <th className="px-6 py-4">Học sinh</th>
-                    <th className="px-6 py-4">Thời gian nộp</th>
-                    <th className="px-6 py-4">Trạng thái</th>
-                    <th className="px-6 py-4 text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {needsReviewSubmissions.map((sub) => (
-                    <tr key={sub.submissionId} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                        {sub.examName}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="font-semibold text-slate-800">{sub.studentName}</div>
-                        <div className="text-xs text-slate-400">{sub.studentEmail}</div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-500">
-                        {new Date(sub.submittedAt).toLocaleString('vi-VN')}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                          Cần duyệt chấm
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <Link
-                          href={`/exam/${sub.submissionId}/result?mode=grade`}
-                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-colors inline-flex items-center gap-1.5 min-h-[38px]"
-                          aria-label={`Chấm ngay bài thi của ${sub.studentName}`}
-                        >
-                          <Edit className="w-4 h-4" />
-                          Chấm ngay
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )
-        ) : activeTab === 'appeals' ? (
+        {activeTab === 'appeals' ? (
           appeals.length === 0 ? (
             <div className="p-12 flex flex-col items-center justify-center text-center">
               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">

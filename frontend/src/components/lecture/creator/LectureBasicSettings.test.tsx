@@ -42,13 +42,13 @@ describe('LectureBasicSettings', () => {
 
     const driveInput = screen.getByPlaceholderText('VD: https://drive.google.com/...')
     expect(driveInput).toBeDefined()
-    expect(screen.queryByText('Mở Drive')).toBeNull()
+    expect(screen.queryByTitle('Mở tài liệu trên Google Drive')).toBeNull()
 
     fireEvent.change(driveInput, { target: { value: 'https://drive.google.com/file/d/test1234' } })
 
-    expect(screen.getByText('Mở Drive')).toBeDefined()
-    const openDriveLink = screen.getByText('Mở Drive').closest('a')
-    expect(openDriveLink?.getAttribute('href')).toBe('https://drive.google.com/file/d/test1234')
+    const openDriveLink = screen.getByTitle('Mở tài liệu trên Google Drive')
+    expect(openDriveLink).toBeDefined()
+    expect(openDriveLink.getAttribute('href')).toBe('https://drive.google.com/file/d/test1234')
   })
 })
 

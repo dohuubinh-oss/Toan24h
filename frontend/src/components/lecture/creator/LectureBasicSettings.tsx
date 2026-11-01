@@ -64,18 +64,6 @@ export default function LectureBasicSettings() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between ml-1 mb-1">
               <Label className="text-xs">Link Drive</Label>
-              {ggLink && (ggLink.startsWith('http://') || ggLink.startsWith('https://')) && (
-                <a
-                  href={ggLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Mở tài liệu trên Google Drive"
-                  className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold hover:underline"
-                >
-                  <span>Mở Drive</span>
-                  <ExternalLink size={12} />
-                </a>
-              )}
             </div>
             <div className="flex items-center gap-2">
               <Input
