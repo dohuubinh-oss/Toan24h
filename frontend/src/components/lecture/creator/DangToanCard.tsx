@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Microscope, Plus, Trash2, ChevronDown, ChevronRight, GripVertical, CheckCircle2, Sigma } from 'lucide-react'
+import { Microscope, Plus, Trash2, ChevronDown, ChevronRight, GripVertical, CheckCircle2 } from 'lucide-react'
 import { Button } from '../../ui/Button'
 import MathText from '@/components/ui/MathText'
 import SharedEditorCard from '@/components/questions/creator/editor/SharedEditorCard'
@@ -139,10 +139,7 @@ export default function DangToanCard({
 
       <div className="p-6 flex-grow flex flex-col gap-6">
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-bold text-slate-700">Tên Dạng Toán</label>
-            <span className="text-xs text-slate-400">Gõ công thức <code className="text-primary font-mono bg-primary/5 px-1 py-0.5 rounded">$...$</code> hoặc bấm <Sigma className="w-3.5 h-3.5 inline text-primary mx-0.5" /> để chèn/sửa công thức trực tiếp</span>
-          </div>
+          <label className="block text-sm font-bold text-slate-700 mb-2">Tên Dạng Toán</label>
           <div className="w-full min-h-[44px] px-3.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 focus-within:bg-white focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition-colors flex items-center">
             <RichTextEditor
               inline={true}

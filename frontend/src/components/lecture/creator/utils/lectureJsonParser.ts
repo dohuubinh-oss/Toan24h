@@ -44,9 +44,12 @@ export interface RawMathTypeItem {
   methods?: RawMethodItem[];
 }
 
+import { normalizeVietnameseMath } from '@/lib/mathTextCleaner'
+
 export function cleanCitations(text?: string | null): string {
   if (!text) return ''
-  return text.replace(/\[cite:\s*[^\]]+\]/gi, '').trim()
+  const cleaned = text.replace(/\[cite:\s*[^\]]+\]/gi, '').trim()
+  return normalizeVietnameseMath(cleaned)
 }
 
 export function formatTextToHtml(text?: string | null): string {

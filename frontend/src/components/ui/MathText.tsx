@@ -4,6 +4,7 @@ import katex from 'katex';
 import DOMPurify from 'isomorphic-dompurify';
 import { formatSolutionGuide } from '../questions/creator/utils/questionTextFormatter';
 import { markdownToHtml } from '@/lib/markdownUtils';
+import { normalizeVietnameseMath } from '@/lib/mathTextCleaner';
 
 interface MathTextProps {
   content: any;
@@ -85,6 +86,9 @@ export default function MathText({ content, className = '' }: MathTextProps) {
 
   // Đảm bảo rawText luôn là string
   let textContent = typeof rawText === 'string' ? rawText : '';
+
+  // Tự động làm sạch và tách chữ tiếng Việt ra khỏi dấu $ để công thức KaTeX chuẩn đẹp
+  textContent = normalizeVietnameseMath(textContent);
 
   // Tự động nhận diện cú pháp Markdown (###, **, \n\n, danh sách) nếu chưa có thẻ khối HTML
   const hasBlockHtml = /<(?:p|div|ul|ol|table|h[1-6]|blockquote|article|section)[\s>]/i.test(textContent);

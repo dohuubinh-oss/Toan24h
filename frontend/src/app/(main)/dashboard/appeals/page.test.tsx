@@ -68,7 +68,7 @@ describe('AppealsPage', () => {
     expect(await screen.findByText('Quản lý Báo lỗi & Kháng cáo')).toBeInTheDocument()
     expect(screen.getByText('Báo lỗi & Kháng cáo')).toBeInTheDocument()
 
-    expect(screen.getByRole('button', { name: /Kháng cáo/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Kháng cáo/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Báo cáo lỗi câu hỏi/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Cần duyệt chấm/i })).toBeInTheDocument()
 
