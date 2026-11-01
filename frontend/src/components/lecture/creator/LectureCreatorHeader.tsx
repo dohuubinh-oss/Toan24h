@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import { ArrowLeft, FileText, Save, Loader2, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
@@ -38,7 +38,7 @@ export default function LectureCreatorHeader() {
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 w-full">
       <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500">
+          <Link href="/dashboard/lectures" className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500" title="Quay lại danh sách bài giảng">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="flex items-center gap-3">
@@ -60,11 +60,6 @@ export default function LectureCreatorHeader() {
               <span>Xóa bài giảng</span>
             </Button>
           )}
-
-          <Button variant="secondary" className="hidden md:flex items-center gap-2" disabled={isSubmitting || isDeleting}>
-            <FileText className="w-4 h-4" />
-            Tải file PDF đính kèm
-          </Button>
           
           <Button 
             className="px-6 flex items-center gap-2 shadow-sm shadow-primary/20"

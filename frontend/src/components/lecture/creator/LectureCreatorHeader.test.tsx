@@ -29,15 +29,16 @@ describe('LectureCreatorHeader', () => {
   })
 
   it('renders create mode title and buttons without delete button', () => {
-    render(
+    const { container } = render(
       <LectureCreatorProvider>
         <LectureCreatorHeader />
       </LectureCreatorProvider>
     )
     expect(screen.getByText('Soạn bài giảng mới')).toBeDefined()
-    expect(screen.getByText('Tải file PDF đính kèm')).toBeDefined()
     expect(screen.getByText('Lưu & Xuất bản')).toBeDefined()
     expect(screen.queryByText('Xóa bài giảng')).toBeNull()
+    const backLink = container.querySelector('a[href="/dashboard/lectures"]')
+    expect(backLink).toBeDefined()
   })
 
   it('renders delete button in edit mode', () => {

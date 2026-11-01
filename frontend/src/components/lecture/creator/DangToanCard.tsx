@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react'
-import { Microscope, ImagePlus, Plus, Trash2, ChevronDown, ChevronRight, GripVertical, CheckCircle2 } from 'lucide-react'
+import React, { useState } from 'react'
+import { Microscope, Plus, Trash2, ChevronDown, ChevronRight, GripVertical, CheckCircle2 } from 'lucide-react'
 import { Button } from '../../ui/Button'
 import MathText from '@/components/ui/MathText'
 import SharedEditorCard from '@/components/questions/creator/editor/SharedEditorCard'
@@ -10,73 +10,6 @@ interface DangToanCardProps {
   index: number;
   onChange: (dt: DangToanItem) => void;
   onRemove?: () => void;
-}
-
-function ImageUploadArea({ 
-  imageUrl, 
-  onChange, 
-  label 
-}: { 
-  imageUrl?: string | null; 
-  onChange: (url: string | null) => void; 
-  label: string;
-}) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleImageClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const url = URL.createObjectURL(file)
-      onChange(url)
-    }
-  }
-
-  const handleRemoveImage = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    onChange(null)
-  }
-
-  return (
-    <div className="flex flex-col gap-2">
-      <h3 className="text-sm font-bold text-slate-700">{label}</h3>
-      <input 
-        type="file" 
-        accept="image/*" 
-        className="hidden" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-      />
-      <div 
-        onClick={handleImageClick}
-        className={`relative group border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center min-h-[150px] hover:border-primary/50 transition-colors cursor-pointer overflow-hidden ${imageUrl ? 'bg-white' : 'bg-slate-50/50'}`}
-      >
-        {imageUrl ? (
-          <>
-            <img src={imageUrl} alt="Uploaded" className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105" />
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-              <button 
-                onClick={handleRemoveImage}
-                className="px-4 py-2 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition-colors text-sm shadow-md transform scale-95 group-hover:scale-100"
-              >
-                Xóa ảnh
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="text-center">
-              <ImagePlus className="w-8 h-8 mx-auto text-slate-300 group-hover:text-primary transition-colors" />
-              <p className="mt-2 text-xs text-slate-500 font-bold uppercase tracking-widest">Tải ảnh lên</p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
 }
 
 function MethodCard({ method, index, onChange, onRemove }: { method: MethodItem, index: number, onChange: (m: MethodItem) => void, onRemove?: () => void }) {

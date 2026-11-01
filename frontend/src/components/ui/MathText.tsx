@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import 'katex/dist/katex.min.css';
-import { InlineMath, BlockMath } from 'react-katex';
 import katex from 'katex';
 import DOMPurify from 'isomorphic-dompurify';
 import { formatSolutionGuide } from '../questions/creator/utils/questionTextFormatter';
@@ -9,6 +8,34 @@ import { markdownToHtml } from '@/lib/markdownUtils';
 interface MathTextProps {
   content: any;
   className?: string;
+}
+
+export function renderKatexToString(math: string, isBlock: boolean = false): string {
+  if (!math) return '';
+  // Chặn console.warn của KaTeX về font metrics và strict mode đối với các ký tự tiếng Việt có dấu
+  // KaTeX hiển thị font fallback bình thường trên browser nhưng vẫn in cảnh báo 'No character metrics for...' và 'LaTeX-incompatible input'
+  const originalWarn = console.warn;
+  console.warn = (...args: any[]) => {
+    if (
+      typeof args[0] === 'string' &&
+      (args[0].includes('No character metrics') || args[0].includes('LaTeX-incompatible input'))
+    ) {
+      return;
+    }
+    originalWarn(...args);
+  };
+
+  try {
+    return katex.renderToString(math, {
+      throwOnError: false,
+      displayMode: isBlock,
+      strict: 'ignore',
+    });
+  } catch {
+    return math;
+  } finally {
+    console.warn = originalWarn;
+  }
 }
 
 export function decodeMathEntities(text: string): string {
@@ -98,7 +125,7 @@ export default function MathText({ content, className = '' }: MathTextProps) {
       const isBlock = !!(b1 || b2);
       const math = decodeMathEntities(rawMath);
       try {
-        const rendered = katex.renderToString(math, { throwOnError: false, displayMode: isBlock, strict: false });
+        const rendered = renderKatexToString(math, isBlock);
         const idx = mathPlaceholders.length;
         mathPlaceholders.push(rendered);
         return `%%%KATEX_MATH_${idx}%%%`;
@@ -116,7 +143,7 @@ export default function MathText({ content, className = '' }: MathTextProps) {
       }
       try {
         const decoded = decodeMathEntities(innerText.trim());
-        const rendered = katex.renderToString(decoded, { throwOnError: false, displayMode: false, strict: false });
+        const rendered = renderKatexToString(decoded, false);
         if (rendered.includes('katex-error')) {
           return match;
         }
@@ -161,11 +188,13 @@ export default function MathText({ content, className = '' }: MathTextProps) {
       {parts.map((part, index) => {
         if ((part.startsWith('$$') && part.endsWith('$$')) || (part.startsWith('\\[') && part.endsWith('\\]'))) {
           const math = decodeMathEntities(part.slice(2, -2));
-          return <BlockMath math={math} key={index} />;
+          const html = renderKatexToString(math, true);
+          return <div key={index} className="my-2" dangerouslySetInnerHTML={{ __html: html }} />;
         }
         if ((part.startsWith('$') && part.endsWith('$')) || (part.startsWith('\\(') && part.endsWith('\\)'))) {
           const math = decodeMathEntities(part.startsWith('$') ? part.slice(1, -1) : part.slice(2, -2));
-          return <InlineMath math={math} key={index} />;
+          const html = renderKatexToString(math, false);
+          return <span key={index} dangerouslySetInnerHTML={{ __html: html }} />;
         }
         return <span key={index}>{decodeMathEntities(part)}</span>;
       })}

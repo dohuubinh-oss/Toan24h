@@ -1,7 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import MathText from './MathText';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 describe('MathText', () => {
   it('renders plain text correctly', () => {
@@ -117,5 +117,20 @@ describe('MathText', () => {
     expect(container.querySelector('ul')).toBeInTheDocument();
     expect(container.querySelector('strong')).toBeInTheDocument();
     expect(container.querySelector('.katex')).toBeInTheDocument();
+  });
+
+  it('renders Vietnamese accented characters in math without emitting console warnings', () => {
+    const warnSpy = vi.spyOn(console, 'warn');
+    const { container } = render(
+      <MathText content="Biểu thức: $\text{hệ số ộ ậ ợ ự ủ ỏ ổ ả} = 5$" />
+    );
+    expect(container.querySelector('.katex')).toBeInTheDocument();
+    
+    // Check that KaTeX metrics / strict warnings were suppressed
+    const metricsWarnCalls = warnSpy.mock.calls.filter(args => 
+      typeof args[0] === 'string' && (args[0].includes('No character metrics') || args[0].includes('LaTeX-incompatible input'))
+    );
+    expect(metricsWarnCalls.length).toBe(0);
+    warnSpy.mockRestore();
   });
 });
