@@ -89,4 +89,19 @@ describe('LectureContentEditor', () => {
     fireEvent.click(aiBtn)
     expect(screen.getByText(/Bóc tách Dạng toán & Bài tập mẫu bằng AI/i)).toBeInTheDocument()
   })
+
+  it('renders math formula preview when Tên Dạng Toán contains LaTeX', () => {
+    const { container } = render(
+      <LectureCreatorProvider>
+        <LectureContentEditor />
+      </LectureCreatorProvider>
+    )
+
+    const input = screen.getByPlaceholderText(/VD: Dạng 1: Rút gọn biểu thức/i)
+    fireEvent.change(input, { target: { value: 'Dạng 1: Tìm $x$ để $A = \\sqrt{x} > 0$' } })
+
+    const katexElements = container.querySelectorAll('.katex')
+    expect(katexElements.length).toBeGreaterThan(0)
+    expect(screen.getByText('Hiển thị:')).toBeInTheDocument()
+  })
 })

@@ -69,4 +69,25 @@ describe('LectureExamples', () => {
     expect(screen.getByText('Phương pháp phân tích')).toBeInTheDocument()
     expect(screen.getByText('Đa thức là tổng của đơn thức')).toBeInTheDocument()
   })
+
+  it('renders math formulas inside mathType using KaTeX', () => {
+    const mathExamples = [
+      {
+        id: '1',
+        mathType: 'Dạng 1. Biểu thức $P = \\frac{1}{x} + \\sqrt{x}$',
+        methods: [
+          {
+            id: 'm1',
+            methodName: 'Phương pháp quy đồng',
+            solution: '<p>Quy đồng mẫu số</p>',
+            exercise: { content: '<p>Tìm ĐKXĐ</p>' }
+          }
+        ]
+      }
+    ]
+    const { container } = render(<LectureExamples examples={mathExamples as any} />)
+    const katexElement = container.querySelector('.katex')
+    expect(katexElement).toBeInTheDocument()
+    expect(screen.getByText(/Dạng 1\. Biểu thức/)).toBeInTheDocument()
+  })
 })

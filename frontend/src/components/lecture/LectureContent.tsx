@@ -80,8 +80,11 @@ export function LectureExamples({ examples = [] }: LectureExamplesProps) {
                 <div key={dt.id} className="space-y-8">
                   <div className="relative overflow-hidden bg-primary/10 px-6 py-3 rounded-xl flex w-full items-center gap-2">
                     <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-primary"></div>
-                    <span className="font-bold text-primary text-base">Dạng {i + 1}:</span>
-                    <span className="font-bold text-slate-800 text-base">{dt.mathType || (dt as any).dangToanName || `Dạng ${i + 1}`}</span>
+                    <span className="font-bold text-primary text-base shrink-0">Dạng {i + 1}:</span>
+                    <MathText 
+                      content={dt.mathType || (dt as any).dangToanName || `Dạng ${i + 1}`}
+                      className="font-bold text-slate-800 text-base"
+                    />
                   </div>
 
                   {Array.isArray(dt.methods) && dt.methods.map((method, j) => (

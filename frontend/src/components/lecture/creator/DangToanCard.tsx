@@ -109,10 +109,18 @@ export default function DangToanCard({
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-      <div className="p-4 bg-white flex flex-wrap items-center justify-between">
-        <div className="flex items-center gap-2 px-2">
-          <Microscope className="text-primary w-5 h-5" />
-          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">Dạng Toán {index + 1}</h2>
+      <div className="p-4 bg-white flex flex-wrap items-center justify-between border-b border-slate-100">
+        <div className="flex items-center gap-2 px-2 flex-wrap">
+          <Microscope className="text-primary w-5 h-5 shrink-0" />
+          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700 shrink-0">Dạng Toán {index + 1}</h2>
+          {dangToan.mathType?.trim() && (
+            <>
+              <span className="text-slate-300">/</span>
+              <div className="text-sm font-semibold text-slate-600">
+                <MathText content={dangToan.mathType} />
+              </div>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {onRemove && (
@@ -130,14 +138,23 @@ export default function DangToanCard({
 
       <div className="p-6 flex-grow flex flex-col gap-6">
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2">Tên Dạng Toán</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-bold text-slate-700">Tên Dạng Toán</label>
+            <span className="text-xs text-slate-400">Hỗ trợ công thức toán học <code className="text-primary font-mono bg-primary/5 px-1 py-0.5 rounded">$...$</code></span>
+          </div>
           <input
             type="text"
-            placeholder="VD: Nhận biết đơn thức..."
+            placeholder="VD: Dạng 1: Rút gọn biểu thức $A = \sqrt{x} + 1$..."
             value={dangToan.mathType}
             onChange={(e) => onChange({ ...dangToan, mathType: e.target.value })}
             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-primary/50 transition-colors"
           />
+          {dangToan.mathType?.trim() && (
+            <div className="mt-2.5 px-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center gap-2.5 text-sm">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0">Hiển thị:</span>
+              <MathText content={dangToan.mathType} className="font-semibold text-slate-800" />
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-2">
