@@ -105,6 +105,69 @@ func TestGetTeacherForGrade_NilDB(t *testing.T) {
 	assert.Nil(t, admin)
 }
 
+func TestMultiTierCommissionCalculationScenarios(t *testing.T) {
+	// 5 Scenarios tested according to business spec:
+	// 1. Direct student (no referrer): Direct 0%, Teacher 3%, Admin 1% -> Total 4%
+	// 2. Teacher 7 direct: Direct 50%, Teacher 7 Grade (0% - skipped), Admin 1% -> Total 51%
+	// 3. Teacher 8 direct (student grade 7): Direct 50%, Teacher 7 Grade 3%, Admin 1% -> Total 54%
+	// 4. Admin direct: Direct 60%, Teacher 7 Grade 3%, Admin Platform (0% - skipped) -> Total 63%
+	// 5. Affiliate direct: Direct 30%, Teacher 7 Grade 3%, Admin 1% -> Total 34%
+
+	amount := 100000
+
+	calcMultiTier := func(studentGrade string, referrerRole string, isReferrerTeacherOfGrade bool, isReferrerAdmin bool) (directAmt int, gradeAmt int, platformAmt int) {
+		// Tier 1: Direct
+		if referrerRole != "" {
+			rate := services.GetCommissionRateByRole(referrerRole)
+			directAmt = int(float64(amount) * float64(rate) / 100.0)
+		}
+		// Tier 2: Grade 3%
+		if services.NormalizeGrade(studentGrade) != "" && !isReferrerTeacherOfGrade {
+			gradeAmt = int(float64(amount) * float64(services.CommissionRateGrade) / 100.0)
+		}
+		// Tier 3: Platform 1%
+		if !isReferrerAdmin {
+			platformAmt = int(float64(amount) * float64(services.CommissionRatePlatform) / 100.0)
+		}
+		return
+	}
+
+	// Scenario 1:
+	d, g, p := calcMultiTier("7", "", false, false)
+	assert.Equal(t, 0, d)
+	assert.Equal(t, 3000, g)
+	assert.Equal(t, 1000, p)
+	assert.Equal(t, 4000, d+g+p)
+
+	// Scenario 2:
+	d, g, p = calcMultiTier("7", "teacher", true, false)
+	assert.Equal(t, 50000, d)
+	assert.Equal(t, 0, g)
+	assert.Equal(t, 1000, p)
+	assert.Equal(t, 51000, d+g+p)
+
+	// Scenario 3:
+	d, g, p = calcMultiTier("7", "teacher", false, false)
+	assert.Equal(t, 50000, d)
+	assert.Equal(t, 3000, g)
+	assert.Equal(t, 1000, p)
+	assert.Equal(t, 54000, d+g+p)
+
+	// Scenario 4:
+	d, g, p = calcMultiTier("7", "admin", false, true)
+	assert.Equal(t, 60000, d)
+	assert.Equal(t, 3000, g)
+	assert.Equal(t, 0, p)
+	assert.Equal(t, 63000, d+g+p)
+
+	// Scenario 5:
+	d, g, p = calcMultiTier("7", "affiliate", false, false)
+	assert.Equal(t, 30000, d)
+	assert.Equal(t, 3000, g)
+	assert.Equal(t, 1000, p)
+	assert.Equal(t, 34000, d+g+p)
+}
+
 func TestIsPartnerRole(t *testing.T) {
 	assert.True(t, services.IsPartnerRole("admin"))
 	assert.True(t, services.IsPartnerRole("Admin"))

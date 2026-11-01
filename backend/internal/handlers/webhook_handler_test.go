@@ -237,7 +237,7 @@ func TestWebhookCommission(t *testing.T) {
 	router := gin.Default()
 	router.POST("/api/webhook/payos", webhookHandler.HandlePayOSWebhook)
 
-	t.Run("TeacherReferrer_Receives60PercentCommission", func(t *testing.T) {
+	t.Run("TeacherReferrer_Receives50PercentCommission", func(t *testing.T) {
 		teacher := models.User{
 			Email:             fmt.Sprintf("teacher_%d@example.com", time.Now().UnixNano()),
 			PasswordHash:      "hashed",
@@ -276,20 +276,21 @@ func TestWebhookCommission(t *testing.T) {
 		require.NoError(t, db.First(&updatedStudent, "id = ?", student.ID).Error)
 		assert.NotNil(t, updatedStudent.ExpiresAt)
 
-		// Verify Teacher CommissionBalance: 300,000 * 60% = 180,000
+		// Verify Teacher CommissionBalance: 300,000 * 50% = 150,000
 		var updatedTeacher models.User
 		require.NoError(t, db.First(&updatedTeacher, "id = ?", teacher.ID).Error)
-		assert.Equal(t, int64(180000), updatedTeacher.CommissionBalance)
+		assert.Equal(t, int64(150000), updatedTeacher.CommissionBalance)
 
 		// Verify CommissionTransaction created
 		var commTx models.CommissionTransaction
-		require.NoError(t, db.First(&commTx, "order_code = ?", orderCode).Error)
+		require.NoError(t, db.First(&commTx, "order_code = ? AND referrer_id = ?", orderCode, teacher.ID).Error)
 		assert.Equal(t, teacher.ID, commTx.ReferrerID)
 		assert.Equal(t, student.ID, commTx.StudentID)
 		assert.Equal(t, 300000, commTx.StudentAmount)
-		assert.InDelta(t, float32(60.0), commTx.CommissionRate, 0.01)
-		assert.Equal(t, 180000, commTx.CommissionAmount)
+		assert.InDelta(t, float32(50.0), commTx.CommissionRate, 0.01)
+		assert.Equal(t, 150000, commTx.CommissionAmount)
 		assert.Equal(t, "pending", commTx.Status)
+		assert.Equal(t, "direct", commTx.CommissionType)
 	})
 
 	t.Run("AffiliateReferrer_Receives30PercentCommission", func(t *testing.T) {
@@ -342,7 +343,7 @@ func TestWebhookCommission(t *testing.T) {
 		assert.Equal(t, "pending", commTx.Status)
 	})
 
-	t.Run("AdminReferrer_Receives70PercentCommission", func(t *testing.T) {
+	t.Run("AdminReferrer_Receives60PercentCommission", func(t *testing.T) {
 		admin := models.User{
 			Email:             fmt.Sprintf("admin_%d@example.com", time.Now().UnixNano()),
 			PasswordHash:      "hashed",
@@ -376,20 +377,21 @@ func TestWebhookCommission(t *testing.T) {
 		w := sendPayOSWebhookReq(router, payosService, orderCode, 300000)
 		assert.Equal(t, http.StatusOK, w.Code)
 
-		// Verify Admin CommissionBalance: 300,000 * 70% = 210,000
+		// Verify Admin CommissionBalance: 300,000 * 60% = 180,000
 		var updatedAdmin models.User
 		require.NoError(t, db.First(&updatedAdmin, "id = ?", admin.ID).Error)
-		assert.Equal(t, int64(210000), updatedAdmin.CommissionBalance)
+		assert.Equal(t, int64(180000), updatedAdmin.CommissionBalance)
 
 		// Verify CommissionTransaction created
 		var commTx models.CommissionTransaction
-		require.NoError(t, db.First(&commTx, "order_code = ?", orderCode).Error)
+		require.NoError(t, db.First(&commTx, "order_code = ? AND referrer_id = ?", orderCode, admin.ID).Error)
 		assert.Equal(t, admin.ID, commTx.ReferrerID)
 		assert.Equal(t, student.ID, commTx.StudentID)
 		assert.Equal(t, 300000, commTx.StudentAmount)
-		assert.InDelta(t, float32(70.0), commTx.CommissionRate, 0.01)
-		assert.Equal(t, 210000, commTx.CommissionAmount)
+		assert.InDelta(t, float32(60.0), commTx.CommissionRate, 0.01)
+		assert.Equal(t, 180000, commTx.CommissionAmount)
 		assert.Equal(t, "pending", commTx.Status)
+		assert.Equal(t, "direct", commTx.CommissionType)
 	})
 
 	t.Run("StudentWithoutReferrer_NoCommissionGenerated", func(t *testing.T) {
@@ -464,16 +466,16 @@ func TestWebhookCommission(t *testing.T) {
 
 		var teacherAfterFirst models.User
 		require.NoError(t, db.First(&teacherAfterFirst, "id = ?", teacher.ID).Error)
-		assert.Equal(t, int64(180000), teacherAfterFirst.CommissionBalance)
+		assert.Equal(t, int64(150000), teacherAfterFirst.CommissionBalance)
 
 		// 2nd Webhook Call (Duplicate with same orderCode)
 		w2 := sendPayOSWebhookReq(router, payosService, orderCode, 300000)
 		assert.Equal(t, http.StatusOK, w2.Code)
 
-		// Verify CommissionBalance is still 180,000 (NOT 360,000)
+		// Verify CommissionBalance is still 150,000 (NOT 300,000)
 		var teacherAfterSecond models.User
 		require.NoError(t, db.First(&teacherAfterSecond, "id = ?", teacher.ID).Error)
-		assert.Equal(t, int64(180000), teacherAfterSecond.CommissionBalance)
+		assert.Equal(t, int64(150000), teacherAfterSecond.CommissionBalance)
 
 		// Exactly 1 CommissionTransaction exists
 		var commCount int64
@@ -529,5 +531,346 @@ func TestWebhookCommission(t *testing.T) {
 		var count int64
 		require.NoError(t, db.Model(&models.CommissionTransaction{}).Where("order_code = ?", orderCode).Count(&count).Error)
 		assert.Equal(t, int64(0), count)
+	})
+
+	t.Run("MultiTier_Scenario1_DirectStudentWithGrade7_PaysTeacher3PercentAndAdmin1Percent", func(t *testing.T) {
+		admin := models.User{
+			Email:             fmt.Sprintf("admin_sc1_%d@example.com", time.Now().UnixNano()),
+			PasswordHash:      "hashed",
+			FullName:          "Admin SC1",
+			Role:              "admin",
+			Status:            "active",
+			CommissionBalance: 0,
+		}
+		require.NoError(t, db.Create(&admin).Error)
+
+		teacher7 := models.User{
+			Email:             fmt.Sprintf("teacher7_sc1_%d@example.com", time.Now().UnixNano()),
+			PasswordHash:      "hashed",
+			FullName:          "Teacher 7 SC1",
+			Role:              "teacher",
+			Grade:             "7",
+			Status:            "active",
+			CommissionBalance: 0,
+		}
+		require.NoError(t, db.Create(&teacher7).Error)
+
+		student := models.User{
+			Email:        fmt.Sprintf("student_sc1_%d@example.com", time.Now().UnixNano()),
+			PasswordHash: "hashed",
+			FullName:     "Student SC1",
+			Role:         "student",
+			Grade:        "7",
+			Status:       "active",
+			ReferrerID:   nil,
+		}
+		require.NoError(t, db.Create(&student).Error)
+
+		orderCode := time.Now().UnixNano() / 1000
+		tx := models.Transaction{
+			UserID:    student.ID,
+			OrderCode: orderCode,
+			Amount:    100000,
+			Plan:      "1_month",
+			Status:    "pending",
+		}
+		require.NoError(t, db.Create(&tx).Error)
+
+		w := sendPayOSWebhookReq(router, payosService, orderCode, 100000)
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		// Teacher 7 receives 3% = 3,000
+		var updatedT7 models.User
+		require.NoError(t, db.First(&updatedT7, "id = ?", teacher7.ID).Error)
+		assert.Equal(t, int64(3000), updatedT7.CommissionBalance)
+
+		// Admin receives 1% = 1,000
+		var updatedAdmin models.User
+		require.NoError(t, db.First(&updatedAdmin, "id = ?", admin.ID).Error)
+		assert.Equal(t, int64(1000), updatedAdmin.CommissionBalance)
+
+		// Exactly 2 commission transactions
+		var commTxs []models.CommissionTransaction
+		require.NoError(t, db.Where("order_code = ?", orderCode).Find(&commTxs).Error)
+		assert.Len(t, commTxs, 2)
+	})
+
+	t.Run("MultiTier_Scenario2_TeacherGrade7DirectReferrer_Gets50Percent_SkipsGradeOverride", func(t *testing.T) {
+		admin := models.User{
+			Email:             fmt.Sprintf("admin_sc2_%d@example.com", time.Now().UnixNano()),
+			PasswordHash:      "hashed",
+			FullName:          "Admin SC2",
+			Role:              "admin",
+			Status:            "active",
+			CommissionBalance: 0,
+		}
+		require.NoError(t, db.Create(&admin).Error)
+
+		teacher7 := models.User{
+			Email:             fmt.Sprintf("teacher7_sc2_%d@example.com", time.Now().UnixNano()),
+			PasswordHash:      "hashed",
+			FullName:          "Teacher 7 SC2",
+			Role:              "teacher",
+			Grade:             "7",
+			Status:            "active",
+			CommissionBalance: 0,
+		}
+		require.NoError(t, db.Create(&teacher7).Error)
+
+		student := models.User{
+			Email:        fmt.Sprintf("student_sc2_%d@example.com", time.Now().UnixNano()),
+			PasswordHash: "hashed",
+			FullName:     "Student SC2",
+			Role:         "student",
+			Grade:        "7",
+			Status:       "active",
+			ReferrerID:   &teacher7.ID,
+		}
+		require.NoError(t, db.Create(&student).Error)
+
+		orderCode := time.Now().UnixNano() / 1000
+		tx := models.Transaction{
+			UserID:    student.ID,
+			OrderCode: orderCode,
+			Amount:    100000,
+			Plan:      "1_month",
+			Status:    "pending",
+		}
+		require.NoError(t, db.Create(&tx).Error)
+
+		w := sendPayOSWebhookReq(router, payosService, orderCode, 100000)
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		// Teacher 7 receives 50% = 50,000 (3% skipped)
+		var updatedT7 models.User
+		require.NoError(t, db.First(&updatedT7, "id = ?", teacher7.ID).Error)
+		assert.Equal(t, int64(50000), updatedT7.CommissionBalance)
+
+		// Admin receives 1% = 1,000
+		var updatedAdmin models.User
+		require.NoError(t, db.First(&updatedAdmin, "id = ?", admin.ID).Error)
+		assert.Equal(t, int64(1000), updatedAdmin.CommissionBalance)
+
+		// Exactly 2 commission transactions
+		var commTxs []models.CommissionTransaction
+		require.NoError(t, db.Where("order_code = ?", orderCode).Find(&commTxs).Error)
+		assert.Len(t, commTxs, 2)
+	})
+
+	t.Run("MultiTier_Scenario3_TeacherGrade8Referrer_Grade7Student_Gets50PercentAndTeacher7Gets3PercentAndAdmin1Percent", func(t *testing.T) {
+		admin := models.User{
+			Email:             fmt.Sprintf("admin_sc3_%d@example.com", time.Now().UnixNano()),
+			PasswordHash:      "hashed",
+			FullName:          "Admin SC3",
+			Role:              "admin",
+			Status:            "active",
+			CommissionBalance: 0,
+		}
+		require.NoError(t, db.Create(&admin).Error)
+
+		teacher7 := models.User{
+			Email:             fmt.Sprintf("teacher7_sc3_%d@example.com", time.Now().UnixNano()),
+			PasswordHash:      "hashed",
+			FullName:          "Teacher 7 SC3",
+			Role:              "teacher",
+			Grade:             "7",
+			Status:            "active",
+			CommissionBalance: 0,
+		}
+		require.NoError(t, db.Create(&teacher7).Error)
+
+		teacher8 := models.User{
+			Email:             fmt.Sprintf("teacher8_sc3_%d@example.com", time.Now().UnixNano()),
+			PasswordHash:      "hashed",
+			FullName:          "Teacher 8 SC3",
+			Role:              "teacher",
+			Grade:             "8",
+			Status:            "active",
+			CommissionBalance: 0,
+		}
+		require.NoError(t, db.Create(&teacher8).Error)
+
+		student := models.User{
+			Email:        fmt.Sprintf("student_sc3_%d@example.com", time.Now().UnixNano()),
+			PasswordHash: "hashed",
+			FullName:     "Student SC3",
+			Role:         "student",
+			Grade:        "7",
+			Status:       "active",
+			ReferrerID:   &teacher8.ID,
+		}
+		require.NoError(t, db.Create(&student).Error)
+
+		orderCode := time.Now().UnixNano() / 1000
+		tx := models.Transaction{
+			UserID:    student.ID,
+			OrderCode: orderCode,
+			Amount:    100000,
+			Plan:      "1_month",
+			Status:    "pending",
+		}
+		require.NoError(t, db.Create(&tx).Error)
+
+		w := sendPayOSWebhookReq(router, payosService, orderCode, 100000)
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		// Teacher 8 receives 50% = 50,000
+		var updatedT8 models.User
+		require.NoError(t, db.First(&updatedT8, "id = ?", teacher8.ID).Error)
+		assert.Equal(t, int64(50000), updatedT8.CommissionBalance)
+
+		// Teacher 7 receives 3% = 3,000
+		var updatedT7 models.User
+		require.NoError(t, db.First(&updatedT7, "id = ?", teacher7.ID).Error)
+		assert.Equal(t, int64(3000), updatedT7.CommissionBalance)
+
+		// Admin receives 1% = 1,000
+		var updatedAdmin models.User
+		require.NoError(t, db.First(&updatedAdmin, "id = ?", admin.ID).Error)
+		assert.Equal(t, int64(1000), updatedAdmin.CommissionBalance)
+
+		// Exactly 3 commission transactions
+		var commTxs []models.CommissionTransaction
+		require.NoError(t, db.Where("order_code = ?", orderCode).Find(&commTxs).Error)
+		assert.Len(t, commTxs, 3)
+	})
+
+	t.Run("MultiTier_Scenario4_AdminDirectReferrer_Gets60Percent_SkipsPlatformOverride", func(t *testing.T) {
+		admin := models.User{
+			Email:             fmt.Sprintf("admin_sc4_%d@example.com", time.Now().UnixNano()),
+			PasswordHash:      "hashed",
+			FullName:          "Admin SC4",
+			Role:              "admin",
+			Status:            "active",
+			CommissionBalance: 0,
+		}
+		require.NoError(t, db.Create(&admin).Error)
+
+		teacher7 := models.User{
+			Email:             fmt.Sprintf("teacher7_sc4_%d@example.com", time.Now().UnixNano()),
+			PasswordHash:      "hashed",
+			FullName:          "Teacher 7 SC4",
+			Role:              "teacher",
+			Grade:             "7",
+			Status:            "active",
+			CommissionBalance: 0,
+		}
+		require.NoError(t, db.Create(&teacher7).Error)
+
+		student := models.User{
+			Email:        fmt.Sprintf("student_sc4_%d@example.com", time.Now().UnixNano()),
+			PasswordHash: "hashed",
+			FullName:     "Student SC4",
+			Role:         "student",
+			Grade:        "7",
+			Status:       "active",
+			ReferrerID:   &admin.ID,
+		}
+		require.NoError(t, db.Create(&student).Error)
+
+		orderCode := time.Now().UnixNano() / 1000
+		tx := models.Transaction{
+			UserID:    student.ID,
+			OrderCode: orderCode,
+			Amount:    100000,
+			Plan:      "1_month",
+			Status:    "pending",
+		}
+		require.NoError(t, db.Create(&tx).Error)
+
+		w := sendPayOSWebhookReq(router, payosService, orderCode, 100000)
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		// Admin receives 60% = 60,000 (1% skipped)
+		var updatedAdmin models.User
+		require.NoError(t, db.First(&updatedAdmin, "id = ?", admin.ID).Error)
+		assert.Equal(t, int64(60000), updatedAdmin.CommissionBalance)
+
+		// Teacher 7 receives 3% = 3,000
+		var updatedT7 models.User
+		require.NoError(t, db.First(&updatedT7, "id = ?", teacher7.ID).Error)
+		assert.Equal(t, int64(3000), updatedT7.CommissionBalance)
+
+		// Exactly 2 commission transactions
+		var commTxs []models.CommissionTransaction
+		require.NoError(t, db.Where("order_code = ?", orderCode).Find(&commTxs).Error)
+		assert.Len(t, commTxs, 2)
+	})
+
+	t.Run("MultiTier_Scenario5_AffiliateDirectReferrer_Gets30Percent", func(t *testing.T) {
+		admin := models.User{
+			Email:             fmt.Sprintf("admin_sc5_%d@example.com", time.Now().UnixNano()),
+			PasswordHash:      "hashed",
+			FullName:          "Admin SC5",
+			Role:              "admin",
+			Status:            "active",
+			CommissionBalance: 0,
+		}
+		require.NoError(t, db.Create(&admin).Error)
+
+		teacher7 := models.User{
+			Email:             fmt.Sprintf("teacher7_sc5_%d@example.com", time.Now().UnixNano()),
+			PasswordHash:      "hashed",
+			FullName:          "Teacher 7 SC5",
+			Role:              "teacher",
+			Grade:             "7",
+			Status:            "active",
+			CommissionBalance: 0,
+		}
+		require.NoError(t, db.Create(&teacher7).Error)
+
+		affiliate := models.User{
+			Email:             fmt.Sprintf("affiliate_sc5_%d@example.com", time.Now().UnixNano()),
+			PasswordHash:      "hashed",
+			FullName:          "Affiliate SC5",
+			Role:              "affiliate",
+			Status:            "active",
+			CommissionBalance: 0,
+		}
+		require.NoError(t, db.Create(&affiliate).Error)
+
+		student := models.User{
+			Email:        fmt.Sprintf("student_sc5_%d@example.com", time.Now().UnixNano()),
+			PasswordHash: "hashed",
+			FullName:     "Student SC5",
+			Role:         "student",
+			Grade:        "7",
+			Status:       "active",
+			ReferrerID:   &affiliate.ID,
+		}
+		require.NoError(t, db.Create(&student).Error)
+
+		orderCode := time.Now().UnixNano() / 1000
+		tx := models.Transaction{
+			UserID:    student.ID,
+			OrderCode: orderCode,
+			Amount:    100000,
+			Plan:      "1_month",
+			Status:    "pending",
+		}
+		require.NoError(t, db.Create(&tx).Error)
+
+		w := sendPayOSWebhookReq(router, payosService, orderCode, 100000)
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		// Affiliate receives 30% = 30,000
+		var updatedAff models.User
+		require.NoError(t, db.First(&updatedAff, "id = ?", affiliate.ID).Error)
+		assert.Equal(t, int64(30000), updatedAff.CommissionBalance)
+
+		// Teacher 7 receives 3% = 3,000
+		var updatedT7 models.User
+		require.NoError(t, db.First(&updatedT7, "id = ?", teacher7.ID).Error)
+		assert.Equal(t, int64(3000), updatedT7.CommissionBalance)
+
+		// Admin receives 1% = 1,000
+		var updatedAdmin models.User
+		require.NoError(t, db.First(&updatedAdmin, "id = ?", admin.ID).Error)
+		assert.Equal(t, int64(1000), updatedAdmin.CommissionBalance)
+
+		// Exactly 3 commission transactions
+		var commTxs []models.CommissionTransaction
+		require.NoError(t, db.Where("order_code = ?", orderCode).Find(&commTxs).Error)
+		assert.Len(t, commTxs, 3)
 	})
 }
