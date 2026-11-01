@@ -45,7 +45,7 @@ export default function HomeFooter() {
           <div>
             <h4 className="font-bold mb-6 text-slate-900">Liên kết</h4>
             <ul className="space-y-4 text-slate-500 text-sm">
-              <li><Link className="hover:text-primary transition-colors" href="/blog">Về chúng tôi</Link></li>
+              <li><Link className="hover:text-primary transition-colors" href="/about">Về chúng tôi</Link></li>
               <li><Link className="hover:text-primary transition-colors" href="/lectures">Bài giảng lý thuyết</Link></li>
               <li><Link className="hover:text-primary transition-colors" href="/exams">Kho đề thi thử</Link></li>
               <li><Link className="hover:text-primary transition-colors" href="/leaderboard">Bảng xếp hạng</Link></li>

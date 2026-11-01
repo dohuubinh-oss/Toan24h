@@ -178,6 +178,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
           <Link className="hover:text-primary transition-colors text-slate-700" href="/">Trang chủ</Link>
           <Link className="hover:text-primary transition-colors text-slate-700" href="/lectures">Bài giảng</Link>
           <Link className="hover:text-primary transition-colors text-slate-700" href="/blog">Blog</Link>
+          <Link className="hover:text-primary transition-colors text-slate-700" href="/about">Về chúng tôi</Link>
         </div>
 
         {/* Right: Notification & Profile / Auth */}
@@ -438,7 +439,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                     { label: 'Cài đặt & Tài khoản', href: '/profile', icon: Settings },
                   ]
                 : []),
-              { label: 'Về toan6789.vn', href: '/blog', icon: Info },
+              { label: 'Về toan6789.vn', href: '/about', icon: Info },
             ].map((item) => {
               const Icon = item.icon
               const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
