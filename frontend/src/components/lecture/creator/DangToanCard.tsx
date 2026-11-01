@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { Microscope, Plus, Trash2, ChevronDown, ChevronRight, GripVertical, CheckCircle2 } from 'lucide-react'
+import { Microscope, Plus, Trash2, ChevronDown, ChevronRight, GripVertical, CheckCircle2, Sigma } from 'lucide-react'
 import { Button } from '../../ui/Button'
 import MathText from '@/components/ui/MathText'
 import SharedEditorCard from '@/components/questions/creator/editor/SharedEditorCard'
+import RichTextEditor from '@/components/questions/creator/editor/RichTextEditor'
 import { DangToanItem, MethodItem, ExampleExercise, ExampleStep } from './LectureCreatorContext'
 
 interface DangToanCardProps {
@@ -140,21 +141,19 @@ export default function DangToanCard({
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-bold text-slate-700">Tên Dạng Toán</label>
-            <span className="text-xs text-slate-400">Hỗ trợ công thức toán học <code className="text-primary font-mono bg-primary/5 px-1 py-0.5 rounded">$...$</code></span>
+            <span className="text-xs text-slate-400">Gõ công thức <code className="text-primary font-mono bg-primary/5 px-1 py-0.5 rounded">$...$</code> hoặc bấm <Sigma className="w-3.5 h-3.5 inline text-primary mx-0.5" /> để chèn/sửa công thức trực tiếp</span>
           </div>
-          <input
-            type="text"
-            placeholder="VD: Dạng 1: Rút gọn biểu thức $A = \sqrt{x} + 1$..."
-            value={dangToan.mathType}
-            onChange={(e) => onChange({ ...dangToan, mathType: e.target.value })}
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-primary/50 transition-colors"
-          />
-          {dangToan.mathType?.trim() && (
-            <div className="mt-2.5 px-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center gap-2.5 text-sm">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0">Hiển thị:</span>
-              <MathText content={dangToan.mathType} className="font-semibold text-slate-800" />
-            </div>
-          )}
+          <div className="w-full min-h-[44px] px-3.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 focus-within:bg-white focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition-colors flex items-center">
+            <RichTextEditor
+              inline={true}
+              hideToolbar={true}
+              showMathButton={true}
+              placeholder="VD: Dạng 1: Rút gọn biểu thức $A = \sqrt{x} + 1$..."
+              content={dangToan.mathType || ''}
+              onChange={(val) => onChange({ ...dangToan, mathType: val })}
+              className="w-full"
+            />
+          </div>
         </div>
 
         <div className="flex flex-col gap-2">

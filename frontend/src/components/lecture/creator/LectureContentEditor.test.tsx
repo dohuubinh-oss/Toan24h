@@ -49,7 +49,7 @@ describe('LectureContentEditor', () => {
     fireEvent.change(textarea, { target: { value: sampleJson } })
     fireEvent.click(screen.getByRole('button', { name: /Xử lý JSON/i }))
 
-    expect(screen.getByDisplayValue('Dạng 1. Đơn thức thử nghiệm')).toBeInTheDocument()
+    expect(screen.getAllByText(/Dạng 1\. Đơn thức thử nghiệm/i).length).toBeGreaterThan(0)
   })
 
   it('allows removing all DangToan cards and shows empty state notice', () => {
@@ -90,18 +90,15 @@ describe('LectureContentEditor', () => {
     expect(screen.getByText(/Bóc tách Dạng toán & Bài tập mẫu bằng AI/i)).toBeInTheDocument()
   })
 
-  it('renders math formula preview when Tên Dạng Toán contains LaTeX', () => {
-    const { container } = render(
+  it('renders rich math formula editor in Tên Dạng Toán with math formula button', () => {
+    render(
       <LectureCreatorProvider>
         <LectureContentEditor />
       </LectureCreatorProvider>
     )
 
-    const input = screen.getByPlaceholderText(/VD: Dạng 1: Rút gọn biểu thức/i)
-    fireEvent.change(input, { target: { value: 'Dạng 1: Tìm $x$ để $A = \\sqrt{x} > 0$' } })
-
-    const katexElements = container.querySelectorAll('.katex')
-    expect(katexElements.length).toBeGreaterThan(0)
-    expect(screen.getByText('Hiển thị:')).toBeInTheDocument()
+    expect(screen.getByText('Tên Dạng Toán')).toBeInTheDocument()
+    const mathBtns = screen.getAllByTitle(/công thức toán/i)
+    expect(mathBtns.length).toBeGreaterThan(0)
   })
 })

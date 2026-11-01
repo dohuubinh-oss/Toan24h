@@ -98,9 +98,9 @@ export const preprocessMath = (html: string) => {
   });
 
   // 4. Convert remaining unwrapped latex expressions (e.g. \frac{1}{2}, -\dfrac{1}{5} x^4 y^5, 2\sqrt{x}, \hat{A})
-  const latexRegex = /\\(dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|in|subset|cup|cap|widehat|hat|degree)/;
+  const latexRegex = /\\(dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|notin|in|subset|cup|cap|widehat|hat|degree)/;
   if (latexRegex.test(processed)) {
-    processed = processed.replace(/([^<>]*?\\(?:dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|in|subset|cup|cap|widehat|hat|degree)[^<>]*)/g, (match) => {
+    processed = processed.replace(/([^<>]*?\\(?:dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|notin|in|subset|cup|cap|widehat|hat|degree)[^<>]*)/g, (match) => {
       if (match.includes('__MATH_PLACEHOLDER_')) return match;
       const trimmed = match.trim();
       if (!trimmed) return match;
