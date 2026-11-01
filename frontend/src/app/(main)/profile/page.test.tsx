@@ -167,7 +167,7 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(`${window.location.origin}/register?ref=GT123456`)
   })
 
-  it('renders correct commission rates for admin (70%) and affiliate (30%)', async () => {
+  it('renders correct commission rates for admin (60% + 1%), teacher (50% + 3%), and affiliate (30%)', async () => {
     const mockAdmin = {
       id: 'admin-123',
       email: 'admin@example.com',
@@ -186,10 +186,36 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
 
     await waitFor(() => {
       expect(screen.getByText('GTADMIN1')).toBeInTheDocument()
-      expect(screen.getByText(/70%/)).toBeInTheDocument()
+      expect(screen.getByText(/Hoa hồng trực tiếp: 60%/)).toBeInTheDocument()
+      expect(screen.getByText(/Quản trị toàn sàn: 1%/)).toBeInTheDocument()
     })
 
     unmount()
+
+    const mockTeacher = {
+      id: 'teacher-123',
+      email: 'teacher@example.com',
+      fullName: 'Thầy Giáo A',
+      role: 'teacher',
+      grade: '9',
+      referralCode: 'GTTEACH9',
+      commissionBalance: 300000,
+      totalCommissionReceived: 1000000,
+    }
+
+    vi.mocked(api.apiFetch).mockResolvedValueOnce({
+      data: mockTeacher,
+    } as any)
+
+    const { unmount: unmountTeacher } = render(<ProfilePage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('GTTEACH9')).toBeInTheDocument()
+      expect(screen.getByText(/Hoa hồng trực tiếp: 50%/)).toBeInTheDocument()
+      expect(screen.getByText(/Quản lý Khối 9: 3%/)).toBeInTheDocument()
+    })
+
+    unmountTeacher()
 
     const mockAffiliate = {
       id: 'aff-123',
@@ -209,7 +235,7 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
 
     await waitFor(() => {
       expect(screen.getByText('GTAFF123')).toBeInTheDocument()
-      expect(screen.getByText(/30%/)).toBeInTheDocument()
+      expect(screen.getByText(/Hoa hồng trực tiếp: 30%/)).toBeInTheDocument()
     })
   })
 
