@@ -189,7 +189,7 @@ Với bài toán rút gọn biểu thức chứa căn thức bậc hai:
     },
     publishedAt: '27 Tháng 10, 2026',
     readTime: '3 Shorts',
-    featured: false,
+    featured: true,
     tags: ['Casio fx-580VNX', 'Mẹo giải nhanh', 'Shorts', 'Toán 9']
   },
   {
@@ -283,7 +283,7 @@ Học sinh có thể xem hình minh họa 3D tương tác ngay tại phần **B�
     },
     publishedAt: '05 Tháng 9, 2026',
     readTime: '5 phút đọc',
-    featured: false,
+    featured: true,
     tags: ['Kỹ năng thi', 'Phân bổ thời gian', 'Thi vào 10', 'Kinh nghiệm']
   },
   {
@@ -518,13 +518,6 @@ export function addBlogPost(post: BlogPost): BlogPost {
     try {
       const customPostsStr = localStorage.getItem(LOCAL_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY)
       let existing: BlogPost[] = customPostsStr ? JSON.parse(customPostsStr) : []
-      
-      if (post.featured) {
-        // Unmark all existing default posts
-        BLOG_POSTS.forEach(p => { p.featured = false })
-        // Unmark all existing custom posts
-        existing.forEach(p => { p.featured = false })
-      }
 
       // Check if post already exists (update mode)
       const existingIdx = existing.findIndex(p => p.id === post.id || p.slug === post.slug)

@@ -52,13 +52,18 @@ export default function BlogListPage() {
     } catch (_) {}
   }, [])
 
-  // Find featured post and secondary highlights for Magazine Bento Hero
-  const { featuredPost, secondaryPosts } = useMemo(() => {
-    const main = posts.find(post => post.featured) || posts[0]
-    const others = posts.filter(post => post.id !== main?.id)
+  // Find featured posts for Magazine Bento Hero: ONLY posts with featured === true
+  const { featuredPost, secondaryPosts, featuredPostIds } = useMemo(() => {
+    const featuredList = posts.filter(post => post.featured)
+    const main = featuredList[0] || null
+    const secondary = featuredList.slice(1, 3)
+    const activeIds = new Set<string>()
+    if (main) activeIds.add(main.id)
+    secondary.forEach(p => activeIds.add(p.id))
     return {
       featuredPost: main,
-      secondaryPosts: posts.length >= 3 ? others.slice(0, 2) : [],
+      secondaryPosts: secondary,
+      featuredPostIds: activeIds,
     }
   }, [posts])
 
@@ -70,8 +75,8 @@ export default function BlogListPage() {
   // Filter posts
   const filteredPosts = useMemo(() => {
     return posts.filter(post => {
-      // Nếu bài viết đang hiển thị trên khu vực bài viết nổi bật, loại bỏ khỏi danh sách bài viết bên dưới
-      if (isFeaturedActive && featuredPost && post.id === featuredPost.id) {
+      // Các bài viết xuất hiện trên khu vực bài viết nổi bật sẽ không xuất hiện lại trong danh sách bài viết bên dưới
+      if (isFeaturedActive && featuredPostIds.has(post.id)) {
         return false
       }
 
@@ -82,7 +87,7 @@ export default function BlogListPage() {
 
       return matchesCategory && matchesSearch
     })
-  }, [posts, selectedCategory, searchQuery, isFeaturedActive, featuredPost])
+  }, [posts, selectedCategory, searchQuery, isFeaturedActive, featuredPostIds])
 
   // Reset pagination when filter or search changes
   useEffect(() => {
@@ -191,7 +196,7 @@ export default function BlogListPage() {
             {/* Column 1: Main Editorial Hero Banner */}
             <div
               className={`relative rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 group flex flex-col justify-end min-h-[440px] sm:min-h-[500px] p-6 sm:p-8 lg:p-10 border border-slate-200/60 ${
-                secondaryPosts.length >= 2 ? 'lg:col-span-8' : 'lg:col-span-12'
+                secondaryPosts.length > 0 ? 'lg:col-span-8' : 'lg:col-span-12'
               }`}
             >
               <Image
@@ -302,14 +307,13 @@ export default function BlogListPage() {
             </div>
 
             {/* Column 2: Secondary Highlights (Bento Stack) */}
-            {secondaryPosts.length >= 2 && (
+            {secondaryPosts.length > 0 && (
               <div className="lg:col-span-4 flex flex-col justify-between gap-4">
-                <div className="flex items-center justify-between px-1">
+                <div className="flex items-center px-1">
                   <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-primary" />
-                    Đáng chú ý hôm nay
+                    Bài viết nổi bật khác
                   </span>
-                  <span className="text-[11px] font-bold text-primary">Biên tập viên chọn</span>
                 </div>
 
                 {secondaryPosts.map((post, idx) => (
