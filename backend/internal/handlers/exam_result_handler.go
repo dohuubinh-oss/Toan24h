@@ -570,15 +570,19 @@ func AppealExamResult(c *gin.Context) {
 
 func GetAppeals(c *gin.Context) {
 	type AppealResponse struct {
-		SubmissionID  string  `json:"resultId"` // Kept resultId for frontend compatibility
-		QuestionID    string  `json:"detailId"` // Kept detailId for frontend compatibility
-		ExamName      string  `json:"examName"`
-		Question      string  `json:"question"`
-		StudentAnswer string  `json:"studentAnswer"`
-		AIExplanation string  `json:"aiExplanation"`
-		Score         float64 `json:"score"`
-		MaxScore      float64 `json:"maxScore"`
-		AppealMessage string  `json:"appealMessage"`
+		SubmissionID  string     `json:"resultId"` // Kept resultId for frontend compatibility
+		QuestionID    string     `json:"detailId"` // Kept detailId for frontend compatibility
+		ExamName      string     `json:"examName"`
+		StudentID     string     `json:"studentId"`
+		StudentName   string     `json:"studentName"`
+		StudentEmail  string     `json:"studentEmail"`
+		SubmittedAt   *time.Time `json:"submittedAt"`
+		Question      string     `json:"question"`
+		StudentAnswer string     `json:"studentAnswer"`
+		AIExplanation string     `json:"aiExplanation"`
+		Score         float64    `json:"score"`
+		MaxScore      float64    `json:"maxScore"`
+		AppealMessage string     `json:"appealMessage"`
 	}
 
 	var submissions []models.Submission
@@ -596,6 +600,20 @@ func GetAppeals(c *gin.Context) {
 		var exam models.Exam
 		config.DB.First(&exam, "id = ?", sub.ExamID)
 
+		studentName := "Học sinh"
+		studentEmail := ""
+		studentIDStr := ""
+		if sub.UserID != nil {
+			studentIDStr = sub.UserID.String()
+			var user models.User
+			if err := config.DB.First(&user, "id = ?", *sub.UserID).Error; err == nil {
+				if user.FullName != "" {
+					studentName = user.FullName
+				}
+				studentEmail = user.Email
+			}
+		}
+
 		for qID, ans := range answersMap {
 			if ans.Appeal.IsAppealed && ans.Appeal.Status == models.AppealPending {
 				var q models.Question
@@ -605,6 +623,10 @@ func GetAppeals(c *gin.Context) {
 					SubmissionID:  sub.ID.String(),
 					QuestionID:    qID,
 					ExamName:      exam.Title,
+					StudentID:    studentIDStr,
+					StudentName:  studentName,
+					StudentEmail: studentEmail,
+					SubmittedAt:  sub.SubmittedAt,
 					Question:      q.Content,
 					StudentAnswer: ans.StudentAnswer,
 					AIExplanation: ans.AIExplanation,

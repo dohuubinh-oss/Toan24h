@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { 
   Loader2, MessageSquareWarning, Check, X, AlertTriangle, Edit, 
-  ClipboardList, ChevronRight, RefreshCw, AlertCircle, CheckCircle2 
+  ClipboardList, ChevronRight, RefreshCw, AlertCircle, CheckCircle2,
+  ChevronDown, ChevronUp, Sparkles, BookOpen
 } from 'lucide-react'
 import MathText from '@/components/ui/MathText'
 import { toast } from '@/components/ui/ToastProvider'
@@ -26,6 +27,19 @@ export default function AppealsPage() {
   
   const [selectedAppeal, setSelectedAppeal] = useState<any>(null)
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
+  const [expandedReportIds, setExpandedReportIds] = useState<Set<string>>(new Set())
+
+  const toggleExpandReport = (id: string) => {
+    setExpandedReportIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
   
   // Resolve states
   const [resolveStatus, setResolveStatus] = useState<'APPROVED' | 'REJECTED'>('APPROVED')
@@ -309,10 +323,11 @@ export default function AppealsPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left min-w-[900px]">
+              <table className="w-full text-left min-w-[950px]">
                 <thead className="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider">
                   <tr>
                     <th className="px-6 py-4">Bài thực hành</th>
+                    <th className="px-6 py-4">Học sinh</th>
                     <th className="px-6 py-4">Câu hỏi</th>
                     <th className="px-6 py-4">Bài làm học sinh</th>
                     <th className="px-6 py-4">Điểm AI</th>
@@ -324,7 +339,18 @@ export default function AppealsPage() {
                   {appeals.map((appeal) => (
                     <tr key={appeal.detailId} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                        {appeal.examName}
+                        <div>{appeal.examName}</div>
+                        {appeal.submittedAt && (
+                          <div className="text-xs text-slate-400 font-normal mt-0.5">
+                            {new Date(appeal.submittedAt).toLocaleString('vi-VN')}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <div className="font-semibold text-slate-800">{appeal.studentName || 'Học sinh'}</div>
+                        {appeal.studentEmail && (
+                          <div className="text-xs text-slate-400">{appeal.studentEmail}</div>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <div className="line-clamp-2 max-w-xs text-slate-700">
@@ -384,7 +410,8 @@ export default function AppealsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {reportedQuestions.map((q) => (
-                    <tr key={q.id} className="hover:bg-slate-50/50 transition-colors">
+                    <React.Fragment key={q.id}>
+                      <tr className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-6 py-4 text-xs font-mono text-slate-500">
                         {q.id.slice(0, 8)}...
                       </td>
@@ -398,6 +425,24 @@ export default function AppealsPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleExpandReport(q.id)}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors min-h-[38px]"
+                            aria-label={expandedReportIds.has(q.id) ? `Ẩn đáp án câu hỏi ${q.id}` : `Xem đáp án câu hỏi ${q.id}`}
+                          >
+                            {expandedReportIds.has(q.id) ? (
+                              <>
+                                <ChevronUp className="w-4 h-4" />
+                                <span>Ẩn đáp án</span>
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-4 h-4" />
+                                <span>Xem đáp án</span>
+                              </>
+                            )}
+                          </button>
                           <Link
                             href={`/dashboard/questions/create?id=${q.id}`}
                             className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-semibold transition-colors min-h-[38px]"
@@ -417,6 +462,68 @@ export default function AppealsPage() {
                         </div>
                       </td>
                     </tr>
+                    {expandedReportIds.has(q.id) && (
+                      <tr className="bg-slate-50/70 border-b border-slate-100 animate-in fade-in duration-150">
+                        <td colSpan={4} className="px-6 py-4">
+                          <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+                            {q.options && Array.isArray(q.options) && q.options.length > 0 && (
+                              <div>
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                  Các phương án lựa chọn:
+                                </span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {q.options.map((opt: any, optIdx: number) => {
+                                    const optLetter = String.fromCharCode(65 + optIdx)
+                                    const isCorrect = (q.correct_answer || q.correctAnswer) === opt || (q.correct_answer || q.correctAnswer) === optLetter
+                                    return (
+                                      <div 
+                                        key={optIdx} 
+                                        className={`p-2.5 rounded-lg border text-sm flex items-start gap-2 ${
+                                          isCorrect 
+                                            ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-semibold' 
+                                            : 'bg-slate-50 border-slate-200/70 text-slate-700'
+                                        }`}
+                                      >
+                                        <span className="font-bold text-slate-500">{optLetter}.</span>
+                                        <div className="flex-1">
+                                          <MathText content={typeof opt === 'string' ? opt : (opt.content || '')} />
+                                        </div>
+                                        {isCorrect && (
+                                          <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider shrink-0">
+                                            (Đáp án đúng)
+                                          </span>
+                                        )}
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-2 text-sm flex-wrap">
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Đáp án chính xác:
+                              </span>
+                              <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg">
+                                <MathText content={q.correct_answer || q.correctAnswer || '(Không có)'} />
+                              </span>
+                            </div>
+
+                            {(q.solution_guide || q.solutionGuide) && (
+                              <div>
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                                  Lời giải chi tiết:
+                                </span>
+                                <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-sm text-slate-700">
+                                  <MathText content={q.solution_guide || q.solutionGuide} />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -432,7 +539,15 @@ export default function AppealsPage() {
             <div className="p-5 sm:p-6 border-b border-slate-100 flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-bold text-slate-800">Duyệt Kháng Cáo</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Bài thi: {selectedAppeal.examName}</p>
+                <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5 flex-wrap">
+                  <span>Bài thi: <strong className="text-slate-700">{selectedAppeal.examName}</strong></span>
+                  {selectedAppeal.studentName && (
+                    <>
+                      <span>•</span>
+                      <span>Học sinh: <strong className="text-slate-700">{selectedAppeal.studentName}</strong> {selectedAppeal.studentEmail && `(${selectedAppeal.studentEmail})`}</span>
+                    </>
+                  )}
+                </div>
               </div>
               <button 
                 onClick={() => setSelectedAppeal(null)} 
@@ -513,9 +628,27 @@ export default function AppealsPage() {
 
                 {resolveStatus === 'APPROVED' && (
                   <div className="space-y-2 animate-in fade-in duration-200">
-                    <label className="text-sm font-semibold text-slate-700">
-                      Điểm mới (Tối đa: {selectedAppeal.maxScore})
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-semibold text-slate-700">
+                        Điểm mới (Tối đa: {selectedAppeal.maxScore})
+                      </label>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setNewScore(selectedAppeal.maxScore)}
+                          className="px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-md border border-emerald-200 transition-colors"
+                        >
+                          Tối đa ({selectedAppeal.maxScore})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNewScore(Math.min(selectedAppeal.maxScore, Math.round(((selectedAppeal.score || 0) + 0.5) * 100) / 100))}
+                          className="px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-md transition-colors"
+                        >
+                          +0.5đ
+                        </button>
+                      </div>
+                    </div>
                     <input 
                       type="number"
                       step="0.25"
@@ -536,9 +669,35 @@ export default function AppealsPage() {
                 )}
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">
-                    Lời nhắn / Nhận xét phản hồi <span className="text-rose-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-slate-700">
+                      Lời nhắn / Nhận xét phản hồi <span className="text-rose-500">*</span>
+                    </label>
+                  </div>
+
+                  {/* Quick Feedback Chips */}
+                  <div className="flex flex-wrap gap-1.5 pb-1">
+                    <span className="text-xs font-medium text-slate-400 self-center mr-1">Gợi ý nhanh:</span>
+                    {(resolveStatus === 'APPROVED' ? [
+                      'Đã cộng điểm câu này, cách giải của em hoàn toàn chính xác.',
+                      'Thầy/Cô đã kiểm tra lại và chấp thuận kết quả của em.',
+                      'Đồng ý, phương pháp giải hợp lệ và rõ ràng.'
+                    ] : [
+                      'Kết quả chấm của hệ thống là chính xác, em xem lại lời giải chi tiết nhé.',
+                      'Bước tính toán chưa chính xác, không đủ điều kiện cộng điểm.',
+                      'Lập luận còn thiếu căn cứ, em chú ý thêm ở bài sau.'
+                    ]).map((template, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setFeedback(template)}
+                        className="px-2.5 py-1 text-xs rounded-lg bg-slate-100 hover:bg-primary/10 hover:text-primary text-slate-600 transition-colors text-left"
+                      >
+                        {template.length > 35 ? `${template.slice(0, 35)}...` : template}
+                      </button>
+                    ))}
+                  </div>
+
                   <textarea 
                     rows={3}
                     value={feedback}
