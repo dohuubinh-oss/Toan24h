@@ -96,7 +96,7 @@ export function LectureExamples({ examples = [] }: LectureExamplesProps) {
                         </div>
                         {(method.solution || (method as any).methodContent) && (
                            <MathText 
-                             className="prose max-w-none text-sm text-slate-600"
+                             className="prose max-w-none text-[16px] [&_p]:text-[16px] [&_li]:text-[16px] leading-relaxed text-slate-600"
                              content={method.solution || (method as any).methodContent}
                            />
                         )}
@@ -105,7 +105,7 @@ export function LectureExamples({ examples = [] }: LectureExamplesProps) {
                       {method.exercise && method.exercise.content && (
                         <div className="space-y-6 w-full mt-4">
                           <MathText 
-                            className="prose max-w-none text-slate-800"
+                            className="prose max-w-none text-[17px] [&_p]:text-[17px] [&_li]:text-[17px] leading-relaxed text-slate-800"
                             content={method.exercise.content.replace(/<p[^>]*>\s*Đề bài:\s*<\/p>/gi, '')}
                           />
                         </div>
