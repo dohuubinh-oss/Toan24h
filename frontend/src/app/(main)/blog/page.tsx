@@ -52,9 +52,14 @@ export default function BlogListPage() {
     } catch (_) {}
   }, [])
 
-  // Find featured post
-  const featuredPost = useMemo(() => {
-    return posts.find(post => post.featured) || posts[0]
+  // Find featured post and secondary highlights for Magazine Bento Hero
+  const { featuredPost, secondaryPosts } = useMemo(() => {
+    const main = posts.find(post => post.featured) || posts[0]
+    const others = posts.filter(post => post.id !== main?.id)
+    return {
+      featuredPost: main,
+      secondaryPosts: posts.length >= 3 ? others.slice(0, 2) : [],
+    }
   }, [posts])
 
   // Điều kiện khu vực bài viết nổi bật được hiển thị (trên trang chủ blog, không tìm kiếm, không lọc danh mục)
@@ -180,106 +185,183 @@ export default function BlogListPage() {
           </div>
         </div>
 
-        {/* Featured Article Spotlight (Full Width) */}
+        {/* Magazine Bento Hero Section */}
         {isFeaturedActive && currentPage === 1 && (
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-xl hover:border-primary/30 transition-all duration-300 overflow-hidden group">
-            <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
-              <div className="lg:col-span-7 relative h-64 sm:h-80 lg:h-full min-h-[320px] overflow-hidden bg-slate-100">
-                <Image 
-                  src={featuredPost.coverImage} 
-                  alt={featuredPost.title}
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 60vw"
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-4 left-4 z-10 flex items-center gap-2 flex-wrap">
-                  <span className="px-3 py-1.5 rounded-xl bg-primary text-white text-xs font-bold shadow-md flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            {/* Column 1: Main Editorial Hero Banner */}
+            <div
+              className={`relative rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 group flex flex-col justify-end min-h-[440px] sm:min-h-[500px] p-6 sm:p-8 lg:p-10 border border-slate-200/60 ${
+                secondaryPosts.length >= 2 ? 'lg:col-span-8' : 'lg:col-span-12'
+              }`}
+            >
+              <Image
+                src={featuredPost.coverImage}
+                alt={featuredPost.title}
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 70vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+              />
+
+              {/* Multi-layered cinematic gradient overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-950/20" />
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-transparent to-transparent hidden sm:block" />
+
+              {/* Floating Top Badges */}
+              <div className="absolute top-5 left-5 right-5 z-10 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-3.5 py-1.5 rounded-full bg-primary/90 backdrop-blur-md text-white text-xs font-black shadow-lg border border-white/20 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                     Bài viết Nổi bật
                   </span>
                   {featuredPost.postType === 'shorts_playlist' && (
-                    <span className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-md flex items-center gap-1.5">
+                    <span className="px-3.5 py-1.5 rounded-full bg-rose-600/90 backdrop-blur-md text-white text-xs font-bold shadow-lg border border-white/20 flex items-center gap-1.5">
                       <Play className="w-3.5 h-3.5 fill-white" />
                       Playlist Shorts
                     </span>
                   )}
-                </div>
-              </div>
-              <div className="lg:col-span-5 p-6 sm:p-8 lg:p-10 space-y-5 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
-                    <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary font-bold">
-                      {featuredPost.categoryLabel}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      {featuredPost.publishedAt}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      {featuredPost.readTime}
-                    </span>
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 group-hover:text-primary transition-colors leading-snug">
-                    <Link href={`/blog/${featuredPost.slug}`}>
-                      {featuredPost.title}
-                    </Link>
-                  </h2>
-                  {featuredPost.summary && (
-                    <p className="text-xs sm:text-sm text-slate-600 font-medium line-clamp-3 leading-relaxed mt-2">
-                      {featuredPost.summary}
-                    </p>
-                  )}
+                  <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-semibold border border-white/20">
+                    {featuredPost.categoryLabel}
+                  </span>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between flex-wrap gap-3">
+                {isAdminOrTeacher && (
+                  <Link
+                    href={`/dashboard/blog/create?id=${featuredPost.id}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white text-xs font-bold border border-white/20 transition-all cursor-pointer"
+                    aria-label="Chỉnh sửa bài viết nổi bật"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Sửa bài</span>
+                  </Link>
+                )}
+              </div>
+
+              {/* Content Box */}
+              <div className="relative z-10 space-y-4 max-w-3xl">
+                <div className="flex items-center gap-3 text-xs font-semibold text-slate-300">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-blue-300" />
+                    {featuredPost.publishedAt}
+                  </span>
+                  <span className="w-1 h-1 rounded-full bg-slate-400" />
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-blue-300" />
+                    {featuredPost.readTime}
+                  </span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white group-hover:text-blue-200 transition-colors leading-[1.2] tracking-tight drop-shadow-md">
+                  <Link href={`/blog/${featuredPost.slug}`}>{featuredPost.title}</Link>
+                </h2>
+
+                {featuredPost.summary && (
+                  <p className="text-xs sm:text-sm text-slate-200 font-normal line-clamp-2 sm:line-clamp-3 leading-relaxed drop-shadow-sm">
+                    {featuredPost.summary}
+                  </p>
+                )}
+
+                <div className="pt-4 border-t border-white/15 flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-3">
                     {featuredPost.author.avatar ? (
-                      <img 
-                        src={featuredPost.author.avatar} 
+                      <img
+                        src={featuredPost.author.avatar}
                         alt={featuredPost.author.name}
-                        className="w-10 h-10 rounded-full object-cover border-2 border-primary/20 bg-slate-100"
+                        className="w-10 h-10 rounded-full object-cover border-2 border-white/40 bg-slate-800 shadow-sm"
                         onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                          if (fallback) fallback.style.display = 'flex';
+                          e.currentTarget.style.display = 'none'
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                          if (fallback) fallback.style.display = 'flex'
                         }}
                       />
                     ) : null}
-                    <div 
-                      className={`w-10 h-10 rounded-full bg-primary/10 text-primary border border-primary/20 items-center justify-center font-bold text-xs uppercase shrink-0 ${featuredPost.author.avatar ? 'hidden' : 'flex'}`}
+                    <div
+                      className={`w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 items-center justify-center font-bold text-xs uppercase shrink-0 ${
+                        featuredPost.author.avatar ? 'hidden' : 'flex'
+                      }`}
                     >
                       {getAvatarInitial(featuredPost.author.name)}
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-slate-900">{featuredPost.author.name || 'Nhóm Toan6789'}</h4>
-                      <p className="text-xs text-slate-500 font-medium">{featuredPost.author.role || 'Ban biên tập Toan6789'}</p>
+                      <h4 className="text-xs font-bold text-white">{featuredPost.author.name || 'Nhóm Toan6789'}</h4>
+                      <p className="text-[11px] text-slate-300 font-medium">
+                        {featuredPost.author.role || 'Ban biên tập Toan6789'}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {isAdminOrTeacher && (
-                      <Link 
-                        href={`/dashboard/blog/create?id=${featuredPost.id}`}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[38px] bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-xs font-bold hover:bg-amber-100 transition-all shadow-2xs cursor-pointer"
-                        aria-label="Chỉnh sửa bài viết nổi bật"
-                      >
-                        <Edit3 className="w-3.5 h-3.5 text-amber-600" />
-                        Sửa bài
-                      </Link>
-                    )}
-                    <Link 
-                      href={`/blog/${featuredPost.slug}`}
-                      className="inline-flex items-center gap-2 px-4 py-2 min-h-[38px] bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-all shadow-xs group-hover:gap-3"
-                    >
-                      Đọc ngay
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </div>
+                  <Link
+                    href={`/blog/${featuredPost.slug}`}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white text-slate-900 font-black text-xs sm:text-sm hover:bg-primary hover:text-white transition-all shadow-xl group-hover:gap-3 cursor-pointer active:scale-95"
+                  >
+                    <span>Đọc ngay</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
                 </div>
               </div>
             </div>
+
+            {/* Column 2: Secondary Highlights (Bento Stack) */}
+            {secondaryPosts.length >= 2 && (
+              <div className="lg:col-span-4 flex flex-col justify-between gap-4">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    Đáng chú ý hôm nay
+                  </span>
+                  <span className="text-[11px] font-bold text-primary">Biên tập viên chọn</span>
+                </div>
+
+                {secondaryPosts.map((post, idx) => (
+                  <Link
+                    key={post.id}
+                    href={`/blog/${post.slug}`}
+                    className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-xs hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col justify-between group/sub flex-1 overflow-hidden"
+                  >
+                    <div>
+                      <div className="relative h-32 sm:h-36 w-full rounded-2xl overflow-hidden mb-3 bg-slate-100">
+                        <Image
+                          src={post.coverImage}
+                          alt={post.title}
+                          fill
+                          sizes="(max-width: 1024px) 100vw, 30vw"
+                          className="object-cover group-hover/sub:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5">
+                          <span className="px-2.5 py-0.5 rounded-md bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-black shadow-sm">
+                            #{idx + 1} Hot
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-md bg-primary/90 backdrop-blur-md text-white text-[10px] font-bold shadow-sm">
+                            {post.categoryLabel}
+                          </span>
+                        </div>
+                        {post.postType === 'shorts_playlist' && (
+                          <div className="absolute bottom-2 left-2 z-10 px-2 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm">
+                            <Play className="w-3 h-3 fill-white" />
+                            Shorts
+                          </div>
+                        )}
+                      </div>
+
+                      <h3 className="text-sm font-bold text-slate-900 group-hover/sub:text-primary transition-colors line-clamp-2 leading-snug">
+                        {post.title}
+                      </h3>
+                    </div>
+
+                    <div className="pt-2.5 mt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+                      <span className="flex items-center gap-1 text-[11px]">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        {post.readTime}
+                      </span>
+                      <span className="text-primary font-bold text-xs group-hover/sub:translate-x-1 transition-transform flex items-center gap-1">
+                        <span>Đọc tiếp</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

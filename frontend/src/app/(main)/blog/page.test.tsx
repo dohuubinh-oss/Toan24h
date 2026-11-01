@@ -106,4 +106,11 @@ describe('BlogListPage with shorts playlist items', () => {
     expect(articles[0]).toHaveTextContent('Bí quyết ôn thi vào lớp 10 đạt điểm 9+')
     expect(articles[0]).not.toHaveTextContent('Tuyển tập 5 mẹo bấm máy Casio fx-580VNX')
   })
+
+  it('renders Magazine Bento hero with primary spotlight post and action button', () => {
+    render(<BlogListPage />)
+    expect(screen.getByText('Tuyển tập 5 mẹo bấm máy Casio fx-580VNX')).toBeInTheDocument()
+    expect(screen.getByText('Bài viết Nổi bật')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Đọc ngay/i })).toBeInTheDocument()
+  })
 })
