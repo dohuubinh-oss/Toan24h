@@ -215,9 +215,8 @@ export default function BlogListPage() {
               {/* Floating Top Badges */}
               <div className="absolute top-5 left-5 right-5 z-10 flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-3.5 py-1.5 rounded-full bg-primary/90 backdrop-blur-md text-white text-xs font-black shadow-lg border border-white/20 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                    Bài viết Nổi bật
+                  <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-semibold border border-white/20">
+                    {featuredPost.categoryLabel}
                   </span>
                   {featuredPost.postType === 'shorts_playlist' && (
                     <span className="px-3.5 py-1.5 rounded-full bg-rose-600/90 backdrop-blur-md text-white text-xs font-bold shadow-lg border border-white/20 flex items-center gap-1.5">
@@ -225,9 +224,6 @@ export default function BlogListPage() {
                       Playlist Shorts
                     </span>
                   )}
-                  <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-semibold border border-white/20">
-                    {featuredPost.categoryLabel}
-                  </span>
                 </div>
 
                 {isAdminOrTeacher && (
@@ -306,63 +302,114 @@ export default function BlogListPage() {
               </div>
             </div>
 
-            {/* Column 2: Secondary Highlights (Bento Stack) */}
+            {/* Column 2: Secondary Highlights */}
             {secondaryPosts.length > 0 && (
-              <div className="lg:col-span-4 flex flex-col justify-between gap-4">
-                <div className="flex items-center px-1">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-primary" />
-                    Bài viết nổi bật khác
-                  </span>
-                </div>
-
-                {secondaryPosts.map((post, idx) => (
-                  <Link
+              <div className="lg:col-span-4 flex flex-col justify-between gap-6">
+                {secondaryPosts.map((post) => (
+                  <div
                     key={post.id}
-                    href={`/blog/${post.slug}`}
-                    className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-xs hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col justify-between group/sub flex-1 overflow-hidden"
+                    className="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:border-primary/30 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between overflow-hidden group flex-1"
                   >
-                    <div>
-                      <div className="relative h-32 sm:h-36 w-full rounded-2xl overflow-hidden mb-3 bg-slate-100">
-                        <Image
-                          src={post.coverImage}
+                    <div className="space-y-3.5">
+                      {/* Cover Image */}
+                      <div className="relative h-40 sm:h-44 w-full overflow-hidden bg-slate-100">
+                        <Image 
+                          src={post.coverImage} 
                           alt={post.title}
                           fill
-                          sizes="(max-width: 1024px) 100vw, 30vw"
-                          className="object-cover group-hover/sub:scale-105 transition-transform duration-500"
+                          sizes="(max-width: 1024px) 100vw, 33vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                        <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5">
-                          <span className="px-2.5 py-0.5 rounded-md bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-black shadow-sm">
-                            #{idx + 1} Hot
-                          </span>
-                          <span className="px-2.5 py-0.5 rounded-md bg-primary/90 backdrop-blur-md text-white text-[10px] font-bold shadow-sm">
+                        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 flex-wrap">
+                          <span className="px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur-xs text-primary font-bold text-xs shadow-xs">
                             {post.categoryLabel}
                           </span>
+                          {post.postType === 'shorts_playlist' && (
+                            <span className="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold text-xs shadow-xs flex items-center gap-1">
+                              <Play className="w-3 h-3 fill-white" />
+                              Playlist Shorts
+                            </span>
+                          )}
                         </div>
-                        {post.postType === 'shorts_playlist' && (
-                          <div className="absolute bottom-2 left-2 z-10 px-2 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm">
-                            <Play className="w-3 h-3 fill-white" />
-                            Shorts
-                          </div>
-                        )}
                       </div>
 
-                      <h3 className="text-sm font-bold text-slate-900 group-hover/sub:text-primary transition-colors line-clamp-2 leading-snug">
-                        {post.title}
-                      </h3>
+                      {/* Content */}
+                      <div className="px-5 space-y-2">
+                        <div className="flex items-center gap-3 text-xs font-medium text-slate-500">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                            {post.publishedAt}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                            {post.readTime}
+                          </span>
+                        </div>
+
+                        <h4 className="text-base font-bold text-slate-900 group-hover:text-primary transition-colors leading-snug line-clamp-2">
+                          <Link href={`/blog/${post.slug}`}>
+                            {post.title}
+                          </Link>
+                        </h4>
+
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                          {post.tags.slice(0, 3).map((tag, idx) => (
+                            <span key={idx} className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-medium flex items-center gap-1">
+                              <Tag className="w-3 h-3 text-slate-400" />
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="pt-2.5 mt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
-                      <span className="flex items-center gap-1 text-[11px]">
-                        <Clock className="w-3 h-3 text-slate-400" />
-                        {post.readTime}
-                      </span>
-                      <span className="text-primary font-bold text-xs group-hover/sub:translate-x-1 transition-transform flex items-center gap-1">
-                        <span>Đọc tiếp</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </span>
+                    {/* Footer with Author & Action Buttons */}
+                    <div className="p-5 pt-3.5 border-t border-slate-100 mt-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        {post.author.avatar ? (
+                          <img 
+                            src={post.author.avatar} 
+                            alt={post.author.name}
+                            className="w-7 h-7 rounded-full object-cover border border-slate-200 bg-slate-100"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div 
+                          className={`w-7 h-7 rounded-full bg-primary/10 text-primary border border-primary/20 items-center justify-center font-bold text-xs uppercase shrink-0 ${post.author.avatar ? 'hidden' : 'flex'}`}
+                        >
+                          {getAvatarInitial(post.author.name)}
+                        </div>
+                        <span className="text-xs font-semibold text-slate-700 truncate max-w-[120px]">
+                          {post.author.name || 'Nhóm Toan6789'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {isAdminOrTeacher && (
+                          <Link 
+                            href={`/dashboard/blog/create?id=${post.id}`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-xs font-bold hover:bg-amber-100 transition-all shadow-2xs cursor-pointer"
+                            aria-label="Chỉnh sửa bài viết"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Sửa</span>
+                          </Link>
+                        )}
+                        <Link 
+                          href={`/blog/${post.slug}`}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors"
+                        >
+                          <span>Đọc tiếp</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             )}

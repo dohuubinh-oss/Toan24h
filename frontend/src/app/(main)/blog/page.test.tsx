@@ -107,11 +107,13 @@ describe('BlogListPage with shorts playlist items', () => {
     expect(articles[0]).not.toHaveTextContent('Tuyển tập 5 mẹo bấm máy Casio fx-580VNX')
   })
 
-  it('renders Magazine Bento hero with primary spotlight post and action button, and does not show Biên tập viên chọn', () => {
+  it('renders Magazine Bento hero with primary spotlight post and action button, and does not show badges or removed headers', () => {
     render(<BlogListPage />)
     expect(screen.getByText('Tuyển tập 5 mẹo bấm máy Casio fx-580VNX')).toBeInTheDocument()
-    expect(screen.getByText('Bài viết Nổi bật')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Đọc ngay/i })).toBeInTheDocument()
     expect(screen.queryByText(/Biên tập viên chọn/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Bài viết Nổi bật/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/#1 Hot/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Bài viết nổi bật khác/i)).not.toBeInTheDocument()
   })
 })
