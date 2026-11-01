@@ -43,7 +43,7 @@
   - `models.CommissionTransaction.Note string`
   - Tag: `gorm:"not null;uniqueIndex:idx_comm_order_referrer_type"`
 
-- [ ] **Step 1: Cập nhật struct `CommissionTransaction` trong `backend/internal/models/commission_transaction.go`**
+- [x] **Step 1: Cập nhật struct `CommissionTransaction` trong `backend/internal/models/commission_transaction.go`**
 
 ```go
 package models
@@ -80,12 +80,12 @@ func (c *CommissionTransaction) BeforeCreate(tx *gorm.DB) (err error) {
 }
 ```
 
-- [ ] **Step 2: Kiểm tra biên dịch backend**
+- [x] **Step 2: Kiểm tra biên dịch backend**
 
 Run: `cd backend && go vet ./internal/models/...`
 Expected: PASS (không có lỗi cú pháp).
 
-- [ ] **Step 3: Commit Task 1**
+- [x] **Step 3: Commit Task 1**
 
 ```bash
 git add backend/internal/models/commission_transaction.go
@@ -111,7 +111,7 @@ git commit -m "feat(models): add commission type, note and composite unique inde
   - `GetTeacherForGrade(db *gorm.DB, grade string) (*models.User, error)`
   - `GetSystemAdmin(db *gorm.DB) (*models.User, error)`
 
-- [ ] **Step 1: Viết test case mới trong `backend/internal/services/referral_service_test.go`**
+- [x] **Step 1: Viết test case mới trong `backend/internal/services/referral_service_test.go`**
 
 Cập nhật test tỷ lệ và thêm test cho `NormalizeGrade`:
 ```go
@@ -167,12 +167,12 @@ func TestNormalizeGrade(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Chạy test để xác nhận FAIL (do hằng số cũ 60%/70% và hàm NormalizeGrade chưa có)**
+- [x] **Step 2: Chạy test để xác nhận FAIL (do hằng số cũ 60%/70% và hàm NormalizeGrade chưa có)**
 
 Run: `cd backend && go test -v ./internal/services -run "TestReferralCommissionRatesByRole|TestNormalizeGrade"`
 Expected: FAIL.
 
-- [ ] **Step 3: Triển khai code trong `backend/internal/services/referral_service.go`**
+- [x] **Step 3: Triển khai code trong `backend/internal/services/referral_service.go`**
 
 1. Cập nhật các hằng số:
 ```go
@@ -253,12 +253,12 @@ func GetSystemAdmin(db *gorm.DB) (*models.User, error) {
 }
 ```
 
-- [ ] **Step 4: Chạy test xác nhận PASS**
+- [x] **Step 4: Chạy test xác nhận PASS**
 
 Run: `cd backend && go test -v ./internal/services -run "TestReferralCommissionRatesByRole|TestNormalizeGrade"`
 Expected: PASS.
 
-- [ ] **Step 5: Commit Task 2**
+- [x] **Step 5: Commit Task 2**
 
 ```bash
 git add backend/internal/services/referral_service.go backend/internal/services/referral_service_test.go
@@ -276,23 +276,23 @@ git commit -m "feat(services): update commission rates and add NormalizeGrade, G
 **Interfaces:**
 - Consumes: `services.GetCommissionRateByRole`
 
-- [ ] **Step 1: Cập nhật `voucher_handler.go` để lấy tỷ lệ động từ `services.GetCommissionRateByRole`**
+- [x] **Step 1: Cập nhật `voucher_handler.go` để lấy tỷ lệ động từ `services.GetCommissionRateByRole`**
 
 Thay thế hardcode tại dòng 89:
 ```go
 commissionPercent := services.GetCommissionRateByRole(targetRole)
 ```
 
-- [ ] **Step 2: Cập nhật assertion trong `user_handler_test.go`**
+- [x] **Step 2: Cập nhật assertion trong `user_handler_test.go`**
 
 Đổi giá trị mong đợi từ 60% sang 50% tại dòng 262 (khi tạo voucher cho teacher).
 
-- [ ] **Step 3: Chạy go vet và unit tests kiểm tra**
+- [x] **Step 3: Chạy go vet và unit tests kiểm tra**
 
 Run: `cd backend && go vet ./internal/handlers/...`
 Expected: PASS.
 
-- [ ] **Step 4: Commit Task 3**
+- [x] **Step 4: Commit Task 3**
 
 ```bash
 git add backend/internal/handlers/voucher_handler.go backend/internal/handlers/user_handler_test.go
@@ -319,7 +319,7 @@ git commit -m "refactor(handlers): use dynamic commission rates for vouchers and
 - Produces:
   - `processMultiTierCommissions(tx models.Transaction, student models.User)`
 
-- [ ] **Step 1: Viết test case đa tầng trong `backend/internal/handlers/webhook_handler_test.go`**
+- [x] **Step 1: Viết test case đa tầng trong `backend/internal/handlers/webhook_handler_test.go`**
 
 Tạo bộ test độc lập (sử dụng in-memory sqlite hoặc mock DB) bao phủ 5 kịch bản phân bổ dòng tiền:
 1. Học sinh tự đăng ký (không mã GT): Nhận 0% direct, Teacher nhận 3%, Admin nhận 1%.
@@ -329,7 +329,7 @@ Tạo bộ test độc lập (sử dụng in-memory sqlite hoặc mock DB) bao p
 5. Affiliate giới thiệu: Affiliate nhận 30% direct, Teacher Lớp 7 nhận 3% khối, Admin nhận 1%.
 6. Kiểm tra Idempotency: Gọi lần thứ 2 với cùng `orderCode` không sinh thêm giao dịch và không cộng dồn thêm số dư.
 
-- [ ] **Step 2: Sửa guard check tại `backend/internal/handlers/webhook_handler.go:159`**
+- [x] **Step 2: Sửa guard check tại `backend/internal/handlers/webhook_handler.go:159`**
 
 Thay vì kiểm tra `student.ReferrerID != nil`, sửa thành:
 ```go
@@ -338,7 +338,7 @@ if !alreadyCompleted {
 }
 ```
 
-- [ ] **Step 3: Thay thế `processCommission` bằng `processMultiTierCommissions` trong `webhook_handler.go`**
+- [x] **Step 3: Thay thế `processCommission` bằng `processMultiTierCommissions` trong `webhook_handler.go`**
 
 ```go
 // processMultiTierCommissions safely calculates and allocates multi-tier commissions
@@ -490,12 +490,12 @@ func (h *WebhookHandler) processMultiTierCommissions(tx models.Transaction, stud
 }
 ```
 
-- [ ] **Step 4: Chạy test webhook xác nhận PASS toàn bộ**
+- [x] **Step 4: Chạy test webhook xác nhận PASS toàn bộ**
 
 Run: `cd backend && go test -v ./internal/handlers -run TestProcessMultiTierCommissions`
 Expected: PASS.
 
-- [ ] **Step 5: Commit Task 4**
+- [x] **Step 5: Commit Task 4**
 
 ```bash
 git add backend/internal/handlers/webhook_handler.go backend/internal/handlers/webhook_handler_test.go
@@ -518,7 +518,7 @@ git commit -m "feat(webhook): implement atomic multi-tier commission processing 
     - Affiliate: 30% trực tiếp
   - Badges và ghi chú trực quan, thân thiện.
 
-- [ ] **Step 1: Cập nhật `profile/page.tsx` để hiển thị tỷ lệ hoa hồng theo role**
+- [x] **Step 1: Cập nhật `profile/page.tsx` để hiển thị tỷ lệ hoa hồng theo role**
 
 Trong Card "Mã Giới Thiệu & Hoa Hồng Đối Tác":
 ```tsx
@@ -552,21 +552,21 @@ Trong Card "Mã Giới Thiệu & Hoa Hồng Đối Tác":
 </div>
 ```
 
-- [ ] **Step 2: Cập nhật `profile/page.test.tsx`**
+- [x] **Step 2: Cập nhật `profile/page.test.tsx`**
 
 Cập nhật test case:
 - Admin mong đợi `/60%/` và `/1%/`.
 - Teacher mong đợi `/50%/` và `/3%/`.
 - Affiliate mong đợi `/30%/`.
 
-- [ ] **Step 3: Chạy test Vitest và kiểm tra TypeScript**
+- [x] **Step 3: Chạy test Vitest và kiểm tra TypeScript**
 
 Run: 
 1. `cd frontend && /usr/local/bin/node ./node_modules/vitest/vitest.mjs run src/app/\(main\)/profile/page.test.tsx`
 2. `cd frontend && /usr/local/bin/node ./node_modules/typescript/bin/tsc --noEmit`
 Expected: PASS 100%, 0 TypeScript errors.
 
-- [ ] **Step 4: Commit Task 5**
+- [x] **Step 4: Commit Task 5**
 
 ```bash
 git add frontend/src/app/\(main\)/profile/page.tsx frontend/src/app/\(main\)/profile/page.test.tsx
@@ -580,17 +580,17 @@ git commit -m "feat(profile): display multi-tier commission rates by partner rol
 **Files:**
 - Toàn bộ files đã chỉnh sửa.
 
-- [ ] **Step 1: Chạy toàn bộ backend unit tests**
+- [x] **Step 1: Chạy toàn bộ backend unit tests**
 
 Run: `cd backend && go test ./internal/services/...`
 Expected: PASS.
 
-- [ ] **Step 2: Chạy toàn bộ frontend unit tests liên quan**
+- [x] **Step 2: Chạy toàn bộ frontend unit tests liên quan**
 
 Run: `cd frontend && /usr/local/bin/node ./node_modules/vitest/vitest.mjs run src/app/\(main\)/profile/page.test.tsx src/components/questions/creator/QuestionSettingsSidebar.test.tsx src/components/lecture/creator/LectureBasicSettings.test.tsx`
 Expected: PASS.
 
-- [ ] **Step 3: Kiểm tra trạng thái Git**
+- [x] **Step 3: Kiểm tra trạng thái Git**
 
 Run: `git status`
 Expected: Working tree clean, mọi commit đều theo Conventional Commits.
