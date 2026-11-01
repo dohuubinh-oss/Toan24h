@@ -627,9 +627,51 @@ func TestParseAndProcessExtractedBlocks_DiagramInQuestion(t *testing.T) {
 	assert.Len(t, blocks, 1)
 	assert.Len(t, blocks[0].Questions, 1)
 
-	// Diagram inside question should be replaced with DiagramAlertBadge
+	// Diagram inside question should be replaced with DiagramAlertBadge and cropped img tag
 	assert.True(t, strings.Contains(blocks[0].Questions[0].Content, "diagram-placeholder"))
+	assert.True(t, strings.Contains(blocks[0].Questions[0].Content, "<img src="))
 	assert.False(t, strings.Contains(blocks[0].Questions[0].Content, `[DIAGRAM_0_0]`))
+}
+
+func TestParseAndProcessExtractedBlocks_TableAsDiagramCropping(t *testing.T) {
+	tempDir := "./uploads/temp"
+	defer os.RemoveAll(tempDir)
+
+	img := image.NewRGBA(image.Rect(0, 0, 400, 400))
+	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{100, 200, 100, 255}}, image.Point{}, draw.Src)
+	images := []image.Image{img}
+
+	rawJSON := `[
+		{
+			"shared_content": null,
+			"type_question": "single",
+			"questions": [
+				{
+					"content": "Cho bảng biến thiên của hàm số như sau:\n[DIAGRAM_0_0]\nTìm khoảng đồng biến của hàm số.",
+					"type": "Trắc nghiệm",
+					"options": ["A. (0; 2)", "B. (-1; 1)", "C. (1; 3)", "D. R"],
+					"correct_answer": "A. (0; 2)",
+					"diagrams": [
+						{
+							"image_index": 0,
+							"box_2d": [50, 50, 250, 350],
+							"placeholder": "[DIAGRAM_0_0]"
+						}
+					]
+				}
+			]
+		}
+	]`
+
+	blocks, err := ParseAndProcessExtractedBlocks(rawJSON, images, tempDir, 9)
+	assert.NoError(t, err)
+	assert.Len(t, blocks, 1)
+	assert.Len(t, blocks[0].Questions, 1)
+
+	qContent := blocks[0].Questions[0].Content
+	assert.True(t, strings.Contains(qContent, "<img src="), "Table treated as diagram must be cropped into an img tag")
+	assert.True(t, strings.Contains(qContent, "diagram-placeholder"))
+	assert.False(t, strings.Contains(qContent, "[DIAGRAM_0_0]"))
 }
 
 func TestParseAndProcessExtractedBlocks_DiagramFlexibleID(t *testing.T) {

@@ -721,12 +721,24 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 			}
 
 			if hasDiagram {
+				badge := DiagramAlertBadge
+				for _, diag := range allDiagrams {
+					if len(diag.Box2D) == 4 && diag.ImageIndex >= 0 && diag.ImageIndex < len(sourceImages) && sourceImages[diag.ImageIndex] != nil {
+						croppedUrl, err := utils.CropDiagram(sourceImages[diag.ImageIndex], diag.Box2D, tempDir)
+						if err == nil && croppedUrl != "" {
+							imgTag := fmt.Sprintf(`<img src="%s" alt="Hình vẽ / Bảng" class="max-w-md mx-auto my-3 rounded-xl border border-slate-200" />`, croppedUrl)
+							badge = imgTag + "\n" + DiagramAlertBadge
+							break
+						}
+					}
+				}
+
 				if rxDiagPlaceholder.MatchString(*sharedContent) {
 					placeholder := rxDiagPlaceholder.FindString(*sharedContent)
-					*sharedContent = cleanAndAppendDiagram(*sharedContent, placeholder, DiagramAlertBadge)
+					*sharedContent = cleanAndAppendDiagram(*sharedContent, placeholder, badge)
 					*sharedContent = rxDiagPlaceholder.ReplaceAllString(*sharedContent, "")
 				} else if !strings.Contains(*sharedContent, DiagramAlertBadge) {
-					*sharedContent = cleanAndAppendDiagram(*sharedContent, "", DiagramAlertBadge)
+					*sharedContent = cleanAndAppendDiagram(*sharedContent, "", badge)
 				}
 			} else {
 				// Nếu đề bài trong ảnh không có hình, dọn dẹp mọi placeholder nếu có
@@ -773,16 +785,25 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 							}
 						}
 					}
+					badge := DiagramAlertBadge
+					if len(diag.Box2D) == 4 && diag.ImageIndex >= 0 && diag.ImageIndex < len(sourceImages) && sourceImages[diag.ImageIndex] != nil {
+						croppedUrl, err := utils.CropDiagram(sourceImages[diag.ImageIndex], diag.Box2D, tempDir)
+						if err == nil && croppedUrl != "" {
+							imgTag := fmt.Sprintf(`<img src="%s" alt="Hình vẽ / Bảng" class="max-w-md mx-auto my-3 rounded-xl border border-slate-200" />`, croppedUrl)
+							badge = imgTag + "\n" + DiagramAlertBadge
+						}
+					}
+
 					applied := false
 					for qIdx := range rb.Questions {
 						q := &rb.Questions[qIdx]
 						if placeholder != "" && strings.Contains(q.Content, placeholder) {
-							q.Content = cleanAndAppendDiagram(q.Content, placeholder, DiagramAlertBadge)
+							q.Content = cleanAndAppendDiagram(q.Content, placeholder, badge)
 							applied = true
 						}
 					}
 					if !applied && len(rb.Questions) == 1 {
-						rb.Questions[0].Content = cleanAndAppendDiagram(rb.Questions[0].Content, "", DiagramAlertBadge)
+						rb.Questions[0].Content = cleanAndAppendDiagram(rb.Questions[0].Content, "", badge)
 					}
 				}
 
@@ -1010,16 +1031,18 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
     - Đồng thời gán giá trị này cho cả "quick_solve_tips".
 17. "general_method": Công thức tổng quát hóa cho dạng bài toán này.
 18. "mistakes": Các lỗi sai học sinh thường vấp phải.
-19. Bảng biến thiên, Bảng xét dấu hoặc Bảng số liệu: HÃY chuyển đổi trực tiếp thành bảng HTML (thẻ <table>, <tr>, <td>) hoặc bảng Markdown rõ ràng, KHÔNG cắt thành ảnh.
-20. QUY TẮC PHÁT HIỆN HÌNH VẼ CỦA ĐỀ BÀI (HÌNH CÓ SẴN TRONG ẢNH TẢI LÊN):
-    - CHỈ KHI TRONG ẢNH ĐỀ BÀI GỐC CÓ IN SẴN HÌNH VẼ, HÌNH HỌC, ĐỒ THỊ HOẶC BẢNG MINH HỌA ĐI KÈM ĐỀ:
-      + Mới được đặt placeholder [DIAGRAM] và khai báo trong mảng "diagrams": [{"placeholder": "[DIAGRAM]"}].
-      + VỚI CÂU HỎI CHÙM ('group'): BẮT BUỘC đặt [DIAGRAM] ở CUỐI CÙNG của "shared_content" (Nội dung dẫn chung). TUYỆT ĐỐI KHÔNG đặt [DIAGRAM] trong "content" của các câu hỏi con a, b, c... (vì toàn bộ các câu hỏi con đều dùng chung hình ảnh đặt tại phần dẫn chung).
+19. BẢNG BIẾN THIÊN, BẢNG XÉT DẤU HOẶC BẢNG SỐ LIỆU THỐNG KÊ:
+    - BẮT BUỘC COI LÀ HÌNH ẢNH (DIAGRAM), TUYỆT ĐỐI KHÔNG chuyển đổi thành văn bản, mảng số hay bảng HTML/Markdown rời rạc làm học sinh khó hiểu.
+    - Xử lý bảng giống hệt như một hình vẽ/đồ thị toán học: đặt placeholder [DIAGRAM] tại vị trí của bảng trong nội dung và khai báo trong mảng "diagrams" kèm tọa độ box_2d [ymin, xmin, ymax, xmax] (thang đo 0-1000) bao quanh bảng.
+20. QUY TẮC PHÁT HIỆN HÌNH VẼ HOẶC BẢNG DỮ LIỆU CỦA ĐỀ BÀI (HÌNH/BẢNG CÓ SẴN TRONG ẢNH TẢI LÊN):
+    - CHỈ KHI TRONG ẢNH ĐỀ BÀI GỐC CÓ IN SẴN HÌNH VẼ, HÌNH HỌC, ĐỒ THỊ HOẶC BẢNG BIẾN THIÊN / BẢNG SỐ LIỆU ĐI KÈM ĐỀ:
+      + Mới được đặt placeholder [DIAGRAM] và khai báo trong mảng "diagrams": [{"placeholder": "[DIAGRAM]", "box_2d": [ymin, xmin, ymax, xmax], "image_index": 0}].
+      + VỚI CÂU HỎI CHÙM ('group'): BẮT BUỘC đặt [DIAGRAM] ở CUỐI CÙNG của "shared_content" (Nội dung dẫn chung). TUYỆT ĐỐI KHÔNG đặt [DIAGRAM] trong "content" của các câu hỏi con a, b, c... (vì toàn bộ các câu hỏi con đều dùng chung hình ảnh/bảng đặt tại phần dẫn chung).
       + VỚI CÂU HỎI ĐƠN ('single'): Đặt [DIAGRAM] ở CUỐI CÙNG của trường "content".
-    - NẾU ĐỀ BÀI TRONG ẢNH LÀ DẠNG THUẦN CHỮ (bài toán mô tả bằng lời văn, KHÔNG có in sẵn hình vẽ trong ảnh đề bài):
+    - NẾU ĐỀ BÀI TRONG ẢNH LÀ DẠNG THUẦN CHỮ (bài toán mô tả bằng lời văn, KHÔNG có in sẵn hình vẽ hay bảng số liệu):
       + TUYỆT ĐỐI KHÔNG ĐƯỢC chèn [DIAGRAM] vào "content" hay "shared_content"!
       + TUYỆT ĐỐI KHÔNG khai báo mảng "diagrams" (để mảng rỗng [] hoặc bỏ qua)!
-      + Hệ thống sẽ KHÔNG chèn dòng chữ '(Chèn hình ảnh tại đây)' nếu đề bài gốc không có in sẵn hình.
+      + Hệ thống sẽ KHÔNG chèn hình ảnh nếu đề bài gốc không có in sẵn hình/bảng.
 21. CẤU TRÚC ĐẦU RA JSON MẪU (OUTPUT SCHEMA - TUYỆT ĐỐI KHÔNG CÓ TRƯỜNG "is_group"):
 [
   {

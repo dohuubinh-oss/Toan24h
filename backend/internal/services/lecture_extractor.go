@@ -135,7 +135,9 @@ Hãy đọc các trang ảnh tài liệu bài giảng/sách tham khảo đính k
 
 Yêu cầu nghiêm ngặt về nội dung và định dạng văn bản:
 1. Tất cả công thức toán học phải được định dạng bằng cú pháp LaTeX chuẩn: trong dòng dùng $...$, công thức quan trọng hiển thị riêng dòng dùng $$\n...\n$$.
-2. Với Bảng biến thiên, Bảng xét dấu hoặc Bảng số liệu: HÃY chuyển đổi trực tiếp thành bảng HTML (thẻ <table>, <tr>, <td>) hoặc bảng Markdown, KHÔNG cắt thành ảnh.
+2. Với Bảng biến thiên, Bảng xét dấu, Bảng số liệu thống kê hoặc Bảng giá trị: BẮT BUỘC XEM LÀ HÌNH VẼ / MINH HỌA (DIAGRAM).
+   - TUYỆT ĐỐI KHÔNG chuyển đổi thành văn bản, mảng số hay bảng HTML/Markdown rời rạc vì sẽ làm vỡ cấu trúc và mất tính trực quan khiến học sinh khó hiểu.
+   - Hãy xử lý bảng giống hệt như một hình vẽ/đồ thị: điền mã định danh [DIAGRAM_0_1] tại vị trí xuất hiện của bảng trong nội dung và khai báo thông tin vào mảng "diagrams" kèm tọa độ box_2d [ymin, xmin, ymax, xmax] (thang đo 0-1000) bao quanh bảng để hệ thống tự động cắt ảnh gốc sắc nét chèn vào bài giảng.
 3. Quy tắc trình bày và ngắt dòng trong trường "solution" (Phương pháp giải):
    - TUYỆT ĐỐI KHÔNG viết thành một khối văn bản dính liền nhau.
    - Mỗi định lý, quy tắc hoặc bước phương pháp phải được ngắt đoạn bằng 2 dấu xuống dòng (\n\n).
@@ -150,9 +152,9 @@ Yêu cầu nghiêm ngặt về nội dung và định dạng văn bản:
    - "formula": Chứa phép biến đổi hoặc công thức toán trọng tâm của bước (dạng LaTeX).
    - "conclusion": Kết luận rõ ràng đáp số / kết quả bài toán.
    - "tips": Gợi ý, lưu ý hoặc mẹo giải nhanh (nếu có).
-6. Với Hình vẽ hình học và Đồ thị hàm số trên hệ trục Oxy:
-   - Điền một mã định danh vào vị trí tương ứng trong đề bài hoặc lời giải, ví dụ: [DIAGRAM_0_1] (trong đó 0 là chỉ số trang ảnh 0-indexed, 1 là thứ tự hình).
-   - Khai báo thông tin vào mảng "diagrams" với tọa độ chuẩn hóa box_2d [ymin, xmin, ymax, xmax] (thang đo 0-1000).
+6. Với Hình vẽ hình học, Đồ thị hàm số, và Bảng biến thiên / Bảng số liệu:
+   - Điền một mã định danh vào vị trí tương ứng trong đề bài, phương pháp hoặc lời giải, ví dụ: [DIAGRAM_0_1] (trong đó 0 là chỉ số trang ảnh 0-indexed, 1 là thứ tự hình hoặc bảng).
+   - Khai báo thông tin vào mảng "diagrams" với tọa độ chuẩn hóa box_2d [ymin, xmin, ymax, xmax] (thang đo 0-1000) bao trọn toàn bộ hình vẽ hoặc bảng dữ liệu đó.
 7. Cấu trúc JSON bắt buộc phải là một mảng [] các Dạng toán theo cấu trúc:
 [
   {
