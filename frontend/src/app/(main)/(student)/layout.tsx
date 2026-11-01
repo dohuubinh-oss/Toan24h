@@ -1,7 +1,7 @@
 import React from 'react'
 import Sidebar from '@/components/layout/Sidebar'
 import { cookies } from 'next/headers'
-import GradeSelectionModal from '@/components/student/GradeSelectionModal'
+import GradeSelectionModal from '@/components/auth/GradeSelectionModal'
 import PromotionRewardModal from '@/components/student/PromotionRewardModal'
 import { StudentLectureFilterProvider } from '@/contexts/StudentLectureFilterContext'
 import StudentFilterManager from '@/components/student/StudentFilterManager'

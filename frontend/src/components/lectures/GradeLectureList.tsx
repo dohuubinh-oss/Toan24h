@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { BookOpen, Sparkles, X } from 'lucide-react';
 import { Lecture } from '@/types/lecture';
 import { LectureCard, PracticeLectureCard } from './LectureCard';
-import { LectureSidebar } from './LectureSidebar';
+import { LectureFilterSidebar } from './LectureFilterSidebar';
 import { useStudentLectureFilter } from '@/contexts/StudentLectureFilterContext';
 
 export interface GradeLectureListProps {
@@ -128,7 +128,7 @@ export function GradeLectureList({
       {/* Cột Trái: Sidemenu Bộ lọc & Chuyên đề (Ẩn trên desktop khi đã tích hợp vào Sidebar menu chính) */}
       {lectures.length > 0 && (
         <div className={contextFilter ? 'lg:hidden w-full' : 'w-full lg:w-72 xl:w-80 shrink-0'}>
-          <LectureSidebar
+          <LectureFilterSidebar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             selectedChapter={selectedChapter}

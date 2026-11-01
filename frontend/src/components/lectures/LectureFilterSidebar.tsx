@@ -29,7 +29,9 @@ export interface LectureSidebarProps {
   isInsideSidebar?: boolean;
 }
 
-export function LectureSidebar({
+export type LectureFilterSidebarProps = LectureSidebarProps;
+
+export function LectureFilterSidebar({
   searchQuery,
   onSearchChange,
   selectedChapter,
@@ -304,4 +306,5 @@ export function LectureSidebar({
     </aside>
   );
 }
-export default LectureSidebar;
+export const LectureSidebar = LectureFilterSidebar;
+export default LectureFilterSidebar;

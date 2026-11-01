@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { LectureSidebar } from './LectureSidebar';
+import { LectureFilterSidebar } from './LectureFilterSidebar';
 
-describe('LectureSidebar', () => {
+describe('LectureFilterSidebar', () => {
   const chapters = ['Đại số', 'Hình học'];
 
   it('renders search input, chapter list and status filters', () => {
@@ -12,7 +12,7 @@ describe('LectureSidebar', () => {
     const onStatusChange = vi.fn();
 
     render(
-      <LectureSidebar
+      <LectureFilterSidebar
         searchQuery=""
         onSearchChange={onSearchChange}
         selectedChapter="all"
@@ -38,7 +38,7 @@ describe('LectureSidebar', () => {
   it('triggers search callback when typing', () => {
     const onSearchChange = vi.fn();
     render(
-      <LectureSidebar
+      <LectureFilterSidebar
         searchQuery=""
         onSearchChange={onSearchChange}
         selectedChapter="all"
@@ -61,7 +61,7 @@ describe('LectureSidebar', () => {
   it('triggers chapter change when clicking chapter item', () => {
     const onChapterChange = vi.fn();
     render(
-      <LectureSidebar
+      <LectureFilterSidebar
         searchQuery=""
         onSearchChange={vi.fn()}
         selectedChapter="all"

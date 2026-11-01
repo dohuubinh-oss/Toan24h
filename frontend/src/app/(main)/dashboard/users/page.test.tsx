@@ -13,9 +13,6 @@ vi.mock('next/navigation', () => ({
   }),
 }))
 
-vi.mock('@/components/users/UserFilters', () => ({
-  default: () => <div data-testid="user-filters">Filters</div>
-}))
 vi.mock('@/components/users/UserHeader', () => ({
   default: () => <div data-testid="user-header">Header</div>
 }))

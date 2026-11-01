@@ -1,7 +1,7 @@
 import React from 'react'
 import LectureHeader from '@/components/lecture/LectureHeader'
 import { LectureConcept, LectureExamples } from '@/components/lecture/LectureContent'
-import LectureSidebar from '@/components/lecture/LectureSidebar'
+import LectureDetailSidebar from '@/components/lecture/LectureDetailSidebar'
 import { getLectureById } from '@/lib/lectureApi'
 import { notFound, redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
@@ -127,7 +127,7 @@ export default async function GradeLecturePage({
           </div>
         </div>
         <div className="col-span-12 lg:col-span-4 space-y-8">
-          <LectureSidebar />
+          <LectureDetailSidebar />
         </div>
       </div>
     </div>

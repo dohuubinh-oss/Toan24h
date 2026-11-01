@@ -1,7 +1,7 @@
 import React from 'react';
 import { Sparkles, X, CheckSquare, ArrowDownToLine } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useExam } from '../../contexts/ExamContext';
+import { useExam } from '@/contexts/ExamContext';
 
 interface FloatingActionBarProps {
   selectedIds: string[];

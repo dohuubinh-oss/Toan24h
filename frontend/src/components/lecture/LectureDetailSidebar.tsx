@@ -1,7 +1,7 @@
 import React from 'react'
 import { Download, Bookmark, BookOpen, ArrowRight } from 'lucide-react'
 
-export default function LectureSidebar() {
+export default function LectureDetailSidebar() {
   return (
     <div className="space-y-6">
       {/* Related Lessons */}

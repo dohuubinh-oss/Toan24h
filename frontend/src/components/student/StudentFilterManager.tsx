@@ -3,7 +3,7 @@
 import React from 'react'
 import { usePathname } from 'next/navigation'
 import { useStudentLectureFilter } from '@/contexts/StudentLectureFilterContext'
-import { LectureSidebar } from '@/components/lectures/LectureSidebar'
+import LectureFilterSidebar from '@/components/lectures/LectureFilterSidebar'
 
 export function StudentFilterManager() {
   const pathname = usePathname()
@@ -20,7 +20,7 @@ export function StudentFilterManager() {
   }
 
   return (
-    <LectureSidebar
+    <LectureFilterSidebar
       searchQuery={filter.searchQuery}
       onSearchChange={filter.setSearchQuery}
       selectedChapter={filter.selectedChapter}
