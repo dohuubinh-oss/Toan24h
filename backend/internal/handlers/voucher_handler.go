@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
+	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"gorm.io/gorm"
 )
@@ -85,11 +86,7 @@ func (h *VoucherHandler) CreateVoucher(c *gin.Context) {
 			}
 		}
 
-		if targetRole == "teacher" {
-			commissionPercent = 50.0
-		} else {
-			commissionPercent = 30.0
-		}
+		commissionPercent = services.GetCommissionRateByRole(targetRole)
 	}
 
 	voucher := models.Voucher{

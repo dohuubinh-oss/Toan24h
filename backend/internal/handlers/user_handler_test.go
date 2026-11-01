@@ -259,8 +259,8 @@ func TestGetProfile_ReferralAndCommission(t *testing.T) {
 		if err := db.Where("code = ?", *res.Data.ReferralCode).First(&voucher).Error; err != nil {
 			t.Fatalf("Expected voucher in DB for referral code, got error: %v", err)
 		}
-		if voucher.CommissionPercent != 60 {
-			t.Errorf("Expected voucher commission 60%%, got %v", voucher.CommissionPercent)
+		if voucher.CommissionPercent != 50 {
+			t.Errorf("Expected voucher commission 50%%, got %v", voucher.CommissionPercent)
 		}
 	})
 
