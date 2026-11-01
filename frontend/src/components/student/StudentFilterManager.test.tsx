@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import React from 'react'
 import StudentFilterManager from './StudentFilterManager'
-import { StudentLectureFilterProvider, useStudentLectureFilter } from '@/context/StudentLectureFilterContext'
+import { StudentLectureFilterProvider, useStudentLectureFilter } from '@/contexts/StudentLectureFilterContext'
 
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => '/lectures/lop/8'),

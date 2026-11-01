@@ -6,7 +6,7 @@ import { BookOpen, Sparkles, X } from 'lucide-react';
 import { Lecture } from '@/types/lecture';
 import { LectureCard, PracticeLectureCard } from './LectureCard';
 import { LectureSidebar } from './LectureSidebar';
-import { useStudentLectureFilter } from '@/context/StudentLectureFilterContext';
+import { useStudentLectureFilter } from '@/contexts/StudentLectureFilterContext';
 
 export interface GradeLectureListProps {
   lectures: Lecture[];

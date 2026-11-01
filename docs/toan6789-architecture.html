@@ -160,13 +160,13 @@
     <div class="header">
       <p class="header-eyebrow">Hệ thống toan6789.vn · Kiến trúc tổng thể</p>
       <h1>Sơ đồ Kiến trúc Hệ thống toan6789.vn</h1>
-      <p class="subtitle">Mô hình kiến trúc đa tầng tối ưu hiệu năng cao: Cổng tiếp nhận Nginx, Frontend Next.js 15 kết hợp YouTube Shorts Player & KaTeX, Backend Go Fiber xử lý nghiệp vụ & Gemini AI, cùng tầng lưu trữ PostgreSQL và bộ đệm Redis.</p>
+      <p class="subtitle">Mô hình kiến trúc đa tầng tối ưu hiệu năng cao: Cổng tiếp nhận Nginx, Frontend Next.js 16 kết hợp YouTube Shorts Player & KaTeX, Backend Go Gin xử lý nghiệp vụ & Gemini AI, cùng tầng lưu trữ PostgreSQL và bộ đệm Redis.</p>
     </div>
 
     <div class="diagram-container">
       <svg viewBox="0 0 1020 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="toan6789-arch-title toan6789-arch-desc">
         <title id="toan6789-arch-title">Sơ đồ Kiến trúc Hệ thống toan6789.vn</title>
-        <desc id="toan6789-arch-desc">Sơ đồ luồng dữ liệu và phân tầng giữa Client, Next.js Frontend, YouTube Shorts Player, Nginx Gateway, Go Fiber API, Gemini AI Pool, PostgreSQL và Redis.</desc>
+        <desc id="toan6789-arch-desc">Sơ đồ luồng dữ liệu và phân tầng giữa Client, Next.js Frontend, YouTube Shorts Player, Nginx Gateway, Go Gin API, Gemini AI Pool, PostgreSQL và Redis.</desc>
         <defs>
           <pattern id="grid-dots" width="22" height="22" patternUnits="userSpaceOnUse">
             <circle cx="1" cy="1" r="0.85" fill="rgba(45,49,66,0.08)"/>
@@ -208,7 +208,7 @@
         <rect x="306" y="163" width="68" height="12" rx="2" fill="#f5f5f5"/>
         <text x="340" y="172" fill="#2e5aa8" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HTTPS / TLS</text>
 
-        <!-- 2. Nginx -> Go Fiber (Reverse Proxy API) -->
+        <!-- 2. Nginx -> Go Gin (Reverse Proxy API) -->
         <line x1="505" y1="202" x2="505" y2="236" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
         <rect x="450" y="213" width="110" height="12" rx="2" fill="#f5f5f5"/>
         <text x="505" y="222" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">PROXY PASS :8080</text>
@@ -219,7 +219,7 @@
         <rect x="306" y="210" width="44" height="12" rx="2" fill="#f5f5f5"/>
         <text x="328" y="219" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">:3000</text>
 
-        <!-- 4. Next.js -> Go Fiber (REST API client fetch) -->
+        <!-- 4. Next.js -> Go Gin (REST API client fetch) -->
         <line x1="280" y1="269" x2="400" y2="269" stroke="#bf4520" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
         <rect x="300" y="263" width="80" height="12" rx="2" fill="#f5f5f5"/>
         <text x="340" y="272" fill="#bf4520" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">REST API / JSON</text>
@@ -229,18 +229,18 @@
         <rect x="130" y="313" width="90" height="12" rx="2" fill="#f5f5f5"/>
         <text x="175" y="322" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">UI STATE &amp; PROPS</text>
 
-        <!-- 6. Go Fiber -> Redis Cache (Auth & Cache) -->
+        <!-- 6. Go Gin -> Redis Cache (Auth & Cache) -->
         <path d="M 610,252 H 664 Q 672,252 672,244 V 177 Q 672,169 680,169 H 735"
               fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
         <rect x="632" y="204" width="80" height="12" rx="2" fill="#f5f5f5"/>
         <text x="672" y="213" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CACHE &amp; AUTH</text>
 
-        <!-- 7. Go Fiber -> PostgreSQL (GORM / SQL persistence) -->
+        <!-- 7. Go Gin -> PostgreSQL (GORM / SQL persistence) -->
         <line x1="610" y1="269" x2="735" y2="269" stroke="#bf4520" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
         <rect x="640" y="263" width="64" height="12" rx="2" fill="#f5f5f5"/>
         <text x="672" y="272" fill="#bf4520" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">SQL / GORM</text>
 
-        <!-- 8. Go Fiber -> Gemini AI Pool (Dispatch AI generation) -->
+        <!-- 8. Go Gin -> Gemini AI Pool (Dispatch AI generation) -->
         <line x1="505" y1="302" x2="505" y2="336" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
         <rect x="446" y="313" width="118" height="12" rx="2" fill="#f5f5f5"/>
         <text x="505" y="322" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DISPATCH WORKER</text>
@@ -293,13 +293,13 @@
         <text x="505" y="168" fill="#2d3142" font-size="11.5" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Nginx Reverse Proxy</text>
         <text x="505" y="184" fill="#4f5d75" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">SSL Term · Rate Limit · Router</text>
 
-        <!-- Node 2.2: Go Fiber API (FOCAL CORAL NODE) -->
+        <!-- Node 2.2: Go Gin API (FOCAL CORAL NODE) -->
         <rect x="400" y="236" width="210" height="66" rx="6" fill="#f5f5f5"/>
         <rect x="400" y="236" width="210" height="66" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1.2"/>
         <rect x="408" y="244" width="32" height="12" rx="2" fill="transparent" stroke="rgba(191,69,32,0.50)" stroke-width="0.8"/>
         <text x="424" y="253" fill="#bf4520" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CORE</text>
         <text x="598" y="288" fill="rgba(191,69,32,0.12)" font-size="28" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end">05</text>
-        <text x="505" y="268" fill="#2d3142" font-size="11.5" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Go Fiber Backend API</text>
+        <text x="505" y="268" fill="#2d3142" font-size="11.5" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Go Gin Backend API</text>
         <text x="505" y="284" fill="#bf4520" font-size="8.5" font-family="'Geist Mono', monospace" text-anchor="middle">JWT · Exam CRUD · Playlist Service</text>
 
         <!-- Node 2.3: Gemini AI Pool -->
@@ -344,7 +344,7 @@
 
         <!-- Legend Items -->
         <rect x="40" y="496" width="14" height="10" rx="2" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1"/>
-        <text x="60" y="504" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Focal / Go Fiber Core</text>
+        <text x="60" y="504" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">Focal / Go Gin Core</text>
 
         <rect x="195" y="496" width="14" height="10" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
         <text x="215" y="504" fill="#4f5d75" font-size="8.5" font-family="'Geist', sans-serif">App &amp; Frontend</text>
@@ -371,9 +371,9 @@
         <p class="eyebrow">ĐIỂM NHẤN CÔNG NGHỆ</p>
         <div class="card-header">
           <span class="card-dot coral"></span>
-          <h3>Go Fiber Backend &amp; Gemini AI Pool</h3>
+          <h3>Go Gin Backend &amp; Gemini AI Pool</h3>
         </div>
-        <p>Go Fiber cung cấp REST API siêu nhanh với độ trễ tối thiểu, chịu tải đồng thời lớn. Hệ thống tích hợp cụm Gemini AI Pool xoay vòng API key thông minh để phân tích đề thi và sinh công thức toán học LaTeX chuẩn xác.</p>
+        <p>Go Gin cung cấp REST API siêu nhanh với độ trễ tối thiểu, chịu tải đồng thời lớn. Hệ thống tích hợp cụm Gemini AI Pool xoay vòng API key thông minh để phân tích đề thi và sinh công thức toán học LaTeX chuẩn xác.</p>
       </div>
 
       <div class="card">

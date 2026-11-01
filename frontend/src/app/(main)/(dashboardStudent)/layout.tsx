@@ -3,7 +3,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import { cookies } from 'next/headers'
 import GradeSelectionModal from '@/components/student/GradeSelectionModal'
 import PromotionRewardModal from '@/components/student/PromotionRewardModal'
-import { StudentLectureFilterProvider } from '@/context/StudentLectureFilterContext'
+import { StudentLectureFilterProvider } from '@/contexts/StudentLectureFilterContext'
 import StudentFilterManager from '@/components/student/StudentFilterManager'
 import StudentBottomNav from '@/components/layout/StudentBottomNav'
 

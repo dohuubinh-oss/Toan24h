@@ -22,7 +22,8 @@ backend/server
 backend/api
 uploads/temp/
 backend/uploads/
-backend/internal/handlers/uploads/
+backend/**/uploads/
+**/uploads/temp/
 *.tsbuildinfo
 
 

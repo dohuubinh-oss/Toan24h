@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { usePathname } from 'next/navigation'
-import { useStudentLectureFilter } from '@/context/StudentLectureFilterContext'
+import { useStudentLectureFilter } from '@/contexts/StudentLectureFilterContext'
 import { LectureSidebar } from '@/components/lectures/LectureSidebar'
 
 export function StudentFilterManager() {
