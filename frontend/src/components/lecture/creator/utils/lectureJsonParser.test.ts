@@ -195,4 +195,31 @@ describe('lectureJsonParser', () => {
     expect(exerciseHtml).toContain('<br/>') // problem has line breaks
     expect(exerciseHtml).toContain('<ul><li>TH1: $x = 2$</li><li>TH2: $x = -2$</li></ul>') // step content has bullets
   })
+
+  it('formats steps with complex underbrace formula without breaking or splitting braces', () => {
+    const sample = JSON.stringify([
+      {
+        mathType: 'Dạng 1. Lũy thừa',
+        problems: [
+          {
+            problem: 'Tính giá trị lũy thừa',
+            steps: [
+              {
+                step: 1,
+                title: 'Bước 1: Khai triển lũy thừa thành tích',
+                content: 'Áp dụng định nghĩa lũy thừa để tính giá trị cụ thể.',
+                formula: 'a^n = \\underbrace{a \\cdot a \\dots \\cdot a}_{n \\text{ thừa số } a}'
+              }
+            ]
+          }
+        ]
+      }
+    ])
+
+    const result = parseLectureJson(sample)
+    const exerciseHtml = result[0].methods[0].exercise?.content || ''
+    expect(exerciseHtml).toContain('$$a^n = \\underbrace{a \\cdot a \\dots \\cdot a}_{n \\text{ thừa số } a}$$')
+    expect(exerciseHtml).not.toContain('_{n$')
+    expect(exerciseHtml).not.toContain('$}');
+  })
 })

@@ -12,6 +12,26 @@ export function containsVietnamese(str: string): boolean {
 }
 
 /**
+ * Tìm chỉ số đóng ngoặc tương ứng với ngoặc mở tại openIndex
+ */
+export function findClosingBrace(text: string, openIndex: number, openChar = '{', closeChar = '}'): number {
+  let depth = 0;
+  for (let i = openIndex; i < text.length; i++) {
+    if (text[i] === '\\' && i + 1 < text.length) {
+      i++;
+      continue;
+    }
+    if (text[i] === openChar) {
+      depth++;
+    } else if (text[i] === closeChar) {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
+/**
  * Đếm độ sâu dấu ngoặc nhọn { trừ } (bỏ qua dấu ngoặc thoát \{ hoặc \})
  */
 export function countBraceDepth(str: string): number {
@@ -63,9 +83,82 @@ export function hasBalancedEnvironments(str: string): boolean {
 }
 
 /**
+ * Khớp hoàn chỉnh một lệnh LaTeX và tất cả các tham số cân bằng đi kèm {...}, [...], _{...}, ^{...}
+ * Tránh việc cắt đứt giữa chừng tại các dấu cách hoặc ký tự tiếng Việt lồng nhau.
+ */
+export function matchLatexCommand(text: string, startIndex: number): number {
+  if (text[startIndex] !== '\\') return -1;
+
+  const nameMatch = text.slice(startIndex + 1).match(/^[a-zA-Z]+/);
+  if (!nameMatch) return -1;
+
+  const cmdName = nameMatch[0];
+  const cmdRegexTest = new RegExp(`^(?:${LATEX_COMMANDS})$`);
+  if (!cmdRegexTest.test(cmdName)) return -1;
+
+  let idx = startIndex + 1 + cmdName.length;
+
+  while (idx < text.length) {
+    let spaceIdx = idx;
+    while (spaceIdx < text.length && (text[spaceIdx] === ' ' || text[spaceIdx] === '\t')) {
+      spaceIdx++;
+    }
+
+    const nextChar = text[spaceIdx];
+
+    if (nextChar === '{') {
+      const closeIdx = findClosingBrace(text, spaceIdx, '{', '}');
+      if (closeIdx === -1) break;
+      idx = closeIdx + 1;
+    } else if (nextChar === '[') {
+      const closeIdx = findClosingBrace(text, spaceIdx, '[', ']');
+      if (closeIdx === -1) break;
+      idx = closeIdx + 1;
+    } else if (nextChar === '_' || nextChar === '^') {
+      let subIdx = spaceIdx + 1;
+      while (subIdx < text.length && (text[subIdx] === ' ' || text[subIdx] === '\t')) {
+        subIdx++;
+      }
+      if (subIdx < text.length && text[subIdx] === '{') {
+        const closeIdx = findClosingBrace(text, subIdx, '{', '}');
+        if (closeIdx === -1) break;
+        idx = closeIdx + 1;
+      } else if (subIdx < text.length && /[a-zA-Z0-9]/.test(text[subIdx])) {
+        idx = subIdx + 1;
+      } else if (subIdx < text.length && text[subIdx] === '\\') {
+        const subCmdMatch = text.slice(subIdx + 1).match(/^[a-zA-Z]+/);
+        if (subCmdMatch) {
+          idx = subIdx + 1 + subCmdMatch[0].length;
+          let afterSub = idx;
+          while (afterSub < text.length && (text[afterSub] === ' ' || text[afterSub] === '\t')) {
+            afterSub++;
+          }
+          if (afterSub < text.length && text[afterSub] === '{') {
+            const closeSub = findClosingBrace(text, afterSub, '{', '}');
+            if (closeSub !== -1) {
+              idx = closeSub + 1;
+            }
+          }
+        } else {
+          break;
+        }
+      } else {
+        break;
+      }
+    } else {
+      break;
+    }
+  }
+
+  return idx;
+}
+
+/**
  * Tự động hàn gắn các biểu thức toán bị phân tách lỗi ngoặc từ trước.
- * Ví dụ: `$a^n = \underbrace{a.a......a}_{n$ thừa số a $} (n \in \mathbb{N}^*)$`
- * hoặc `<math-inline data-latex="a^n = \underbrace{a.a......a}_{n">...</math-inline> thừa số a <math-inline data-latex="} (n \in \mathbb{N}^*)">...</math-inline>`
+ * Ví dụ:
+ * 1. `$a^n = \underbrace{a.a......a}_{n$ thừa số a $} (n \in \mathbb{N}^*)$`
+ * 2. `a^n = $\underbrace{a \cdot a \dots \cdot a}_{n$ \text{ thừa số } a}`
+ * 3. `a^n = <math-inline data-latex="\underbrace{...}_{n">...</math-inline> \text{ thừa số } a}`
  * sẽ được tự động hàn gắn lại thành 1 công thức toán hoàn chỉnh nguyên vẹn.
  */
 export function healBrokenMathSplits(text: string): string {
@@ -104,6 +197,41 @@ export function healBrokenMathSplits(text: string): string {
     }
   );
 
+  // 3. Hàn gắn [prefix]$formula1$ trailingTextWithClosingBrace
+  // Ví dụ: a^n = $\underbrace{a \cdot a \dots \cdot a}_{n$ \text{ thừa số } a}
+  healed = healed.replace(
+    /(?:([a-zA-Z0-9^_{}\s]*[=<>]\s*))?\$([^\$]+)\$([^\$<>\n]*\}[^\$<>\n]*)/g,
+    (fullMatch, prefix, f1, trailing) => {
+      const depth1 = countBraceDepth(f1);
+      const depthTrailing = countBraceDepth(trailing);
+
+      if (depth1 > 0 && depth1 + depthTrailing === 0) {
+        const p = (prefix || '').trim();
+        const merged = `${p ? p + ' ' : ''}${f1.trim()} ${trailing.trim()}`.trim();
+        return `$${merged}$`;
+      }
+      return fullMatch;
+    }
+  );
+
+  // 4. Hàn gắn [prefix]<math-inline ...>...</math-inline> trailingTextWithClosingBrace
+  // Ví dụ: a^n = <math-inline data-latex="\underbrace{...}_{n">...</math-inline> \text{ thừa số } a}
+  healed = healed.replace(
+    /(?:([a-zA-Z0-9^_{}\s]*[=<>]\s*))?<math-inline[^>]*?(?:data-latex|latex)="([^"]*)"[^>]*>[\s\S]*?<\/math-inline>([^\n<>]*\}[^\n<>]*)/gi,
+    (fullMatch, prefix, f1, trailing) => {
+      const depth1 = countBraceDepth(f1);
+      const depthTrailing = countBraceDepth(trailing);
+
+      if (depth1 > 0 && depth1 + depthTrailing === 0) {
+        const p = (prefix || '').trim();
+        const merged = `${p ? p + ' ' : ''}${f1.trim()} ${trailing.trim()}`.trim();
+        const escaped = merged.replace(/"/g, '&quot;');
+        return `<math-inline data-latex="${escaped}">$${merged}$</math-inline>`;
+      }
+      return fullMatch;
+    }
+  );
+
   return healed;
 }
 
@@ -128,7 +256,6 @@ export function splitTopLevelText(inner: string): TextToken[] | null {
   let extractedAny = false;
 
   while (i < inner.length) {
-    // Nhận diện \begin{...} và \end{...}
     if (inner.startsWith('\\begin{', i)) {
       envDepth++;
       currentMath += '\\begin{';
@@ -144,24 +271,8 @@ export function splitTopLevelText(inner: string): TextToken[] | null {
       continue;
     }
 
-    // Nhận diện \text{ khi đang ở cấp gốc ngoài cùng (braceDepth === 0 && envDepth === 0)
     if (braceDepth === 0 && envDepth === 0 && inner.startsWith('\\text{', i)) {
-      let textEnd = -1;
-      let textBraceDepth = 0;
-      for (let j = i + 5; j < inner.length; j++) {
-        if (inner[j] === '\\' && j + 1 < inner.length) {
-          j++;
-          continue;
-        }
-        if (inner[j] === '{') textBraceDepth++;
-        else if (inner[j] === '}') {
-          textBraceDepth--;
-          if (textBraceDepth === 0) {
-            textEnd = j;
-            break;
-          }
-        }
-      }
+      const textEnd = findClosingBrace(inner, i + 5, '{', '}');
 
       if (textEnd !== -1) {
         const textContent = inner.slice(i + 6, textEnd);
@@ -211,7 +322,6 @@ export function splitTopLevelText(inner: string): TextToken[] | null {
     return null;
   }
 
-  // Đảm bảo mọi đoạn math sau khi tách đều có ngoặc nhọn cân bằng
   for (const tok of tokens) {
     if (tok.type === 'math') {
       const trimmed = tok.content.trim();
@@ -227,8 +337,8 @@ export function splitTopLevelText(inner: string): TextToken[] | null {
 }
 
 /**
- * Tự động bọc các lệnh LaTeX độc lập chưa có dấu $ (ví dụ: \in, \notin, \frac{1}{2}, \sqrt{x})
- * mà không ảnh hưởng đến các công thức đã bọc $ hoặc các thẻ HTML.
+ * Tự động bọc các lệnh LaTeX độc lập chưa có dấu $ (ví dụ: \in, \notin, \frac{1}{2}, \sqrt{x}, \underbrace{...}_{...})
+ * Sử dụng matchLatexCommand để quét cân bằng toàn bộ tham số và chỉ số, tuyệt đối không cắt cụt cấu trúc.
  */
 export function wrapStandaloneLatex(text: string): string {
   if (!text) return '';
@@ -240,12 +350,46 @@ export function wrapStandaloneLatex(text: string): string {
     return `%%%PROTECTED_${placeholders.length - 1}%%%`;
   });
 
-  // 2. Bọc các lệnh LaTeX đứng riêng lẻ bằng $...$
-  const cmdRegex = new RegExp(`\\\\(?:${LATEX_COMMANDS})(?:\\{[^{}]*\\}|\\[[^\\[\\]]*\\])*(?:_[a-zA-Z0-9{}]+|\\^[a-zA-Z0-9{}]+)*`, 'g');
-  protectedText = protectedText.replace(cmdRegex, (cmd) => `$${cmd}$`);
+  // 2. Quét và bọc các lệnh LaTeX đứng riêng lẻ bằng $...$ một cách cân bằng và chính xác
+  let result = '';
+  let i = 0;
+
+  while (i < protectedText.length) {
+    if (protectedText[i] === '\\') {
+      const endIdx = matchLatexCommand(protectedText, i);
+      if (endIdx !== -1) {
+        const cmdPart = protectedText.slice(i, endIdx);
+        result += `$${cmdPart}$`;
+        i = endIdx;
+        continue;
+      }
+    }
+
+    result += protectedText[i];
+    i++;
+  }
 
   // 3. Khôi phục các placeholder
-  return protectedText.replace(/%%%PROTECTED_(\d+)%%%/g, (_, idx) => placeholders[Number(idx)] || '');
+  return result.replace(/%%%PROTECTED_(\d+)%%%/g, (_, idx) => placeholders[Number(idx)] || '');
+}
+
+/**
+ * Chuẩn hóa trường công thức toán học chuyên dụng (formula) từ AI bóc tách hoặc bài tập
+ * Đảm bảo toàn bộ công thức được bọc trọn vẹn trong dấu $$, không bị cắt cụt.
+ */
+export function cleanFormula(formula?: string | null): string {
+  if (!formula) return '';
+  const cleaned = formula.replace(/\[cite:\s*[^\]]+\]/gi, '').trim();
+  if (!cleaned || cleaned.toLowerCase() === 'null') return '';
+
+  let healed = healBrokenMathSplits(cleaned);
+
+  // Nếu công thức chưa được bọc bất kỳ ký hiệu toán học nào, bọc trọn vẹn bằng $$...$$
+  if (!healed.includes('$') && !healed.includes('\\(') && !healed.includes('\\[') && !healed.includes('<math-inline')) {
+    healed = `$$${healed}$$`;
+  }
+
+  return normalizeVietnameseMath(healed);
 }
 
 /**

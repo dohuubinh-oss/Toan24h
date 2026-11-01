@@ -44,7 +44,7 @@ export interface RawMathTypeItem {
   methods?: RawMethodItem[];
 }
 
-import { normalizeVietnameseMath } from '@/lib/mathTextCleaner'
+import { normalizeVietnameseMath, cleanFormula } from '@/lib/mathTextCleaner'
 
 export function cleanCitations(text?: string | null): string {
   if (!text) return ''
@@ -160,7 +160,7 @@ export function buildExerciseHtmlFromProblems(problems: RawProblemItem[]): strin
           idx: st.step || idx + 1,
           title: cleanCitations(st.title),
           content: cleanCitations(st.content),
-          formula: st.formula ? cleanCitations(st.formula) : null
+          formula: st.formula ? cleanFormula(st.formula) : null
         })
       })
 
@@ -217,9 +217,10 @@ export function buildExerciseHtmlFromProblems(problems: RawProblemItem[]): strin
             timelineItem.formula.trim() !== '' &&
             timelineItem.formula.trim().toLowerCase() !== 'null'
           ) {
-            const trimmed = timelineItem.formula.trim()
-            const formattedFormula = trimmed.includes('$') ? trimmed : `$$${trimmed}$$`
-            blockHtml += `<p class="mt-3 text-blue-600 font-bold m-0">${formattedFormula}</p>`
+            const formattedFormula = cleanFormula(timelineItem.formula)
+            if (formattedFormula) {
+              blockHtml += `<p class="mt-3 text-blue-600 font-bold m-0">${formattedFormula}</p>`
+            }
           }
         } else if (timelineItem.type === 'conclusion') {
           const formattedContent = formatTextToHtml(timelineItem.content)

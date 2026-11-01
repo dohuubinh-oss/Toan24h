@@ -9,7 +9,7 @@ import { uploadTempImage } from '@/lib/api'
 import { MathExtension } from '@/components/questions/creator/editor/MathExtension'
 import { toast } from '@/components/ui/ToastProvider'
 import { Node, Mark, mergeAttributes, Extension } from '@tiptap/core'
-import { healBrokenMathSplits } from '@/lib/mathTextCleaner'
+import { healBrokenMathSplits, matchLatexCommand } from '@/lib/mathTextCleaner'
 
 export const DivNode = Node.create({
   name: 'div',
@@ -98,15 +98,26 @@ export const preprocessMath = (html: string) => {
     return addPlaceholder(`<math-inline data-latex="${escaped}">$${p1}$</math-inline>`);
   });
 
-  // 4. Convert remaining unwrapped latex expressions (e.g. \frac{1}{2}, -\dfrac{1}{5} x^4 y^5, 2\sqrt{x}, \hat{A}, \in, \notin, \underbrace, \overbrace)
-  const latexRegex = /(?:-?\d*\s*)?\\(?:dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|notin|in|subset|cup|cap|widehat|hat|degree|underbrace|overbrace)(?:\{[^{}]*\}|\[[^\[\]]*\])*(?:_[a-zA-Z0-9{}]+|\^[a-zA-Z0-9{}]+)*/g;
-  processed = processed.replace(latexRegex, (match) => {
-    if (match.includes('__MATH_PLACEHOLDER_')) return match;
-    const trimmed = match.trim();
-    if (!trimmed) return match;
-    const escaped = trimmed.replace(/"/g, '&quot;');
-    return addPlaceholder(`<math-inline data-latex="${escaped}">$${trimmed}$</math-inline>`);
-  });
+  // 4. Convert remaining unwrapped latex expressions with balanced brace parsing
+  let i = 0;
+  let nextProcessed = '';
+  while (i < processed.length) {
+    if (processed[i] === '\\') {
+      const endIdx = matchLatexCommand(processed, i);
+      if (endIdx !== -1) {
+        const cmdPart = processed.slice(i, endIdx);
+        if (!cmdPart.includes('__MATH_PLACEHOLDER_')) {
+          const escaped = cmdPart.replace(/"/g, '&quot;');
+          nextProcessed += addPlaceholder(`<math-inline data-latex="${escaped}">$${cmdPart}$</math-inline>`);
+          i = endIdx;
+          continue;
+        }
+      }
+    }
+    nextProcessed += processed[i];
+    i++;
+  }
+  processed = nextProcessed;
 
   // 5. Restore placeholders in reverse order
   for (let i = placeholders.length - 1; i >= 0; i--) {

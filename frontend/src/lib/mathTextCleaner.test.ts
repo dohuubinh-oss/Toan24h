@@ -5,7 +5,8 @@ import {
   wrapStandaloneLatex,
   hasBalancedBraces,
   hasBalancedEnvironments,
-  healBrokenMathSplits
+  healBrokenMathSplits,
+  cleanFormula
 } from './mathTextCleaner';
 
 describe('mathTextCleaner', () => {
@@ -94,6 +95,32 @@ describe('mathTextCleaner', () => {
     expect(normalizeVietnameseMath('Dạng 2. Sử dụng các kí hiệu \\in và \\notin')).toBe(
       'Dạng 2. Sử dụng các kí hiệu $\\in$ và $\\notin$'
     );
+  });
+
+  it('wraps standalone underbrace command with complete arguments without slicing braces', () => {
+    const raw = 'a^n = \\underbrace{a \\cdot a \\dots \\cdot a}_{n \\text{ thừa số } a}';
+    const wrapped = wrapStandaloneLatex(raw);
+    expect(wrapped).toBe('a^n = $\\underbrace{a \\cdot a \\dots \\cdot a}_{n \\text{ thừa số } a}$');
+    expect(hasBalancedBraces(wrapped)).toBe(true);
+  });
+
+  it('cleans formula and preserves underbrace as a single intact formula', () => {
+    const raw = 'a^n = \\underbrace{a \\cdot a \\dots \\cdot a}_{n \\text{ thừa số } a}';
+    const cleaned = cleanFormula(raw);
+    expect(cleaned).toBe('$$a^n = \\underbrace{a \\cdot a \\dots \\cdot a}_{n \\text{ thừa số } a}$$');
+  });
+
+  it('heals trailing plain text with closing brace from broken underbrace', () => {
+    const broken = 'a^n = $\\underbrace{a \\cdot a \\dots \\cdot a}_{n$ \\text{ thừa số } a}';
+    const healed = healBrokenMathSplits(broken);
+    expect(healed).toBe('$a^n = \\underbrace{a \\cdot a \\dots \\cdot a}_{n \\text{ thừa số } a}$');
+    expect(hasBalancedBraces(healed)).toBe(true);
+  });
+
+  it('heals trailing plain text with closing brace from broken math-inline underbrace', () => {
+    const broken = 'a^n = <math-inline data-latex="\\underbrace{a \\cdot a \\dots \\cdot a}_{n">$\\underbrace{a \\cdot a \\dots \\cdot a}_{n$</math-inline> \\text{ thừa số } a}';
+    const healed = healBrokenMathSplits(broken);
+    expect(healed).toContain('<math-inline data-latex="a^n = \\underbrace{a \\cdot a \\dots \\cdot a}_{n \\text{ thừa số } a}">');
   });
 
   it('keeps standard math expressions untouched', () => {

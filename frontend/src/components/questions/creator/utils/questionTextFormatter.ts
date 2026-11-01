@@ -1,4 +1,5 @@
 import { safeJsonParse } from '@/lib/jsonRepair'
+import { cleanFormula } from '@/lib/mathTextCleaner'
 
 /**
  * Kiểm tra xem chuỗi có phải biểu thức hoặc công thức toán học cần bọc $...$ không
@@ -260,7 +261,7 @@ export function formatSolutionGuide(guide: any): string {
             idx: st.step || idx + 1,
             title: cleanCitations(st.title),
             content: cleanCitations(st.content),
-            formula: st.formula ? cleanCitations(st.formula) : null,
+            formula: st.formula ? cleanFormula(st.formula) : null,
             point: parsedPoint,
           })
         })
@@ -321,9 +322,10 @@ export function formatSolutionGuide(guide: any): string {
             item.formula.trim() !== '' &&
             item.formula.trim().toLowerCase() !== 'null'
           ) {
-            const trimmedF = item.formula.trim()
-            const formattedFormula = trimmedF.includes('$') ? trimmedF : `$$${trimmedF}$$`
-            html += `<p class="mt-3 text-blue-600 font-bold !m-0">${formattedFormula}</p>`
+            const formattedFormula = cleanFormula(item.formula)
+            if (formattedFormula) {
+              html += `<p class="mt-3 text-blue-600 font-bold !m-0">${formattedFormula}</p>`
+            }
           }
         } else if (item.type === 'conclusion') {
           const formattedContent = formatTextToHtml(item.content)
