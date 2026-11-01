@@ -2,11 +2,11 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import LoginPage from './page'
 
-vi.mock('../../components/auth/LoginBranding', () => ({
+vi.mock('@/components/auth/LoginBranding', () => ({
   default: () => <div data-testid="login-branding-mock">LoginBranding</div>
 }))
 
-vi.mock('../../components/auth/LoginForm', () => ({
+vi.mock('@/components/auth/LoginForm', () => ({
   default: () => <div data-testid="login-form-mock">LoginForm</div>
 }))
 

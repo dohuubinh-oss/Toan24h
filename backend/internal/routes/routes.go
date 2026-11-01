@@ -3,7 +3,6 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/config"
-	"github.com/modeptrai/exam-model-backend/internal/controllers"
 	"github.com/modeptrai/exam-model-backend/internal/handlers"
 	"github.com/modeptrai/exam-model-backend/internal/middleware"
 	"github.com/modeptrai/exam-model-backend/internal/repository"
@@ -59,9 +58,9 @@ func SetupRouter() *gin.Engine {
 	// Dependencies
 	lectureRepo := repository.NewLectureRepository(config.DB)
 	lectureService := services.NewLectureService(lectureRepo)
-	lectureController := controllers.NewLectureController(lectureService)
-	ocrController := controllers.NewOCRController()
-	mobileUploadController := controllers.NewMobileUploadController()
+	lectureHandler := handlers.NewLectureHandler(lectureService)
+	ocrHandler := handlers.NewOCRHandler()
+	mobileUploadHandler := handlers.NewMobileUploadHandler()
 
 	// Services
 	var payosClientID, payosAPIKey, payosChecksumKey string
@@ -118,13 +117,13 @@ func SetupRouter() *gin.Engine {
 		v1.GET("/leaderboard", leaderboardHandler.GetWeeklyLeaderboard)
 
 		// Read-only Public Lectures
-		v1.GET("/lectures", lectureController.GetAllLectures)
-		v1.GET("/lectures/grade/:grade", lectureController.GetLecturesByGrade)
-		v1.GET("/lectures/:id", lectureController.GetLectureByID)
+		v1.GET("/lectures", lectureHandler.GetAllLectures)
+		v1.GET("/lectures/grade/:grade", lectureHandler.GetLecturesByGrade)
+		v1.GET("/lectures/:id", lectureHandler.GetLectureByID)
 
 		// Mobile QR Upload & Sync
-		v1.POST("/mobile-upload/:sessionId", mobileUploadController.UploadFromMobile)
-		v1.GET("/mobile-upload/:sessionId", mobileUploadController.CheckUploadStatus)
+		v1.POST("/mobile-upload/:sessionId", mobileUploadHandler.UploadFromMobile)
+		v1.GET("/mobile-upload/:sessionId", mobileUploadHandler.CheckUploadStatus)
 	}
 
 	// Protected API routes
@@ -194,10 +193,10 @@ func SetupRouter() *gin.Engine {
 			staff.DELETE("/exams/:id", handlers.DeleteExam)
 
 			// Lectures admin
-			staff.POST("/lectures", lectureController.CreateLecture)
+			staff.POST("/lectures", lectureHandler.CreateLecture)
 			staff.POST("/lectures/extract-ai", handlers.ExtractAILecture)
-			staff.PUT("/lectures/:id", lectureController.UpdateLecture)
-			staff.DELETE("/lectures/:id", lectureController.DeleteLecture)
+			staff.PUT("/lectures/:id", lectureHandler.UpdateLecture)
+			staff.DELETE("/lectures/:id", lectureHandler.DeleteLecture)
 
 			// Appeals admin
 			staff.GET("/appeals", handlers.GetAppeals)
@@ -224,7 +223,7 @@ func SetupRouter() *gin.Engine {
 			voucherAccess.GET("/vouchers", voucherHandler.GetVouchers)
 		}
 
-		protected.POST("/ocr", ocrController.ExtractText)
+		protected.POST("/ocr", ocrHandler.ExtractText)
 	}
 
 	return r

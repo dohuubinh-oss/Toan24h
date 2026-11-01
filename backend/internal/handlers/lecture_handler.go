@@ -1,23 +1,23 @@
-package controllers
+package handlers
 
 import (
 	"net/http"
 	"strconv"
 
+	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
-	"github.com/gin-gonic/gin"
 )
 
-type LectureController struct {
+type LectureHandler struct {
 	service services.LectureService
 }
 
-func NewLectureController(service services.LectureService) *LectureController {
-	return &LectureController{service: service}
+func NewLectureHandler(service services.LectureService) *LectureHandler {
+	return &LectureHandler{service: service}
 }
 
-func (ctrl *LectureController) CreateLecture(c *gin.Context) {
+func (h *LectureHandler) CreateLecture(c *gin.Context) {
 	var req services.CreateLectureRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -35,7 +35,7 @@ func (ctrl *LectureController) CreateLecture(c *gin.Context) {
 		}
 	}
 
-	if err := ctrl.service.CreateLecture(c.Request.Context(), req); err != nil {
+	if err := h.service.CreateLecture(c.Request.Context(), req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -47,7 +47,7 @@ func (ctrl *LectureController) CreateLecture(c *gin.Context) {
 	})
 }
 
-func (ctrl *LectureController) UpdateLecture(c *gin.Context) {
+func (h *LectureHandler) UpdateLecture(c *gin.Context) {
 	id := c.Param("id")
 	var req services.CreateLectureRequest
 
@@ -59,7 +59,7 @@ func (ctrl *LectureController) UpdateLecture(c *gin.Context) {
 		return
 	}
 
-	if err := ctrl.service.UpdateLecture(c.Request.Context(), id, req); err != nil {
+	if err := h.service.UpdateLecture(c.Request.Context(), id, req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -71,12 +71,12 @@ func (ctrl *LectureController) UpdateLecture(c *gin.Context) {
 	})
 }
 
-func (ctrl *LectureController) GetLecturesByGrade(c *gin.Context) {
+func (h *LectureHandler) GetLecturesByGrade(c *gin.Context) {
 	grade := c.Param("grade")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "9"))
 
-	res, err := ctrl.service.GetLecturesByGrade(c.Request.Context(), grade, page, limit)
+	res, err := h.service.GetLecturesByGrade(c.Request.Context(), grade, page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -85,8 +85,8 @@ func (ctrl *LectureController) GetLecturesByGrade(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func (ctrl *LectureController) GetAllLectures(c *gin.Context) {
-	res, err := ctrl.service.GetAllLectures(c.Request.Context())
+func (h *LectureHandler) GetAllLectures(c *gin.Context) {
+	res, err := h.service.GetAllLectures(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -94,28 +94,21 @@ func (ctrl *LectureController) GetAllLectures(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": res})
 }
 
-func (ctrl *LectureController) GetLectureByID(c *gin.Context) {
+func (h *LectureHandler) GetLectureByID(c *gin.Context) {
 	id := c.Param("id")
-	res, err := ctrl.service.GetLectureByID(c.Request.Context(), id)
+	res, err := h.service.GetLectureByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "lecture not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-
 	c.JSON(http.StatusOK, res)
 }
 
-func (ctrl *LectureController) DeleteLecture(c *gin.Context) {
+func (h *LectureHandler) DeleteLecture(c *gin.Context) {
 	id := c.Param("id")
-
-	if err := ctrl.service.DeleteLecture(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
+	if err := h.service.DeleteLecture(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Lecture deleted successfully",
-	})
+	c.JSON(http.StatusOK, gin.H{"message": "Lecture deleted successfully"})
 }

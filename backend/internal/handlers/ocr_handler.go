@@ -1,4 +1,4 @@
-package controllers
+package handlers
 
 import (
 	"io"
@@ -9,13 +9,13 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
-type OCRController struct{}
+type OCRHandler struct{}
 
-func NewOCRController() *OCRController {
-	return &OCRController{}
+func NewOCRHandler() *OCRHandler {
+	return &OCRHandler{}
 }
 
-func (ctrl *OCRController) ExtractText(c *gin.Context) {
+func (h *OCRHandler) ExtractText(c *gin.Context) {
 	// Receive file from multipart form data
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {

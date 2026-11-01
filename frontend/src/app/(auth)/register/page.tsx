@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react'
 import type { Metadata } from 'next'
-import LoginBranding from '../../components/auth/LoginBranding'
-import RegisterForm from '../../components/auth/RegisterForm'
+import LoginBranding from '@/components/auth/LoginBranding'
+import RegisterForm from '@/components/auth/RegisterForm'
 
 export const metadata: Metadata = {
   title: 'Đăng Ký Tài Khoản Học Sinh Mới',

@@ -1,4 +1,4 @@
-package controllers
+package handlers
 
 import (
 	"fmt"
@@ -32,15 +32,15 @@ type RateLimitEntry struct {
 	WindowStart time.Time
 }
 
-type MobileUploadController struct {
+type MobileUploadHandler struct {
 	store     sync.Map // sessionId -> MobileUploadResult
 	rateLimit sync.Map // rateKey -> RateLimitEntry
 	rateMu    sync.Mutex
 	extractor TextExtractorFunc
 }
 
-func NewMobileUploadController() *MobileUploadController {
-	c := &MobileUploadController{
+func NewMobileUploadHandler() *MobileUploadHandler {
+	h := &MobileUploadHandler{
 		extractor: services.ExtractTextFromImageWithGemini,
 	}
 	// Run background cleaner every 5 minutes to remove expired sessions (>10 min)
@@ -48,27 +48,27 @@ func NewMobileUploadController() *MobileUploadController {
 		for {
 			time.Sleep(5 * time.Minute)
 			now := time.Now()
-			c.store.Range(func(key, value any) bool {
+			h.store.Range(func(key, value any) bool {
 				if res, ok := value.(MobileUploadResult); ok {
 					if now.Sub(res.CreatedAt) > 10*time.Minute {
-						c.store.Delete(key)
+						h.store.Delete(key)
 					}
 				}
 				return true
 			})
 		}
 	}()
-	return c
+	return h
 }
 
 // SetExtractor cho phép mock extractor phục vụ unit test
-func (ctrl *MobileUploadController) SetExtractor(fn TextExtractorFunc) {
-	ctrl.extractor = fn
+func (h *MobileUploadHandler) SetExtractor(fn TextExtractorFunc) {
+	h.extractor = fn
 }
 
 // InjectSessionForTest cho phép giả lập phiên cho unit test kiểm tra TTL
-func (ctrl *MobileUploadController) InjectSessionForTest(sessionID string, text string, createdAt time.Time) {
-	ctrl.store.Store(sessionID, MobileUploadResult{
+func (h *MobileUploadHandler) InjectSessionForTest(sessionID string, text string, createdAt time.Time) {
+	h.store.Store(sessionID, MobileUploadResult{
 		Text:       text,
 		PageCount:  1,
 		CreatedAt:  createdAt,
@@ -78,20 +78,20 @@ func (ctrl *MobileUploadController) InjectSessionForTest(sessionID string, text 
 }
 
 // checkRateLimit giới hạn tối đa 5 lần upload/phút trên mỗi session/IP
-func (ctrl *MobileUploadController) checkRateLimit(key string) bool {
-	ctrl.rateMu.Lock()
-	defer ctrl.rateMu.Unlock()
+func (h *MobileUploadHandler) checkRateLimit(key string) bool {
+	h.rateMu.Lock()
+	defer h.rateMu.Unlock()
 
 	now := time.Now()
-	val, ok := ctrl.rateLimit.Load(key)
+	val, ok := h.rateLimit.Load(key)
 	if !ok {
-		ctrl.rateLimit.Store(key, RateLimitEntry{Count: 1, WindowStart: now})
+		h.rateLimit.Store(key, RateLimitEntry{Count: 1, WindowStart: now})
 		return true
 	}
 
 	entry := val.(RateLimitEntry)
 	if now.Sub(entry.WindowStart) > time.Minute {
-		ctrl.rateLimit.Store(key, RateLimitEntry{Count: 1, WindowStart: now})
+		h.rateLimit.Store(key, RateLimitEntry{Count: 1, WindowStart: now})
 		return true
 	}
 
@@ -100,11 +100,11 @@ func (ctrl *MobileUploadController) checkRateLimit(key string) bool {
 	}
 
 	entry.Count++
-	ctrl.rateLimit.Store(key, entry)
+	h.rateLimit.Store(key, entry)
 	return true
 }
 
-func (ctrl *MobileUploadController) UploadFromMobile(c *gin.Context) {
+func (h *MobileUploadHandler) UploadFromMobile(c *gin.Context) {
 	sessionID := c.Param("sessionId")
 	if sessionID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing sessionId"})
@@ -113,7 +113,7 @@ func (ctrl *MobileUploadController) UploadFromMobile(c *gin.Context) {
 
 	// 1. Kiểm tra Rate Limiting (tối đa 5 lượt/phút)
 	rateKey := sessionID + "_" + c.ClientIP()
-	if !ctrl.checkRateLimit(rateKey) {
+	if !h.checkRateLimit(rateKey) {
 		c.JSON(http.StatusTooManyRequests, gin.H{
 			"error": "Bạn đã gửi quá nhiều yêu cầu trong thời gian ngắn (tối đa 5 lượt/phút). Vui lòng chờ giây lát.",
 		})
@@ -122,10 +122,10 @@ func (ctrl *MobileUploadController) UploadFromMobile(c *gin.Context) {
 
 	// 2. Kiểm tra TTL phiên hiện tại (tối đa 10 phút)
 	var existing MobileUploadResult
-	if val, ok := ctrl.store.Load(sessionID); ok {
+	if val, ok := h.store.Load(sessionID); ok {
 		existing = val.(MobileUploadResult)
 		if time.Since(existing.CreatedAt) > 10*time.Minute {
-			ctrl.store.Delete(sessionID)
+			h.store.Delete(sessionID)
 			c.JSON(http.StatusGone, gin.H{"error": "Phiên làm việc đã hết hạn (10 phút). Vui lòng quét lại mã QR trên máy tính."})
 			return
 		}
@@ -214,7 +214,7 @@ func (ctrl *MobileUploadController) UploadFromMobile(c *gin.Context) {
 		existing.PageCount = 1
 		existing.IsComplete = true
 		existing.UpdatedAt = time.Now()
-		ctrl.store.Store(sessionID, existing)
+		h.store.Store(sessionID, existing)
 
 		c.JSON(http.StatusOK, gin.H{
 			"message":    "Tải ảnh hình vẽ thành công",
@@ -255,7 +255,7 @@ func (ctrl *MobileUploadController) UploadFromMobile(c *gin.Context) {
 			mimeType = "image/jpeg"
 		}
 
-		result, err := ctrl.extractor(fileBytes, mimeType)
+		result, err := h.extractor(fileBytes, mimeType)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Đã xảy ra lỗi trong quá trình nhận dạng ảnh"})
 			return
@@ -271,7 +271,7 @@ func (ctrl *MobileUploadController) UploadFromMobile(c *gin.Context) {
 
 	existing.UpdatedAt = time.Now()
 	existing.IsComplete = true
-	ctrl.store.Store(sessionID, existing)
+	h.store.Store(sessionID, existing)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":   "Upload và nhận dạng thành công",
@@ -280,14 +280,14 @@ func (ctrl *MobileUploadController) UploadFromMobile(c *gin.Context) {
 	})
 }
 
-func (ctrl *MobileUploadController) CheckUploadStatus(c *gin.Context) {
+func (h *MobileUploadHandler) CheckUploadStatus(c *gin.Context) {
 	sessionID := c.Param("sessionId")
 	if sessionID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing sessionId"})
 		return
 	}
 
-	val, ok := ctrl.store.Load(sessionID)
+	val, ok := h.store.Load(sessionID)
 	if !ok {
 		c.JSON(http.StatusOK, gin.H{
 			"status": "waiting",
@@ -298,7 +298,7 @@ func (ctrl *MobileUploadController) CheckUploadStatus(c *gin.Context) {
 	res := val.(MobileUploadResult)
 	// Kiểm tra nếu session đã quá 10 phút
 	if time.Since(res.CreatedAt) > 10*time.Minute {
-		ctrl.store.Delete(sessionID)
+		h.store.Delete(sessionID)
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "expired",
 			"message": "Phiên làm việc đã hết hạn (10 phút)",
@@ -307,7 +307,7 @@ func (ctrl *MobileUploadController) CheckUploadStatus(c *gin.Context) {
 	}
 
 	// Delete once consumed so it doesn't trigger multiple times
-	ctrl.store.Delete(sessionID)
+	h.store.Delete(sessionID)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":     "completed",

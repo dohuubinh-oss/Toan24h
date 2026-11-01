@@ -1,7 +1,7 @@
 import React from 'react'
 import type { Metadata } from 'next'
-import LoginBranding from '../../components/auth/LoginBranding'
-import ForgotPasswordForm from '../../components/auth/ForgotPasswordForm'
+import LoginBranding from '@/components/auth/LoginBranding'
+import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm'
 
 export const metadata: Metadata = {
   title: 'Khôi Phục Mật Khẩu',
