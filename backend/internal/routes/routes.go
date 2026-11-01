@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/handlers"
@@ -147,8 +149,8 @@ func SetupRouter() *gin.Engine {
 			users.POST("/me/avatar", userHandler.UploadAvatar)
 		}
 
-		// Upload Temp Image (requires authenticated user)
-		protected.POST("/uploads/temp", handlers.UploadTempImage)
+		// Upload Temp Image (requires authenticated user) with rate limit (20 req/min)
+		protected.POST("/uploads/temp", middleware.RateLimiter(20, time.Minute, "upload-temp"), handlers.UploadTempImage)
 
 		// Report question (authenticated student)
 		protected.POST("/questions/:id/report", handlers.ReportQuestion)
@@ -181,7 +183,7 @@ func SetupRouter() *gin.Engine {
 		{
 			// Questions admin
 			staff.POST("/questions/bulk", handlers.BulkCreateQuestions)
-			staff.POST("/questions/extract-ai", handlers.ExtractAIQuestions)
+			staff.POST("/questions/extract-ai", middleware.RateLimiter(10, time.Minute, "extract-ai-q"), handlers.ExtractAIQuestions)
 			staff.POST("/questions/refine-diagram-svg", handlers.RefineGeometryDiagram)
 			staff.PUT("/questions/:id", handlers.UpdateQuestion)
 			staff.DELETE("/questions/:id", handlers.DeleteQuestion)
@@ -194,7 +196,7 @@ func SetupRouter() *gin.Engine {
 
 			// Lectures admin
 			staff.POST("/lectures", lectureHandler.CreateLecture)
-			staff.POST("/lectures/extract-ai", handlers.ExtractAILecture)
+			staff.POST("/lectures/extract-ai", middleware.RateLimiter(10, time.Minute, "extract-ai-lec"), handlers.ExtractAILecture)
 			staff.PUT("/lectures/:id", lectureHandler.UpdateLecture)
 			staff.DELETE("/lectures/:id", lectureHandler.DeleteLecture)
 
@@ -223,7 +225,7 @@ func SetupRouter() *gin.Engine {
 			voucherAccess.GET("/vouchers", voucherHandler.GetVouchers)
 		}
 
-		protected.POST("/ocr", ocrHandler.ExtractText)
+		protected.POST("/ocr", middleware.RateLimiter(10, time.Minute, "ocr"), ocrHandler.ExtractText)
 	}
 
 	return r
