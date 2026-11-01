@@ -48,11 +48,11 @@ func TestReferralCommissionRatesByRole(t *testing.T) {
 		role         string
 		expectedRate float32
 	}{
-		{"teacher", 60.0},
-		{"Teacher", 60.0},
-		{"TEACHER", 60.0},
-		{"admin", 70.0},
-		{"Admin", 70.0},
+		{"teacher", 50.0},
+		{"Teacher", 50.0},
+		{"TEACHER", 50.0},
+		{"admin", 60.0},
+		{"Admin", 60.0},
 		{"affiliate", 30.0},
 		{"Affiliate", 30.0},
 		{"student", 30.0},
@@ -66,6 +66,43 @@ func TestReferralCommissionRatesByRole(t *testing.T) {
 			assert.Equal(t, tc.expectedRate, rate)
 		})
 	}
+}
+
+func TestNormalizeGrade(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected string
+	}{
+		{"6", "6"},
+		{"7", "7"},
+		{"8", "8"},
+		{"9", "9"},
+		{"Lớp 6", "6"},
+		{"Lớp 7", "7"},
+		{"lop 8", "8"},
+		{"Khối 9", "9"},
+		{"khoi 6", "6"},
+		{"  7  ", "7"},
+		{"chuyen", ""},
+		{"tot_nghiep", ""},
+		{"", ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("Grade_%s", tc.input), func(t *testing.T) {
+			assert.Equal(t, tc.expected, services.NormalizeGrade(tc.input))
+		})
+	}
+}
+
+func TestGetTeacherForGrade_NilDB(t *testing.T) {
+	teacher, err := services.GetTeacherForGrade(nil, "7")
+	assert.NoError(t, err)
+	assert.Nil(t, teacher)
+
+	admin, err := services.GetSystemAdmin(nil)
+	assert.NoError(t, err)
+	assert.Nil(t, admin)
 }
 
 func TestIsPartnerRole(t *testing.T) {

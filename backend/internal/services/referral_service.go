@@ -23,11 +23,77 @@ const (
 
 // Commission rates by role
 const (
-	CommissionRateTeacher   float32 = 60.0
-	CommissionRateAdmin     float32 = 70.0
-	CommissionRateAffiliate float32 = 30.0
-	CommissionRateDefault   float32 = 30.0
+	CommissionRateTeacher   float32 = 50.0 // Điều chỉnh từ 60%
+	CommissionRateAdmin     float32 = 60.0 // Điều chỉnh từ 70%
+	CommissionRateAffiliate float32 = 30.0 // Giữ nguyên
+	CommissionRateDefault   float32 = 30.0 // Mặc định
+	CommissionRateGrade     float32 = 3.0  // Hoa hồng quản lý khối lớp
+	CommissionRatePlatform  float32 = 1.0  // Hoa hồng quản trị nền tảng sàn
 )
+
+// NormalizeGrade cleans and extracts standard secondary school grade numbers ("6", "7", "8", "9").
+// Returns empty string if not a recognized secondary school grade.
+func NormalizeGrade(grade string) string {
+	cleaned := strings.ToLower(strings.TrimSpace(grade))
+	cleaned = strings.TrimPrefix(cleaned, "lớp")
+	cleaned = strings.TrimPrefix(cleaned, "lop")
+	cleaned = strings.TrimPrefix(cleaned, "khối")
+	cleaned = strings.TrimPrefix(cleaned, "khoi")
+	cleaned = strings.TrimSpace(cleaned)
+
+	switch cleaned {
+	case "6", "7", "8", "9":
+		return cleaned
+	default:
+		return ""
+	}
+}
+
+// GetTeacherForGrade finds the single active teacher in charge of a given grade.
+// Returns (nil, nil) if db is nil, grade is invalid or no active teacher is found.
+func GetTeacherForGrade(db *gorm.DB, grade string) (*models.User, error) {
+	if db == nil {
+		return nil, nil
+	}
+	normGrade := NormalizeGrade(grade)
+	if normGrade == "" {
+		return nil, nil
+	}
+
+	var teacher models.User
+	err := db.Where("role = ? AND status = ? AND (grade = ? OR grade = ? OR grade = ?)",
+		"teacher", "active", normGrade, "Lớp "+normGrade, "Khối "+normGrade).
+		Order("created_at asc").
+		First(&teacher).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &teacher, nil
+}
+
+// GetSystemAdmin finds the single active system administrator.
+// Returns (nil, nil) if db is nil or no active admin is found.
+func GetSystemAdmin(db *gorm.DB) (*models.User, error) {
+	if db == nil {
+		return nil, nil
+	}
+	var admin models.User
+	err := db.Where("role = ? AND status = ?", "admin", "active").
+		Order("created_at asc").
+		First(&admin).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &admin, nil
+}
 
 // IsPartnerRole kiểm tra xem role có phải là đối tác được cấp mã GT và hưởng hoa hồng (admin, teacher, affiliate) hay không
 func IsPartnerRole(role string) bool {
