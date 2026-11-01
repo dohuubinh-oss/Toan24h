@@ -17,9 +17,14 @@ bin/
 *.so
 *.dylib
 *.db
+*.bak
 backend/backend
 backend/server
 backend/api
+backend/main
+backend/tmp_build
+backend/tmp/
+backend/bin/
 uploads/temp/
 backend/uploads/
 backend/**/uploads/
