@@ -79,7 +79,7 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, retries: n
   throw lastError || new Error(`Failed to fetch from ${url}`);
 }
 
-export async function getLecturesByGrade(grade: string, page: number = 1, limit: number = 9): Promise<PaginatedLectures> {
+export async function getLecturesByGrade(grade: string, page: number = 1, limit: number = 6): Promise<PaginatedLectures> {
   const url = `${API_BASE_URL}/lectures/grade/${grade}?page=${page}&limit=${limit}`;
   const response = await fetchWithRetry(url, {
     cache: 'no-store', // Always fetch fresh data

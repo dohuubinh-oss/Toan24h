@@ -75,7 +75,7 @@ export default async function GradeLecturesPage({
   const token = cookieStore.get('accessToken')?.value;
 
   const [lecturesResult, examsData, resultsData] = await Promise.all([
-    getLecturesByGrade(grade, page, 12),
+    getLecturesByGrade(grade, page, 6),
     getExams({ grade }),
     token ? getMyExamResults(token) : Promise.resolve([]),
   ]);
