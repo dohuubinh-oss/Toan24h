@@ -27,11 +27,25 @@ interface LectureHeaderProps {
 export default function LectureHeader({ initialBookmarked = false, title, grade, category, createdAt, id, author, gg_link, practiceIds }: LectureHeaderProps) {
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isTeacherOrAdmin, setIsTeacherOrAdmin] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsAdmin(document.cookie.includes('userRole=admin') || document.cookie.includes('userRole=teacher'));
+      const match = document.cookie.match(/(?:^|; )userRole=([^;]*)/);
+      const role = match ? decodeURIComponent(match[1]) : '';
+      let isStaff = role === 'admin' || role === 'teacher';
+      if (!isStaff) {
+        try {
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            const user = JSON.parse(userStr);
+            isStaff = user.role === 'admin' || user.role === 'teacher';
+          }
+        } catch {
+          // ignore
+        }
+      }
+      setIsTeacherOrAdmin(isStaff);
     }
   }, []);
 
@@ -123,7 +137,7 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
                 Bài thực hành
               </Link>
             )}
-            {id && isAdmin && (
+            {id && isTeacherOrAdmin && (
               <Link 
                 href={`/dashboard/lectures/create?editId=${id}`}
                 className="flex items-center justify-center gap-2 px-4 py-2 min-h-[44px] font-bold rounded-lg transition-all border text-sm bg-slate-800 text-white hover:bg-slate-700 border-transparent shadow-sm"
@@ -132,7 +146,7 @@ export default function LectureHeader({ initialBookmarked = false, title, grade,
                 Sửa bài giảng
               </Link>
             )}
-            {gg_link && (gg_link.startsWith('http://') || gg_link.startsWith('https://')) && (
+            {isTeacherOrAdmin && gg_link && (gg_link.startsWith('http://') || gg_link.startsWith('https://')) && (
               <a
                 href={gg_link}
                 target="_blank"
