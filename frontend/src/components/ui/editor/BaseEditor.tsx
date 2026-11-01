@@ -97,17 +97,15 @@ export const preprocessMath = (html: string) => {
     return addPlaceholder(`<math-inline data-latex="${escaped}">$${p1}$</math-inline>`);
   });
 
-  // 4. Convert remaining unwrapped latex expressions (e.g. \frac{1}{2}, -\dfrac{1}{5} x^4 y^5, 2\sqrt{x}, \hat{A})
-  const latexRegex = /\\(dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|notin|in|subset|cup|cap|widehat|hat|degree)/;
-  if (latexRegex.test(processed)) {
-    processed = processed.replace(/([^<>]*?\\(?:dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|notin|in|subset|cup|cap|widehat|hat|degree)[^<>]*)/g, (match) => {
-      if (match.includes('__MATH_PLACEHOLDER_')) return match;
-      const trimmed = match.trim();
-      if (!trimmed) return match;
-      const escaped = trimmed.replace(/"/g, '&quot;');
-      return addPlaceholder(`<math-inline data-latex="${escaped}">$${trimmed}$</math-inline>`);
-    });
-  }
+  // 4. Convert remaining unwrapped latex expressions (e.g. \frac{1}{2}, -\dfrac{1}{5} x^4 y^5, 2\sqrt{x}, \hat{A}, \in, \notin)
+  const latexRegex = /(?:-?\d*\s*)?\\(?:dfrac|frac|sqrt|int|sum|lim|alpha|beta|gamma|delta|pi|theta|infty|matrix|begin|vec|overline|cdot|pm|times|div|leq|geq|neq|approx|notin|in|subset|cup|cap|widehat|hat|degree)(?:\{[^{}]*\}|\[[^\[\]]*\])*(?:_[a-zA-Z0-9{}]+|\^[a-zA-Z0-9{}]+)*/g;
+  processed = processed.replace(latexRegex, (match) => {
+    if (match.includes('__MATH_PLACEHOLDER_')) return match;
+    const trimmed = match.trim();
+    if (!trimmed) return match;
+    const escaped = trimmed.replace(/"/g, '&quot;');
+    return addPlaceholder(`<math-inline data-latex="${escaped}">$${trimmed}$</math-inline>`);
+  });
 
   // 5. Restore placeholders in reverse order
   for (let i = placeholders.length - 1; i >= 0; i--) {

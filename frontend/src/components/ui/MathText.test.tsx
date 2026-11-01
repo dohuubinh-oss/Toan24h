@@ -133,4 +133,26 @@ describe('MathText', () => {
     expect(metricsWarnCalls.length).toBe(0);
     warnSpy.mockRestore();
   });
+
+  it('renders mixed Vietnamese and standalone LaTeX commands like \\in and \\notin without wrapping whole sentence', () => {
+    const warnSpy = vi.spyOn(console, 'warn');
+    const { container } = render(
+      <MathText content="Dạng 2. Sử dụng các kí hiệu \in và \notin" />
+    );
+
+    // Both \in and \notin should be rendered as KaTeX elements
+    const katexElements = container.querySelectorAll('.katex');
+    expect(katexElements.length).toBe(2);
+
+    // Vietnamese words should be preserved in normal text
+    expect(container.textContent).toContain('Dạng 2. Sử dụng các kí hiệu');
+    expect(container.textContent).toContain('và');
+
+    // No warning emitted
+    const metricsWarnCalls = warnSpy.mock.calls.filter(args => 
+      typeof args[0] === 'string' && (args[0].includes('No character metrics') || args[0].includes('LaTeX-incompatible input'))
+    );
+    expect(metricsWarnCalls.length).toBe(0);
+    warnSpy.mockRestore();
+  });
 });

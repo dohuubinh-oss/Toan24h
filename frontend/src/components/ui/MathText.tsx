@@ -11,20 +11,28 @@ interface MathTextProps {
   className?: string;
 }
 
+// Chặn toàn cục console.warn của KaTeX về font metrics và strict mode đối với các ký tự tiếng Việt có dấu
+// KaTeX hiển thị font fallback bình thường trên browser nhưng vẫn in cảnh báo 'No character metrics for...' và 'LaTeX-incompatible input'
+if (typeof console !== 'undefined') {
+  const originalConsoleWarn = console.warn;
+  if (!(console as any).__katex_silenced) {
+    (console as any).__katex_silenced = true;
+    console.warn = (...args: any[]) => {
+      if (
+        typeof args[0] === 'string' &&
+        (args[0].includes('No character metrics') ||
+         args[0].includes('LaTeX-incompatible input') ||
+         args[0].includes('strict mode is set to'))
+      ) {
+        return;
+      }
+      originalConsoleWarn(...args);
+    };
+  }
+}
+
 export function renderKatexToString(math: string, isBlock: boolean = false): string {
   if (!math) return '';
-  // Chặn console.warn của KaTeX về font metrics và strict mode đối với các ký tự tiếng Việt có dấu
-  // KaTeX hiển thị font fallback bình thường trên browser nhưng vẫn in cảnh báo 'No character metrics for...' và 'LaTeX-incompatible input'
-  const originalWarn = console.warn;
-  console.warn = (...args: any[]) => {
-    if (
-      typeof args[0] === 'string' &&
-      (args[0].includes('No character metrics') || args[0].includes('LaTeX-incompatible input'))
-    ) {
-      return;
-    }
-    originalWarn(...args);
-  };
 
   try {
     return katex.renderToString(math, {
@@ -34,8 +42,6 @@ export function renderKatexToString(math: string, isBlock: boolean = false): str
     });
   } catch {
     return math;
-  } finally {
-    console.warn = originalWarn;
   }
 }
 
@@ -138,24 +144,21 @@ export default function MathText({ content, className = '' }: MathTextProps) {
       }
     });
 
-    // 4. Xử lý các lệnh LaTeX chưa có dấu bọc $ nằm lẫn trong văn bản HTML thuần (ví dụ <p>-\dfrac{1}{5} x^4 y^5</p>)
+    // 4. Xử lý các lệnh LaTeX chưa có dấu bọc $ nằm lẫn trong văn bản HTML thuần
     // Vì công thức đã render trước đó ở dạng placeholder, bước này tuyệt đối KHÔNG bao giờ match nhầm vào <annotation> MathML
-    const unwrappedRegex = new RegExp(`>([^<]*?\\\\(?:${LATEX_COMMANDS})[^<]*?)<`, 'g');
-    processed = processed.replace(unwrappedRegex, (match, innerText) => {
-      if (innerText.includes('%%%KATEX_MATH_')) {
-        return match;
-      }
+    const unwrappedCmdRegex = new RegExp(`\\\\(?:${LATEX_COMMANDS})(?:\\{[^{}]*\\}|\\[[^\\[\\]]*\\])*(?:_[a-zA-Z0-9{}]+|\\^[a-zA-Z0-9{}]+)*`, 'g');
+    processed = processed.replace(unwrappedCmdRegex, (cmd) => {
       try {
-        const decoded = decodeMathEntities(innerText.trim());
+        const decoded = decodeMathEntities(cmd.trim());
         const rendered = renderKatexToString(decoded, false);
         if (rendered.includes('katex-error')) {
-          return match;
+          return cmd;
         }
         const idx = mathPlaceholders.length;
         mathPlaceholders.push(rendered);
-        return `>%%%KATEX_MATH_${idx}%%%<`;
+        return `%%%KATEX_MATH_${idx}%%%`;
       } catch {
-        return match;
+        return cmd;
       }
     });
 
@@ -177,15 +180,8 @@ export default function MathText({ content, className = '' }: MathTextProps) {
     );
   }
 
-  // Hàm đơn giản phân tách text thường và text latex khi không có thẻ HTML
-  let processedContent = textContent;
-  if (textContent && !/(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^$]+\$|\\\([\s\S]*?\\\))/.test(textContent)) {
-    if (new RegExp(`\\\\(?:${LATEX_COMMANDS})`).test(textContent)) {
-      processedContent = `$${textContent}$`;
-    }
-  }
-
-  const parts = processedContent.split(/(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^$]+\$|\\\([\s\S]*?\\\))/g);
+  // Phân tách text thường và text latex khi không có thẻ HTML
+  const parts = textContent.split(/(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\$[^$]+\$|\\\([\s\S]*?\\\))/g);
 
   return (
     <div className={`latex-font ${className}`}>
