@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/modeptrai/exam-model-backend/internal/cache"
+	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
@@ -42,6 +44,9 @@ func (h *LectureHandler) CreateLecture(c *gin.Context) {
 		return
 	}
 
+	// Invalidate lectures cache
+	_ = cache.InvalidatePrefix(c.Request.Context(), cache.LectureCachePrefix)
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Lecture created successfully",
 	})
@@ -66,6 +71,9 @@ func (h *LectureHandler) UpdateLecture(c *gin.Context) {
 		return
 	}
 
+	// Invalidate lectures cache
+	_ = cache.InvalidatePrefix(c.Request.Context(), cache.LectureCachePrefix)
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Lecture updated successfully",
 	})
@@ -76,21 +84,40 @@ func (h *LectureHandler) GetLecturesByGrade(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "9"))
 
+	cacheKey := cache.BuildLectureGradeCacheKey(grade, page, limit)
+	var cachedRes services.PaginatedLectures
+	if cache.Get(c.Request.Context(), cacheKey, &cachedRes) {
+		c.JSON(http.StatusOK, cachedRes)
+		return
+	}
+
 	res, err := h.service.GetLecturesByGrade(c.Request.Context(), grade, page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	_ = cache.Set(c.Request.Context(), cacheKey, res, cache.DefaultTTL)
+
 	c.JSON(http.StatusOK, res)
 }
 
 func (h *LectureHandler) GetAllLectures(c *gin.Context) {
+	cacheKey := cache.BuildLectureAllCacheKey()
+	var cachedRes []models.Lecture
+	if cache.Get(c.Request.Context(), cacheKey, &cachedRes) {
+		c.JSON(http.StatusOK, gin.H{"data": cachedRes})
+		return
+	}
+
 	res, err := h.service.GetAllLectures(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	_ = cache.Set(c.Request.Context(), cacheKey, res, cache.DefaultTTL)
+
 	c.JSON(http.StatusOK, gin.H{"data": res})
 }
 
@@ -110,5 +137,9 @@ func (h *LectureHandler) DeleteLecture(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Invalidate lectures cache
+	_ = cache.InvalidatePrefix(c.Request.Context(), cache.LectureCachePrefix)
+
 	c.JSON(http.StatusOK, gin.H{"message": "Lecture deleted successfully"})
 }

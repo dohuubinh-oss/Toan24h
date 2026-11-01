@@ -7,6 +7,7 @@ import (
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 
+	"github.com/modeptrai/exam-model-backend/internal/cache"
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/services"
@@ -23,6 +24,9 @@ func CreateExam(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create exam: " + err.Error()})
 		return
 	}
+
+	// Invalidate exams cache
+	_ = cache.InvalidatePrefix(c.Request.Context(), cache.ExamCachePrefix)
 
 	c.JSON(http.StatusCreated, exam)
 }
@@ -161,25 +165,43 @@ func UpdateExam(c *gin.Context) {
 		return
 	}
 
+	// Invalidate exams cache
+	_ = cache.InvalidatePrefix(c.Request.Context(), cache.ExamCachePrefix)
+
 	c.JSON(http.StatusOK, existingExam)
 }
 
 func GetExams(c *gin.Context) {
+	lectureID := c.Query("lecture_id")
+	grade := c.Query("grade")
+	examType := c.Query("type")
+
+	// Cache-Aside lookup
+	cacheKey := cache.BuildExamCacheKey(lectureID, grade, examType)
+	var cachedExams []models.Exam
+	if cache.Get(c.Request.Context(), cacheKey, &cachedExams) {
+		c.JSON(http.StatusOK, gin.H{"data": cachedExams})
+		return
+	}
+
 	var exams []models.Exam
 	query := config.DB.Order("created_at desc")
-	if lectureID := c.Query("lecture_id"); lectureID != "" {
+	if lectureID != "" {
 		query = query.Where("lecture_id = ?", lectureID)
 	}
-	if grade := c.Query("grade"); grade != "" {
+	if grade != "" {
 		query = query.Where("grade = ?", grade)
 	}
-	if examType := c.Query("type"); examType != "" {
+	if examType != "" {
 		query = query.Where("type = ?", examType)
 	}
 	if err := query.Find(&exams).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch exams: " + err.Error()})
 		return
 	}
+
+	// Cache the result with DefaultTTL (10 minutes)
+	_ = cache.Set(c.Request.Context(), cacheKey, exams, cache.DefaultTTL)
 
 	c.JSON(http.StatusOK, gin.H{"data": exams})
 }
@@ -282,6 +304,9 @@ func DeleteExam(c *gin.Context) {
 		unusedImages := services.FilterUnusedQuestionImages(config.DB, candidateImageURLs, allOrphanIDs)
 		services.DeletePhysicalImages(unusedImages)
 	}
+
+	// Invalidate exams cache
+	_ = cache.InvalidatePrefix(c.Request.Context(), cache.ExamCachePrefix)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":               "Exam deleted successfully",
