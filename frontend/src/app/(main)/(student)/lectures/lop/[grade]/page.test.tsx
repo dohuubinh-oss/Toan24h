@@ -29,8 +29,8 @@ vi.mock('@/lib/api', () => ({
 }))
 
 vi.mock('@/components/lectures/GradeLectureList', () => ({
-  GradeLectureList: ({ lectures }: any) => (
-    <div data-testid="grade-lecture-list">
+  GradeLectureList: ({ lectures, allLectures }: any) => (
+    <div data-testid="grade-lecture-list" data-total-all={allLectures?.length}>
       {lectures.map((l: any) => (
         <div key={l.id} data-testid="lecture-item">
           {l.title}
@@ -55,24 +55,25 @@ describe('GradeLecturesPage (/lectures/lop/[grade])', () => {
 
     vi.mocked(api.getExams).mockResolvedValue([])
     vi.mocked(api.getMyExamResults).mockResolvedValue([])
+
+    // 12 sample lectures
+    const mockData = Array.from({ length: 12 }).map((_, i) => ({
+      id: `lec-${i + 1}`,
+      title: `Bài ${i + 1}: Nội dung toán ${i + 1}`,
+      chapter: i < 7 ? 'Tập hợp số tự nhiên' : 'Tính chất chia hết',
+    }))
+
     vi.mocked(lectureApi.getLecturesByGrade).mockResolvedValue({
-      data: [
-        { id: 'lec-1', title: 'Bài 1: Tập hợp' },
-        { id: 'lec-2', title: 'Bài 2: Phép cộng' },
-        { id: 'lec-3', title: 'Bài 3: Phép nhân' },
-        { id: 'lec-4', title: 'Bài 4: Lũy thừa' },
-        { id: 'lec-5', title: 'Bài 5: Thứ tự thực hiện' },
-        { id: 'lec-6', title: 'Bài 6: Chia hết' },
-      ],
+      data: mockData,
       currentPage: 1,
-      totalPages: 3,
-      totalItems: 18,
+      totalPages: 1,
+      totalItems: 12,
       startIndex: 1,
-      endIndex: 6,
+      endIndex: 12,
     } as any)
   })
 
-  it('fetches lectures with limit of 6 items per page by default', async () => {
+  it('fetches all grade lectures and slices 6 items for page 1 with full curriculum passed to sidebar', async () => {
     const pageJSX = await GradeLecturesPage({
       params: Promise.resolve({ grade: '6' }),
       searchParams: Promise.resolve({}),
@@ -80,12 +81,15 @@ describe('GradeLecturesPage (/lectures/lop/[grade])', () => {
 
     render(pageJSX)
 
-    expect(lectureApi.getLecturesByGrade).toHaveBeenCalledWith('6', 1, 6)
+    expect(lectureApi.getLecturesByGrade).toHaveBeenCalledWith('6', 1, 100)
     expect(screen.getByText('Danh sách Bài giảng Toán Lớp 6')).toBeInTheDocument()
     expect(screen.getAllByTestId('lecture-item')).toHaveLength(6)
+    expect(screen.getByTestId('grade-lecture-list')).toHaveAttribute('data-total-all', '12')
+    expect(screen.getByText('Bài 1: Nội dung toán 1')).toBeInTheDocument()
+    expect(screen.getByText('Bài 6: Nội dung toán 6')).toBeInTheDocument()
   })
 
-  it('passes requested page number with limit of 6 when page parameter is provided', async () => {
+  it('slices items 7 to 12 when page 2 is requested', async () => {
     const pageJSX = await GradeLecturesPage({
       params: Promise.resolve({ grade: '6' }),
       searchParams: Promise.resolve({ page: '2' }),
@@ -93,6 +97,8 @@ describe('GradeLecturesPage (/lectures/lop/[grade])', () => {
 
     render(pageJSX)
 
-    expect(lectureApi.getLecturesByGrade).toHaveBeenCalledWith('6', 2, 6)
+    expect(screen.getAllByTestId('lecture-item')).toHaveLength(6)
+    expect(screen.getByText('Bài 7: Nội dung toán 7')).toBeInTheDocument()
+    expect(screen.getByText('Bài 12: Nội dung toán 12')).toBeInTheDocument()
   })
 })

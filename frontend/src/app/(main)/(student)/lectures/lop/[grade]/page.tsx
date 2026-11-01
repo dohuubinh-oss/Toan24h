@@ -74,23 +74,23 @@ export default async function GradeLecturesPage({
 
   const token = cookieStore.get('accessToken')?.value;
 
-  const [lecturesResult, examsData, resultsData] = await Promise.all([
-    getLecturesByGrade(grade, page, 6),
+  const [allLecturesResult, examsData, resultsData] = await Promise.all([
+    getLecturesByGrade(grade, 1, 100),
     getExams({ grade }),
     token ? getMyExamResults(token) : Promise.resolve([]),
   ]);
 
-  const {
-    data: lectures,
-    totalPages,
-    totalItems,
-    startIndex,
-    endIndex,
-    currentPage,
-  } = lecturesResult;
+  const allLectures = allLecturesResult.data || [];
+  // Tính toán trạng thái học tập và khóa/mở khóa liên hoàn trên toàn bộ bài giảng của khối
+  const allMappedLectures = calculateLectureProgression(allLectures, examsData, resultsData);
 
-  // Tính toán trạng thái học tập và khóa/mở khóa liên hoàn (Mastery Progression)
-  const mappedLectures = calculateLectureProgression(lectures, examsData, resultsData);
+  const totalItems = allMappedLectures.length;
+  const pageSize = 6;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const validPage = Math.max(1, Math.min(page, totalPages));
+  const startIndex = totalItems > 0 ? (validPage - 1) * pageSize + 1 : 0;
+  const endIndex = Math.min(validPage * pageSize, totalItems);
+  const currentPageLectures = allMappedLectures.slice((validPage - 1) * pageSize, validPage * pageSize);
 
   return (
     <div className="space-y-8">
@@ -143,7 +143,8 @@ export default async function GradeLecturesPage({
 
       {/* Toolbar và Danh sách Bài giảng có viền trạng thái & khóa tiến độ */}
       <GradeLectureList
-        lectures={mappedLectures}
+        lectures={currentPageLectures}
+        allLectures={allMappedLectures}
         grade={grade}
         returnUrl={returnUrl}
         examId={examId}
@@ -153,7 +154,7 @@ export default async function GradeLecturesPage({
       {totalPages > 1 && (
         <div className="mt-8">
           <ClientPagination
-            currentPage={currentPage}
+            currentPage={validPage}
             totalPages={totalPages}
             totalItems={totalItems}
             startIndex={startIndex}

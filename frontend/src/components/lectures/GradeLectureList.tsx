@@ -10,6 +10,7 @@ import { useStudentLectureFilter } from '@/contexts/StudentLectureFilterContext'
 
 export interface GradeLectureListProps {
   lectures: Lecture[];
+  allLectures?: Lecture[];
   grade: string;
   returnUrl?: string;
   examId?: string;
@@ -17,6 +18,7 @@ export interface GradeLectureListProps {
 
 export function GradeLectureList({
   lectures,
+  allLectures,
   grade,
   returnUrl,
   examId,
@@ -36,24 +38,38 @@ export function GradeLectureList({
   const selectedStatus = contextFilter ? contextFilter.selectedStatus : localSelectedStatus;
   const setSelectedStatus = contextFilter ? contextFilter.setSelectedStatus : setLocalSelectedStatus;
 
-  // Lấy danh sách các chuyên đề/chương duy nhất
+  const statsSource = allLectures && allLectures.length > 0 ? allLectures : lectures;
+
+  // Lấy danh sách các chuyên đề/chương duy nhất trên toàn bộ khối lớp
   const chapters = useMemo(() => {
     const set = new Set<string>();
-    lectures.forEach((l) => {
+    statsSource.forEach((l) => {
       if (l.chapter && l.chapter.trim()) {
         set.add(l.chapter.trim());
       }
     });
     return Array.from(set);
-  }, [lectures]);
+  }, [statsSource]);
 
-  // Thống kê số lượng bài theo trạng thái
+  // Đếm số lượng bài của từng chuyên đề
+  const chapterCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    statsSource.forEach((l) => {
+      if (l.chapter && l.chapter.trim()) {
+        const chap = l.chapter.trim();
+        map[chap] = (map[chap] || 0) + 1;
+      }
+    });
+    return map;
+  }, [statsSource]);
+
+  // Thống kê số lượng bài theo trạng thái trên toàn bộ khối lớp
   const counts = useMemo(() => {
     let completed = 0;
     let pending = 0;
     let locked = 0;
 
-    lectures.forEach((l) => {
+    statsSource.forEach((l) => {
       if (l.isCompleted) {
         completed++;
       } else if (l.isLocked) {
@@ -64,16 +80,25 @@ export function GradeLectureList({
     });
 
     return {
-      total: lectures.length,
+      total: statsSource.length,
       completed,
       pending,
       locked,
     };
-  }, [lectures]);
+  }, [statsSource]);
+
+  const hasActiveFilters =
+    searchQuery.trim() !== '' ||
+    selectedChapter !== 'all' ||
+    selectedStatus !== 'all';
+
+  // Khi có bộ lọc (tìm kiếm / chọn chuyên đề / trạng thái): tìm trên toàn bộ khối lớp (statsSource).
+  // Khi không có bộ lọc: hiển thị 6 bài của trang hiện tại (lectures).
+  const sourceToFilter = hasActiveFilters ? statsSource : lectures;
 
   // Lọc bài giảng theo tìm kiếm, phân môn, và trạng thái
   const filteredLectures = useMemo(() => {
-    return lectures.filter((lecture) => {
+    return sourceToFilter.filter((lecture) => {
       // 1. Tìm kiếm
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
@@ -105,7 +130,7 @@ export function GradeLectureList({
 
       return true;
     });
-  }, [lectures, searchQuery, selectedChapter, selectedStatus]);
+  }, [sourceToFilter, searchQuery, selectedChapter, selectedStatus]);
 
   useEffect(() => {
     if (contextFilter) {
@@ -118,11 +143,6 @@ export function GradeLectureList({
     }
   }, [contextFilter, chapters, counts]);
 
-  const hasActiveFilters =
-    searchQuery.trim() !== '' ||
-    selectedChapter !== 'all' ||
-    selectedStatus !== 'all';
-
   return (
     <div className="flex flex-col lg:flex-row items-start gap-7">
       {/* Cột Trái: Sidemenu Bộ lọc & Chuyên đề (Ẩn trên desktop khi đã tích hợp vào Sidebar menu chính) */}
@@ -134,6 +154,7 @@ export function GradeLectureList({
             selectedChapter={selectedChapter}
             onChapterChange={setSelectedChapter}
             chapters={chapters}
+            chapterCounts={chapterCounts}
             selectedStatus={selectedStatus}
             onStatusChange={setSelectedStatus}
             totalCount={counts.total}

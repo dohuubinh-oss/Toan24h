@@ -141,7 +141,7 @@ describe('calculateLectureProgression', () => {
     expect(progression[1].isLocked).toBe(false);
   });
 
-  it('marks lecture without regular exams as completed and unlocks next', () => {
+  it('does not mark lecture without regular exams as completed by default, but unlocks it and next lecture', () => {
     const lectureWithNoExams: Lecture[] = [
       {
         id: 'lec-theory-only',
@@ -160,8 +160,9 @@ describe('calculateLectureProgression', () => {
     ];
 
     const progression = calculateLectureProgression(lectureWithNoExams, [], []);
-    expect(progression[0].isCompleted).toBe(true);
-    expect(progression[0].status).toBe('COMPLETED');
+    expect(progression[0].isCompleted).toBe(false);
+    expect(progression[0].status).toBe('NOT_STARTED');
+    expect(progression[0].isLocked).toBe(false);
     expect(progression[1].isLocked).toBe(false);
   });
 

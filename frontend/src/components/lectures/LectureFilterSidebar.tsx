@@ -20,6 +20,7 @@ export interface LectureSidebarProps {
   selectedChapter: string;
   onChapterChange: (chapter: string) => void;
   chapters: string[];
+  chapterCounts?: Record<string, number>;
   selectedStatus: 'all' | 'completed' | 'pending' | 'locked';
   onStatusChange: (status: 'all' | 'completed' | 'pending' | 'locked') => void;
   totalCount: number;
@@ -37,6 +38,7 @@ export function LectureFilterSidebar({
   selectedChapter,
   onChapterChange,
   chapters,
+  chapterCounts,
   selectedStatus,
   onStatusChange,
   totalCount,
@@ -144,6 +146,7 @@ export function LectureFilterSidebar({
 
             {chapters.map((chap) => {
               const isSelected = selectedChapter === chap;
+              const count = chapterCounts ? chapterCounts[chap] : undefined;
               return (
                 <button
                   key={chap}
@@ -156,6 +159,17 @@ export function LectureFilterSidebar({
                   }`}
                 >
                   <span className="truncate pr-2">{chap}</span>
+                  {count !== undefined && (
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-bold shrink-0 ${
+                        isSelected
+                          ? 'bg-white/20 text-white'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  )}
                 </button>
               );
             })}

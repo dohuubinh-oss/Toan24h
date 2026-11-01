@@ -86,9 +86,9 @@ export function calculateLectureProgression(
         practiceCount,
         regularPracticeCount: 0,
         completedWellCount,
-        averageScore: 10,
-        isCompleted: true,
-        status: 'COMPLETED' as LectureStatus,
+        averageScore: 0,
+        isCompleted: false,
+        status: 'NOT_STARTED' as LectureStatus,
         isLocked: false,
       };
     }
@@ -154,10 +154,10 @@ export function calculateLectureProgression(
     unlockedIndices.add(0);
   }
 
-  // 2. Khi bài i hoàn thành sẽ tự động mở khóa bài i+1 và bài i-1 (và các bài đã hoàn thành luôn mở để ôn tập)
+  // 2. Khi bài i hoàn thành hoặc là bài thuần lý thuyết thì tự động mở khóa bài i+1 và bài i-1 (và các bài đã hoàn thành luôn mở để ôn tập)
   evaluatedLectures.forEach((current, index) => {
-    if (current.isCompleted) {
-      unlockedIndices.add(index); // Bài đã xong luôn mở
+    if (current.isCompleted || current.regularPracticeCount === 0) {
+      unlockedIndices.add(index); // Bài đã xong hoặc thuần lý thuyết luôn mở
 
       // Mở bài sau (i + 1)
       if (index + 1 < evaluatedLectures.length) {
