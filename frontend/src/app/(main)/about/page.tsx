@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   Sparkles,
   Target,
-  Bot,
+  UserCheck,
   BookOpen,
   Award,
   Users,
@@ -92,8 +92,8 @@ export default function AboutPage() {
 
             {/* Subtitle */}
             <p className="text-base sm:text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
-              Đồng hành cùng học sinh THCS lớp 6, 7, 8, 9 bứt phá điểm số với công nghệ MathAI vượt trội, đồng thời mang
-              đến cơ hội gia tăng thu nhập thụ động bền vững cho đối tác cộng đồng.
+              Đồng hành cùng học sinh THCS lớp 6, 7, 8, 9 bứt phá điểm số với phương pháp học tập chuẩn mực và sự tận tâm
+              của đội ngũ giáo viên, đồng thời mang đến cơ hội gia tăng thu nhập thụ động bền vững cho đối tác cộng đồng.
             </p>
 
             {/* Quick Actions */}
@@ -152,8 +152,8 @@ export default function AboutPage() {
             </h2>
             <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
               toan6789.vn được xây dựng với khát vọng giúp mọi học sinh lớp 6, 7, 8, 9 không còn cảm giác sợ môn Toán.
-              Chúng tôi kết hợp nội dung sư phạm chuẩn mực cùng trí tuệ nhân tạo MathAI để cá nhân hóa việc học tập, giải
-              đáp mọi thắc mắc ngay tức thì.
+              Chúng tôi chú trọng phương pháp sư phạm chuẩn mực, đồng hành sát sao cùng học sinh để cá nhân hóa lộ trình
+              ôn luyện và giúp các em tự tin làm chủ kiến thức.
             </p>
           </div>
 
@@ -161,12 +161,12 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
               <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6">
-                <Bot className="w-7 h-7" />
+                <UserCheck className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Trợ Lý MathAI Tự Động Chấm Bài Tự Luận</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Đội Ngũ Giáo Viên Chuyên Toán Chấm Chữa Tận Tâm</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Không chỉ dừng lại ở trắc nghiệm, MathAI phân tích từng bước giải tự luận (Đại số &amp; Hình học), phát
-                hiện chính xác vị trí sai sót và gợi ý hướng đi đúng đắn theo tiêu chuẩn chấm thi tuyển sinh.
+                Từng bài giải tự luận và đề thi đều được chuẩn hóa theo barem chấm thi tuyển sinh chính thức. Thầy cô
+                phân tích chi tiết từng bước lập luận, chỉ rõ lỗi sai thường gặp và uốn nắn cách trình bày để đạt điểm tối đa.
               </p>
             </div>
 

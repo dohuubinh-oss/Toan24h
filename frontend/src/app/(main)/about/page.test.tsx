@@ -11,7 +11,8 @@ describe('AboutPage', () => {
     ).toBeInTheDocument()
 
     expect(screen.getByText(/Biến Môn Toán THCS Trở Nên Trực Quan & Dễ Tiếp Cận Cho Mọi Học Sinh/i)).toBeInTheDocument()
-    expect(screen.getByText(/Trợ Lý MathAI Tự Động Chấm Bài Tự Luận/i)).toBeInTheDocument()
+    expect(screen.getByText(/Đội Ngũ Giáo Viên Chuyên Toán Chấm Chữa Tận Tâm/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Trợ Lý MathAI/i)).not.toBeInTheDocument()
   })
 
   it('renders Affiliate section with only 30% commission policy', () => {

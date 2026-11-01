@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Về Chúng Tôi & Chương Trình Đối Tác Affiliate 30% | toan6789.vn',
     description:
-      'Nền tảng học Toán THCS thông minh tích hợp MathAI. Tham gia mạng lưới đối tác toan6789.vn và nhận 30% hoa hồng chia sẻ doanh thu hấp dẫn.',
+      'Nền tảng học và luyện thi Toán THCS bám sát chương trình mới cùng đội ngũ giáo viên chuyên môn. Tham gia mạng lưới đối tác toan6789.vn và nhận 30% hoa hồng chia sẻ doanh thu hấp dẫn.',
   },
 }
 
