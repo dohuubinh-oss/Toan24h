@@ -46,6 +46,20 @@ vi.mock('@/data/blogData', async () => {
         publishedAt: '26/10/2026',
         readTime: '5 phút đọc',
         tags: ['Luyện thi', 'Toán 9']
+      },
+      {
+        id: 'draft-post-3',
+        slug: 'bai-viet-ban-nhap',
+        title: 'Bài viết Bản Nháp Chưa Xuất Bản',
+        postType: 'standard',
+        category: 'Bi-Quyet-Thi',
+        categoryLabel: 'Bí quyết thi vào 10',
+        coverImage: 'https://example.com/cover3.jpg',
+        author: { name: 'Thầy C', avatar: null, role: 'Giáo viên' },
+        publishedAt: '28/10/2026',
+        readTime: '3 phút đọc',
+        tags: ['Nháp'],
+        isPublished: false,
       }
     ]
   }
@@ -115,5 +129,19 @@ describe('BlogListPage with shorts playlist items', () => {
     expect(screen.queryByText(/Bài viết Nổi bật/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/#1 Hot/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Bài viết nổi bật khác/i)).not.toBeInTheDocument()
+  })
+
+  it('hides unpublished draft posts for students or guests', () => {
+    document.cookie = 'userRole=student'
+    render(<BlogListPage />)
+    expect(screen.queryByText('Bài viết Bản Nháp Chưa Xuất Bản')).not.toBeInTheDocument()
+    expect(screen.queryByText('Bản nháp')).not.toBeInTheDocument()
+  })
+
+  it('shows unpublished draft posts with Bản nháp badge for teacher or admin', () => {
+    document.cookie = 'userRole=teacher'
+    render(<BlogListPage />)
+    expect(screen.getByText('Bài viết Bản Nháp Chưa Xuất Bản')).toBeInTheDocument()
+    expect(screen.getByText('Bản nháp')).toBeInTheDocument()
   })
 })

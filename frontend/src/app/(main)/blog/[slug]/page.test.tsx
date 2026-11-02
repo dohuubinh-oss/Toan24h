@@ -45,6 +45,21 @@ vi.mock('@/data/blogData', async () => {
         publishedAt: '26/10/2026',
         readTime: '6 phút',
         tags: ['Toán 9', 'Thi vào 10']
+      },
+      {
+        id: 'test-draft',
+        slug: 'bai-viet-nhap',
+        title: 'Bản Nháp Bài Viết Toán',
+        postType: 'standard',
+        content: 'Nội dung bí mật bản nháp',
+        category: 'Bi-Quyet-Thi',
+        categoryLabel: 'Bí quyết thi vào 10',
+        coverImage: 'https://example.com/draft.jpg',
+        author: { name: 'Thầy C', avatar: null, role: 'Giáo viên' },
+        publishedAt: '28/10/2026',
+        readTime: '2 phút',
+        tags: ['Nháp'],
+        isPublished: false,
       }
     ]
   }
@@ -115,5 +130,40 @@ describe('BlogDetailPage', () => {
 
     // Previous / Next post navigation
     expect(screen.getByText(/Bài viết trước/i)).toBeInTheDocument()
+  })
+
+  it('hides unpublished post for student or guest and shows not found UI', async () => {
+    document.cookie = 'userRole=student'
+    const params = Promise.resolve({ slug: 'bai-viet-nhap' })
+    await act(async () => {
+      render(
+        <ToastProvider>
+          <Suspense fallback={<div>Đang tải...</div>}>
+            <BlogDetailPage params={params} />
+          </Suspense>
+        </ToastProvider>
+      )
+    })
+
+    expect(screen.getByText('Không tìm thấy bài viết')).toBeInTheDocument()
+    expect(screen.queryByText('Bản Nháp Bài Viết Toán')).not.toBeInTheDocument()
+  })
+
+  it('allows teacher or admin to preview unpublished post with draft banner', async () => {
+    document.cookie = 'userRole=teacher'
+    const params = Promise.resolve({ slug: 'bai-viet-nhap' })
+    await act(async () => {
+      render(
+        <ToastProvider>
+          <Suspense fallback={<div>Đang tải...</div>}>
+            <BlogDetailPage params={params} />
+          </Suspense>
+        </ToastProvider>
+      )
+    })
+
+    expect(screen.queryByText('Không tìm thấy bài viết')).not.toBeInTheDocument()
+    expect(screen.getAllByText('Bản Nháp Bài Viết Toán').length).toBeGreaterThan(0)
+    expect(screen.getByText(/Bạn đang xem trước bài viết chưa xuất bản/i)).toBeInTheDocument()
   })
 })

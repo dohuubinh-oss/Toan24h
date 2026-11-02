@@ -18,6 +18,8 @@ export interface StudentLectureFilterContextType {
   setSelectedStatus: (status: 'all' | 'completed' | 'pending' | 'locked') => void
   chapters: string[]
   setChapters: (chapters: string[]) => void
+  chapterCounts: Record<string, number>
+  setChapterCounts: (counts: Record<string, number>) => void
   counts: FilterCounts
   setCounts: (counts: FilterCounts) => void
   isAvailable: boolean
@@ -32,6 +34,7 @@ export function StudentLectureFilterProvider({ children }: { children: ReactNode
   const [selectedChapter, setSelectedChapter] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'completed' | 'pending' | 'locked'>('all')
   const [chapters, setChapters] = useState<string[]>([])
+  const [chapterCounts, setChapterCounts] = useState<Record<string, number>>({})
   const [counts, setCounts] = useState<FilterCounts>({
     total: 0,
     completed: 0,
@@ -56,13 +59,15 @@ export function StudentLectureFilterProvider({ children }: { children: ReactNode
       setSelectedStatus,
       chapters,
       setChapters,
+      chapterCounts,
+      setChapterCounts,
       counts,
       setCounts,
       isAvailable,
       setIsAvailable,
       resetFilters,
     }),
-    [searchQuery, selectedChapter, selectedStatus, chapters, counts, isAvailable]
+    [searchQuery, selectedChapter, selectedStatus, chapters, chapterCounts, counts, isAvailable]
   )
 
   return (

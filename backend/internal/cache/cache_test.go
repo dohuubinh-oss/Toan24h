@@ -13,11 +13,11 @@ func TestCache_KeyBuilders(t *testing.T) {
 	examKey := cache.BuildExamCacheKey("lec-123", "9", "exam")
 	assert.Equal(t, "cache:exams:lid=lec-123:g=9:t=exam", examKey)
 
-	lectureGradeKey := cache.BuildLectureGradeCacheKey("8", 1, 9)
-	assert.Equal(t, "cache:lectures:grade:8:p=1:l=9", lectureGradeKey)
+	lectureGradeKey := cache.BuildLectureGradeCacheKey("8", 1, 9, true)
+	assert.Equal(t, "cache:lectures:grade:8:p=1:l=9:pub=true", lectureGradeKey)
 
-	lectureAllKey := cache.BuildLectureAllCacheKey()
-	assert.Equal(t, "cache:lectures:all", lectureAllKey)
+	lectureAllKey := cache.BuildLectureAllCacheKey(false)
+	assert.Equal(t, "cache:lectures:all:pub=false", lectureAllKey)
 }
 
 func TestCache_NilClientGracefulFallback(t *testing.T) {

@@ -110,4 +110,35 @@ describe('LectureCard and PracticeLectureCard', () => {
     const link = screen.getByRole('link')
     expect(link).toHaveAttribute('href', '/lectures/lop/5/prac-789')
   })
+
+  it('renders draft badge when isPublished is false on LectureCard', () => {
+    render(
+      <LectureCard 
+        id="lec-draft"
+        title="Bài giảng bản nháp"
+        chapter="Hình học"
+        status="NOT_STARTED"
+        practiceCount={0}
+        grade="9"
+        isPublished={false}
+      />
+    )
+
+    expect(screen.getByText('Bản nháp')).toBeInTheDocument()
+  })
+
+  it('renders draft badge when isPublished is false on PracticeLectureCard', () => {
+    render(
+      <PracticeLectureCard 
+        id="prac-draft"
+        grade="9"
+        title="Đề kiểm tra bản nháp"
+        chapter="Hình học"
+        practiceCount={1}
+        isPublished={false}
+      />
+    )
+
+    expect(screen.getByText('Bản nháp')).toBeInTheDocument()
+  })
 })

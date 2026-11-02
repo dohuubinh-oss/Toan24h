@@ -47,7 +47,7 @@ describe('GradeLectureList', () => {
   it('filters lectures by chapter', () => {
     render(<GradeLectureList lectures={sampleLectures} grade="8" />);
 
-    const geomChip = screen.getByRole('button', { name: 'Hình học' });
+    const geomChip = screen.getByRole('button', { name: /Hình học/i });
     fireEvent.click(geomChip);
 
     expect(screen.queryByText('Phương trình bậc nhất')).not.toBeInTheDocument();
@@ -62,5 +62,44 @@ describe('GradeLectureList', () => {
 
     expect(screen.getByText('Phương trình bậc nhất')).toBeInTheDocument();
     expect(screen.queryByText('Định lý Ta-lét')).not.toBeInTheDocument();
+  });
+
+  it('paginates lectures correctly with 6 items per page and resets on filter change', () => {
+    const manyLectures: Lecture[] = Array.from({ length: 8 }, (_, i) => ({
+      id: `lec-${i + 1}`,
+      title: `Bài giảng số ${i + 1}`,
+      chapter: i < 5 ? 'Đại số' : 'Hình học',
+      status: 'NOT_STARTED',
+      practiceCount: 1,
+      isLocked: false,
+    }));
+
+    render(<GradeLectureList lectures={manyLectures} allLectures={manyLectures} grade="8" />);
+
+    // Page 1 should show Bài giảng 1 to 6
+    expect(screen.getByText('Bài giảng số 1')).toBeInTheDocument();
+    expect(screen.getByText('Bài giảng số 6')).toBeInTheDocument();
+    expect(screen.queryByText('Bài giảng số 7')).not.toBeInTheDocument();
+
+    // Pagination info
+    expect(screen.getByText(/1 - 6/i)).toBeInTheDocument();
+    expect(screen.getByText(/trong số/i)).toBeInTheDocument();
+
+    // Click page 2
+    const page2Button = screen.getByRole('button', { name: '2' });
+    fireEvent.click(page2Button);
+
+    expect(screen.queryByText('Bài giảng số 1')).not.toBeInTheDocument();
+    expect(screen.getByText('Bài giảng số 7')).toBeInTheDocument();
+    expect(screen.getByText('Bài giảng số 8')).toBeInTheDocument();
+
+    // Filter by Hình học (which only has 3 items)
+    const geomChip = screen.getByRole('button', { name: /Hình học/i });
+    fireEvent.click(geomChip);
+
+    // Resets to page 1 and only shows Hình học items (no pagination since <= 6 items)
+    expect(screen.getByText('Bài giảng số 7')).toBeInTheDocument();
+    expect(screen.getByText('Bài giảng số 8')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '2' })).not.toBeInTheDocument();
   });
 });

@@ -21,11 +21,13 @@ export function StudentFilterManager() {
 
   return (
     <LectureFilterSidebar
+      searchId="sidebar-lecture-search"
       searchQuery={filter.searchQuery}
       onSearchChange={filter.setSearchQuery}
       selectedChapter={filter.selectedChapter}
       onChapterChange={filter.setSelectedChapter}
       chapters={filter.chapters}
+      chapterCounts={filter.chapterCounts}
       selectedStatus={filter.selectedStatus}
       onStatusChange={filter.setSelectedStatus}
       totalCount={filter.counts.total}

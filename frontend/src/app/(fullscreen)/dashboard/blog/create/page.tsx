@@ -70,6 +70,7 @@ function CreateBlogPostContent() {
   const [slug, setSlug] = useState('')
   const [isCustomSlug, setIsCustomSlug] = useState(false)
   const [isFeatured, setIsFeatured] = useState(false)
+  const [isPublished, setIsPublished] = useState(true)
   const [summary, setSummary] = useState('')
   const [category, setCategory] = useState<BlogPost['category']>('Bi-Quyet-Thi')
   const [categoryLabel, setCategoryLabel] = useState('Bí quyết thi vào 10')
@@ -311,6 +312,7 @@ function CreateBlogPostContent() {
         setSlug(existing.slug)
         setIsCustomSlug(true)
         setIsFeatured(!!existing.featured)
+        setIsPublished(existing.isPublished !== undefined ? Boolean(existing.isPublished) : true)
         setSummary(existing.summary || '')
         setCategory(existing.category)
         setCategoryLabel(existing.categoryLabel)
@@ -541,6 +543,7 @@ ${tocListHtml}
       publishedAt: 'Hôm nay',
       readTime: postType === 'shorts_playlist' ? `${shortsList.length} Shorts` : '5 phút đọc',
       featured: isFeatured,
+      isPublished: isPublished,
       tags: tags.length > 0 ? tags : ['Toán6789']
     }
 
@@ -607,7 +610,11 @@ ${tocListHtml}
 
             <Button onClick={handlePublish} className="min-h-[44px] px-6 font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm shadow-primary/20 cursor-pointer">
               <Send className="w-4 h-4" />
-              <span>{editPostId ? 'Cập nhật bài viết' : 'Xuất bản bài viết'}</span>
+              <span>
+                {editPostId
+                  ? (isPublished ? 'Cập nhật bài viết' : 'Lưu bản nháp')
+                  : (isPublished ? 'Xuất bản bài viết' : 'Lưu bản nháp')}
+              </span>
             </Button>
           </div>
         </div>
@@ -1210,6 +1217,40 @@ ${tocListHtml}
                 </div>
 
                 <div className="p-5 space-y-4">
+                  {/* Publication Status (Published vs Draft) */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700">Trạng thái phát hành</label>
+                    <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200/80">
+                      <button
+                        type="button"
+                        onClick={() => setIsPublished(true)}
+                        className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          isPublished
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                        }`}
+                      >
+                        Xuất bản công khai
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsPublished(false)}
+                        className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          !isPublished
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                        }`}
+                      >
+                        Lưu bản nháp
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-slate-500 italic">
+                      {isPublished
+                        ? 'Bài blog sẽ hiển thị cho độc giả.'
+                        : 'Bài blog ở chế độ nháp, chỉ giáo viên và admin mới xem được.'}
+                    </p>
+                  </div>
+
                   {/* Featured Post Toggle Item */}
                   <div className="p-3.5 bg-amber-50/60 border border-amber-200/80 rounded-xl space-y-2">
                     <div className="flex items-center justify-between gap-2">

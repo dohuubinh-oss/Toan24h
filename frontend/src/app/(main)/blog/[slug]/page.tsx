@@ -19,10 +19,35 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
   const toast = useToast()
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [isAdminOrTeacher, setIsAdminOrTeacher] = useState(false)
 
   useEffect(() => {
     setPosts(getBlogPosts())
     setLoaded(true)
+
+    try {
+      const getCookie = (name: string) => {
+        const value = `; ${document.cookie}`
+        const parts = value.split(`; ${name}=`)
+        if (parts.length === 2) return parts.pop()?.split(';').shift()
+        return undefined
+      }
+
+      const role = getCookie('userRole')
+      let roleMatch = role === 'admin' || role === 'teacher'
+      if (!roleMatch) {
+        try {
+          const userStored = localStorage.getItem('user')
+          if (userStored) {
+            const parsed = JSON.parse(userStored)
+            if (parsed.role === 'admin' || parsed.role === 'teacher') {
+              roleMatch = true
+            }
+          }
+        } catch (_) {}
+      }
+      setIsAdminOrTeacher(roleMatch)
+    } catch (_) {}
   }, [])
 
   const post = posts.find(p => p.slug === slug)
@@ -42,13 +67,14 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
     )
   }
 
-  if (!post) {
+  // Ẩn bài nháp đối với học sinh, affiliate hoặc khách
+  if (!post || (post.isPublished === false && !isAdminOrTeacher)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
         <div className="bg-white p-8 sm:p-12 rounded-3xl border border-slate-200/80 shadow-xs max-w-md space-y-4">
           <BookOpen className="w-12 h-12 text-slate-300 mx-auto" />
           <h2 className="text-xl font-bold text-slate-800">Không tìm thấy bài viết</h2>
-          <p className="text-xs text-slate-500">Bài viết bạn tìm kiếm không tồn tại hoặc đã được di chuyển.</p>
+          <p className="text-xs text-slate-500">Bài viết bạn tìm kiếm không tồn tại hoặc chưa được xuất bản công khai.</p>
           <Link 
             href="/blog"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-xl shadow-xs hover:bg-primary/90 transition-all min-h-[42px]"
@@ -96,6 +122,22 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
           <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
           <span className="text-primary font-bold line-clamp-1 max-w-[240px] sm:max-w-md">{post.title}</span>
         </div>
+
+        {/* Banner xem trước bài nháp dành cho Giáo viên & Quản trị viên */}
+        {post.isPublished === false && (
+          <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 shadow-xs">
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
+              <span className="px-2.5 py-1 bg-amber-500 text-white rounded-lg text-xs font-bold shrink-0">Bản nháp</span>
+              <span>Bạn đang xem trước bài viết chưa xuất bản (chỉ hiển thị cho Giáo viên & Admin).</span>
+            </div>
+            <Link
+              href={`/dashboard/blog/create?id=${post.id}`}
+              className="inline-flex items-center justify-center px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shrink-0 transition-colors shadow-xs"
+            >
+              Chỉnh sửa & Xuất bản
+            </Link>
+          </div>
+        )}
 
         {/* 2-Column Academic Portal Grid Layout (8 cols Content + 4 cols Sticky Sidebar) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

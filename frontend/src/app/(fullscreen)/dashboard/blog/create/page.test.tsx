@@ -81,11 +81,6 @@ describe('CreateBlogPostPage shorts playlist mode', () => {
     const categorySelect = screen.getByDisplayValue('Bí quyết thi vào 10')
     expect(categorySelect).toBeInTheDocument()
 
-    // Verify Auto cover image box is rendered with automatic extraction badge
-    expect(screen.getByText('Ảnh bìa đại diện')).toBeInTheDocument()
-    expect(screen.getByText('Tự động')).toBeInTheDocument()
-    expect(screen.getByText(/Hệ thống tự động trích xuất hình ảnh đầu tiên trong nội dung bài viết/i)).toBeInTheDocument()
-
     // Verify manual link input is REMOVED
     const coverInput = screen.queryByPlaceholderText(/https:\/\/images\.unsplash\.com\/\.\.\. hoặc link ảnh tùy chọn/i)
     expect(coverInput).not.toBeInTheDocument()
@@ -133,11 +128,28 @@ describe('CreateBlogPostPage shorts playlist mode', () => {
     expect(backBtn).toHaveAttribute('href', '/blog')
     expect(screen.getByText('Tạo bài viết Blog mới')).toBeInTheDocument()
 
-    // 4 Inspector cards in the Right Sidebar
+    // Inspector cards in the Right Sidebar
     expect(screen.getByText('Tác giả bài viết')).toBeInTheDocument()
     expect(screen.getByText('Xuất bản & Phân loại')).toBeInTheDocument()
-    expect(screen.getByText('Ảnh bìa đại diện')).toBeInTheDocument()
+    expect(screen.getByText('Trạng thái phát hành')).toBeInTheDocument()
+    expect(screen.getByText('Xuất bản công khai')).toBeInTheDocument()
+    expect(screen.getByText('Lưu bản nháp')).toBeInTheDocument()
     expect(screen.getByText(/Thẻ từ khóa/i)).toBeInTheDocument()
+  })
+
+  it('allows toggling between published and draft mode', () => {
+    render(
+      <ToastProvider>
+        <CreateBlogPostPage />
+      </ToastProvider>
+    )
+
+    const draftBtn = screen.getByRole('button', { name: /Lưu bản nháp/i })
+    expect(draftBtn).toBeInTheDocument()
+    fireEvent.click(draftBtn)
+
+    // Button in header updates to Lưu bản nháp
+    expect(screen.getAllByText('Lưu bản nháp').length).toBeGreaterThan(0)
   })
 
   it('provides automatic Table of Contents (TOC) creation from H1 headings', () => {

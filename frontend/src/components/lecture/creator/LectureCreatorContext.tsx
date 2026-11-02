@@ -42,12 +42,14 @@ interface LectureCreatorState {
   basicConcept: string;
   dangToanList: DangToanItem[];
   ggLink: string;
+  isPublished: boolean;
   setTitle: (val: string) => void;
   setGrade: (val: string) => void;
   setCategory: (val: string) => void;
   setBasicConcept: (val: string) => void;
   setDangToanList: (val: DangToanItem[] | ((prev: DangToanItem[]) => DangToanItem[])) => void;
   setGgLink: (val: string) => void;
+  setIsPublished: (val: boolean) => void;
   validateAndSubmit: () => void;
   resetForm: () => void;
   removeDangToan: (id: string) => void;
@@ -67,6 +69,7 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
   const [category, setCategory] = useState('')
   const [basicConcept, setBasicConcept] = useState('')
   const [ggLink, setGgLink] = useState('')
+  const [isPublished, setIsPublished] = useState(true)
   const [dangToanList, setDangToanList] = useState<DangToanItem[]>([
     { 
       id: '1', 
@@ -96,6 +99,7 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
           setCategory(data.category || '')
           setBasicConcept(data.basicConcept || '')
           setGgLink(data.gg_link || '')
+          setIsPublished(data.isPublished !== undefined ? Boolean(data.isPublished) : true)
 
           let rawExamples: any[] = []
           if (typeof data.examples === 'string') {
@@ -216,7 +220,8 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
         category,
         basicConcept: processedBasicConcept,
         examples: processedDangToanList,
-        gg_link: ggLink.trim()
+        gg_link: ggLink.trim(),
+        isPublished
       }
 
       if (editId) {
@@ -254,6 +259,7 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
     setCategory('')
     setBasicConcept('')
     setGgLink('')
+    setIsPublished(true)
     setDangToanList([{ 
       id: Math.random().toString(36).substr(2, 9), 
       mathType: '', 
@@ -277,12 +283,14 @@ export function LectureCreatorProvider({ children, editId }: { children: React.R
       basicConcept,
       dangToanList,
       ggLink,
+      isPublished,
       setTitle,
       setGrade,
       setCategory,
       setBasicConcept,
       setDangToanList,
       setGgLink,
+      setIsPublished,
       validateAndSubmit,
       resetForm,
       removeDangToan,

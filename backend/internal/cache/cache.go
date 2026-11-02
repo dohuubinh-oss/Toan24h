@@ -36,13 +36,13 @@ func BuildExamCacheKey(lectureID, grade, examType string) string {
 }
 
 // BuildLectureGradeCacheKey tạo khóa cache phân trang bài giảng theo khối lớp
-func BuildLectureGradeCacheKey(grade string, page, limit int) string {
-	return fmt.Sprintf("%sgrade:%s:p=%d:l=%d", LectureCachePrefix, grade, page, limit)
+func BuildLectureGradeCacheKey(grade string, page, limit int, publishedOnly bool) string {
+	return fmt.Sprintf("%sgrade:%s:p=%d:l=%d:pub=%t", LectureCachePrefix, grade, page, limit, publishedOnly)
 }
 
 // BuildLectureAllCacheKey tạo khóa cache cho danh sách tất cả bài giảng
-func BuildLectureAllCacheKey() string {
-	return fmt.Sprintf("%sall", LectureCachePrefix)
+func BuildLectureAllCacheKey(publishedOnly bool) string {
+	return fmt.Sprintf("%sall:pub=%t", LectureCachePrefix, publishedOnly)
 }
 
 // Get đọc dữ liệu từ Redis cache và deserialize vào target. Trả về true nếu Cache Hit.

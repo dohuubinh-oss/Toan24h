@@ -19,6 +19,7 @@ export interface LectureCardProps {
   lockReason?: string;
   averageScore?: number;
   priority?: boolean;
+  isPublished?: boolean;
 }
 
 export function LectureCard({
@@ -36,6 +37,7 @@ export function LectureCard({
   lockReason,
   averageScore,
   priority = false,
+  isPublished = true,
 }: LectureCardProps) {
   const isCompleted = status === 'COMPLETED';
   const isInProgress = status === 'PENDING';
@@ -82,6 +84,12 @@ export function LectureCard({
 
       {/* Badges trạng thái ở góc trên */}
       <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+        {isPublished === false && (
+          <div className="bg-amber-500/95 text-white border border-amber-400/80 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm backdrop-blur-sm">
+            <span>Bản nháp</span>
+          </div>
+        )}
+
         {isLocked && (
           <div className="bg-slate-800/80 text-white border border-slate-700/60 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
             <Lock className="w-3.5 h-3.5 text-slate-300" aria-hidden="true" />
@@ -202,6 +210,7 @@ export interface PracticeLectureCardProps {
   href?: string;
   thumbnailUrl?: string;
   priority?: boolean;
+  isPublished?: boolean;
 }
 
 export function PracticeLectureCard({
@@ -213,6 +222,7 @@ export function PracticeLectureCard({
   href,
   thumbnailUrl,
   priority = false,
+  isPublished = true,
 }: PracticeLectureCardProps) {
   const targetHref = href || (id ? `/lectures/lop/${grade}/${id}` : `/lectures`);
 
@@ -239,7 +249,12 @@ export function PracticeLectureCard({
             <PenTool className="w-8 h-8" aria-hidden="true" />
           </div>
         )}
-        <div className="absolute top-3 right-3 z-10">
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+          {isPublished === false && (
+            <div className="bg-amber-500/95 text-white border border-amber-400/80 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm backdrop-blur-sm">
+              <span>Bản nháp</span>
+            </div>
+          )}
           <div className="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm backdrop-blur-sm">
             Luyện tập & Đề
           </div>

@@ -78,10 +78,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     )
   })
 
-  // 3. Blog posts dynamic routes
+  // 3. Blog posts dynamic routes (chỉ xuất bản bài viết công khai)
   let blogRoutes: MetadataRoute.Sitemap = []
   try {
-    const posts = getBlogPosts()
+    const posts = getBlogPosts({ publishedOnly: true })
     blogRoutes = posts.map((post) => {
       let lastModified = currentDate
       if (post.publishedAt) {

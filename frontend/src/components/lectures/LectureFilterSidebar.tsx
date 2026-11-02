@@ -28,6 +28,7 @@ export interface LectureSidebarProps {
   pendingCount: number;
   lockedCount: number;
   isInsideSidebar?: boolean;
+  searchId?: string;
 }
 
 export type LectureFilterSidebarProps = LectureSidebarProps;
@@ -46,7 +47,9 @@ export function LectureFilterSidebar({
   pendingCount,
   lockedCount,
   isInsideSidebar = false,
+  searchId,
 }: LectureSidebarProps) {
+  const inputId = searchId || (isInsideSidebar ? 'sidebar-lecture-search' : 'mobile-lecture-search');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const percentCompleted =
@@ -83,7 +86,7 @@ export function LectureFilterSidebar({
         {/* Ô tìm kiếm */}
         <div>
           <label
-            htmlFor="lecture-search"
+            htmlFor={inputId}
             className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2"
           >
             Tìm kiếm bài giảng
@@ -93,11 +96,13 @@ export function LectureFilterSidebar({
               <Search className="w-4 h-4 text-slate-400" aria-hidden="true" />
             </div>
             <input
-              id="lecture-search"
+              id={inputId}
+              name={inputId}
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Tìm kiếm bài giảng, công thức..."
+              autoComplete="off"
               className="w-full pl-9 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             />
             {searchQuery && (
@@ -146,7 +151,7 @@ export function LectureFilterSidebar({
 
             {chapters.map((chap) => {
               const isSelected = selectedChapter === chap;
-              const count = chapterCounts ? chapterCounts[chap] : undefined;
+              const count = chapterCounts ? (chapterCounts[chap] ?? 0) : undefined;
               return (
                 <button
                   key={chap}
@@ -289,31 +294,36 @@ export function LectureFilterSidebar({
   }
 
   return (
-    <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-5">
+    <aside className="w-full md:w-72 xl:w-80 shrink-0 space-y-5">
       {/* Nút bấm toggle bộ lọc trên Mobile */}
-      <div className="lg:hidden">
+      <div className="md:hidden">
         <button
           type="button"
           onClick={() => setIsMobileOpen(!isMobileOpen)}
           className="w-full min-h-[44px] px-4 py-2.5 bg-white border border-slate-200/90 rounded-2xl shadow-xs text-sm font-semibold text-slate-800 flex items-center justify-between cursor-pointer"
         >
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-primary" aria-hidden="true" />
-            <span>Tìm kiếm & Bộ lọc chuyên đề</span>
+          <div className="flex items-center gap-2 truncate pr-2">
+            <SlidersHorizontal className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+            <span className="truncate">
+              {selectedChapter !== 'all' ? selectedChapter : 'Tìm kiếm & Bộ lọc chuyên đề'}
+            </span>
+            {(selectedChapter !== 'all' || selectedStatus !== 'all' || searchQuery.trim() !== '') && (
+              <span className="w-2 h-2 rounded-full bg-primary shrink-0" aria-label="Đang có bộ lọc" />
+            )}
           </div>
           {isMobileOpen ? (
-            <ChevronUp className="w-4 h-4 text-slate-500" aria-hidden="true" />
+            <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" aria-hidden="true" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-slate-500" aria-hidden="true" />
+            <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" aria-hidden="true" />
           )}
         </button>
       </div>
 
-      {/* Khối Sidebar nội dung (Hiện toàn thời gian trên Desktop, Collapsible trên Mobile) */}
+      {/* Khối Sidebar nội dung (Hiện toàn thời gian trên Tablet/Desktop khi không có layout sidebar, Collapsible trên Mobile) */}
       <div
         className={`${
           isMobileOpen ? 'block' : 'hidden'
-        } lg:block space-y-5`}
+        } md:block space-y-5`}
       >
         {contentCards}
       </div>

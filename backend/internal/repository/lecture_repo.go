@@ -9,8 +9,8 @@ import (
 
 type LectureRepository interface {
 	CreateLecture(ctx context.Context, lecture *models.Lecture) error
-	GetLecturesByGrade(ctx context.Context, grade string, limit, offset int) ([]models.Lecture, int64, error)
-	GetAllLectures(ctx context.Context) ([]models.Lecture, error)
+	GetLecturesByGrade(ctx context.Context, grade string, limit, offset int, publishedOnly bool) ([]models.Lecture, int64, error)
+	GetAllLectures(ctx context.Context, publishedOnly bool) ([]models.Lecture, error)
 	GetLectureByID(ctx context.Context, id string) (*models.Lecture, error)
 	UpdateLecture(ctx context.Context, lecture *models.Lecture) error
 	DeleteLecture(ctx context.Context, id string) error
@@ -34,11 +34,14 @@ func (r *lectureRepository) CreateLecture(ctx context.Context, lecture *models.L
 	})
 }
 
-func (r *lectureRepository) GetLecturesByGrade(ctx context.Context, grade string, limit, offset int) ([]models.Lecture, int64, error) {
+func (r *lectureRepository) GetLecturesByGrade(ctx context.Context, grade string, limit, offset int, publishedOnly bool) ([]models.Lecture, int64, error) {
 	var lectures []models.Lecture
 	var total int64
 
 	query := r.db.WithContext(ctx).Model(&models.Lecture{}).Where("grade = ?", grade)
+	if publishedOnly {
+		query = query.Where("is_published IS NOT FALSE")
+	}
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -51,9 +54,14 @@ func (r *lectureRepository) GetLecturesByGrade(ctx context.Context, grade string
 	return lectures, total, nil
 }
 
-func (r *lectureRepository) GetAllLectures(ctx context.Context) ([]models.Lecture, error) {
+func (r *lectureRepository) GetAllLectures(ctx context.Context, publishedOnly bool) ([]models.Lecture, error) {
 	var lectures []models.Lecture
-	if err := r.db.WithContext(ctx).Model(&models.Lecture{}).Preload("Author").Order("updated_at asc").Find(&lectures).Error; err != nil {
+	query := r.db.WithContext(ctx).Model(&models.Lecture{})
+	if publishedOnly {
+		query = query.Where("is_published IS NOT FALSE")
+	}
+
+	if err := query.Preload("Author").Order("updated_at asc").Find(&lectures).Error; err != nil {
 		return nil, err
 	}
 	return lectures, nil

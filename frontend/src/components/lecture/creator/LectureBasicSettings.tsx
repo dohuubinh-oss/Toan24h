@@ -8,7 +8,14 @@ import { useLectureCreator } from './LectureCreatorContext'
 import { TOPIC_MAPPING, GRADES } from '@/constants/topics'
 
 export default function LectureBasicSettings() {
-  const { contentType, setContentType, title, setTitle, grade, setGrade, category, setCategory, ggLink, setGgLink } = useLectureCreator()
+  const { 
+    contentType, setContentType, 
+    title, setTitle, 
+    grade, setGrade, 
+    category, setCategory, 
+    ggLink, setGgLink,
+    isPublished, setIsPublished 
+  } = useLectureCreator()
 
   return (
     <>
@@ -49,6 +56,40 @@ export default function LectureBasicSettings() {
                 <span>Luyện tập / Đề</span>
               </button>
             </div>
+          </div>
+
+          {/* Trạng thái phát hành (Published vs Draft) */}
+          <div className="space-y-2">
+            <Label className="text-xs uppercase tracking-wider text-slate-500 font-bold">Trạng thái phát hành</Label>
+            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100/90 rounded-xl border border-slate-200/80">
+              <button
+                type="button"
+                onClick={() => setIsPublished(true)}
+                className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  isPublished
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+              >
+                <span>Xuất bản công khai</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPublished(false)}
+                className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  !isPublished
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                }`}
+              >
+                <span>Lưu bản nháp</span>
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-500 italic">
+              {isPublished
+                ? 'Bài giảng sẽ hiển thị cho học sinh và affiliate.'
+                : 'Bài giảng ở chế độ nháp, chỉ giáo viên và admin mới xem được.'}
+            </p>
           </div>
 
           <div className="space-y-2">

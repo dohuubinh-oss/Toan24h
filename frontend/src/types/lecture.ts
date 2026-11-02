@@ -16,6 +16,7 @@ export interface Lecture {
   averageScore?: number;
   regularPracticeCount?: number;
   completedWellCount?: number;
+  isPublished?: boolean;
 }
 
 export interface PaginatedLectures {

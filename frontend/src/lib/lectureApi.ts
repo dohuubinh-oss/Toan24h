@@ -42,6 +42,7 @@ export interface BackendLecture {
   gg_link?: string;
   authorId?: string;
   author?: BackendLectureAuthor;
+  isPublished?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -79,10 +80,16 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, retries: n
   throw lastError || new Error(`Failed to fetch from ${url}`);
 }
 
-export async function getLecturesByGrade(grade: string, page: number = 1, limit: number = 6): Promise<PaginatedLectures> {
+export async function getLecturesByGrade(grade: string, page: number = 1, limit: number = 6, token?: string): Promise<PaginatedLectures> {
   const url = `${API_BASE_URL}/lectures/grade/${grade}?page=${page}&limit=${limit}`;
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetchWithRetry(url, {
     cache: 'no-store', // Always fetch fresh data
+    headers,
   });
 
   if (!response.ok) {
@@ -135,6 +142,7 @@ export async function getLecturesByGrade(grade: string, page: number = 1, limit:
       thumbnailUrl,
       isPracticeCard,
       practiceIds: item.practiceIds,
+      isPublished: item.isPublished !== undefined ? item.isPublished : true,
     }
   });
 
@@ -144,10 +152,16 @@ export async function getLecturesByGrade(grade: string, page: number = 1, limit:
   };
 }
 
-export async function getLectureById(id: string): Promise<BackendLecture> {
+export async function getLectureById(id: string, token?: string): Promise<BackendLecture> {
   const url = `${API_BASE_URL}/lectures/${id}`;
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetchWithRetry(url, {
     cache: 'no-store',
+    headers,
   });
 
   if (!response.ok) {
@@ -158,10 +172,16 @@ export async function getLectureById(id: string): Promise<BackendLecture> {
   return result;
 }
 
-export async function getAllLectures(): Promise<BackendLecture[]> {
+export async function getAllLectures(token?: string): Promise<BackendLecture[]> {
   const url = `${API_BASE_URL}/lectures`;
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetchWithRetry(url, {
     cache: 'no-store',
+    headers,
   });
 
   if (!response.ok) {

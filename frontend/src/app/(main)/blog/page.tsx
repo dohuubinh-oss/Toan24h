@@ -52,9 +52,17 @@ export default function BlogListPage() {
     } catch (_) {}
   }, [])
 
+  // Lọc bài viết theo quyền hạn:
+  // - Nếu là giáo viên (teacher) hoặc admin: thấy cả bài xuất bản và bản nháp
+  // - Nếu là học sinh (student), affiliate hoặc khách: CHỈ thấy bài đã xuất bản (isPublished !== false)
+  const visiblePosts = useMemo(() => {
+    if (isAdminOrTeacher) return posts;
+    return posts.filter(post => post.isPublished !== false);
+  }, [posts, isAdminOrTeacher]);
+
   // Find featured posts for Magazine Bento Hero: ONLY posts with featured === true
   const { featuredPost, secondaryPosts, featuredPostIds } = useMemo(() => {
-    const featuredList = posts.filter(post => post.featured)
+    const featuredList = visiblePosts.filter(post => post.featured)
     const main = featuredList[0] || null
     const secondary = featuredList.slice(1, 3)
     const activeIds = new Set<string>()
@@ -65,7 +73,7 @@ export default function BlogListPage() {
       secondaryPosts: secondary,
       featuredPostIds: activeIds,
     }
-  }, [posts])
+  }, [visiblePosts])
 
   // Điều kiện khu vực bài viết nổi bật được hiển thị (trên trang chủ blog, không tìm kiếm, không lọc danh mục)
   const isFeaturedActive = Boolean(
@@ -74,7 +82,7 @@ export default function BlogListPage() {
 
   // Filter posts
   const filteredPosts = useMemo(() => {
-    return posts.filter(post => {
+    return visiblePosts.filter(post => {
       // Các bài viết xuất hiện trên khu vực bài viết nổi bật sẽ không xuất hiện lại trong danh sách bài viết bên dưới
       if (isFeaturedActive && featuredPostIds.has(post.id)) {
         return false
@@ -87,7 +95,7 @@ export default function BlogListPage() {
 
       return matchesCategory && matchesSearch
     })
-  }, [posts, selectedCategory, searchQuery, isFeaturedActive, featuredPostIds])
+  }, [visiblePosts, selectedCategory, searchQuery, isFeaturedActive, featuredPostIds])
 
   // Reset pagination when filter or search changes
   useEffect(() => {
@@ -215,6 +223,11 @@ export default function BlogListPage() {
               {/* Floating Top Badges */}
               <div className="absolute top-5 left-5 right-5 z-10 flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2 flex-wrap">
+                  {featuredPost.isPublished === false && (
+                    <span className="px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-bold shadow-md border border-amber-400">
+                      Bản nháp
+                    </span>
+                  )}
                   <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-semibold border border-white/20">
                     {featuredPost.categoryLabel}
                   </span>
@@ -321,6 +334,11 @@ export default function BlogListPage() {
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 flex-wrap">
+                          {post.isPublished === false && (
+                            <span className="px-2.5 py-1 rounded-lg bg-amber-500 text-white font-bold text-xs shadow-xs">
+                              Bản nháp
+                            </span>
+                          )}
                           <span className="px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur-xs text-primary font-bold text-xs shadow-xs">
                             {post.categoryLabel}
                           </span>
@@ -474,6 +492,11 @@ export default function BlogListPage() {
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 flex-wrap">
+                        {post.isPublished === false && (
+                          <span className="px-2.5 py-1 rounded-lg bg-amber-500 text-white font-bold text-xs shadow-xs">
+                            Bản nháp
+                          </span>
+                        )}
                         <span className="px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur-xs text-primary font-bold text-xs shadow-xs">
                           {post.categoryLabel}
                         </span>

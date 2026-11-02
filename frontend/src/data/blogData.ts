@@ -42,6 +42,7 @@ export interface BlogPost {
   readTime: string
   featured?: boolean
   tags: string[]
+  isPublished?: boolean
 }
 
 export const BLOG_CATEGORIES: { id: string; label: string }[] = [
@@ -491,26 +492,30 @@ Học sinh cần rèn luyện kỹ năng đọc hiểu đề bài, chuyển đ�
 const LOCAL_STORAGE_KEY = 'toan6789_custom_blog_posts'
 const LEGACY_STORAGE_KEY = 'toan24h_custom_blog_posts'
 
-export function getBlogPosts(): BlogPost[] {
-  if (typeof window === 'undefined') {
-    return BLOG_POSTS
-  }
-  try {
-    const customPostsStr = localStorage.getItem(LOCAL_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY)
-    if (customPostsStr) {
-      const customPosts: BlogPost[] = JSON.parse(customPostsStr)
-      if (Array.isArray(customPosts)) {
-        // Deduplicate: custom posts override default posts with matching id or slug
-        const customIds = new Set(customPosts.map(p => String(p.id)))
-        const customSlugs = new Set(customPosts.map(p => p.slug))
-        const remainingDefaults = BLOG_POSTS.filter(p => !customIds.has(String(p.id)) && !customSlugs.has(p.slug))
-        return [...customPosts, ...remainingDefaults]
+export function getBlogPosts(options?: { publishedOnly?: boolean }): BlogPost[] {
+  let posts: BlogPost[] = BLOG_POSTS
+  if (typeof window !== 'undefined') {
+    try {
+      const customPostsStr = localStorage.getItem(LOCAL_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY)
+      if (customPostsStr) {
+        const customPosts: BlogPost[] = JSON.parse(customPostsStr)
+        if (Array.isArray(customPosts)) {
+          // Deduplicate: custom posts override default posts with matching id or slug
+          const customIds = new Set(customPosts.map(p => String(p.id)))
+          const customSlugs = new Set(customPosts.map(p => p.slug))
+          const remainingDefaults = BLOG_POSTS.filter(p => !customIds.has(String(p.id)) && !customSlugs.has(p.slug))
+          posts = [...customPosts, ...remainingDefaults]
+        }
       }
+    } catch (e) {
+      console.error('Error reading custom blog posts from localStorage', e)
     }
-  } catch (e) {
-    console.error('Error reading custom blog posts from localStorage', e)
   }
-  return BLOG_POSTS
+
+  if (options?.publishedOnly) {
+    return posts.filter(p => p.isPublished !== false)
+  }
+  return posts
 }
 
 export function addBlogPost(post: BlogPost): BlogPost {

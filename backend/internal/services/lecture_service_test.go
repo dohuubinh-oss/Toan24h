@@ -11,8 +11,8 @@ import (
 // Mock Repository for testing
 type mockLectureRepository struct {
 	SaveFunc               func(ctx context.Context, lecture *models.Lecture) error
-	GetLecturesByGradeFunc func(ctx context.Context, grade string, limit, offset int) ([]models.Lecture, int64, error)
-	GetAllLecturesFunc     func(ctx context.Context) ([]models.Lecture, error)
+	GetLecturesByGradeFunc func(ctx context.Context, grade string, limit, offset int, publishedOnly bool) ([]models.Lecture, int64, error)
+	GetAllLecturesFunc     func(ctx context.Context, publishedOnly bool) ([]models.Lecture, error)
 	GetLectureByIDFunc     func(ctx context.Context, id string) (*models.Lecture, error)
 	DeleteLectureFunc      func(ctx context.Context, id string) error
 }
@@ -38,16 +38,16 @@ func (m *mockLectureRepository) UpdateLecture(ctx context.Context, lecture *mode
 	return nil
 }
 
-func (m *mockLectureRepository) GetLecturesByGrade(ctx context.Context, grade string, limit, offset int) ([]models.Lecture, int64, error) {
+func (m *mockLectureRepository) GetLecturesByGrade(ctx context.Context, grade string, limit, offset int, publishedOnly bool) ([]models.Lecture, int64, error) {
 	if m.GetLecturesByGradeFunc != nil {
-		return m.GetLecturesByGradeFunc(ctx, grade, limit, offset)
+		return m.GetLecturesByGradeFunc(ctx, grade, limit, offset, publishedOnly)
 	}
 	return nil, 0, nil
 }
 
-func (m *mockLectureRepository) GetAllLectures(ctx context.Context) ([]models.Lecture, error) {
+func (m *mockLectureRepository) GetAllLectures(ctx context.Context, publishedOnly bool) ([]models.Lecture, error) {
 	if m.GetAllLecturesFunc != nil {
-		return m.GetAllLecturesFunc(ctx)
+		return m.GetAllLecturesFunc(ctx, publishedOnly)
 	}
 	return nil, nil
 }
@@ -140,17 +140,17 @@ func TestCreateLectureService(t *testing.T) {
 
 func TestGetLecturesByGrade(t *testing.T) {
 	mockRepo := &mockLectureRepository{
-		GetLecturesByGradeFunc: func(ctx context.Context, grade string, limit, offset int) ([]models.Lecture, int64, error) {
+		GetLecturesByGradeFunc: func(ctx context.Context, grade string, limit, offset int, publishedOnly bool) ([]models.Lecture, int64, error) {
 			if grade == "9" {
-				return []models.Lecture{{Title: "L9", Grade: "9"}}, 1, nil
+				return []models.Lecture{{Title: "L9", Grade: "9", IsPublished: true}}, 1, nil
 			}
 			return nil, 0, errors.New("db error")
 		},
 	}
 	service := NewLectureService(mockRepo)
 
-	t.Run("Success", func(t *testing.T) {
-		res, err := service.GetLecturesByGrade(context.Background(), "9", 1, 6)
+	t.Run("Success Published Only", func(t *testing.T) {
+		res, err := service.GetLecturesByGrade(context.Background(), "9", 1, 6, true)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
@@ -162,8 +162,18 @@ func TestGetLecturesByGrade(t *testing.T) {
 		}
 	})
 
+	t.Run("Success Include Drafts", func(t *testing.T) {
+		res, err := service.GetLecturesByGrade(context.Background(), "9", 1, 6, false)
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if len(res.Data) != 1 {
+			t.Errorf("Expected 1 item, got %d", len(res.Data))
+		}
+	})
+
 	t.Run("Error", func(t *testing.T) {
-		_, err := service.GetLecturesByGrade(context.Background(), "8", 1, 6)
+		_, err := service.GetLecturesByGrade(context.Background(), "8", 1, 6, true)
 		if err == nil || err.Error() != "db error" {
 			t.Errorf("Expected 'db error', got %v", err)
 		}

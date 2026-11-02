@@ -7,6 +7,7 @@ import { Lecture } from '@/types/lecture';
 import { LectureCard, PracticeLectureCard } from './LectureCard';
 import { LectureFilterSidebar } from './LectureFilterSidebar';
 import { useStudentLectureFilter } from '@/contexts/StudentLectureFilterContext';
+import { Pagination } from '@/components/ui/Pagination';
 
 export interface GradeLectureListProps {
   lectures: Lecture[];
@@ -14,6 +15,7 @@ export interface GradeLectureListProps {
   grade: string;
   returnUrl?: string;
   examId?: string;
+  initialPage?: number;
 }
 
 export function GradeLectureList({
@@ -22,6 +24,7 @@ export function GradeLectureList({
   grade,
   returnUrl,
   examId,
+  initialPage = 1,
 }: GradeLectureListProps) {
   const contextFilter = useStudentLectureFilter();
 
@@ -92,9 +95,8 @@ export function GradeLectureList({
     selectedChapter !== 'all' ||
     selectedStatus !== 'all';
 
-  // Khi có bộ lọc (tìm kiếm / chọn chuyên đề / trạng thái): tìm trên toàn bộ khối lớp (statsSource).
-  // Khi không có bộ lọc: hiển thị 6 bài của trang hiện tại (lectures).
-  const sourceToFilter = hasActiveFilters ? statsSource : lectures;
+  // Lấy toàn bộ bài giảng của khối (statsSource). Luôn lọc trên statsSource để đảm bảo đầy đủ kết quả.
+  const sourceToFilter = statsSource;
 
   // Lọc bài giảng theo tìm kiếm, phân môn, và trạng thái
   const filteredLectures = useMemo(() => {
@@ -132,23 +134,73 @@ export function GradeLectureList({
     });
   }, [sourceToFilter, searchQuery, selectedChapter, selectedStatus]);
 
+  const PAGE_SIZE = 6;
+  const [currentPage, setCurrentPage] = useState(initialPage);
+
+  // Đồng bộ khi initialPage từ URL thay đổi
+  useEffect(() => {
+    if (initialPage) {
+      setCurrentPage(initialPage);
+    }
+  }, [initialPage]);
+
+  // Reset về trang 1 khi thay đổi bất kỳ bộ lọc nào (tìm kiếm, chuyên đề, trạng thái)
+  useEffect(() => {
+    setCurrentPage(1);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('page')) {
+        url.searchParams.delete('page');
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  }, [searchQuery, selectedChapter, selectedStatus]);
+
+  const totalFiltered = filteredLectures.length;
+  const totalPages = Math.ceil(totalFiltered / PAGE_SIZE) || 1;
+  const validPage = Math.max(1, Math.min(currentPage, totalPages));
+  const startIndex = totalFiltered > 0 ? (validPage - 1) * PAGE_SIZE + 1 : 0;
+  const endIndex = Math.min(validPage * PAGE_SIZE, totalFiltered);
+
+  const paginatedLectures = useMemo(() => {
+    return filteredLectures.slice((validPage - 1) * PAGE_SIZE, validPage * PAGE_SIZE);
+  }, [filteredLectures, validPage]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (newPage > 1) {
+        url.searchParams.set('page', newPage.toString());
+      } else {
+        url.searchParams.delete('page');
+      }
+      window.history.replaceState({}, '', url.toString());
+      if (typeof window.scrollTo === 'function') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  };
+
   useEffect(() => {
     if (contextFilter) {
       contextFilter.setChapters(chapters);
+      contextFilter.setChapterCounts(chapterCounts);
       contextFilter.setCounts(counts);
       contextFilter.setIsAvailable(true);
       return () => {
         contextFilter.setIsAvailable(false);
       };
     }
-  }, [contextFilter, chapters, counts]);
+  }, [contextFilter, chapters, chapterCounts, counts]);
 
   return (
     <div className="flex flex-col lg:flex-row items-start gap-7">
-      {/* Cột Trái: Sidemenu Bộ lọc & Chuyên đề (Ẩn trên desktop khi đã tích hợp vào Sidebar menu chính) */}
+      {/* Cột Trái: Sidemenu Bộ lọc & Chuyên đề (Ẩn trên tablet/desktop khi đã tích hợp vào Sidebar menu chính) */}
       {lectures.length > 0 && (
-        <div className={contextFilter ? 'lg:hidden w-full' : 'w-full lg:w-72 xl:w-80 shrink-0'}>
+        <div className={contextFilter ? 'md:hidden w-full' : 'w-full md:w-72 xl:w-80 shrink-0'}>
           <LectureFilterSidebar
+            searchId="mobile-lecture-search"
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             selectedChapter={selectedChapter}
@@ -169,13 +221,13 @@ export function GradeLectureList({
       <main className="flex-1 min-w-0 w-full space-y-5">
         {/* Thanh trạng thái bộ lọc đang chọn */}
         {hasActiveFilters && (
-          <div className="flex items-center justify-between p-3.5 bg-blue-50/70 border border-blue-200/60 rounded-2xl text-xs text-slate-700">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between p-3.5 bg-blue-50/70 border border-blue-200/60 rounded-2xl text-xs text-slate-700 gap-2">
+            <div className="flex items-center gap-2 min-w-0">
               <Sparkles className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
-              <span>
+              <span className="truncate">
                 Tìm thấy{' '}
                 <strong className="text-primary font-bold">
-                  {filteredLectures.length}
+                  {totalFiltered}
                 </strong>{' '}
                 bài giảng phù hợp bộ lọc
               </span>
@@ -187,7 +239,7 @@ export function GradeLectureList({
                 setSelectedChapter('all');
                 setSelectedStatus('all');
               }}
-              className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1 hover:underline"
+              className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1 hover:underline shrink-0 min-h-[36px]"
             >
               <X className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Xóa bộ lọc</span>
@@ -197,7 +249,7 @@ export function GradeLectureList({
 
         {/* Grid bài giảng */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredLectures.map((item, index) => {
+          {paginatedLectures.map((item, index) => {
             const isPriority = index < 2;
             if (item.isPracticeCard) {
               let lectureUrl = `/lectures/lop/${grade}/${item.id}`;
@@ -217,6 +269,7 @@ export function GradeLectureList({
                   href={lectureUrl}
                   thumbnailUrl={item.thumbnailUrl}
                   priority={isPriority}
+                  isPublished={item.isPublished}
                 />
               );
             }
@@ -228,6 +281,7 @@ export function GradeLectureList({
                 returnUrl={returnUrl}
                 examId={examId}
                 priority={isPriority}
+                isPublished={item.isPublished}
                 {...item}
               />
             );
@@ -276,6 +330,21 @@ export function GradeLectureList({
             </div>
           )}
         </div>
+
+        {/* Phân trang bài giảng theo bộ lọc */}
+        {totalPages > 1 && (
+          <div className="pt-6 border-t border-slate-100">
+            <Pagination
+              currentPage={validPage}
+              totalPages={totalPages}
+              totalItems={totalFiltered}
+              startIndex={startIndex}
+              endIndex={endIndex}
+              itemName="bài giảng"
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
       </main>
     </div>
   );

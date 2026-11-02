@@ -56,6 +56,7 @@ type CreateLectureRequest struct {
 	Examples     []DangToanRequest `json:"examples"`
 	GgLink       string            `json:"gg_link"`
 	AuthorID     *string           `json:"authorId,omitempty"`
+	IsPublished  *bool             `json:"isPublished,omitempty"`
 }
 
 type PaginatedLectures struct {
@@ -70,8 +71,8 @@ type PaginatedLectures struct {
 type LectureService interface {
 	CreateLecture(ctx context.Context, req CreateLectureRequest) error
 	UpdateLecture(ctx context.Context, id string, req CreateLectureRequest) error
-	GetLecturesByGrade(ctx context.Context, grade string, page, limit int) (*PaginatedLectures, error)
-	GetAllLectures(ctx context.Context) ([]models.Lecture, error)
+	GetLecturesByGrade(ctx context.Context, grade string, page, limit int, publishedOnly bool) (*PaginatedLectures, error)
+	GetAllLectures(ctx context.Context, publishedOnly bool) ([]models.Lecture, error)
 	GetLectureByID(ctx context.Context, id string) (*models.Lecture, error)
 	DeleteLecture(ctx context.Context, id string) error
 }
@@ -206,6 +207,11 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		}
 	}
 
+	isPublished := true
+	if req.IsPublished != nil {
+		isPublished = *req.IsPublished
+	}
+
 	// Mapping DTO to Model
 	lecture := &models.Lecture{
 		ID:           lectureID,
@@ -216,6 +222,7 @@ func (s *lectureService) CreateLecture(ctx context.Context, req CreateLectureReq
 		Examples:     examplesStr,
 		GgLink:       req.GgLink,
 		AuthorID:     authorUUID,
+		IsPublished:  isPublished,
 	}
 
 	return s.repo.CreateLecture(ctx, lecture)
@@ -256,11 +263,14 @@ func (s *lectureService) UpdateLecture(ctx context.Context, id string, req Creat
 			lecture.AuthorID = &uid
 		}
 	}
+	if req.IsPublished != nil {
+		lecture.IsPublished = *req.IsPublished
+	}
 
 	return s.repo.UpdateLecture(ctx, lecture)
 }
 
-func (s *lectureService) GetLecturesByGrade(ctx context.Context, grade string, page, limit int) (*PaginatedLectures, error) {
+func (s *lectureService) GetLecturesByGrade(ctx context.Context, grade string, page, limit int, publishedOnly bool) (*PaginatedLectures, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -269,7 +279,7 @@ func (s *lectureService) GetLecturesByGrade(ctx context.Context, grade string, p
 	}
 	offset := (page - 1) * limit
 
-	lectures, total, err := s.repo.GetLecturesByGrade(ctx, grade, limit, offset)
+	lectures, total, err := s.repo.GetLecturesByGrade(ctx, grade, limit, offset, publishedOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -292,8 +302,8 @@ func (s *lectureService) GetLecturesByGrade(ctx context.Context, grade string, p
 	}, nil
 }
 
-func (s *lectureService) GetAllLectures(ctx context.Context) ([]models.Lecture, error) {
-	return s.repo.GetAllLectures(ctx)
+func (s *lectureService) GetAllLectures(ctx context.Context, publishedOnly bool) ([]models.Lecture, error) {
+	return s.repo.GetAllLectures(ctx, publishedOnly)
 }
 
 func (s *lectureService) GetLectureByID(ctx context.Context, id string) (*models.Lecture, error) {

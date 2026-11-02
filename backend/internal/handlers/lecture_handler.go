@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/modeptrai/exam-model-backend/internal/cache"
@@ -79,19 +80,55 @@ func (h *LectureHandler) UpdateLecture(c *gin.Context) {
 	})
 }
 
+func getPublishedOnlyFromContext(c *gin.Context) bool {
+	// 1. Check if userRole is already set in gin context
+	if roleVal, exists := c.Get("userRole"); exists {
+		if role, ok := roleVal.(string); ok && (role == "teacher" || role == "admin") {
+			return false
+		}
+	}
+
+	// 2. Fallback: Check Authorization header or accessToken cookie if endpoint is public
+	var tokenString string
+	authHeader := c.GetHeader("Authorization")
+	if authHeader != "" {
+		parts := strings.Split(authHeader, " ")
+		if len(parts) == 2 && parts[0] == "Bearer" {
+			tokenString = parts[1]
+		}
+	}
+	if tokenString == "" {
+		if cookieToken, err := c.Cookie("accessToken"); err == nil && cookieToken != "" {
+			tokenString = cookieToken
+		}
+	}
+
+	if tokenString != "" {
+		if claims, err := utils.ValidateAccessToken(tokenString); err == nil && claims != nil {
+			if claims.Role == "teacher" || claims.Role == "admin" {
+				return false
+			}
+		}
+	}
+
+	// Default for student, affiliate, or unauthenticated/guest -> published only
+	return true
+}
+
 func (h *LectureHandler) GetLecturesByGrade(c *gin.Context) {
 	grade := c.Param("grade")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "9"))
+	publishedOnly := getPublishedOnlyFromContext(c)
 
-	cacheKey := cache.BuildLectureGradeCacheKey(grade, page, limit)
+	cacheKey := cache.BuildLectureGradeCacheKey(grade, page, limit, publishedOnly)
 	var cachedRes services.PaginatedLectures
 	if cache.Get(c.Request.Context(), cacheKey, &cachedRes) {
 		c.JSON(http.StatusOK, cachedRes)
 		return
 	}
 
-	res, err := h.service.GetLecturesByGrade(c.Request.Context(), grade, page, limit)
+	res, err := h.service.GetLecturesByGrade(c.Request.Context(), grade, page, limit, publishedOnly)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -103,14 +140,15 @@ func (h *LectureHandler) GetLecturesByGrade(c *gin.Context) {
 }
 
 func (h *LectureHandler) GetAllLectures(c *gin.Context) {
-	cacheKey := cache.BuildLectureAllCacheKey()
+	publishedOnly := getPublishedOnlyFromContext(c)
+	cacheKey := cache.BuildLectureAllCacheKey(publishedOnly)
 	var cachedRes []models.Lecture
 	if cache.Get(c.Request.Context(), cacheKey, &cachedRes) {
 		c.JSON(http.StatusOK, gin.H{"data": cachedRes})
 		return
 	}
 
-	res, err := h.service.GetAllLectures(c.Request.Context())
+	res, err := h.service.GetAllLectures(c.Request.Context(), publishedOnly)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

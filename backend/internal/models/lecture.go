@@ -17,6 +17,7 @@ type Lecture struct {
 	GgLink       string         `gorm:"type:text;column:gg_link" json:"gg_link"`
 	AuthorID     *uuid.UUID     `gorm:"type:uuid;index" json:"authorId,omitempty"`
 	Author       *User          `gorm:"foreignKey:AuthorID" json:"author,omitempty"`
+	IsPublished  bool           `gorm:"default:true;index" json:"isPublished"`
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`

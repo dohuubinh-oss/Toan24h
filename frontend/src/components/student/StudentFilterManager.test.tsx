@@ -14,6 +14,7 @@ function TestHarness() {
   React.useEffect(() => {
     if (filter) {
       filter.setChapters(['Đại số 8', 'Hình học 8'])
+      filter.setChapterCounts({ 'Đại số 8': 6, 'Hình học 8': 4 })
       filter.setCounts({
         total: 10,
         completed: 6,
@@ -39,8 +40,8 @@ describe('StudentFilterManager Component', () => {
     expect(screen.getByText('60%')).toBeInTheDocument()
     expect(screen.getByText('6 / 10 bài')).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/Tìm kiếm bài giảng/i)).toBeInTheDocument()
-    expect(screen.getByText('Đại số 8')).toBeInTheDocument()
-    expect(screen.getByText('Hình học 8')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Đại số 8/ })).toHaveTextContent('6')
+    expect(screen.getByRole('button', { name: /Hình học 8/ })).toHaveTextContent('4')
     expect(screen.getByText('Đã hoàn thành')).toBeInTheDocument()
   })
 })
