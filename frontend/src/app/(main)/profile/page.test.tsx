@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import ProfilePage from './page'
 import * as api from '@/lib/api'
-import { toast } from 'react-hot-toast'
+import { toast } from '@/components/ui/ToastProvider'
 
 const mockPush = vi.fn()
 vi.mock('next/navigation', () => ({
@@ -16,16 +16,20 @@ vi.mock('@/lib/api', () => ({
   uploadUserAvatar: vi.fn(),
 }))
 
-vi.mock('react-hot-toast', () => ({
-  default: {
-    error: vi.fn(),
-    success: vi.fn(),
-  },
+vi.mock('@/components/ui/ToastProvider', () => ({
   toast: {
     error: vi.fn(),
     success: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
   },
-  Toaster: () => null,
+  useToast: () => ({
+    error: vi.fn(),
+    success: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+  }),
+  ToastProvider: ({ children }: any) => <>{children}</>,
 }))
 
 // Mock window.confirm

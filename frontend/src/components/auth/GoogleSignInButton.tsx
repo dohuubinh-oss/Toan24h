@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { loginWithGoogle } from '@/lib/authApi'
-import toast from 'react-hot-toast'
+import { toast } from '@/components/ui/ToastProvider'
 
 interface GoogleSignInButtonProps {
   onSuccess?: (user: any) => void

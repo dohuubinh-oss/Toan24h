@@ -19,7 +19,7 @@ import {
   FileText,
   Info,
 } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { toast } from '@/components/ui/ToastProvider'
 import { apiFetch } from '@/lib/api'
 import { getAvatarInitial } from '@/lib/utils'
 import Logo from '@/components/common/Logo'

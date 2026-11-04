@@ -13,7 +13,7 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
-import { toast } from 'react-hot-toast'
+import { toast } from '@/components/ui/ToastProvider'
 import PayOSPaymentModal, { PayOSPaymentData } from '@/components/payment/PayOSPaymentModal'
 
 interface Plan {

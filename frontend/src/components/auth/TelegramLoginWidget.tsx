@@ -31,6 +31,15 @@ export default function TelegramLoginWidget({
     onAuthSuccessRef.current = onAuthSuccess
   }, [onAuthSuccess])
 
+  useEffect(() => {
+    if (!showQrModal) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowQrModal(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showQrModal])
+
   // Start QR session - Immediately generate sessionId and deepLink so QR renders with 0ms delay
   const startQrSession = async () => {
     const localId = typeof crypto !== 'undefined' && crypto.randomUUID
@@ -113,20 +122,28 @@ export default function TelegramLoginWidget({
 
       {/* Modal QR & Linking */}
       {showQrModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative border border-slate-100">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="telegram-qr-title"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200 font-sans"
+        >
+          <div className="fixed inset-0" onClick={() => setShowQrModal(false)} aria-hidden="true" />
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative border border-slate-200/90 animate-in zoom-in-95 duration-200">
             <button
+              type="button"
               onClick={() => setShowQrModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors cursor-pointer"
+              className="absolute top-4 right-4 min-w-[40px] min-h-[40px] p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label="Đóng cửa sổ"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
 
             <div className="text-center space-y-1.5 mb-5">
-              <div className="w-12 h-12 rounded-full bg-sky-100 text-[#24A1DE] flex items-center justify-center mx-auto mb-2">
-                <QrCode className="w-6 h-6" />
+              <div className="w-14 h-14 rounded-2xl bg-sky-50 text-[#24A1DE] border border-sky-100/60 flex items-center justify-center mx-auto mb-2 shadow-xs">
+                <QrCode className="w-7 h-7" aria-hidden="true" />
               </div>
-              <h3 className="text-xl font-bold text-slate-800">{defaultModalTitle}</h3>
+              <h3 id="telegram-qr-title" className="text-xl font-bold text-slate-900">{defaultModalTitle}</h3>
             </div>
 
             {qrStatus === 'completed' ? (

@@ -10,7 +10,7 @@ import { Button } from '../ui/Button'
 
 import { registerUser } from '@/lib/authApi'
 import GoogleSignInButton from './GoogleSignInButton'
-import toast from 'react-hot-toast'
+import { toast } from '@/components/ui/ToastProvider'
 
 type RegisterFormValues = {
   fullname: string

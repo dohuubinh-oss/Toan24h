@@ -40,6 +40,15 @@ export default function SharedIllustrationCard({
   const [isDragging, setIsDragging] = useState(false)
   const [copied, setCopied] = useState(false)
 
+  useEffect(() => {
+    if (!showAiModal) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowAiModal(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showAiModal])
+
   // Upload an image file (PNG, JPG, SVG, WebP)
   const processImageFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -391,16 +400,21 @@ export default function SharedIllustrationCard({
 
       {/* AI Geometry Prompt Modal (Không làm mờ nền để giáo viên đọc đề bài và lời giải bên dưới) */}
       {showAiModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border-2 border-slate-300 ring-4 ring-black/5 relative animate-in fade-in zoom-in-95 duration-150 pointer-events-auto max-h-[90vh] flex flex-col overflow-hidden">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ai-geom-modal-title"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none font-sans"
+        >
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200/90 ring-4 ring-black/5 relative animate-in fade-in zoom-in-95 duration-150 pointer-events-auto max-h-[90vh] flex flex-col overflow-hidden">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4 flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
-                  <Sparkles className="w-4 h-4" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-amber-600 shadow-xs">
+                  <Sparkles className="w-5 h-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-800">
+                  <h3 id="ai-geom-modal-title" className="text-base font-bold text-slate-900">
                     {imgSrc ? 'Sửa hình minh hoạ' : 'Vẽ hình minh hoạ'}
                   </h3>
                 </div>
@@ -408,9 +422,10 @@ export default function SharedIllustrationCard({
               <button
                 type="button"
                 onClick={() => setShowAiModal(false)}
-                className="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+                className="min-w-[40px] min-h-[40px] p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Đóng cửa sổ"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
@@ -486,12 +501,12 @@ export default function SharedIllustrationCard({
             </div>
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 flex-shrink-0">
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => setShowAiModal(false)}
                 disabled={isAiGenerating}
-                className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                className="min-h-[40px] px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
               >
                 Hủy
               </button>
@@ -499,16 +514,16 @@ export default function SharedIllustrationCard({
                 type="button"
                 onClick={handleGenerateAiSvg}
                 disabled={isAiGenerating}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-primary hover:bg-primary/95 rounded-xl transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                className="min-h-[40px] inline-flex items-center gap-2 px-5 py-2 text-xs font-bold text-white bg-primary hover:bg-primary/95 rounded-xl transition-all shadow-sm shadow-primary/20 cursor-pointer disabled:opacity-50 active:scale-98"
               >
                 {isAiGenerating ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Đang dựng hình vector...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Sparkles className="w-4 h-4" />
                     <span>{imgSrc ? 'Vẽ lại ngay' : 'Vẽ hình ngay'}</span>
                   </>
                 )}

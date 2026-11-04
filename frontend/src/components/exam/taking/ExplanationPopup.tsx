@@ -76,17 +76,17 @@ export default function ExplanationPopup({ isOpen, onClose, onSubmit, initialExp
     <>
       {/* Mobile backdrop */}
       <div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs sm:hidden z-[99] pointer-events-auto"
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 sm:hidden z-[99] pointer-events-auto"
         aria-hidden="true"
         onClick={handleClose}
       />
 
-      <div className="fixed inset-x-3 bottom-4 sm:bottom-auto sm:inset-x-auto sm:top-24 sm:right-8 z-[100] flex flex-col w-auto sm:w-[400px] max-w-[calc(100vw-24px)] pointer-events-none">
+      <div className="fixed inset-x-3 bottom-4 sm:bottom-auto sm:inset-x-auto sm:top-24 sm:right-8 z-[100] flex flex-col w-auto sm:w-[400px] max-w-[calc(100vw-24px)] pointer-events-none font-sans">
         {/* Panel Container */}
         <div 
           ref={containerRef}
           data-testid="explanation-popup-panel"
-          className="relative bg-white/95 sm:bg-white/70 backdrop-blur-2xl w-full rounded-2xl sm:rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.08)] border border-slate-200/80 sm:border-white/50 flex flex-col overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] opacity-100 scale-100 pointer-events-auto h-[380px] sm:h-[420px] max-h-[82vh]"
+          className="relative bg-white/95 sm:bg-white/90 backdrop-blur-2xl w-full rounded-2xl sm:rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.08)] border border-slate-200/90 flex flex-col overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] opacity-100 scale-100 pointer-events-auto h-[380px] sm:h-[420px] max-h-[82vh]"
           style={{
             boxShadow: '0 20px 40px -15px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.4)'
           }}
@@ -98,7 +98,7 @@ export default function ExplanationPopup({ isOpen, onClose, onSubmit, initialExp
               type="button"
               onClick={handleClose} 
               aria-label="Đóng" 
-              className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors cursor-pointer sm:hidden"
+              className="min-w-[40px] min-h-[40px] p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors cursor-pointer sm:hidden flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <X size={18} />
             </button>
@@ -123,7 +123,7 @@ export default function ExplanationPopup({ isOpen, onClose, onSubmit, initialExp
             <button 
               type="button"
               onClick={handleClose}
-              className="px-4 py-2.5 rounded-xl font-bold text-slate-600 bg-white/70 hover:bg-slate-100 transition-all text-sm flex-1 mr-2 border border-slate-200 cursor-pointer"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl font-bold text-slate-600 bg-white/70 hover:bg-slate-100 transition-all text-sm flex-1 mr-2 border border-slate-200 cursor-pointer flex items-center justify-center"
             >
               Hủy
             </button>
@@ -131,7 +131,7 @@ export default function ExplanationPopup({ isOpen, onClose, onSubmit, initialExp
               type="button"
               onClick={handleSubmit}
               disabled={!isValid}
-              className="px-4 py-2.5 rounded-xl font-bold text-white bg-primary hover:bg-primary/90 transition-all shadow-sm shadow-primary/25 flex items-center justify-center gap-2 text-sm flex-1 ml-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl font-bold text-white bg-primary hover:bg-primary/90 transition-all shadow-sm shadow-primary/25 flex items-center justify-center gap-2 text-sm flex-1 ml-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-98"
             >
               <CheckCircle2 className="w-4 h-4" />
               Lưu

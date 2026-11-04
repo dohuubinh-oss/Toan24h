@@ -56,7 +56,7 @@ export default function PromotionRewardModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="promo-reward-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans"
     >
       <div className="relative bg-white rounded-3xl border border-slate-200/90 shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 p-6 sm:p-8 text-center">
         {/* Close Button */}

@@ -47,6 +47,18 @@ export default function AppealsPage() {
   const [reportFeedback, setReportFeedback] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  useEffect(() => {
+    if (!selectedAppeal && !selectedReportId) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedAppeal(null)
+        setSelectedReportId(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedAppeal, selectedReportId])
+
   const fetchData = async (isManual = false) => {
     if (isManual) {
       setIsRefreshing(true)
@@ -455,11 +467,17 @@ export default function AppealsPage() {
 
       {/* Resolve Appeal Modal */}
       {selectedAppeal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="appeal-modal-title"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans"
+        >
+          <div className="fixed inset-0" onClick={() => !isSubmitting && setSelectedAppeal(null)} aria-hidden="true" />
+          <div className="relative bg-white rounded-3xl max-w-3xl w-full shadow-2xl border border-slate-200/90 flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-5 sm:p-6 border-b border-slate-100 flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-bold text-slate-800">Duyệt Kháng Cáo</h2>
+                <h2 id="appeal-modal-title" className="text-xl font-bold text-slate-900">Duyệt Kháng Cáo</h2>
                 <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5 flex-wrap">
                   <span>Bài thi: <strong className="text-slate-700">{selectedAppeal.examName}</strong></span>
                   {selectedAppeal.studentName && (
@@ -471,11 +489,12 @@ export default function AppealsPage() {
                 </div>
               </div>
               <button 
+                type="button"
                 onClick={() => setSelectedAppeal(null)} 
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                className="min-w-[40px] min-h-[40px] p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label="Đóng cửa sổ"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
             
@@ -635,14 +654,14 @@ export default function AppealsPage() {
                 variant="outline" 
                 onClick={() => setSelectedAppeal(null)}
                 disabled={isSubmitting}
-                className="min-h-[40px] px-5"
+                className="min-h-[40px] px-5 rounded-xl"
               >
                 Hủy
               </Button>
               <Button 
                 onClick={handleResolve}
                 disabled={isSubmitting || !feedback.trim()}
-                className="min-h-[40px] px-6 font-semibold flex items-center gap-2"
+                className="min-h-[40px] px-6 font-semibold flex items-center gap-2 rounded-xl active:scale-98"
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 Xác nhận
@@ -654,19 +673,26 @@ export default function AppealsPage() {
 
       {/* Resolve Report Modal */}
       {selectedReportId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="report-resolve-modal-title"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans"
+        >
+          <div className="fixed inset-0" onClick={() => !isSubmitting && setSelectedReportId(null)} aria-hidden="true" />
+          <div className="relative bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200/90 flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-5 border-b border-slate-100 flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-bold text-slate-800">Xử lý báo lỗi</h2>
+                <h2 id="report-resolve-modal-title" className="text-xl font-bold text-slate-900">Xử lý báo lỗi</h2>
                 <p className="text-xs text-slate-500 mt-0.5">Xác nhận đã khắc phục nội dung câu hỏi</p>
               </div>
               <button 
+                type="button"
                 onClick={() => setSelectedReportId(null)} 
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                className="min-w-[40px] min-h-[40px] p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label="Đóng cửa sổ"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
             
@@ -678,7 +704,7 @@ export default function AppealsPage() {
                   value={reportFeedback}
                   onChange={(e) => setReportFeedback(e.target.value)}
                   placeholder="Ghi chú nội dung đã chỉnh sửa hoặc lời cảm ơn học sinh đã phát hiện lỗi..."
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none text-sm"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-2xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none text-sm text-slate-800"
                 ></textarea>
               </div>
             </div>
@@ -688,14 +714,14 @@ export default function AppealsPage() {
                 variant="outline" 
                 onClick={() => setSelectedReportId(null)}
                 disabled={isSubmitting}
-                className="min-h-[40px] px-5"
+                className="min-h-[40px] px-5 rounded-xl"
               >
                 Hủy
               </Button>
               <Button 
                 onClick={handleResolveReportSubmit}
                 disabled={isSubmitting}
-                className="min-h-[40px] px-6 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2"
+                className="min-h-[40px] px-6 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 rounded-xl active:scale-98"
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 Xác nhận đã xử lý

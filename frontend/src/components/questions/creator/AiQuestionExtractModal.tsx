@@ -62,8 +62,6 @@ export default function AiQuestionExtractModal({
     }
   }, [isOpen, defaultGrade])
 
-  if (!isOpen) return null
-
   const handleAddFiles = (selectedFiles: FileList | File[]) => {
     setErrorMessage(null)
     const fileArray = Array.from(selectedFiles).filter((file) =>
@@ -145,6 +143,8 @@ export default function AiQuestionExtractModal({
       window.removeEventListener('paste', handleGlobalPaste)
     }
   }, [isOpen])
+
+  if (!isOpen) return null
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -316,17 +316,25 @@ export default function AiQuestionExtractModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+      aria-labelledby="ai-question-extract-title"
+      className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 font-sans"
     >
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]">
+      <div 
+        className="fixed inset-0" 
+        onClick={isExtracting ? undefined : onClose}
+        aria-hidden="true"
+      />
+      <div className="relative z-10 bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-blue-700 via-primary to-blue-600 text-white flex items-center justify-between shrink-0">
+        <div className="px-6 py-4.5 bg-gradient-to-r from-blue-700 via-primary to-blue-600 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-amber-300 shadow-inner">
+            <div className="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-amber-300 shadow-inner">
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             <div>
-              <h3 className="font-bold text-base leading-tight">Bóc tách câu hỏi bằng AI</h3>
+              <h3 id="ai-question-extract-title" className="font-bold text-base sm:text-lg leading-tight">
+                Bóc tách câu hỏi bằng AI
+              </h3>
               <p className="text-xs text-white/80 mt-0.5">
                 Nhận diện câu hỏi, công thức LaTeX và tự động cắt hình học Oxy
               </p>
@@ -337,7 +345,7 @@ export default function AiQuestionExtractModal({
             onClick={onClose}
             disabled={isExtracting}
             aria-label="Đóng hộp thoại"
-            className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl hover:bg-white/20 transition-colors text-white/90 hover:text-white disabled:opacity-40 flex items-center justify-center cursor-pointer"
+            className="min-w-[40px] min-h-[40px] rounded-xl hover:bg-white/20 transition-colors text-white/90 hover:text-white disabled:opacity-40 flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             <X className="w-5 h-5" />
           </button>
@@ -476,13 +484,13 @@ export default function AiQuestionExtractModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
+        <div className="p-4 sm:p-5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={isExtracting}
-            className="text-xs px-4"
+            className="min-h-[44px] rounded-xl font-bold text-sm px-5 py-2.5 active:scale-98 transition-all cursor-pointer"
           >
             Hủy
           </Button>
@@ -490,16 +498,16 @@ export default function AiQuestionExtractModal({
             type="button"
             onClick={handleSubmit}
             disabled={isExtracting}
-            className="text-xs px-5 bg-gradient-to-r from-blue-600 to-primary hover:from-blue-700 hover:to-primary/90 text-white shadow-sm flex items-center gap-2"
+            className="min-h-[44px] rounded-xl font-bold text-sm px-5 py-2.5 bg-gradient-to-r from-blue-600 to-primary hover:from-blue-700 hover:to-primary/90 text-white shadow-xs flex items-center gap-2 cursor-pointer active:scale-98 transition-all"
           >
             {isExtracting ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Đang bóc tách...
               </>
             ) : (
               <>
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <Sparkles className="w-4 h-4 text-amber-300" />
                 Bóc tách câu hỏi
               </>
             )}

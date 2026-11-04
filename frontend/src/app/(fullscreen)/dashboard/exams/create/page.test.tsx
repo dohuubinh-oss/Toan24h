@@ -17,11 +17,20 @@ vi.mock('next/navigation', () => ({
 }))
 
 // Mock toast
-vi.mock('react-hot-toast', () => ({
-  default: {
+vi.mock('@/components/ui/ToastProvider', () => ({
+  toast: {
     success: vi.fn(),
     error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
   },
+  useToast: () => ({
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+  }),
+  ToastProvider: ({ children }: any) => <>{children}</>,
 }))
 
 // Mock child components

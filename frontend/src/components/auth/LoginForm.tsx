@@ -9,7 +9,7 @@ import { Button } from '../ui/Button'
 import { Checkbox } from '../ui/Checkbox'
 import { login, syncAuthSession, resendVerification } from '@/lib/authApi'
 import GoogleSignInButton from './GoogleSignInButton'
-import toast from 'react-hot-toast'
+import { toast } from '@/components/ui/ToastProvider'
 
 type LoginFormValues = {
   identity: string

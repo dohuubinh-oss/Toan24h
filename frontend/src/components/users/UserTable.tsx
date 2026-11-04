@@ -32,6 +32,15 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
   const [selectedRole, setSelectedRole] = useState<string>('teacher')
   const [userToLock, setUserToLock] = useState<User | null>(null)
 
+  React.useEffect(() => {
+    if (!roleModalUser) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setRoleModalUser(null)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [roleModalUser])
+
   const handleOpenLockModal = (user: User) => {
     setUserToLock(user)
   }
@@ -203,25 +212,32 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
 
       {/* Role Management Modal */}
       {roleModalUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="role-modal-title"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans"
+        >
+          <div className="fixed inset-0" onClick={() => setRoleModalUser(null)} aria-hidden="true" />
+          <div className="relative bg-white rounded-3xl shadow-2xl border border-slate-200/90 max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 sm:p-6 border-b border-slate-100">
               <div>
-                <h3 className="font-bold text-lg text-slate-800">Phân quyền người dùng</h3>
+                <h3 id="role-modal-title" className="font-bold text-lg text-slate-900">Phân quyền người dùng</h3>
                 <p className="text-xs text-slate-500 mt-0.5">Cập nhật quyền cho {roleModalUser.name}</p>
               </div>
               <button 
+                type="button"
                 onClick={() => setRoleModalUser(null)}
                 aria-label="Đóng cửa sổ"
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                className="min-w-[40px] min-h-[40px] p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
-            <div className="p-5 space-y-3">
+            <div className="p-5 sm:p-6 space-y-3">
               <label 
-                className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${selectedRole === 'teacher' ? 'border-purple-500 bg-purple-50/40 ring-1 ring-purple-500' : 'border-slate-200 hover:bg-slate-50'}`}
+                className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${selectedRole === 'teacher' ? 'border-purple-500 bg-purple-50/40 ring-1 ring-purple-500 shadow-xs' : 'border-slate-200 hover:bg-slate-50'}`}
               >
                 <input 
                   type="radio" 
@@ -243,7 +259,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
               </label>
 
               <label 
-                className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${selectedRole === 'affiliate' ? 'border-amber-500 bg-amber-50/40 ring-1 ring-amber-500' : 'border-slate-200 hover:bg-slate-50'}`}
+                className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${selectedRole === 'affiliate' ? 'border-amber-500 bg-amber-50/40 ring-1 ring-amber-500 shadow-xs' : 'border-slate-200 hover:bg-slate-50'}`}
               >
                 <input 
                   type="radio" 
@@ -265,11 +281,11 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
               </label>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 p-4 bg-slate-50 border-t border-slate-100">
-              <Button variant="outline" size="sm" onClick={() => setRoleModalUser(null)}>
+            <div className="flex items-center justify-end gap-2.5 p-4 sm:p-5 bg-slate-50 border-t border-slate-100">
+              <Button variant="outline" className="min-h-[40px] px-4 rounded-xl" onClick={() => setRoleModalUser(null)}>
                 Hủy
               </Button>
-              <Button size="sm" onClick={handleConfirmRoleChange}>
+              <Button className="min-h-[40px] px-5 rounded-xl font-bold active:scale-98" onClick={handleConfirmRoleChange}>
                 Lưu thay đổi
               </Button>
             </div>

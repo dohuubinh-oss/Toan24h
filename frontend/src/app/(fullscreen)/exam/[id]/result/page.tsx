@@ -29,6 +29,15 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const [isVip, setIsVip] = useState(false)
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false)
 
+  useEffect(() => {
+    if (!isSummaryModalOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsSummaryModalOpen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isSummaryModalOpen])
+
   // Teacher Grading Mode States
   const [teacherScores, setTeacherScores] = useState<Record<string, number>>({})
   const [teacherFeedbacks, setTeacherFeedbacks] = useState<Record<string, string>>({})
@@ -767,22 +776,30 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
       {/* AI Executive Summary Popup Modal */}
       {isSummaryModalOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white text-slate-800 rounded-3xl p-6 sm:p-8 w-full max-w-2xl shadow-2xl border border-slate-200 relative overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ai-summary-modal-title"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans"
+        >
+          <div className="fixed inset-0" onClick={() => setIsSummaryModalOpen(false)} aria-hidden="true" />
+          <div className="bg-white text-slate-800 rounded-3xl p-6 sm:p-8 w-full max-w-2xl shadow-2xl border border-slate-200/90 relative overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Close button */}
             <button 
+              type="button"
               onClick={() => setIsSummaryModalOpen(false)}
-              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
+              className="absolute top-5 right-5 min-w-[40px] min-h-[40px] p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label="Đóng báo cáo"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
 
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
               <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-xs">
-                <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+                <Sparkles className="w-6 h-6 text-primary animate-pulse" aria-hidden="true" />
               </div>
               <div>
-                <h3 className="font-extrabold text-xl text-slate-900 flex items-center gap-2">
+                <h3 id="ai-summary-modal-title" className="font-extrabold text-xl text-slate-900 flex items-center gap-2">
                   Báo cáo Đánh giá AI Tổng quan
                   <span className="text-[10px] uppercase font-black bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 rounded-full">
                     Gemini 3.6 Flash

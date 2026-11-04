@@ -75,10 +75,10 @@ export default function MathKeyboardModal({ initialValue, anchorEl, onChange, on
     <div 
       style={{ top: `${position.top}px`, left: `${position.left}px` }}
       data-math-keyboard-modal="true"
-      className="absolute z-[10000] flex flex-col w-[440px] pointer-events-none transition-all duration-150"
+      className="absolute z-[10000] flex flex-col w-[440px] pointer-events-none transition-all duration-150 font-sans"
     >
       {/* Modal Container */}
-      <div className="relative bg-white/95 backdrop-blur-2xl w-full rounded-[20px] shadow-[0_24px_48px_-12px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col h-fit pointer-events-auto border border-white/50">
+      <div className="relative bg-white/95 backdrop-blur-2xl w-full rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-fit pointer-events-auto border border-slate-200/90">
         
         {/* Body */}
         <div className="p-4 flex flex-col min-h-0">
@@ -99,14 +99,16 @@ export default function MathKeyboardModal({ initialValue, anchorEl, onChange, on
         {/* Footer */}
         <div className="px-4 py-3 bg-slate-50/80 backdrop-blur-md flex items-center justify-between border-t border-slate-100 shrink-0">
           <button 
+            type="button"
             onClick={onCancel}
-            className="px-4 py-2 rounded-xl font-bold text-slate-600 bg-white/50 hover:bg-slate-100 transition-all text-sm flex-1 mr-2"
+            className="min-h-[40px] px-4 py-2 rounded-xl font-bold text-slate-600 bg-white/70 hover:bg-slate-100 border border-slate-200 transition-all text-sm flex-1 mr-2 cursor-pointer flex items-center justify-center"
           >
             Hủy
           </button>
           <button 
+            type="button"
             onClick={() => onSave(latex)}
-            className="px-4 py-2 rounded-xl font-bold text-white bg-primary hover:bg-primary/90 transition-all shadow-sm shadow-primary/25 flex items-center justify-center gap-2 text-sm flex-1 ml-2"
+            className="min-h-[40px] px-4 py-2 rounded-xl font-bold text-white bg-primary hover:bg-primary/90 transition-all shadow-sm shadow-primary/25 flex items-center justify-center gap-2 text-sm flex-1 ml-2 cursor-pointer active:scale-98"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
             Lưu

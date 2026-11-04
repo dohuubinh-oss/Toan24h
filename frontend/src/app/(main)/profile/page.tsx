@@ -31,7 +31,7 @@ import GradeChangeContactModal from '@/components/profile/GradeChangeContactModa
 import { apiFetch, uploadUserAvatar } from '@/lib/api'
 import { logout } from '@/lib/authApi'
 import { getAvatarInitial } from '@/lib/utils'
-import toast, { Toaster } from 'react-hot-toast'
+import { toast } from '@/components/ui/ToastProvider'
 
 interface UserProfile {
   id: string
@@ -329,7 +329,7 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6">
-      <Toaster position="top-right" />
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Hồ sơ cá nhân</h1>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Camera, CheckCircle, Sparkles, Flag, BookOpen, AlertTriangle, MessageSquare } from 'lucide-react'
+import { Camera, CheckCircle, Sparkles, Flag, BookOpen, AlertTriangle, MessageSquare, X } from 'lucide-react'
 import Link from 'next/link'
 import DOMPurify from 'dompurify'
 import MathText from '@/components/ui/MathText'
@@ -9,6 +9,7 @@ import { recognizeHandwriting, submitAppeal, reportQuestion } from '@/lib/api'
 import MobileQrUploadModal from './MobileQrUploadModal'
 import InAppCameraModal from './InAppCameraModal'
 import QuestionHintTabs from './QuestionHintTabs'
+import QuestionReportModal from './QuestionReportModal'
 
 export interface SubQuestion {
   id: string | number
@@ -628,29 +629,6 @@ export default function EssayQuestion({
   const isGroup = subQuestions && subQuestions.length > 0;
   
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
-  const [reportMessage, setReportMessage] = useState('')
-  const [isSubmittingReport, setIsSubmittingReport] = useState(false)
-
-  const handleReportSubmit = async () => {
-    if (!reportMessage.trim()) return
-    setIsSubmittingReport(true)
-    try {
-      const isGroup = subQuestions && subQuestions.length > 0;
-      if (readonly && resultId && !isGroup && aiFeedbacks?.[questionId]?.detailId) {
-        await submitAppeal(resultId, aiFeedbacks[questionId].detailId!, reportMessage)
-        toast.success('Kháng cáo đã được gửi thành công!')
-      } else {
-        await reportQuestion(questionId.toString(), reportMessage)
-        toast.success('Báo lỗi câu hỏi thành công!')
-      }
-      setIsReportModalOpen(false)
-      setReportMessage('')
-    } catch (e: any) {
-      toast.error(e.response?.data?.error || 'Lỗi khi gửi yêu cầu')
-    } finally {
-      setIsSubmittingReport(false)
-    }
-  }
 
   const renderDiagram = (rawDiagram?: string | null) => {
     if (!rawDiagram || typeof rawDiagram !== 'string') return null;
@@ -916,44 +894,15 @@ export default function EssayQuestion({
         {renderEditors()}
       </div>
 
-      {isReportModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100">
-            <h3 className="text-xl font-bold text-slate-800 mb-2">
-              {readonly ? 'Kháng cáo' : 'Báo lỗi'}
-            </h3>
-            <p className="text-slate-500 text-sm mb-4">
-              {readonly ? 'Nêu rõ lý do bạn muốn kháng cáo cho câu hỏi này.' : 'Vui lòng mô tả lỗi của câu hỏi (sai đề, thiếu thông tin, lỗi chính tả, ...)'}
-            </p>
-            <textarea
-              value={reportMessage}
-              onChange={(e) => setReportMessage(e.target.value)}
-              placeholder="Nhập nội dung..."
-              className="w-full min-h-[120px] p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none text-slate-700"
-            />
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setIsReportModalOpen(false)}
-                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-semibold transition-colors"
-                disabled={isSubmittingReport}
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleReportSubmit}
-                disabled={isSubmittingReport || !reportMessage.trim()}
-                className="flex-1 px-4 py-3 bg-primary text-white hover:bg-primary/90 disabled:opacity-50 rounded-xl font-semibold transition-colors shadow-md shadow-primary/20 flex items-center justify-center"
-              >
-                {isSubmittingReport ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  'Gửi'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <QuestionReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        readonly={readonly}
+        questionId={questionId}
+        resultId={resultId}
+        detailId={aiFeedbacks?.[questionId]?.detailId}
+        isGroup={Boolean(subQuestions && subQuestions.length > 0)}
+      />
     </main>
   )
 }

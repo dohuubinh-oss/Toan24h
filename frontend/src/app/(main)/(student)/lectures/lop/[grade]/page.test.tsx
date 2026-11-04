@@ -81,7 +81,7 @@ describe('GradeLecturesPage (/lectures/lop/[grade])', () => {
 
     render(pageJSX)
 
-    expect(lectureApi.getLecturesByGrade).toHaveBeenCalledWith('6', 1, 100)
+    expect(lectureApi.getLecturesByGrade).toHaveBeenCalledWith('6', 1, 100, 'mock-token')
     expect(screen.getByText('Danh sách Bài giảng Toán Lớp 6')).toBeInTheDocument()
     expect(screen.getAllByTestId('lecture-item')).toHaveLength(6)
     expect(screen.getByTestId('grade-lecture-list')).toHaveAttribute('data-total-all', '12')

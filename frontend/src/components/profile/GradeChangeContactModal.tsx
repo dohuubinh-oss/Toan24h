@@ -13,7 +13,7 @@ import {
   GraduationCap,
   Clock,
 } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { toast } from '@/components/ui/ToastProvider'
 
 interface GradeChangeContactModalProps {
   isOpen: boolean
@@ -82,7 +82,7 @@ export function GradeChangeContactModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="grade-change-title"
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans"
     >
       {/* Backdrop click to close */}
       <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
@@ -115,8 +115,9 @@ export function GradeChangeContactModal({
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer shrink-0"
+            className="min-w-[40px] min-h-[40px] p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer shrink-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             title="Đóng"
             aria-label="Đóng popup"
           >

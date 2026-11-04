@@ -305,7 +305,7 @@ export default function HomeHero() {
           aria-label="Video giới thiệu nền tảng toan6789.vn"
         >
           <div
-            className="relative w-full max-w-4xl bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-white/15 flex flex-col"
+            className="relative w-full max-w-4xl bg-slate-950 rounded-3xl overflow-hidden shadow-2xl border border-white/15 flex flex-col font-sans"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-slate-900 border-b border-white/10">
@@ -318,7 +318,7 @@ export default function HomeHero() {
               <button
                 type="button"
                 onClick={() => setIsVideoOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="min-w-[40px] min-h-[40px] p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 aria-label="Đóng video"
               >
                 <X size={20} />

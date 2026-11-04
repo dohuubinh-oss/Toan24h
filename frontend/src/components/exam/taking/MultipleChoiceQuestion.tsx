@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { Sparkles, CheckCircle2, Flag, BookOpen, AlertTriangle, MessageSquare, Edit3, Lightbulb, Zap } from 'lucide-react'
+import { Sparkles, CheckCircle2, Flag, BookOpen, AlertTriangle, MessageSquare, Edit3, Lightbulb, Zap, X } from 'lucide-react'
 import Link from 'next/link'
 import DOMPurify from 'dompurify'
 import MathText from '@/components/ui/MathText'
 import ExplanationPopup from './ExplanationPopup'
 import QuestionHintTabs from './QuestionHintTabs'
+import QuestionReportModal from './QuestionReportModal'
 import { toast } from '@/components/ui/ToastProvider'
 import { reportQuestion, submitAppeal } from '@/lib/api'
 
@@ -89,8 +90,6 @@ export default function MultipleChoiceQuestion({
   const [pendingOptionId, setPendingOptionId] = useState<string | null>(null)
   
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
-  const [reportMessage, setReportMessage] = useState('')
-  const [isSubmittingReport, setIsSubmittingReport] = useState(false)
 
   const handleOptionClick = (optionId: string) => {
     // If clicking an already selected option, re-open the popup with existing explanation
@@ -110,26 +109,6 @@ export default function MultipleChoiceQuestion({
       onSelectOption(pendingOptionId, '')
     }
     setPendingOptionId(null)
-  }
-
-  const handleReportSubmit = async () => {
-    if (!reportMessage.trim()) return
-    setIsSubmittingReport(true)
-    try {
-      if (readonly && resultId && aiFeedback?.detailId) {
-        await submitAppeal(resultId, aiFeedback.detailId, reportMessage)
-        toast.success('Kháng cáo đã được gửi thành công!')
-      } else {
-        await reportQuestion(questionId.toString(), reportMessage)
-        toast.success('Báo lỗi câu hỏi thành công!')
-      }
-      setIsReportModalOpen(false)
-      setReportMessage('')
-    } catch (e: any) {
-      toast.error(e.response?.data?.error || 'Lỗi khi gửi yêu cầu')
-    } finally {
-      setIsSubmittingReport(false)
-    }
   }
 
   return (
@@ -415,44 +394,14 @@ export default function MultipleChoiceQuestion({
         />
       )}
 
-      {isReportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-100">
-            <h3 className="text-xl font-bold text-slate-800 mb-2">
-              {readonly ? 'Kháng cáo' : 'Báo lỗi'}
-            </h3>
-            <p className="text-slate-500 text-sm mb-4">
-              {readonly ? 'Nêu rõ lý do bạn muốn kháng cáo cho câu hỏi này.' : 'Vui lòng mô tả lỗi của câu hỏi (sai đề, thiếu thông tin, lỗi chính tả, ...)'}
-            </p>
-            <textarea
-              value={reportMessage}
-              onChange={(e) => setReportMessage(e.target.value)}
-              placeholder="Nhập nội dung..."
-              className="w-full min-h-[120px] p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none text-slate-700"
-            />
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setIsReportModalOpen(false)}
-                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-semibold transition-colors"
-                disabled={isSubmittingReport}
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleReportSubmit}
-                disabled={isSubmittingReport || !reportMessage.trim()}
-                className="flex-1 px-4 py-3 bg-primary text-white hover:bg-primary/90 disabled:opacity-50 rounded-xl font-semibold transition-colors shadow-md shadow-primary/20 flex items-center justify-center"
-              >
-                {isSubmittingReport ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  'Gửi'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <QuestionReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        readonly={readonly}
+        questionId={questionId}
+        resultId={resultId}
+        detailId={aiFeedback?.detailId}
+      />
     </main>
   )
 }

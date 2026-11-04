@@ -13,7 +13,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
-import { toast } from 'react-hot-toast'
+import { toast } from '@/components/ui/ToastProvider'
 
 export interface PayOSPaymentData {
   transactionId: string
@@ -134,28 +134,40 @@ export default function PayOSPaymentModal({
   const qrSrc = !qrError && paymentData.qrCode ? paymentData.qrCode : fallbackVietQrUrl
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden relative max-h-[92vh] flex flex-col animate-in zoom-in-95 duration-200">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="payos-payment-title"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans"
+    >
+      <div 
+        className="fixed inset-0" 
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div className="relative z-10 bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200/90 overflow-hidden max-h-[92vh] flex flex-col animate-in zoom-in-95 duration-200">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
-              <QrCode className="w-5 h-5" />
+        <div className="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-primary border border-blue-100 flex items-center justify-center shrink-0 shadow-xs">
+              <QrCode className="w-5 h-5" aria-hidden="true" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-base">
+              <h3 id="payos-payment-title" className="font-bold text-slate-900 text-base sm:text-lg leading-tight">
                 Thanh Toán PayOS (VietQR)
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-0.5">
                 {paymentData.planName ? `${paymentData.planName} • ` : ''}Tự động kích hoạt sau chuyển khoản
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-200/60 hover:bg-slate-200 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="Đóng hộp thoại"
+            className="min-w-[40px] min-h-[40px] rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
