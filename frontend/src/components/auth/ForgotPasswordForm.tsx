@@ -260,6 +260,7 @@ export default function ForgotPasswordForm() {
                   id="email"
                   placeholder="Nhập email của bạn (ví dụ: student@gmail.com)"
                   type="email"
+                  autoComplete="email"
                   error={!!errors.email}
                 />
                 {errors.email && (
@@ -347,6 +348,7 @@ export default function ForgotPasswordForm() {
                     id="newPassword"
                     placeholder="••••••••"
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
                     error={!!errors.newPassword}
                   />
                   <button
@@ -378,6 +380,7 @@ export default function ForgotPasswordForm() {
                     id="confirmNewPassword"
                     placeholder="••••••••"
                     type={showConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
                     error={!!errors.confirmNewPassword}
                   />
                   <button

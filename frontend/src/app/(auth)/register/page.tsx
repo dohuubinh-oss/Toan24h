@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <div className="flex w-full min-h-screen bg-white">
+    <div className="flex w-full min-h-screen bg-slate-50/60 lg:bg-white">
       <LoginBranding />
       <Suspense fallback={<div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white" />}>
         <RegisterForm />

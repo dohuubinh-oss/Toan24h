@@ -18,6 +18,8 @@ export interface AiLectureExtractModalProps {
   isOpen: boolean
   onClose: () => void
   onExtracted: (jsonString: string) => void
+  title?: string
+  description?: string
 }
 
 interface ImageFileItem {
@@ -30,6 +32,8 @@ export default function AiLectureExtractModal({
   isOpen,
   onClose,
   onExtracted,
+  title = 'Bóc tách Dạng toán & Bài tập mẫu bằng AI',
+  description = 'Tự động nhận diện dạng toán, phương pháp giải và tự động giải chi tiết ví dụ mẫu',
 }: AiLectureExtractModalProps) {
   const [images, setImages] = useState<ImageFileItem[]>([])
   const [isExtracting, setIsExtracting] = useState(false)
@@ -191,10 +195,10 @@ export default function AiLectureExtractModal({
             </div>
             <div>
               <h3 id="ai-lecture-extract-title" className="font-bold text-base sm:text-lg leading-tight">
-                Bóc tách Dạng toán & Bài tập mẫu bằng AI
+                {title}
               </h3>
               <p className="text-xs text-white/80 mt-0.5">
-                Tự động nhận diện dạng toán, phương pháp giải và tự động giải chi tiết ví dụ mẫu
+                {description}
               </p>
             </div>
           </div>

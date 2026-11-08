@@ -25,6 +25,7 @@ function UsersPageContent() {
   const currentPage = parseInt(pageParam, 10) || 1
 
   const [users, setUsers] = useState<User[]>([])
+  const [totalUsers, setTotalUsers] = useState<number>(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -54,10 +55,17 @@ function UsersPageContent() {
       const queryParams = new URLSearchParams();
       if (q) queryParams.append('q', q);
       if (role) queryParams.append('role', role);
+      queryParams.append('page', currentPage.toString());
+      queryParams.append('limit', '15');
+      queryParams.append('format', 'paginated');
       
       const res = await apiFetch(`/users?${queryParams.toString()}`);
       
-      const apiUsers = (Array.isArray(res) ? res : []).map((u: any) => ({
+      const rawList = Array.isArray(res) ? res : (res?.users || []);
+      const totalCount = typeof res?.total === 'number' ? res.total : rawList.length;
+      setTotalUsers(totalCount);
+
+      const apiUsers = rawList.map((u: any) => ({
         id: u.id,
         name: u.fullName,
         email: u.email,
@@ -78,7 +86,7 @@ function UsersPageContent() {
 
   useEffect(() => {
     fetchUsers();
-  }, [q, role]);
+  }, [q, role, currentPage]);
 
   const handleSoftDelete = async (id: string, name: string) => {
     try {
@@ -119,18 +127,16 @@ function UsersPageContent() {
     }
   }
 
-  // Paginate locally for now (can be moved to server-side if needed)
-  const itemsPerPage = 10
-  const totalItems = users.length
-  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1
+  // Server-side pagination with 15 users per page
+  const itemsPerPage = 15
+  const totalPages = Math.ceil(totalUsers / itemsPerPage) || 1
   
   const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = Math.min(startIndex + itemsPerPage, totalItems)
-  const paginatedUsers = users.slice(startIndex, endIndex)
+  const endIndex = Math.min(startIndex + users.length, totalUsers)
 
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto relative pb-20">
-      <UserHeader totalUsers={totalItems} />
+      <UserHeader totalUsers={totalUsers} />
       <div className="space-y-4">
         {loading ? (
           <div className="p-8 text-center text-slate-500">Đang tải dữ liệu...</div>
@@ -146,7 +152,7 @@ function UsersPageContent() {
           </div>
         ) : (
           <UserTable 
-            users={paginatedUsers} 
+            users={users} 
             onSoftDelete={handleSoftDelete}
             isAdmin={isAdmin}
             onUpdateRole={handleUpdateRole}
@@ -154,12 +160,12 @@ function UsersPageContent() {
         )}
 
         
-        {!loading && totalItems > 0 && (
+        {!loading && totalUsers > 0 && (
           <div className="pt-0">
             <Pagination 
               currentPage={currentPage} 
               totalPages={totalPages} 
-              totalItems={totalItems} 
+              totalItems={totalUsers} 
               startIndex={startIndex + 1} 
               endIndex={endIndex}
               itemName="người dùng" 

@@ -59,7 +59,7 @@ interface MultipleChoiceQuestionProps {
   onToggleFlag?: () => void
 }
 
-export default function MultipleChoiceQuestion({
+function MultipleChoiceQuestion({
   resultId,
   questionId,
   index,
@@ -405,3 +405,6 @@ export default function MultipleChoiceQuestion({
     </main>
   )
 }
+
+const MemoizedMultipleChoiceQuestion = React.memo(MultipleChoiceQuestion);
+export default MemoizedMultipleChoiceQuestion;

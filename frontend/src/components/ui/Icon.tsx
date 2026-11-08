@@ -1,8 +1,29 @@
 import React from 'react'
-import * as icons from 'lucide-react'
+import {
+  Plus,
+  Home,
+  User,
+  Settings,
+  FunctionSquare,
+  CheckCircle2,
+  XCircle,
+  Check,
+  LucideIcon,
+} from 'lucide-react'
 import { cn } from '../../lib/utils'
 
-export type IconName = keyof typeof icons
+const ICON_MAP: Record<string, LucideIcon> = {
+  Plus,
+  Home,
+  User,
+  Settings,
+  FunctionSquare,
+  CheckCircle2,
+  XCircle,
+  Check,
+}
+
+export type IconName = keyof typeof ICON_MAP | string
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   name: IconName
@@ -11,8 +32,7 @@ interface IconProps extends React.SVGProps<SVGSVGElement> {
 }
 
 export function Icon({ name, size = 24, className, ...props }: IconProps) {
-  // Ep kieu as React.ElementType de tranh loi JSX element type
-  const LucideIcon = icons[name] as React.ElementType
+  const LucideIcon = ICON_MAP[name] as React.ElementType
 
   if (!LucideIcon) {
     return null

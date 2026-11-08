@@ -79,6 +79,8 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     let isMounted = true
     let pollInterval: NodeJS.Timeout | null = null
+    let pollCount = 0
+    const MAX_POLLS = 40 // 40 * 3s = 120s tối đa để tránh loop polling vô hạn
 
     const fetchResult = async () => {
       try {
@@ -111,8 +113,17 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               clearInterval(pollInterval)
               pollInterval = null
             }
-          } else if (!pollInterval && isMounted) {
-            pollInterval = setInterval(fetchResult, 3000)
+          } else if (isMounted) {
+            pollCount++
+            if (pollCount >= MAX_POLLS) {
+              if (pollInterval) {
+                clearInterval(pollInterval)
+                pollInterval = null
+              }
+              toast.info("Hệ thống chấm bài đang xử lý nhiều lượt thi. Vui lòng tải lại trang sau ít phút để xem kết quả hoàn tất.")
+            } else if (!pollInterval) {
+              pollInterval = setInterval(fetchResult, 3000)
+            }
           }
         } else {
           toast.error("Không tìm thấy kết quả bài thi")

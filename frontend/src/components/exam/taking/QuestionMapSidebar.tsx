@@ -17,7 +17,7 @@ interface QuestionMapSidebarProps {
   mode?: 'take' | 'result'
 }
 
-export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubmit, mode = 'take' }: QuestionMapSidebarProps) {
+function QuestionMapSidebar({ questions, onSelectQuestion, onSubmit, mode = 'take' }: QuestionMapSidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
   const sidebarRef = useRef<HTMLDivElement>(null)
 
@@ -136,3 +136,6 @@ export default function QuestionMapSidebar({ questions, onSelectQuestion, onSubm
     </div>
   )
 }
+
+const MemoizedQuestionMapSidebar = React.memo(QuestionMapSidebar);
+export default MemoizedQuestionMapSidebar;

@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
-import { Microscope, Plus, Trash2, ChevronDown, ChevronRight, GripVertical, CheckCircle2 } from 'lucide-react'
+import { Microscope, Plus, Trash2, ChevronDown, ChevronRight, GripVertical, CheckCircle2, Pencil } from 'lucide-react'
 import { Button } from '../../ui/Button'
-import MathText from '@/components/ui/MathText'
 import SharedEditorCard from '@/components/questions/creator/editor/SharedEditorCard'
 import RichTextEditor from '@/components/questions/creator/editor/RichTextEditor'
 import { DangToanItem, MethodItem, ExampleExercise, ExampleStep } from './LectureCreatorContext'
+import AiLectureExtractModal from './AiLectureExtractModal'
+import { parseLectureJson } from './utils/lectureJsonParser'
+import { toast } from '@/components/ui/ToastProvider'
 
 interface DangToanCardProps {
   dangToan: DangToanItem;
@@ -76,6 +78,26 @@ export default function DangToanCard({
   onChange,
   onRemove,
 }: DangToanCardProps) {
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false)
+
+  const handleAiExtracted = (jsonString: string) => {
+    try {
+      const parsedList = parseLectureJson(jsonString)
+      if (parsedList.length === 0) {
+        toast.error('Không tìm thấy dữ liệu Dạng toán trong ảnh')
+        return
+      }
+      const extracted = parsedList[0]
+      onChange({
+        ...extracted,
+        id: dangToan.id,
+      })
+      toast.success(`Đã cập nhật Dạng toán ${index + 1} thành công từ ảnh!`)
+      setIsAiModalOpen(false)
+    } catch (err: any) {
+      toast.error(err.message || 'Lỗi khi xử lý dữ liệu từ ảnh')
+    }
+  }
   
   const updateMethod = (methodId: string, updated: MethodItem) => {
     onChange({
@@ -111,19 +133,19 @@ export default function DangToanCard({
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
       <div className="p-4 bg-white flex flex-wrap items-center justify-between border-b border-slate-100">
-        <div className="flex items-center gap-2 px-2 flex-wrap">
+        <div className="flex items-center gap-2 px-2">
           <Microscope className="text-primary w-5 h-5 shrink-0" />
-          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700 shrink-0">Dạng Toán {index + 1}</h2>
-          {dangToan.mathType?.trim() && (
-            <>
-              <span className="text-slate-300">/</span>
-              <div className="text-sm font-semibold text-slate-600">
-                <MathText content={dangToan.mathType} />
-              </div>
-            </>
-          )}
+          <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">Dạng Toán {index + 1}</h2>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => setIsAiModalOpen(true)}
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-8 px-2"
+            title="Sửa Dạng Toán từ ảnh bằng AI"
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
           {onRemove && (
             <Button
               variant="ghost"
@@ -175,6 +197,14 @@ export default function DangToanCard({
           </Button>
         </div>
       </div>
+
+      <AiLectureExtractModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        onExtracted={handleAiExtracted}
+        title={`Bóc tách & Cập nhật Dạng toán ${index + 1} bằng AI`}
+        description="Tự động nhận diện nội dung dạng toán, phương pháp giải và ví dụ mẫu từ ảnh để cập nhật cho dạng toán này"
+      />
     </div>
   )
 }

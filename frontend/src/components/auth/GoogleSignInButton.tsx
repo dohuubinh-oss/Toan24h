@@ -24,7 +24,6 @@ export default function GoogleSignInButton({
   refCode,
 }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
-  const googleBtnContainerRef = useRef<HTMLDivElement>(null)
   const refCodeRef = useRef(refCode)
 
   useEffect(() => {
@@ -80,17 +79,6 @@ export default function GoogleSignInButton({
             auto_select: false,
             cancel_on_tap_outside: true,
           })
-
-          if (googleBtnContainerRef.current) {
-            // Render hidden/native Google button if desired, or use prompt()
-            window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
-              theme: 'outline',
-              size: 'large',
-              width: 320,
-              text: 'continue_with',
-              shape: 'pill',
-            })
-          }
         } catch (e) {
           console.error('Failed to initialize Google Sign-In:', e)
         }
@@ -168,9 +156,6 @@ export default function GoogleSignInButton({
         </svg>
         <span>{isLoading ? 'Đang xác thực...' : text}</span>
       </button>
-
-      {/* Hidden container where official GIS button can mount if rendered */}
-      <div ref={googleBtnContainerRef} className="hidden" aria-hidden="true" />
     </div>
   )
 }

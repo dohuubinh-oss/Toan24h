@@ -1,6 +1,6 @@
 import React from 'react'
 import { cn } from '../../lib/utils'
-import { Icon } from './Icon'
+import { CheckCircle2 } from 'lucide-react'
 
 export interface RadioOptionProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: React.ReactNode
@@ -38,7 +38,7 @@ export const RadioOption = React.forwardRef<HTMLInputElement, RadioOptionProps>(
         </div>
         
         <div className="absolute right-5 opacity-0 group-has-[:checked]:opacity-100 transition-opacity shrink-0">
-          <Icon name="CheckCircle2" className="text-blue-500" />
+          <CheckCircle2 className="text-blue-500" />
         </div>
       </label>
     )

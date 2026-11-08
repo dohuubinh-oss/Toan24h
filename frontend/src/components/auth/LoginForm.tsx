@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
+import Link from 'next/link'
 import { useForm } from 'react-hook-form'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, GraduationCap, ArrowLeft, ShieldCheck } from 'lucide-react'
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
@@ -101,6 +102,28 @@ export default function LoginForm() {
   return (
     <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 bg-white">
       <div className="w-full max-w-[520px]">
+        {/* Mobile Top Header (Chỉ hiển thị trên thiết bị di động < lg) */}
+        <div className="flex lg:hidden items-center justify-between w-full pb-3 mb-6 border-b border-slate-100 dark:border-slate-800">
+          <Link href="/" className="flex items-center gap-2 text-slate-900 dark:text-white hover:opacity-90 transition">
+            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs">
+              <GraduationCap className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="font-extrabold text-base tracking-tight block leading-tight">Toan6789</span>
+              <span className="text-[10px] tracking-wider text-blue-600 dark:text-blue-400 uppercase font-semibold block">
+                Nền tảng Toán THCS
+              </span>
+            </div>
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Trang chủ</span>
+          </Link>
+        </div>
+
         {/* Title */}
         <div className="mb-8 text-center flex flex-col items-center">
           <h2 className="text-3xl font-bold text-slate-800 mb-2">Đăng nhập</h2>
@@ -138,6 +161,7 @@ export default function LoginForm() {
               id="identity"
               placeholder="name@example.com"
               type="email"
+              autoComplete="username"
               error={!!errors.identity}
             />
             {errors.identity && (
@@ -158,6 +182,7 @@ export default function LoginForm() {
                 id="password"
                 placeholder="••••••••"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 error={!!errors.password}
               />
               <button
@@ -203,6 +228,11 @@ export default function LoginForm() {
 
         <div className="grid gap-4">
           <GoogleSignInButton onSuccess={handleGoogleSuccess} />
+          {/* Trust Badge (Cam Kết Bảo Mật) */}
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 pt-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>Bảo mật SSL 256-bit • Dữ liệu học tập được mã hóa an toàn</span>
+          </div>
         </div>
 
         {/* Footer */}

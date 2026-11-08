@@ -75,7 +75,7 @@ export function decodeMathEntities(text: string): string {
 
 const LATEX_COMMANDS = 'dfrac|frac|cfrac|sqrt|root|int|iint|iiint|oint|sum|prod|coprod|lim|limsup|liminf|alpha|beta|gamma|delta|epsilon|varepsilon|zeta|eta|theta|vartheta|iota|kappa|lambda|mu|nu|xi|pi|varpi|rho|varrho|sigma|varsigma|tau|upsilon|phi|varphi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega|infty|partial|nabla|matrix|pmatrix|bmatrix|vmatrix|Vmatrix|begin|end|vec|overrightarrow|overleftarrow|overline|underline|cdot|pm|mp|times|div|leq|geq|le|ge|neq|ne|approx|sim|simeq|equiv|cong|in|notin|ni|subset|supset|subseteq|supseteq|cup|cap|setminus|widehat|hat|tilde|widetilde|degree|dots|ldots|cdots|vdots|ddots|to|rightarrow|leftarrow|Rightarrow|Leftarrow|Leftrightarrow|iff|implies|angle|measuredangle|parallel|perp|text|mathrm|mathbf|mathit|mathbb|mathcal|left|right';
 
-export default function MathText({ content, className = '' }: MathTextProps) {
+function MathText({ content, className = '' }: MathTextProps) {
   // Tự động nhận diện nếu content là object hoặc JSON string của lời giải chi tiết (solution_guide)
   let rawText = content;
   if (typeof rawText === 'object' && rawText !== null) {
@@ -201,3 +201,6 @@ export default function MathText({ content, className = '' }: MathTextProps) {
     </div>
   );
 }
+
+const MemoizedMathText = React.memo(MathText);
+export default MemoizedMathText;

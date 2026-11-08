@@ -113,5 +113,16 @@ describe('LoginForm Component', () => {
     expect(screen.getByRole('button', { name: /tiếp tục với google/i })).toBeInTheDocument()
     expect(screen.queryByTestId('telegram-login-widget')).not.toBeInTheDocument()
   })
+
+  it('renders mobile top header with Toan6789 and Trang chu link', () => {
+    render(<LoginForm />)
+    expect(screen.getByText('Toan6789')).toBeInTheDocument()
+    expect(screen.getByText('Trang chủ')).toBeInTheDocument()
+  })
+
+  it('renders security trust badge', () => {
+    render(<LoginForm />)
+    expect(screen.getByText(/Bảo mật SSL 256-bit • Dữ liệu học tập được mã hóa an toàn/i)).toBeInTheDocument()
+  })
 })
 

@@ -117,4 +117,36 @@ describe('RegisterForm Component', () => {
     const googleBtn = screen.getByTestId('mock-google-btn')
     expect(googleBtn).toHaveAttribute('data-refcode', 'GT999888')
   })
+
+  it('renders mobile top header and security trust badge', () => {
+    render(<RegisterForm />)
+    expect(screen.getByText('Toan6789')).toBeInTheDocument()
+    expect(screen.getByText('Trang chủ')).toBeInTheDocument()
+    expect(screen.getByText(/Bảo mật SSL 256-bit • Dữ liệu học tập được mã hóa an toàn/i)).toBeInTheDocument()
+  })
+
+  it('calculates and shows password strength levels', () => {
+    render(<RegisterForm />)
+    const passwordInput = screen.getByLabelText(/^Mật khẩu/i)
+
+    // Empty - no meter
+    expect(screen.queryByTestId('password-strength-meter')).not.toBeInTheDocument()
+
+    // Level 1: Yếu (length >= 6)
+    fireEvent.change(passwordInput, { target: { value: 'abcdef' } })
+    expect(screen.getByTestId('password-strength-meter')).toBeInTheDocument()
+    expect(screen.getByText('Yếu')).toBeInTheDocument()
+
+    // Level 2: Trung bình (length >= 6 + digit)
+    fireEvent.change(passwordInput, { target: { value: 'abcdef1' } })
+    expect(screen.getByText('Trung bình')).toBeInTheDocument()
+
+    // Level 3: Khá (length >= 6 + upper + lower + digit)
+    fireEvent.change(passwordInput, { target: { value: 'Abcdef1' } })
+    expect(screen.getByText('Khá')).toBeInTheDocument()
+
+    // Level 4: Rất mạnh (length >= 6 + upper + lower + digit + special)
+    fireEvent.change(passwordInput, { target: { value: 'Abcdef1@' } })
+    expect(screen.getByText('Rất mạnh')).toBeInTheDocument()
+  })
 })

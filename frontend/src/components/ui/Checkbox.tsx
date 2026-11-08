@@ -1,6 +1,6 @@
 import React from 'react'
 import { cn } from '../../lib/utils'
-import { Icon } from './Icon'
+import { Check } from 'lucide-react'
 
 export interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: React.ReactNode
@@ -31,7 +31,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
               className
             )}
           >
-            <Icon name="Check" size={14} className="opacity-0 peer-checked:opacity-100 transition-opacity duration-200" />
+            <Check size={14} className="opacity-0 peer-checked:opacity-100 transition-opacity duration-200" />
           </div>
         </div>
         {label && (

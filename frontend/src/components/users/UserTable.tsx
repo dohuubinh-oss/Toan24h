@@ -26,6 +26,28 @@ interface UserTableProps {
   onUpdateRole?: (id: string, name: string, newRole: string) => void;
 }
 
+function UserAvatarCell({ avatar, name }: { avatar?: string | null; name: string }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (avatar && !hasError) {
+    return (
+      /* eslint-disable-next-line @next/next/no-img-element */
+      <img
+        alt="Avatar"
+        className="w-9 h-9 rounded-full bg-slate-100 object-cover border border-slate-200"
+        src={avatar}
+        onError={() => setHasError(true)}
+      />
+    );
+  }
+
+  return (
+    <div className="w-9 h-9 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs uppercase shrink-0">
+      {getAvatarInitial(name)}
+    </div>
+  );
+}
+
 export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpdateRole }: UserTableProps) {
   const [now] = React.useState(() => Date.now())
   const [roleModalUser, setRoleModalUser] = useState<User | null>(null)
@@ -142,14 +164,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
               <tr key={user.id} className="hover:bg-slate-50 transition-colors group relative border-l-2 border-transparent hover:border-primary">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    {user.avatar ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img alt="Avatar" className="w-9 h-9 rounded-full bg-slate-100 object-cover border border-slate-200" src={user.avatar} />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold text-xs uppercase shrink-0">
-                        {getAvatarInitial(user.name)}
-                      </div>
-                    )}
+                    <UserAvatarCell avatar={user.avatar} name={user.name} />
                     <div>
                       <p className="font-medium text-slate-900">{user.name}</p>
                       <p className="text-xs text-slate-500">{user.email}</p>

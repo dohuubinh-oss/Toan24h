@@ -41,6 +41,15 @@ describe('AiLectureExtractModal Component', () => {
     expect(screen.queryByText(/Bóc tách Dạng toán & Bài tập mẫu bằng AI/i)).not.toBeInTheDocument()
   })
 
+  it('renders custom title and description when provided', () => {
+    renderComponent({
+      title: 'Bóc tách & Cập nhật Dạng toán 1 bằng AI',
+      description: 'Cập nhật nội dung cho dạng toán này từ ảnh'
+    })
+    expect(screen.getByText('Bóc tách & Cập nhật Dạng toán 1 bằng AI')).toBeInTheDocument()
+    expect(screen.getByText('Cập nhật nội dung cho dạng toán này từ ảnh')).toBeInTheDocument()
+  })
+
   it('handles image selection and removal', () => {
     renderComponent()
 

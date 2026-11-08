@@ -20,7 +20,9 @@ const nextConfig = {
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
       { protocol: 'https', hostname: 'api.toan6789.vn' },
       { protocol: 'http', hostname: 'localhost' },
+      { protocol: 'http', hostname: 'localhost', port: '8080' },
       { protocol: 'http', hostname: '127.0.0.1' },
+      { protocol: 'http', hostname: '127.0.0.1', port: '8080' },
     ],
   },
   async rewrites() {

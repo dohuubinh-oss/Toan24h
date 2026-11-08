@@ -37,7 +37,13 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
       credentials: 'include',
     });
   } catch (netErr: any) {
-    // Retry once after short delay for network glitches / cold start
+    const method = (options.method || 'GET').toUpperCase();
+    const isIdempotent = ['GET', 'HEAD', 'OPTIONS'].includes(method);
+    if (!isIdempotent) {
+      throw new Error(`Không thể kết nối đến máy chủ Backend (Port 8080). Bạn vui lòng kiểm tra xem Backend đã khởi động chưa.`);
+    }
+
+    // Retry once after short delay for network glitches / cold start on idempotent methods
     await new Promise(res => setTimeout(res, 300));
     try {
       response = await fetch(url, {

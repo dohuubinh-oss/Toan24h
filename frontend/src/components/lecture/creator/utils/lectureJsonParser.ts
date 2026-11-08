@@ -265,6 +265,10 @@ export function parseLectureJson(jsonString: string): DangToanItem[] {
     throw new Error(`JSON không hợp lệ: ${message}`)
   }
 
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    parsed = [parsed]
+  }
+
   if (!Array.isArray(parsed)) {
     throw new Error('Dữ liệu JSON phải là một danh sách (mảng []) các Dạng toán')
   }

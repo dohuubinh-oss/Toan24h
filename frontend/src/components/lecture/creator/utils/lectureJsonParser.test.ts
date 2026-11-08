@@ -6,8 +6,21 @@ describe('lectureJsonParser', () => {
     expect(() => parseLectureJson('invalid json')).toThrow('JSON không hợp lệ')
   })
 
-  it('throws error if JSON is not an array', () => {
-    expect(() => parseLectureJson('{"mathType": "Dạng 1"}')).toThrow('Dữ liệu JSON phải là một danh sách (mảng []) các Dạng toán')
+  it('throws error if JSON is a primitive and not an object or array', () => {
+    expect(() => parseLectureJson('"just a string"')).toThrow('Dữ liệu JSON phải là một danh sách (mảng []) các Dạng toán')
+    expect(() => parseLectureJson('123')).toThrow('Dữ liệu JSON phải là một danh sách (mảng []) các Dạng toán')
+  })
+
+  it('supports single object JSON and wraps it into an array', () => {
+    const singleObjJson = JSON.stringify({
+      mathType: 'Dạng 1. Đơn thức đơn lẻ',
+      solution: 'Nội dung phương pháp',
+      problems: [{ problem: 'Ví dụ đơn lẻ' }]
+    })
+    const result = parseLectureJson(singleObjJson)
+    expect(result).toHaveLength(1)
+    expect(result[0].mathType).toBe('Dạng 1. Đơn thức đơn lẻ')
+    expect(result[0].methods[0].exercise?.content).toContain('Ví dụ đơn lẻ')
   })
 
   it('throws error if JSON array is empty', () => {

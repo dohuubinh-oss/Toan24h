@@ -11,7 +11,7 @@ interface ExamTakeFooterProps {
   totalCount: number
 }
 
-export default function ExamTakeFooter({
+function ExamTakeFooter({
   onPrev,
   onNext,
   onSubmit,
@@ -74,3 +74,6 @@ export default function ExamTakeFooter({
     </footer>
   )
 }
+
+const MemoizedExamTakeFooter = React.memo(ExamTakeFooter);
+export default MemoizedExamTakeFooter;

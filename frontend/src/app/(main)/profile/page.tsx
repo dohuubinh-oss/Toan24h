@@ -735,7 +735,12 @@ export default function ProfilePage() {
                     <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2.5">
                         {user.telegramAvt ? (
-                          <img src={user.telegramAvt} alt="TG" className="w-8 h-8 rounded-full object-cover" />
+                          <img
+                            src={user.telegramAvt}
+                            alt="TG"
+                            className="w-8 h-8 rounded-full object-cover"
+                            onError={(e) => { e.currentTarget.style.display = 'none' }}
+                          />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">
                             TG
@@ -807,7 +812,12 @@ export default function ProfilePage() {
                     <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2.5">
                         {user.telegramAvt2 ? (
-                          <img src={user.telegramAvt2} alt="TG2" className="w-8 h-8 rounded-full object-cover" />
+                          <img
+                            src={user.telegramAvt2}
+                            alt="TG2"
+                            className="w-8 h-8 rounded-full object-cover"
+                            onError={(e) => { e.currentTarget.style.display = 'none' }}
+                          />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-xs font-bold">
                             TG

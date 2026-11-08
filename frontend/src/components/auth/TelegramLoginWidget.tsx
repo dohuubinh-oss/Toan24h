@@ -77,7 +77,16 @@ export default function TelegramLoginWidget({
   useEffect(() => {
     if (!showQrModal || !sessionId || qrStatus === 'completed') return
 
+    let pollCount = 0
+    const MAX_POLLS = 200 // 200 * 1.5s = 5 phút tối đa
+
     const interval = setInterval(async () => {
+      pollCount++
+      if (pollCount > MAX_POLLS) {
+        clearInterval(interval)
+        return
+      }
+
       try {
         const res = await apiFetch(`/auth/telegram-qr/status/${sessionId}`)
         if (res && res.status === 'completed') {

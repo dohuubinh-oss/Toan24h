@@ -598,7 +598,7 @@ function EditorItem({
   )
 }
 
-export default function EssayQuestion({
+function EssayQuestion({
   resultId,
   questionId,
   index,
@@ -906,3 +906,6 @@ export default function EssayQuestion({
     </main>
   )
 }
+
+const MemoizedEssayQuestion = React.memo(EssayQuestion);
+export default MemoizedEssayQuestion;
