@@ -3,7 +3,7 @@ package services
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/json"
+	json "encoding/json/v2"
 	"fmt"
 	"image"
 	_ "image/jpeg"
