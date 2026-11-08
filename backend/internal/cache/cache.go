@@ -11,9 +11,11 @@ import (
 )
 
 const (
-	ExamCachePrefix    = "cache:exams:"
-	LectureCachePrefix = "cache:lectures:"
-	DefaultTTL         = 10 * time.Minute
+	ExamCachePrefix        = "cache:exams:"
+	LectureCachePrefix     = "cache:lectures:"
+	LeaderboardCachePrefix = "cache:leaderboard:"
+	DefaultTTL             = 10 * time.Minute
+	LeaderboardTTL         = 2 * time.Minute
 )
 
 var customClient *redis.Client
@@ -43,6 +45,11 @@ func BuildLectureGradeCacheKey(grade string, page, limit int, publishedOnly bool
 // BuildLectureAllCacheKey tạo khóa cache cho danh sách tất cả bài giảng
 func BuildLectureAllCacheKey(publishedOnly bool) string {
 	return fmt.Sprintf("%sall:pub=%t", LectureCachePrefix, publishedOnly)
+}
+
+// BuildLeaderboardCacheKey tạo khóa cache cho bảng xếp hạng tuần theo khối lớp
+func BuildLeaderboardCacheKey(grade string) string {
+	return fmt.Sprintf("%sgrade:%s", LeaderboardCachePrefix, grade)
 }
 
 // Get đọc dữ liệu từ Redis cache và deserialize vào target. Trả về true nếu Cache Hit.

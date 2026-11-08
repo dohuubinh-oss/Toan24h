@@ -101,10 +101,10 @@ type QuestionAnswer struct {
 
 type Submission struct {
 	ID                           uuid.UUID        `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
-	UserID                       *uuid.UUID       `gorm:"type:uuid;index" json:"userId,omitempty"`
-	ExamID                       uuid.UUID        `gorm:"type:uuid;not null;index" json:"examId"`
-	AttemptNumber                int              `gorm:"type:int;not null;default:1" json:"attemptNumber"`
-	Status                       SubmissionStatus `gorm:"type:varchar(20);not null;default:'in_progress'" json:"status"`
+	UserID                       *uuid.UUID       `gorm:"type:uuid;index;index:idx_submission_exam_user,priority:2" json:"userId,omitempty"`
+	ExamID                       uuid.UUID        `gorm:"type:uuid;not null;index;index:idx_submission_exam_user,priority:1" json:"examId"`
+	AttemptNumber                int              `gorm:"type:int;not null;default:1;index:idx_submission_exam_user,priority:3" json:"attemptNumber"`
+	Status                       SubmissionStatus `gorm:"type:varchar(20);not null;default:'in_progress';index" json:"status"`
 	TotalScore                   float64          `gorm:"type:decimal(5,2);default:0" json:"totalScore"`
 	OverallEssayFeedback         string           `gorm:"type:text" json:"overallEssayFeedback,omitempty"`
 	OverallComprehensionFeedback string           `gorm:"type:text" json:"overallComprehensionFeedback,omitempty"`

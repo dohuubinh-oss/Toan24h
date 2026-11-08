@@ -55,7 +55,7 @@ func (h *VoucherHandler) CreateVoucher(c *gin.Context) {
 
 	// Kiểm tra mã đã tồn tại chưa
 	var existing models.Voucher
-	if err := h.db.Where("UPPER(code) = ?", code).First(&existing).Error; err == nil {
+	if err := h.db.Where("code = ?", code).First(&existing).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã khuyến mãi này đã tồn tại"})
 		return
 	}

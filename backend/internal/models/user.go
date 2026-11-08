@@ -19,14 +19,14 @@ type User struct {
 	TelegramID2   *int64         `gorm:"index" json:"telegramId2"`
 	TelegramUser2 *string        `gorm:"type:varchar(255)" json:"telegramUsername2"`
 	TelegramAvt2  *string        `gorm:"type:text" json:"telegramPhotoUrl2"`
-	Role          string         `gorm:"type:varchar(50);not null;default:'student'" json:"role"`
-	Grade          string         `gorm:"type:varchar(50)" json:"grade"`
+	Role          string         `gorm:"type:varchar(50);not null;default:'student';index:idx_user_leaderboard,priority:1" json:"role"`
+	Grade          string         `gorm:"type:varchar(50);index:idx_user_leaderboard,priority:3" json:"grade"`
 	Points         int            `gorm:"not null;default:0" json:"points"`
-	LifetimeXP     int            `gorm:"not null;default:0" json:"lifetimeXp"`
-	WeeklyXP       int            `gorm:"not null;default:0" json:"weeklyXp"`
+	LifetimeXP     int            `gorm:"not null;default:0;index:idx_user_leaderboard,priority:5" json:"lifetimeXp"`
+	WeeklyXP       int            `gorm:"not null;default:0;index:idx_user_leaderboard,priority:4" json:"weeklyXp"`
 	CurrentStreak  int            `gorm:"not null;default:0" json:"currentStreak"`
 	LastActiveDate *time.Time     `json:"lastActiveDate"`
-	Status         string         `gorm:"type:varchar(50);not null;default:'active'" json:"status"`
+	Status         string         `gorm:"type:varchar(50);not null;default:'active';index:idx_user_leaderboard,priority:2" json:"status"`
 	IsVerified     bool           `gorm:"not null;default:false" json:"isVerified"`
 	VerificationToken          *string        `gorm:"type:varchar(255);index" json:"-"`
 	VerificationTokenExpiresAt *time.Time     `json:"-"`

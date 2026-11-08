@@ -130,6 +130,9 @@ var (
 	rxMathChars              = regexp.MustCompile(`[+\-*\/=<>≤≥≠;]`)
 	rxQuestionPrefixWithP    = regexp.MustCompile(`^(<p(?:\s+[^>]*)?>)\s*(?:<strong[^>]*>|<b[^>]*>|\*\*)?\s*(?:[Cc][Ââ][Uu]|[Bb][Àà][Ii])\s+\d+(?:[a-zA-Z]|\.[a-zA-Z])?(?:<\/strong>|<\/b>|\*\*)?\s*(?:[\.:\)\-]+\s*(?:<\/strong>|<\/b>|\*\*)?\s*|\s+)`)
 	rxQuestionPrefixWithoutP = regexp.MustCompile(`^\s*(?:<strong[^>]*>|<b[^>]*>|\*\*)?\s*(?:[Cc][Ââ][Uu]|[Bb][Àà][Ii])\s+\d+(?:[a-zA-Z]|\.[a-zA-Z])?(?:<\/strong>|<\/b>|\*\*)?\s*(?:[\.:\)\-]+\s*(?:<\/strong>|<\/b>|\*\*)?\s*|\s+)`)
+	rxPunct                  = regexp.MustCompile(`[ \t]+([.,;?!])`)
+	rxSpaces                 = regexp.MustCompile(`[ \t]{2,}`)
+	rxDiagPlaceholder        = regexp.MustCompile(`\[DIAGRAM(?:_\d+_\d+)?\]`)
 )
 
 // CleanQuestionPrefix loại bỏ các tiền tố đánh số câu hỏi như "Câu 18.", "Câu 1:", "Bài 5.", "**Câu 18.**", "<p>Câu 18.</p>"
@@ -433,10 +436,8 @@ func cleanAndAppendDiagram(text string, placeholder string, imgTag string) strin
 	if placeholder != "" && strings.Contains(text, placeholder) {
 		cleaned = strings.ReplaceAll(text, placeholder, "")
 		// Dọn dẹp khoảng trắng thừa trước dấu câu (ví dụ: "600m [DIAGRAM_0_0]. Khoảng cách" -> "600m. Khoảng cách")
-		rxPunct := regexp.MustCompile(`[ \t]+([.,;?!])`)
 		cleaned = rxPunct.ReplaceAllString(cleaned, "$1")
 		// Thu gọn khoảng trắng liên tiếp
-		rxSpaces := regexp.MustCompile(`[ \t]{2,}`)
 		cleaned = rxSpaces.ReplaceAllString(cleaned, " ")
 	}
 	cleaned = strings.TrimSpace(cleaned)
@@ -703,8 +704,6 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 		for _, q := range rb.Questions {
 			allDiagrams = append(allDiagrams, q.Diagrams...)
 		}
-
-		rxDiagPlaceholder := regexp.MustCompile(`\[DIAGRAM(?:_\d+_\d+)?\]`)
 
 		if sharedContent != nil {
 			// CÂU HỎI CHÙM (GROUP QUESTION):

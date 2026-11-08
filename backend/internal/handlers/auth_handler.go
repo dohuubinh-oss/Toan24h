@@ -71,7 +71,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	voucherCode := strings.ToUpper(strings.TrimSpace(req.VoucherCode))
 	if voucherCode != "" {
 		var v models.Voucher
-		if err := h.db.Where("UPPER(code) = ?", voucherCode).First(&v).Error; err != nil {
+		if err := h.db.Where("code = ?", voucherCode).First(&v).Error; err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Mã khuyến mãi không tồn tại"})
 			return
 		}

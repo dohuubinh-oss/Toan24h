@@ -69,7 +69,9 @@ func (h *BookmarkHandler) GetBookmarkedLectures(c *gin.Context) {
 	}
 
 	var bookmarks []models.LectureBookmark
-	if err := h.db.Preload("Lecture").Where("user_id = ?", userID).Find(&bookmarks).Error; err != nil {
+	if err := h.db.Preload("Lecture", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, title, grade, category, order_index, is_published, created_at")
+	}).Where("user_id = ?", userID).Find(&bookmarks).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch bookmarks"})
 		return
 	}

@@ -56,7 +56,8 @@ func (r *lectureRepository) GetLecturesByGrade(ctx context.Context, grade string
 
 func (r *lectureRepository) GetAllLectures(ctx context.Context, publishedOnly bool) ([]models.Lecture, error) {
 	var lectures []models.Lecture
-	query := r.db.WithContext(ctx).Model(&models.Lecture{})
+	query := r.db.WithContext(ctx).Model(&models.Lecture{}).
+		Select("id", "title", "grade", "category", "gg_link", "author_id", "is_published", "created_at", "updated_at")
 	if publishedOnly {
 		query = query.Where("is_published IS NOT FALSE")
 	}

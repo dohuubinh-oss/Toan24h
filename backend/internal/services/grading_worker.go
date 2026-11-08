@@ -61,8 +61,15 @@ func StartGradingWorkers(workerCount int, processFunc func(submissionID uuid.UUI
 					}
 					
 					log.Printf("Worker %d: Processing grading for submission %s", workerID, job.SubmissionID)
-					// Call the grading function
-					processFunc(job.SubmissionID)
+					// Call the grading function safely with panic recovery
+					func() {
+						defer func() {
+							if r := recover(); r != nil {
+								log.Printf("Worker %d: Panic recovered during grading for submission %s: %v", workerID, job.SubmissionID, r)
+							}
+						}()
+						processFunc(job.SubmissionID)
+					}()
 					log.Printf("Worker %d: Finished grading for submission %s", workerID, job.SubmissionID)
 				}
 			}

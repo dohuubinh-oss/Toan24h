@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/modeptrai/exam-model-backend/internal/cache"
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"gorm.io/gorm"
@@ -29,7 +31,11 @@ func ResetWeeklyXP(db *gorm.DB) error {
 	if db == nil {
 		return nil
 	}
-	return db.Model(&models.User{}).Where("weekly_xp > 0").Update("weekly_xp", 0).Error
+	err := db.Model(&models.User{}).Where("weekly_xp > 0").Update("weekly_xp", 0).Error
+	if err == nil {
+		_ = cache.InvalidatePrefix(context.Background(), cache.LeaderboardCachePrefix)
+	}
+	return err
 }
 
 // StartCronJobs khởi động các tác vụ nền định kỳ
@@ -139,10 +145,10 @@ func CleanupOldSubmissionsAndDiagrams(db *gorm.DB, baseDir string, retentionMont
 	deletedFiles := 0
 	var deletedSubmissions int64
 
-	// 1. Quét CSDL nếu có kết nối: Xóa các file ảnh hình vẽ của các bài thi đã quá 15 tháng
+	// 1. Quét CSDL nếu có kết nối: Xóa các file ảnh hình vẽ của các bài thi đã quá 15 tháng theo lô
 	if db != nil {
 		var oldSubmissions []models.Submission
-		if err := db.Where("created_at < ?", cutoff).Find(&oldSubmissions).Error; err == nil {
+		_ = db.Select("id, answers_json").Where("created_at < ?", cutoff).FindInBatches(&oldSubmissions, 100, func(tx *gorm.DB, batch int) error {
 			for _, sub := range oldSubmissions {
 				var answers map[string]models.QuestionAnswer
 				if err := json.Unmarshal(sub.AnswersJSON, &answers); err == nil {
@@ -157,11 +163,13 @@ func CleanupOldSubmissionsAndDiagrams(db *gorm.DB, baseDir string, retentionMont
 					}
 				}
 			}
-			// Xóa các bản ghi bài thi quá 15 tháng trong PostgreSQL
-			res := db.Where("created_at < ?", cutoff).Delete(&models.Submission{})
-			deletedSubmissions = res.RowsAffected
-			log.Printf("Cronjob info: Deleted %d submissions older than %d months\n", deletedSubmissions, retentionMonths)
-		}
+			return nil
+		}).Error
+
+		// Xóa các bản ghi bài thi quá 15 tháng trong PostgreSQL
+		res := db.Where("created_at < ?", cutoff).Delete(&models.Submission{})
+		deletedSubmissions = res.RowsAffected
+		log.Printf("Cronjob info: Deleted %d submissions older than %d months\n", deletedSubmissions, retentionMonths)
 	}
 
 	// 2. Quét thư mục vật lý ./uploads/diagrams/ để xóa sạch file cũ hơn 15 tháng

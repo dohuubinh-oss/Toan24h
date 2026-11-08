@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -490,7 +491,10 @@ func GetExamResultByID(c *gin.Context) {
 	}
 	var allSubs []models.Submission
 	if submission.UserID != nil {
-		config.DB.Where("exam_id = ? AND user_id = ?", submission.ExamID, *submission.UserID).Order("attempt_number asc, created_at asc").Find(&allSubs)
+		config.DB.Select("id, attempt_number, total_score, status, submitted_at, created_at").
+			Where("exam_id = ? AND user_id = ?", submission.ExamID, *submission.UserID).
+			Order("attempt_number asc, created_at asc").
+			Find(&allSubs)
 	}
 	var attempts []AttemptSummary
 	for _, s := range allSubs {
@@ -586,56 +590,133 @@ func GetAppeals(c *gin.Context) {
 	}
 
 	var submissions []models.Submission
-	// Simple text search for pending appeals. In production, use JSONB @> operator
-	if err := config.DB.Where("answers_json::text LIKE ?", "%\"status\":\"PENDING\"%").Find(&submissions).Error; err != nil {
+	// Batch search for pending appeals.
+	if err := config.DB.Where("answers_json::text LIKE ?", "%\"status\":\"PENDING\"%").Order("created_at desc").Find(&submissions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch appeals"})
 		return
 	}
 
-	var response []AppealResponse
+	if len(submissions) == 0 {
+		c.JSON(http.StatusOK, gin.H{"status": "success", "data": []AppealResponse{}})
+		return
+	}
+
+	type pendingItem struct {
+		sub models.Submission
+		qID string
+		ans models.QuestionAnswer
+	}
+
+	var pendingItems []pendingItem
+	examIDSet := make(map[uuid.UUID]struct{})
+	userIDSet := make(map[uuid.UUID]struct{})
+	questionIDSet := make(map[string]struct{})
+
 	for _, sub := range submissions {
 		var answersMap map[string]models.QuestionAnswer
-		json.Unmarshal(sub.AnswersJSON, &answersMap)
+		if err := json.Unmarshal(sub.AnswersJSON, &answersMap); err != nil {
+			continue
+		}
 
-		var exam models.Exam
-		config.DB.First(&exam, "id = ?", sub.ExamID)
+		for qID, ans := range answersMap {
+			if ans.Appeal.IsAppealed && ans.Appeal.Status == models.AppealPending {
+				pendingItems = append(pendingItems, pendingItem{
+					sub: sub,
+					qID: qID,
+					ans: ans,
+				})
+				examIDSet[sub.ExamID] = struct{}{}
+				if sub.UserID != nil {
+					userIDSet[*sub.UserID] = struct{}{}
+				}
+				questionIDSet[qID] = struct{}{}
+			}
+		}
+	}
+
+	if len(pendingItems) == 0 {
+		c.JSON(http.StatusOK, gin.H{"status": "success", "data": []AppealResponse{}})
+		return
+	}
+
+	// Batch fetch Exams (1 query)
+	examMap := make(map[uuid.UUID]models.Exam)
+	examIDs := make([]uuid.UUID, 0, len(examIDSet))
+	for id := range examIDSet {
+		examIDs = append(examIDs, id)
+	}
+	if len(examIDs) > 0 {
+		var exams []models.Exam
+		config.DB.Select("id, title, exam_code").Where("id IN ?", examIDs).Find(&exams)
+		for _, e := range exams {
+			examMap[e.ID] = e
+		}
+	}
+
+	// Batch fetch Users (1 query)
+	userMap := make(map[uuid.UUID]models.User)
+	userIDs := make([]uuid.UUID, 0, len(userIDSet))
+	for id := range userIDSet {
+		userIDs = append(userIDs, id)
+	}
+	if len(userIDs) > 0 {
+		var users []models.User
+		config.DB.Select("id, full_name, email").Where("id IN ?", userIDs).Find(&users)
+		for _, u := range users {
+			userMap[u.ID] = u
+		}
+	}
+
+	// Batch fetch Questions (1 query)
+	questionMap := make(map[string]models.Question)
+	questionIDs := make([]string, 0, len(questionIDSet))
+	for id := range questionIDSet {
+		questionIDs = append(questionIDs, id)
+	}
+	if len(questionIDs) > 0 {
+		var questions []models.Question
+		config.DB.Select("id, content, solution_guide, general_method, point").Where("id IN ?", questionIDs).Find(&questions)
+		for _, q := range questions {
+			questionMap[q.ID.String()] = q
+		}
+	}
+
+	response := make([]AppealResponse, 0, len(pendingItems))
+	for _, item := range pendingItems {
+		sub := item.sub
+		qID := item.qID
+		ans := item.ans
+		exam := examMap[sub.ExamID]
+		q := questionMap[qID]
 
 		studentName := "Học sinh"
 		studentEmail := ""
 		studentIDStr := ""
 		if sub.UserID != nil {
 			studentIDStr = sub.UserID.String()
-			var user models.User
-			if err := config.DB.First(&user, "id = ?", *sub.UserID).Error; err == nil {
-				if user.FullName != "" {
-					studentName = user.FullName
+			if u, ok := userMap[*sub.UserID]; ok {
+				if u.FullName != "" {
+					studentName = u.FullName
 				}
-				studentEmail = user.Email
+				studentEmail = u.Email
 			}
 		}
 
-		for qID, ans := range answersMap {
-			if ans.Appeal.IsAppealed && ans.Appeal.Status == models.AppealPending {
-				var q models.Question
-				config.DB.First(&q, "id = ?", qID)
-
-				response = append(response, AppealResponse{
-					SubmissionID:  sub.ID.String(),
-					QuestionID:    qID,
-					ExamName:      exam.Title,
-					StudentID:    studentIDStr,
-					StudentName:  studentName,
-					StudentEmail: studentEmail,
-					SubmittedAt:  sub.SubmittedAt,
-					Question:      q.Content,
-					StudentAnswer: ans.StudentAnswer,
-					AIExplanation: ans.AIExplanation,
-					Score:         ans.Score,
-					MaxScore:      float64(q.DifficultyPoint),
-					AppealMessage: ans.Appeal.Message,
-				})
-			}
-		}
+		response = append(response, AppealResponse{
+			SubmissionID:  sub.ID.String(),
+			QuestionID:    qID,
+			ExamName:      exam.Title,
+			StudentID:    studentIDStr,
+			StudentName:  studentName,
+			StudentEmail: studentEmail,
+			SubmittedAt:  sub.SubmittedAt,
+			Question:      q.Content,
+			StudentAnswer: ans.StudentAnswer,
+			AIExplanation: ans.AIExplanation,
+			Score:         ans.Score,
+			MaxScore:      float64(q.DifficultyPoint),
+			AppealMessage: ans.Appeal.Message,
+		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": response})
@@ -727,34 +808,88 @@ type NeedsReviewResponse struct {
 
 func GetNeedsReviewSubmissions(c *gin.Context) {
 	var submissions []models.Submission
-	if err := config.DB.Where("status = ?", models.StatusNeedsReview).Order("created_at desc").Find(&submissions).Error; err != nil {
+	limit := 50
+	if l := c.Query("limit"); l != "" {
+		if parsedL, err := strconv.Atoi(l); err == nil && parsedL > 0 && parsedL <= 100 {
+			limit = parsedL
+		}
+	}
+	offset := 0
+	if p := c.Query("page"); p != "" {
+		if parsedP, err := strconv.Atoi(p); err == nil && parsedP > 1 {
+			offset = (parsedP - 1) * limit
+		}
+	}
+
+	if err := config.DB.Select("id, exam_id, user_id, submitted_at, created_at, status").
+		Where("status = ?", models.StatusNeedsReview).
+		Order("created_at desc").
+		Limit(limit).Offset(offset).Find(&submissions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch submissions for review"})
 		return
 	}
 
-	var response []NeedsReviewResponse
+	if len(submissions) == 0 {
+		c.JSON(http.StatusOK, gin.H{"status": "success", "data": []NeedsReviewResponse{}})
+		return
+	}
+
+	// Batch load exams & users
+	examIDSet := make(map[uuid.UUID]struct{})
+	userIDSet := make(map[uuid.UUID]struct{})
 	for _, sub := range submissions {
-		var exam models.Exam
-		config.DB.First(&exam, "id = ?", sub.ExamID)
+		examIDSet[sub.ExamID] = struct{}{}
+		if sub.UserID != nil {
+			userIDSet[*sub.UserID] = struct{}{}
+		}
+	}
+
+	examMap := make(map[uuid.UUID]models.Exam)
+	examIDs := make([]uuid.UUID, 0, len(examIDSet))
+	for id := range examIDSet {
+		examIDs = append(examIDs, id)
+	}
+	if len(examIDs) > 0 {
+		var exams []models.Exam
+		config.DB.Select("id, title, exam_code").Where("id IN ?", examIDs).Find(&exams)
+		for _, e := range exams {
+			examMap[e.ID] = e
+		}
+	}
+
+	userMap := make(map[uuid.UUID]models.User)
+	userIDs := make([]uuid.UUID, 0, len(userIDSet))
+	for id := range userIDSet {
+		userIDs = append(userIDs, id)
+	}
+	if len(userIDs) > 0 {
+		var users []models.User
+		config.DB.Select("id, full_name, email").Where("id IN ?", userIDs).Find(&users)
+		for _, u := range users {
+			userMap[u.ID] = u
+		}
+	}
+
+	response := make([]NeedsReviewResponse, 0, len(submissions))
+	for _, sub := range submissions {
+		exam := examMap[sub.ExamID]
 
 		studentName := "Học sinh"
 		studentEmail := ""
+		studentIDStr := ""
 		if sub.UserID != nil {
-			var user models.User
-			if err := config.DB.First(&user, "id = ?", *sub.UserID).Error; err == nil {
-				studentName = user.FullName
-				studentEmail = user.Email
+			studentIDStr = sub.UserID.String()
+			if u, ok := userMap[*sub.UserID]; ok {
+				if u.FullName != "" {
+					studentName = u.FullName
+				}
+				studentEmail = u.Email
 			}
 		}
 
 		submittedTime := time.Now()
 		if sub.SubmittedAt != nil {
 			submittedTime = *sub.SubmittedAt
-		}
-
-		studentIDStr := ""
-		if sub.UserID != nil {
-			studentIDStr = sub.UserID.String()
 		}
 
 		response = append(response, NeedsReviewResponse{

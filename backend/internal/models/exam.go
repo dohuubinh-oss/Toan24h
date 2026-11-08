@@ -13,9 +13,9 @@ type Exam struct {
 	ID          uuid.UUID      `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 	Title       string         `gorm:"type:varchar(255);not null" json:"title"`
 	ExamCode    string         `gorm:"type:varchar(50);not null" json:"examCode"`
-	Cate        string         `gorm:"type:varchar(50);not null;default:'exam'" json:"cate"` // 'exam' or 'practice'
-	Type        string         `gorm:"type:varchar(50);not null" json:"type"` // e.g. midterm, final, etc.
-	Grade       string         `gorm:"type:varchar(50);not null" json:"grade"`
+	Cate        string         `gorm:"type:varchar(50);not null;default:'exam';index" json:"cate"` // 'exam' or 'practice'
+	Type        string         `gorm:"type:varchar(50);not null;index:idx_exam_grade_type,priority:2" json:"type"` // e.g. midterm, final, etc.
+	Grade       string         `gorm:"type:varchar(50);not null;index:idx_exam_grade_type,priority:1" json:"grade"`
 	Duration    int            `gorm:"not null;default:0" json:"duration"` // in minutes
 	DiffScore   float64        `gorm:"not null;default:0" json:"diffScore"`
 	QuestionIDs pq.StringArray `gorm:"type:text[]" json:"questionIds"`

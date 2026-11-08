@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,7 +26,7 @@ func NewUserHandler(db *gorm.DB) *UserHandler {
 	return &UserHandler{db: db}
 }
 
-// GetUsers trả về danh sách user cho admin dashboard
+// GetUsers trả về danh sách user cho admin dashboard với phân trang an toàn (15 users/trang)
 func (h *UserHandler) GetUsers(c *gin.Context) {
 	// Lấy params
 	q := c.Query("q")
@@ -41,8 +42,36 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 		query = query.Where("role = ?", role)
 	}
 
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi đếm số lượng người dùng"})
+		return
+	}
+
+	limit := 15 // Mặc định 15 người dùng/trang theo cấu hình an toàn
+	if l := c.Query("limit"); l != "" {
+		if parsedL, err := strconv.Atoi(l); err == nil && parsedL > 0 {
+			if parsedL > 100 {
+				limit = 100
+			} else {
+				limit = parsedL
+			}
+		}
+	} else if c.Query("all") == "true" {
+		limit = 500
+	}
+
+	page := 1
+	if p := c.Query("page"); p != "" {
+		if parsedP, err := strconv.Atoi(p); err == nil && parsedP > 0 {
+			page = parsedP
+		}
+	}
+
+	offset := (page - 1) * limit
+
 	var users []models.User
-	if err := query.Order("created_at desc").Find(&users).Error; err != nil {
+	if err := query.Order("created_at desc").Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi lấy danh sách người dùng"})
 		return
 	}
@@ -53,6 +82,27 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 		if users[i].Status == "active" && users[i].ExpiresAt != nil && users[i].ExpiresAt.Before(now) {
 			users[i].Status = "expired"
 		}
+	}
+
+	totalPages := (total + int64(limit) - 1) / int64(limit)
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
+	c.Header("X-Total-Count", strconv.FormatInt(total, 10))
+	c.Header("X-Page", strconv.Itoa(page))
+	c.Header("X-Limit", strconv.Itoa(limit))
+	c.Header("X-Total-Pages", strconv.FormatInt(totalPages, 10))
+
+	if c.Query("format") == "paginated" {
+		c.JSON(http.StatusOK, gin.H{
+			"users":      users,
+			"total":      total,
+			"page":       page,
+			"limit":      limit,
+			"totalPages": totalPages,
+		})
+		return
 	}
 
 	c.JSON(http.StatusOK, users)

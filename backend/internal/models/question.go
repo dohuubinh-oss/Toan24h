@@ -10,18 +10,18 @@ import (
 // Question represents a detailed math question in the system.
 type Question struct {
 	ID              uuid.UUID      `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
-	ParentID        *uuid.UUID     `gorm:"type:uuid;index" json:"parentId,omitempty"` // Dùng cho 'group' (Câu hỏi con tham chiếu câu hỏi cha)
+	ParentID        *uuid.UUID     `gorm:"type:uuid;index;index:idx_question_parent_grade_cate,priority:1" json:"parentId,omitempty"` // Dùng cho 'group' (Câu hỏi con tham chiếu câu hỏi cha)
 	SubQuestions    []Question     `gorm:"foreignKey:ParentID;constraint:OnDelete:CASCADE" json:"subQuestions,omitempty"` // Dùng cho 'group' để tự động nạp các câu con
 
 	GgDrive         string         `gorm:"type:text;column:gg_drive" json:"gg_drive"` // Link Google Drive gốc
 	BookName        string         `gorm:"-" json:"bookName,omitempty"`               // Backward compatibility
-	Cate            string         `gorm:"type:varchar(50);not null;default:'exam';index" json:"cate"` // 'exam' or 'practice'
+	Cate            string         `gorm:"type:varchar(50);not null;default:'exam';index;index:idx_question_parent_grade_cate,priority:3" json:"cate"` // 'exam' or 'practice'
 	TypeQuestion    string         `gorm:"type:varchar(20);not null" json:"typeQuestion"` // 'group', 'single'
 	Content         string         `gorm:"type:text;not null" json:"content"`
 	DiagramSvg      string         `gorm:"type:text;column:diagram_svg" json:"diagram_svg,omitempty"` // Hình vẽ minh họa SVG hoặc URL ảnh
 	Type            string         `gorm:"type:varchar(50);not null" json:"type"`         // 'Trắc nghiệm', 'Tự luận'
 	
-	Grade           int            `gorm:"not null;index" json:"grade"`
+	Grade           int            `gorm:"not null;index;index:idx_question_parent_grade_cate,priority:2" json:"grade"`
 	Topic           string         `gorm:"type:varchar(255);not null;index" json:"topic"`
 	DifficultyLevel string         `gorm:"type:varchar(50);not null;index" json:"difficultyLevel"`
 	DifficultyPoint float32        `gorm:"not null" json:"difficultyPoint"`
@@ -38,7 +38,7 @@ type Question struct {
 	GeneralMethod   string         `gorm:"type:text" json:"generalMethod"`
 	Mistakes        string         `gorm:"type:text" json:"mistakes"`
 
-	IsReported      bool           `gorm:"default:false" json:"isReported"`
+	IsReported      bool           `gorm:"default:false;index" json:"isReported"`
 	ReportMessage   string         `gorm:"type:text" json:"reportMessage"`
 
 	CreatedAt       time.Time      `json:"createdAt"`

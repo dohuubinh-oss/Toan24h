@@ -139,7 +139,7 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 			cleanRefCode := strings.ToUpper(strings.TrimSpace(req.RefCode))
 			if cleanRefCode != "" {
 				var v models.Voucher
-				if err := h.db.Where("UPPER(code) = ?", cleanRefCode).First(&v).Error; err == nil {
+				if err := h.db.Where("code = ?", cleanRefCode).First(&v).Error; err == nil {
 					if v.IsValid() {
 						isSelfReferral := false
 						if v.AffiliateID != nil {

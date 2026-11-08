@@ -250,6 +250,7 @@ func BulkCreateQuestions(c *gin.Context) {
 			}
 		}
 
+		var groupChildQuestions []models.Question
 		for _, detail := range group.Questions {
 			tagsBytes, _ := json.Marshal(detail.Tags)
 			optionsBytes, _ := json.Marshal(detail.Options)
@@ -310,12 +311,16 @@ func BulkCreateQuestions(c *gin.Context) {
 				Mistakes:        processHtmlImages(detail.Mistakes, detail.Grade),
 			}
 
-			if err := tx.Create(&childQ).Error; err != nil {
+			groupChildQuestions = append(groupChildQuestions, childQ)
+		}
+
+		if len(groupChildQuestions) > 0 {
+			if err := tx.CreateInBatches(groupChildQuestions, 50).Error; err != nil {
 				tx.Rollback()
-				c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: "Failed to create question: " + err.Error()})
+				c.JSON(http.StatusInternalServerError, APIResponse{Status: "error", Error: "Failed to create questions: " + err.Error()})
 				return
 			}
-			createdCount++
+			createdCount += len(groupChildQuestions)
 		}
 	}
 

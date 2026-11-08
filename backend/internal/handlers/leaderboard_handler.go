@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/modeptrai/exam-model-backend/internal/cache"
 	"github.com/modeptrai/exam-model-backend/internal/config"
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"gorm.io/gorm"
@@ -63,21 +64,29 @@ func (h *LeaderboardHandler) GetWeeklyLeaderboard(c *gin.Context) {
 		}
 	}
 
-	query := h.DB.Model(&models.User{}).Where("role = ? AND status = ?", "student", "active")
-	if grade != "" {
-		query = query.Where("grade = ?", grade)
-	}
-
+	// Cache-aside lookup for top 10 leaderboard
+	cacheKey := cache.BuildLeaderboardCacheKey(grade)
 	var users []models.User
-	if err := query.Order("weekly_xp DESC, lifetime_xp DESC, updated_at ASC").Limit(limit).Find(&users).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to fetch leaderboard"})
-		return
+	if !cache.Get(c.Request.Context(), cacheKey, &users) {
+		query := h.DB.Model(&models.User{}).Where("role = ? AND status = ?", "student", "active")
+		if grade != "" {
+			query = query.Where("grade = ?", grade)
+		}
+
+		if err := query.Order("weekly_xp DESC, lifetime_xp DESC, updated_at ASC").Limit(limit).Find(&users).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to fetch leaderboard"})
+			return
+		}
+
+		_ = cache.Set(c.Request.Context(), cacheKey, users, cache.LeaderboardTTL)
 	}
 
 	entries := make([]LeaderboardEntry, len(users))
+	var currentUserRank *LeaderboardEntry
+
 	for i, u := range users {
 		isCurrent := currentUserID != nil && u.ID == *currentUserID
-		entries[i] = LeaderboardEntry{
+		entry := LeaderboardEntry{
 			ID:            u.ID,
 			Rank:          i + 1,
 			Name:          u.FullName,
@@ -88,11 +97,15 @@ func (h *LeaderboardHandler) GetWeeklyLeaderboard(c *gin.Context) {
 			IsCurrentUser: isCurrent,
 			Grade:         u.Grade,
 		}
+		entries[i] = entry
+		if isCurrent {
+			curCopy := entry
+			currentUserRank = &curCopy
+		}
 	}
 
-	// Find current user's actual rank if not in top 10 or to return explicit rank
-	var currentUserRank *LeaderboardEntry
-	if currentUserID != nil {
+	// Find current user's actual rank if not in top 10
+	if currentUserID != nil && currentUserRank == nil {
 		var user models.User
 		if err := h.DB.First(&user, "id = ?", *currentUserID).Error; err == nil {
 			userGrade := user.Grade

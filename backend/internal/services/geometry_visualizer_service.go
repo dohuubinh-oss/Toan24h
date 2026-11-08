@@ -15,6 +15,8 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
+var markdownBlockRegex = regexp.MustCompile("(?s)```(?:xml|svg|json)?\\s*([\\s\\S]*?)\\s*```")
+
 // GeometryVisualizerRequest contains parameters for dedicated AI geometry illustration
 type GeometryVisualizerRequest struct {
 	Content       string `json:"content"`        // Đề bài hoặc câu hỏi
@@ -28,8 +30,7 @@ func ExtractCleanSVG(raw string) string {
 	cleaned := strings.TrimSpace(raw)
 	// Remove markdown blocks ```xml ... ``` or ```svg ... ``` or ```json ... ```
 	if strings.Contains(cleaned, "```") {
-		re := regexp.MustCompile("(?s)```(?:xml|svg|json)?\\s*([\\s\\S]*?)\\s*```")
-		matches := re.FindAllStringSubmatch(cleaned, -1)
+		matches := markdownBlockRegex.FindAllStringSubmatch(cleaned, -1)
 		for _, m := range matches {
 			if len(m) > 1 && strings.Contains(m[1], "<svg") {
 				cleaned = m[1]

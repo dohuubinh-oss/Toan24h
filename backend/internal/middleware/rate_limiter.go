@@ -20,6 +20,7 @@ type inMemoryRateEntry struct {
 var (
 	localRateStore sync.Map // key -> inMemoryRateEntry
 	localRateMu    sync.Mutex
+	lastLocalClean time.Time
 )
 
 // RateLimiter trả về Gin middleware giới hạn số lượt request tối đa theo Client IP hoặc User ID
@@ -76,6 +77,20 @@ func checkLocalRateLimit(key string, maxRequests int, window time.Duration) bool
 	defer localRateMu.Unlock()
 
 	now := time.Now()
+
+	// Dọn dẹp định kỳ các bản ghi đã hết hạn để chống rò rỉ RAM (Memory Leak Prevention)
+	if now.Sub(lastLocalClean) > 5*time.Minute {
+		lastLocalClean = now
+		localRateStore.Range(func(k, v any) bool {
+			if e, ok := v.(inMemoryRateEntry); ok {
+				if now.Sub(e.windowStart) > window*2 {
+					localRateStore.Delete(k)
+				}
+			}
+			return true
+		})
+	}
+
 	val, ok := localRateStore.Load(key)
 	if !ok {
 		localRateStore.Store(key, inMemoryRateEntry{count: 1, windowStart: now})
