@@ -39,7 +39,7 @@ export default function StudentBottomNav() {
               className={`flex-1 min-h-[44px] min-w-[44px] flex flex-col items-center justify-center gap-1 py-1 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                 isActive
                   ? 'text-primary font-bold'
-                  : 'text-slate-500 hover:text-slate-800 font-medium'
+                  : 'text-slate-600 hover:text-slate-900 font-medium'
               }`}
             >
               <Icon className="w-5 h-5" aria-hidden="true" />

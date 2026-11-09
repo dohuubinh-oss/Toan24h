@@ -12,16 +12,16 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading = false, children, disabled, ...props }, ref) => {
-    const baseStyles = "inline-flex items-center justify-center rounded-xl font-bold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+    const baseStyles = "inline-flex items-center justify-center rounded-xl font-bold transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
     
     const variants = {
-      primary: "bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 focus:ring-primary",
-      secondary: "bg-slate-100 hover:bg-slate-200 text-slate-700    focus:ring-slate-400",
-      outline: "border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700     focus:ring-slate-400",
-      ghost: "hover:bg-slate-100 text-slate-700   focus:ring-slate-400",
-      danger: "bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 focus:ring-red-500",
-      success: "bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 focus:ring-emerald-500",
-      warning: "bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200 focus:ring-amber-500",
+      primary: "bg-primary hover:bg-blue-700 text-white shadow-sm hover:shadow focus-visible:ring-primary",
+      secondary: "bg-slate-100 hover:bg-slate-200 text-slate-700 focus-visible:ring-slate-400",
+      outline: "border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 focus-visible:ring-slate-400",
+      ghost: "hover:bg-slate-100 text-slate-700 focus-visible:ring-slate-400",
+      danger: "bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 focus-visible:ring-red-500",
+      success: "bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 focus-visible:ring-emerald-500",
+      warning: "bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200 focus-visible:ring-amber-500",
     }
 
     const sizes = {
