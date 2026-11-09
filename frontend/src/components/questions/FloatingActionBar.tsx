@@ -12,30 +12,9 @@ interface FloatingActionBarProps {
 export default function FloatingActionBar({ selectedIds, onClose, onSelectAll }: FloatingActionBarProps) {
   const router = useRouter();
   const { setSelectedQuestionIds } = useExam();
-  const scrollToBottom = () => {
-    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
-  };
   
   if (selectedIds.length === 0) {
-    return (
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white border border-slate-200 shadow-xl rounded-full px-4 py-2 flex items-center gap-4 z-50 animate-in slide-in-from-bottom-10 fade-in">
-        <button 
-          onClick={onSelectAll}
-          className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-primary transition-colors whitespace-nowrap"
-        >
-          <CheckSquare className="w-4 h-4" />
-          Chọn tất cả trên trang
-        </button>
-        <div className="h-4 w-px bg-slate-200"></div>
-        <button 
-          onClick={scrollToBottom}
-          className="flex items-center justify-center p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-full transition-colors"
-          title="Cuối trang"
-        >
-          <ArrowDownToLine className="w-4 h-4" />
-        </button>
-      </div>
-    );
+    return null;
   }
 
   const handleCreateExam = () => {
@@ -45,45 +24,40 @@ export default function FloatingActionBar({ selectedIds, onClose, onSelectAll }:
   };
 
   return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white border border-slate-200 shadow-2xl rounded-2xl px-6 py-3 flex items-center gap-6 z-50 animate-in slide-in-from-bottom-10 fade-in">
-      <div className="flex items-center gap-3">
-        <span className="w-6 h-6 rounded-full bg-primary text-white text-[10px] flex items-center justify-center font-bold">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white border border-slate-200 shadow-2xl rounded-2xl px-5 py-3 flex items-center gap-4 sm:gap-6 z-50 animate-in slide-in-from-bottom-6 fade-in max-w-[95vw] overflow-x-auto">
+      <div className="flex items-center gap-2.5 shrink-0">
+        <span className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">
           {selectedIds.length}
         </span>
-        <span className="text-sm font-semibold text-slate-700 whitespace-nowrap">Đã chọn {selectedIds.length} câu hỏi</span>
+        <span className="text-sm font-semibold text-slate-800 whitespace-nowrap">Đã chọn {selectedIds.length} câu</span>
       </div>
-      <div className="h-6 w-px bg-slate-200"></div>
-      <div className="flex items-center gap-4">
+      <div className="h-5 w-px bg-slate-200 shrink-0" aria-hidden="true" />
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <button 
+          type="button"
           onClick={handleCreateExam}
-          className="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-primary transition-colors whitespace-nowrap"
+          className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-primary/20 transition-all cursor-pointer whitespace-nowrap"
         >
-          <Sparkles className="w-5 h-5" />
-          Tạo đề thi
+          <Sparkles className="w-4 h-4" />
+          <span>Tạo đề thi</span>
         </button>
         {onSelectAll && (
           <button 
+            type="button"
             onClick={onSelectAll}
-            className="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-primary transition-colors whitespace-nowrap"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-primary hover:bg-slate-100 rounded-xl transition-colors cursor-pointer whitespace-nowrap"
           >
-            <CheckSquare className="w-5 h-5" />
-            Chọn tất cả
+            <CheckSquare className="w-4 h-4" />
+            <span className="hidden sm:inline">Chọn tất cả</span>
           </button>
         )}
         <button 
+          type="button"
           onClick={onClose}
-          className="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-red-600 transition-colors whitespace-nowrap"
+          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer whitespace-nowrap"
         >
-          <X className="w-5 h-5" />
-          Bỏ chọn
-        </button>
-        <div className="h-5 w-px bg-slate-200 ml-1"></div>
-        <button 
-          onClick={scrollToBottom}
-          className="flex items-center justify-center p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-full transition-colors"
-          title="Cuối trang"
-        >
-          <ArrowDownToLine className="w-5 h-5" />
+          <X className="w-4 h-4" />
+          <span>Bỏ chọn</span>
         </button>
       </div>
     </div>

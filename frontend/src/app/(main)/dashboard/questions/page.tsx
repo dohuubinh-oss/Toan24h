@@ -7,7 +7,7 @@ import ContentQuestion from '@/components/questions/ContentQuestion';
 import QuestionSkeleton from '@/components/questions/QuestionSkeleton';
 import FloatingActionBar from '@/components/questions/FloatingActionBar';
 import { Pagination } from '@/components/ui/Pagination';
-import { ChevronRight, Search, Plus, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, Search, Plus, RefreshCw, CheckCircle2, CheckSquare } from 'lucide-react';
 import Link from 'next/link';
 import { getQuestions, deleteQuestion } from '@/lib/api';
 import { extractDiagramSvg } from '@/lib/diagram-utils';
@@ -129,21 +129,34 @@ function QuestionsPageContent() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                <span className="hover:text-primary cursor-pointer transition-colors">Trang chủ</span>
+              <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                <Link href="/dashboard" className="hover:text-primary transition-colors">Trang chủ</Link>
                 <ChevronRight className="w-3 h-3" />
                 <span className="text-primary font-bold">Ngân hàng câu hỏi</span>
-              </div>
+              </nav>
               <h1 className="text-2xl font-bold text-slate-900">Danh sách Câu hỏi <span className="text-slate-500 font-normal text-lg">( {totalVisible} câu hỏi )</span></h1>
             </div>
             
-            <Link 
-              href="/dashboard/questions/create" 
-              className="px-4 py-2 bg-primary text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-sm min-h-[44px]"
-            >
-              <Plus size={18} />
-              Thêm câu hỏi
-            </Link>
+            <div className="flex items-center gap-3">
+              {questions.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleSelectAllOnPage}
+                  className="px-3.5 py-2 bg-white border border-slate-200 hover:border-primary/40 text-slate-700 hover:text-primary font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-2xs text-xs sm:text-sm min-h-[44px] cursor-pointer"
+                >
+                  <CheckSquare size={16} />
+                  <span className="hidden sm:inline">Chọn tất cả trang này</span>
+                  <span className="sm:hidden">Chọn tất cả</span>
+                </button>
+              )}
+              <Link 
+                href="/dashboard/questions/create" 
+                className="px-4 py-2 bg-primary text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-sm min-h-[44px]"
+              >
+                <Plus size={18} />
+                Thêm câu hỏi
+              </Link>
+            </div>
           </div>
 
           {/* Swap Question Banner */}
@@ -207,7 +220,7 @@ function QuestionsPageContent() {
                             Thay thế cho câu ID: <code className="font-mono font-bold bg-amber-100 px-1 py-0.5 rounded text-amber-900">{swapFrom}</code>
                           </span>
                           {isCurrentInExam ? (
-                            <span className="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                            <span className="text-xs font-medium text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
                               Đã có trong đề thi này
                             </span>
                           ) : (
