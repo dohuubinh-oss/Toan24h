@@ -19,11 +19,6 @@ interface JsonInputSectionProps {
   onNext?: () => void;
   onPrev?: () => void;
   initialValue?: string;
-  collapsible?: boolean;
-  defaultOpen?: boolean;
-  isOpen?: boolean;
-  onToggleOpen?: (open: boolean) => void;
-  subtitle?: string;
 }
 
 export const QUESTION_JSON_HINT = `[
@@ -179,12 +174,7 @@ QUY TẮC BẮT BUỘC (TUYỆT ĐỐI KHÔNG CÓ TRƯỜNG HỢP NGOẠI LỆ):
 export default function JsonInputSection({
   onProcessJson = () => {},
   onAiExtract,
-  initialValue = '',
-  collapsible = false,
-  defaultOpen = false,
-  isOpen,
-  onToggleOpen,
-  subtitle
+  initialValue = ''
 }: JsonInputSectionProps) {
   const handleProcess = (jsonInput: string) => {
     const parsed = safeJsonParse<QuestionBlock[]>(jsonInput);
@@ -300,11 +290,6 @@ export default function JsonInputSection({
         onAiExtract={onAiExtract}
         copyPromptText={QUESTION_AI_PROMPT_TEMPLATE}
         initialValue={initialValue}
-        collapsible={collapsible}
-        defaultOpen={defaultOpen}
-        isOpen={isOpen}
-        onToggleOpen={onToggleOpen}
-        subtitle={subtitle}
       />
     </section>
   )
