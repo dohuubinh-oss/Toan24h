@@ -8,7 +8,6 @@ import ExamProgressNav from '@/components/exam/taking/ExamProgressNav'
 import QuestionMapSidebar, { QuestionMapItem, QuestionStatus } from '@/components/exam/taking/QuestionMapSidebar'
 import MultipleChoiceQuestion from '@/components/exam/taking/MultipleChoiceQuestion'
 import EssayQuestion from '@/components/exam/taking/EssayQuestion'
-import AIHintPanel from '@/components/exam/taking/AIHintPanel'
 import MathText from '@/components/ui/MathText'
 import { getExamResultById, submitTeacherGradingReview } from '@/lib/api'
 import { sortExamQuestions } from '@/lib/exam-utils'
@@ -490,7 +489,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
       {/* Attempt Switcher & Retake Action Bar */}
       {resultData?.attempts && resultData.attempts.length > 0 && (
-        <div className="bg-white border-b border-slate-200/80 px-4 md:px-8 py-2.5 flex flex-wrap items-center justify-start gap-3 sm:gap-4 shadow-2xs z-30">
+        <div className="bg-white border-b border-slate-200/80 px-4 md:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3 sm:gap-4 shadow-2xs z-30">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:inline">Lần làm bài:</span>
             <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
@@ -507,7 +506,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                       isCurrent
-                        ? 'bg-white text-blue-600 shadow-xs'
+                        ? 'bg-white text-primary shadow-xs font-bold'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                     }`}
                   >
@@ -536,7 +535,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                 sessionStorage.removeItem(`exam_end_time_${mappedData.exam.id}`)
                 router.push(`/exam/${mappedData.exam.id}/take`)
               }}
-              className="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs md:text-sm font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-primary border border-primary/20 rounded-xl text-xs md:text-sm font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Làm lại đề thi</span>
@@ -546,14 +545,14 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
       )}
 
       {/* Main Workspace Area */}
-      <div className="flex-1 flex flex-col overflow-hidden relative pb-[88px] w-full">
+      <div className="flex-1 flex flex-col overflow-hidden relative pb-16 sm:pb-20 w-full">
         <div className="flex-1 flex overflow-hidden relative w-full">
           {/* Left Navigation Overlay */}
           {currentQuestionIndex > 0 && (
             <button 
               type="button"
               onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
-              className="absolute left-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-start pl-2 md:pl-4 opacity-0 hover:opacity-100 focus-visible:opacity-100 focus:outline-none hover:bg-gradient-to-r hover:from-slate-200/50 hover:to-transparent transition-all group"
+              className="absolute left-0 top-0 bottom-16 sm:bottom-20 w-12 md:w-24 z-10 flex items-center justify-start pl-2 md:pl-4 opacity-0 hover:opacity-100 focus-visible:opacity-100 focus:outline-none hover:bg-gradient-to-r hover:from-slate-200/50 hover:to-transparent transition-all group"
               aria-label="Câu trước"
             >
               <div className="w-10 h-10 rounded-full bg-white border border-slate-200/80 shadow-md flex items-center justify-center text-slate-600 group-hover:text-primary group-focus-visible:text-primary transition-colors">
@@ -567,7 +566,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
             <button 
               type="button"
               onClick={() => setCurrentQuestionIndex(prev => Math.min(mappedData.questions.length - 1, prev + 1))}
-              className="absolute right-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 focus-visible:opacity-100 focus:outline-none hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
+              className="absolute right-0 top-0 bottom-16 sm:bottom-20 w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 focus-visible:opacity-100 focus:outline-none hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
               aria-label="Câu tiếp theo"
             >
               <div className="w-10 h-10 rounded-full bg-white border border-slate-200/80 shadow-md flex items-center justify-center text-slate-600 group-hover:text-primary group-focus-visible:text-primary transition-colors">
@@ -653,11 +652,11 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
             {/* Inline Teacher Grading Control Box */}
             {isTeacherMode && currentQuestion && (
-              <div className="max-w-4xl mx-auto my-6 p-6 bg-indigo-50 border-2 border-indigo-200 rounded-2xl shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
+              <div className="max-w-4xl mx-auto my-6 p-5 sm:p-6 bg-slate-50 border border-slate-200/90 rounded-2xl shadow-xs space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-indigo-600" />
-                    <h4 className="font-bold text-indigo-950 text-base">Giáo viên chấm điểm câu này:</h4>
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    <h4 className="font-bold text-slate-900 text-base">Giáo viên chấm điểm câu này:</h4>
                   </div>
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-semibold text-slate-700">Điểm (Tối đa {currentQuestion.difficultyPoint || 10}):</label>
@@ -671,7 +670,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                         const val = Number(e.target.value)
                         setTeacherScores(prev => ({ ...prev, [currentQuestion.id]: val }))
                       }}
-                      className="w-24 px-3 py-1.5 border border-indigo-300 rounded-xl bg-white font-bold text-slate-900"
+                      className="w-24 px-3 py-1.5 border border-slate-300 rounded-xl bg-white font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     />
                   </div>
                 </div>
@@ -685,22 +684,12 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                       setTeacherFeedbacks(prev => ({ ...prev, [currentQuestion.id]: val }))
                     }}
                     placeholder="Nhập lý do trừ điểm hoặc ghi chú..."
-                    className="w-full px-4 py-2 border border-indigo-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                   />
                 </div>
               </div>
             )}
           </div>
-
-          {/* AI Hint Panel */}
-          <AIHintPanel 
-            isOpen={false} 
-            onClose={() => setIsAiHintOpen(false)} 
-            question={resultData?.questions?.find((q: any) => q.id === currentQuestion?.id) || null}
-            unlockedLevel={10}
-            onUnlock={async () => true}
-            readonlyMode={true}
-          />
 
           {/* Question Map Sidebar */}
           <QuestionMapSidebar 
@@ -717,70 +706,65 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* Result Footer matching Take Footer layout */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-6 z-[100] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 sm:px-6 sm:py-3.5 z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+          {/* Navigation buttons */}
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             <button
+              type="button"
               onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
               disabled={currentQuestionIndex === 0}
-              className="flex items-center gap-2 px-5 py-3 text-slate-600 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 text-slate-700 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap cursor-pointer shrink-0"
+              aria-label="Câu trước"
             >
-              <ChevronLeft className="w-5 h-5" />
-              Câu trước
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+              <span className="hidden sm:inline">Câu trước</span>
+              <span className="sm:hidden">Trước</span>
             </button>
-            <div className="h-6 w-px bg-slate-200"></div>
+            <div className="h-5 sm:h-6 w-px bg-slate-200 shrink-0" aria-hidden="true" />
             <button
+              type="button"
               onClick={() => setCurrentQuestionIndex(prev => Math.min(mappedData.questions.length - 1, prev + 1))}
               disabled={currentQuestionIndex >= mappedData.questions.length - 1}
-              className="flex items-center gap-2 px-5 py-3 text-slate-600 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 text-slate-700 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap cursor-pointer shrink-0"
+              aria-label="Câu tiếp theo"
             >
-              Câu tiếp theo
-              <ChevronRight className="w-5 h-5" />
+              <span className="hidden sm:inline">Câu tiếp theo</span>
+              <span className="sm:hidden">Tiếp</span>
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
             </button>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {isTeacherMode ? (
               <button
+                type="button"
                 onClick={handleTeacherCompleteGrading}
                 disabled={isSubmittingReview}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/25 transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50 text-xs sm:text-sm cursor-pointer"
               >
-                {isSubmittingReview ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                <span>Lưu & Hoàn tất chấm điểm</span>
+                {isSubmittingReview ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <Save className="w-4 h-4 sm:w-5 sm:h-5" />}
+                <span>Lưu & Hoàn tất chấm</span>
               </button>
-            ) : isVip ? (
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsSummaryModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer active:scale-95 border border-primary/20"
-                >
-                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-                  <span>Xem Nhận xét</span>
-                </button>
-                <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-900 rounded-xl font-bold text-sm sm:text-base border border-amber-200/80 shadow-xs">
-                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" />
-                  <span>Điểm tư duy: {avgReasoningScore.toFixed(1)}/10</span>
-                  <span className="text-[10px] uppercase font-black bg-amber-500 text-white px-2 py-0.5 rounded-full shadow-xs ml-1">
-                    VIP
-                  </span>
-                </div>
-              </div>
             ) : (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setIsSummaryModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer active:scale-95 border border-primary/20"
+                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer active:scale-95 border border-primary/20"
                 >
-                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-                  <span>Xem Nhận xét</span>
+                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary animate-pulse" />
+                  <span>Xem Nhận xét AI</span>
                 </button>
-                <div className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-700 rounded-xl font-bold text-base border border-blue-100 shadow-xs">
-                  <Award className="w-5 h-5 text-blue-600" />
-                  <span>Tổng điểm: {standardScore.toFixed(1)}/10</span>
-                </div>
+                {isVip && (
+                  <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-amber-50 text-amber-900 rounded-xl font-bold text-xs sm:text-sm border border-amber-200/80 shadow-xs">
+                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 shrink-0" />
+                    <span>Điểm tư duy: {avgReasoningScore.toFixed(1)}/10</span>
+                    <span className="text-[10px] uppercase font-black bg-amber-500 text-white px-1.5 py-0.5 rounded shadow-xs ml-0.5">
+                      VIP
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
