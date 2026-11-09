@@ -468,7 +468,6 @@ function CreateBlogPostContent() {
 
     const tocBlock = `<div class="toc-box bg-slate-50 border border-slate-200/90 rounded-2xl p-4 sm:p-5 my-5 shadow-xs">
   <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary border-b border-slate-200/80 pb-2.5 mb-3">
-    <span>📋</span>
     <span>MỤC LỤC BÀI VIẾT</span>
     <span class="text-xs font-normal text-slate-500">(${headings.length} mục)</span>
   </div>

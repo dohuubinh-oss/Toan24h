@@ -12,7 +12,7 @@ export default function HomeFooter() {
             <div className="mb-6">
               <Logo size="md" />
             </div>
-            <p className="text-slate-500 max-w-sm mb-6 leading-relaxed text-sm">
+            <p className="text-slate-600 max-w-sm mb-6 leading-relaxed text-sm">
               Nền tảng luyện thi và học Toán THCS bứt phá điểm số từ lớp 6 đến lớp 9, giúp học sinh tự tin chinh phục các kỳ thi.
             </p>
             <div className="flex gap-4">
@@ -44,7 +44,7 @@ export default function HomeFooter() {
 
           <div>
             <h4 className="font-bold mb-6 text-slate-900">Liên kết</h4>
-            <ul className="space-y-4 text-slate-500 text-sm">
+            <ul className="space-y-4 text-slate-600 text-sm">
               <li><Link className="hover:text-primary transition-colors" href="/about">Về chúng tôi</Link></li>
               <li><Link className="hover:text-primary transition-colors" href="/lectures">Bài giảng lý thuyết</Link></li>
               <li><Link className="hover:text-primary transition-colors" href="/exams">Kho đề thi thử</Link></li>
@@ -54,7 +54,7 @@ export default function HomeFooter() {
 
           <div>
             <h4 className="font-bold mb-6 text-slate-900">Hỗ trợ</h4>
-            <ul className="space-y-4 text-slate-500 text-sm">
+            <ul className="space-y-4 text-slate-600 text-sm">
               <li><Link className="hover:text-primary transition-colors" href="/upgrade">Gói cước & Học phí</Link></li>
               <li><a className="hover:text-primary transition-colors" href="mailto:support@toan6789.vn">Trung tâm trợ giúp</a></li>
               <li><a className="hover:text-primary transition-colors" href="mailto:support@toan6789.vn">Liên hệ</a></li>
@@ -62,7 +62,7 @@ export default function HomeFooter() {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-slate-200 text-center text-slate-500 text-sm">
+        <div className="pt-8 border-t border-slate-200 text-center text-slate-600 text-sm">
           <p>© 2026 toan6789.vn - Nền tảng Học và Luyện thi Toán THCS Lớp 6, 7, 8, 9.</p>
         </div>
       </div>

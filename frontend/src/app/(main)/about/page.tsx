@@ -72,16 +72,8 @@ export default function AboutPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-primary/20">
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-white to-slate-50 pt-16 pb-20 sm:pt-24 sm:pb-28 border-b border-slate-200/60">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-tr from-blue-200/30 to-emerald-200/20 blur-3xl -z-10 pointer-events-none" />
-
+        <section className="relative overflow-hidden bg-slate-50 pt-16 pb-20 sm:pt-24 sm:pb-28 border-b border-slate-200/60">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-blue-200 shadow-sm text-xs font-bold text-primary mb-6">
-              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-              <span>Nền Tảng Toán THCS Thông Minh & Cơ Hội Hợp Tác 30%</span>
-            </div>
-
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15] max-w-4xl mx-auto mb-6">
               Về Chúng Tôi &amp; Chương Trình{' '}
@@ -143,10 +135,6 @@ export default function AboutPage() {
         {/* Section: Về toan6789.vn */}
         <section id="about" className="py-20 sm:py-28 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-100/70 text-primary text-xs font-bold uppercase tracking-wider mb-4">
-              <GraduationCap className="w-4 h-4" />
-              <span>Sứ Mệnh Của Chúng Tôi</span>
-            </div>
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-4">
               Biến Môn Toán THCS Trở Nên Trực Quan & Dễ Tiếp Cận Cho Mọi Học Sinh
             </h2>
@@ -182,7 +170,7 @@ export default function AboutPage() {
             </div>
 
             <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm hover:shadow-md transition-all">
-              <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-primary flex items-center justify-center mb-6">
                 <Target className="w-7 h-7" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Lời Giải Chi Tiết & Hình Vẽ Chuẩn Xác</h3>
@@ -206,14 +194,10 @@ export default function AboutPage() {
         </section>
 
         {/* Section: Chương trình Đối tác Affiliate 30% */}
-        <section id="affiliate" className="py-20 sm:py-28 bg-gradient-to-b from-slate-50 via-white to-slate-50 border-t border-slate-200/60">
+        <section id="affiliate" className="py-20 sm:py-28 bg-white border-t border-slate-200/60">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Header */}
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-4">
-                <Gift className="w-4 h-4" />
-                <span>Chính Sách Đối Tác Cộng Đồng</span>
-              </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight mb-4">
                 Nhận Ngay{' '}
                 <span className="text-emerald-600">
@@ -234,7 +218,7 @@ export default function AboutPage() {
                   <Percent className="w-6 h-6" />
                 </div>
                 <h4 className="font-bold text-slate-900 text-base mb-1.5">Tỷ lệ 30% trọn đời</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   Mức chiết khấu hấp dẫn và cạnh tranh bậc nhất trong các nền tảng giáo dục trực tuyến hiện nay.
                 </p>
               </div>
@@ -244,17 +228,17 @@ export default function AboutPage() {
                   <Zap className="w-6 h-6" />
                 </div>
                 <h4 className="font-bold text-slate-900 text-base mb-1.5">Cộng tiền tức thì</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   Ngay sau khi học sinh quét mã VietQR PayOS thành công, hoa hồng 30% lập tức được cộng vào ví của bạn.
                 </p>
               </div>
 
               <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm">
-                <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center mb-4">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
                 <h4 className="font-bold text-slate-900 text-base mb-1.5">Minh bạch realtime</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   Theo dõi số lượt đăng ký, doanh thu chi tiết và lịch sử giao dịch rõ ràng tại trang cá nhân.
                 </p>
               </div>
@@ -264,7 +248,7 @@ export default function AboutPage() {
                   <Wallet className="w-6 h-6" />
                 </div>
                 <h4 className="font-bold text-slate-900 text-base mb-1.5">Không vốn, không rủi ro</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   Tham gia hoàn toàn miễn phí, không ép doanh số, phù hợp cho học sinh, phụ huynh và thầy cô.
                 </p>
               </div>
@@ -282,7 +266,7 @@ export default function AboutPage() {
                     1
                   </div>
                   <h4 className="font-bold text-slate-900 text-base mb-2">Đăng ký tài khoản miễn phí</h4>
-                  <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                     Tạo tài khoản toan6789.vn trong 30 giây để nhận ngay mã giới thiệu độc quyền và link liên kết đối
                     tác.
                   </p>
@@ -293,17 +277,17 @@ export default function AboutPage() {
                     2
                   </div>
                   <h4 className="font-bold text-slate-900 text-base mb-2">Chia sẻ đến cộng đồng</h4>
-                  <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                     Gửi mã hoặc link cho bạn bè, phụ huynh, hội nhóm học tập lớp 6, 7, 8, 9 qua Zalo, Facebook, TikTok.
                   </p>
                 </div>
 
                 <div className="flex flex-col items-center text-center">
-                  <div className="w-16 h-16 rounded-3xl bg-purple-50 text-purple-600 flex items-center justify-center font-black text-xl mb-4 border border-purple-100 shadow-sm">
+                  <div className="w-16 h-16 rounded-3xl bg-teal-50 text-teal-700 flex items-center justify-center font-black text-xl mb-4 border border-teal-100 shadow-sm">
                     3
                   </div>
                   <h4 className="font-bold text-slate-900 text-base mb-2">Nhận hoa hồng 30%</h4>
-                  <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                     Mỗi khi học sinh nâng cấp khóa học, 30% giá trị gói cước tự động chuyển vào ví hoa hồng rút về ngân
                     hàng.
                   </p>
@@ -312,15 +296,9 @@ export default function AboutPage() {
             </div>
 
             {/* Interactive Commission Calculator */}
-            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden mb-16">
-              <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-80 h-80 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-
+            <div className="bg-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden mb-16 border border-slate-800">
               <div className="relative z-10 max-w-4xl mx-auto">
                 <div className="text-center mb-8">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-bold text-emerald-400 mb-3">
-                    <Coins className="w-4 h-4" />
-                    <span>Công Cụ Dự Tính Thu Nhập Thực Tế</span>
-                  </div>
                   <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
                     Tính Toán Thu Nhập Hoa Hồng 30% Của Bạn
                   </h3>
@@ -416,10 +394,6 @@ export default function AboutPage() {
             {/* FAQ Section */}
             <div className="max-w-3xl mx-auto">
               <div className="text-center mb-10">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wider mb-2">
-                  <HelpCircle className="w-4 h-4" />
-                  <span>Giải Đáp Thắc Mắc</span>
-                </div>
                 <h3 className="text-2xl font-bold text-slate-900">Câu Hỏi Thường Gặp Về Chương Trình Affiliate</h3>
               </div>
 
@@ -457,7 +431,7 @@ export default function AboutPage() {
         </section>
 
         {/* Final CTA Banner */}
-        <section className="py-16 sm:py-24 bg-gradient-to-r from-primary via-blue-600 to-indigo-700 text-white relative overflow-hidden">
+        <section className="py-16 sm:py-24 bg-primary text-white relative overflow-hidden">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             <h2 className="text-3xl sm:text-4xl font-black mb-4">
               Bắt Đầu Hành Trình Học Toán &amp; Hợp Tác Cùng toan6789.vn

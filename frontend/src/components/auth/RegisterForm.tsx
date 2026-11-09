@@ -151,7 +151,7 @@ export default function RegisterForm() {
         {/* Title */}
         <div className="mb-5 sm:mb-6 text-center flex flex-col items-center">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white mb-1.5 tracking-tight">Đăng ký</h2>
-          <p className="text-slate-500 text-sm sm:text-base">Tạo tài khoản để bắt đầu học tập cùng Toan6789.</p>
+          <p className="text-slate-600 text-sm sm:text-base">Tạo tài khoản để bắt đầu học tập cùng Toan6789.</p>
         </div>
 
         {/* Form */}
@@ -249,7 +249,7 @@ export default function RegisterForm() {
                 </div>
                 {strengthLabel.label && (
                   <div className="flex items-center justify-between text-xs px-0.5">
-                    <span className="text-slate-400">Độ an toàn:</span>
+                    <span className="text-slate-500">Độ an toàn:</span>
                     <span className={`font-semibold ${strengthLabel.color}`}>{strengthLabel.label}</span>
                   </div>
                 )}
@@ -302,7 +302,7 @@ export default function RegisterForm() {
                 <Gift className="w-4 h-4 text-emerald-600" />
                 Mã giới thiệu / Khuyến mãi
               </Label>
-              <span className="text-xs text-slate-400 font-normal">Không bắt buộc</span>
+              <span className="text-xs text-slate-500 font-normal">Không bắt buộc</span>
             </div>
             <div className="relative mt-1.5">
               <Input
@@ -333,7 +333,7 @@ export default function RegisterForm() {
             <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-white dark:bg-slate-900 text-slate-500 text-xs sm:text-sm">Hoặc tiếp tục với</span>
+            <span className="px-4 bg-white dark:bg-slate-900 text-slate-600 text-xs sm:text-sm">Hoặc tiếp tục với</span>
           </div>
         </div>
 
@@ -343,14 +343,14 @@ export default function RegisterForm() {
             refCode={watch('voucherCode')?.trim() || refParam.trim()}
           />
           {/* Trust Badge (Cam Kết Bảo Mật) */}
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 pt-0.5">
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-0.5">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>Bảo mật SSL 256-bit • Dữ liệu học tập được mã hóa an toàn</span>
           </div>
         </div>
 
         {/* Footer */}
-        <p className="text-center mt-5 sm:mt-6 text-slate-500 text-sm">
+        <p className="text-center mt-5 sm:mt-6 text-slate-600 text-sm">
           Bạn đã có tài khoản?
           <a className="text-primary font-bold hover:underline ml-1 transition-all duration-200" href="/login">Đăng nhập</a>
         </p>

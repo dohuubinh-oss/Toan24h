@@ -114,7 +114,7 @@ export default function HomePricing() {
                     )}
                   </div>
 
-                  <p className="text-sm text-slate-500 min-h-[40px] leading-relaxed">
+                  <p className="text-sm text-slate-600 min-h-[40px] leading-relaxed">
                     {plan.description}
                   </p>
 
@@ -173,11 +173,7 @@ export default function HomePricing() {
         {/* Parent Trust & VietQR Guarantee Banner */}
         <div className="mt-14 max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm">
           <div className="text-center mb-6">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-              <Zap className="w-3.5 h-3.5 text-blue-600" />
-              Cam kết dịch vụ & Minh bạch thanh toán
-            </span>
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2">
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900">
               An tâm đồng hành cùng phụ huynh & học sinh
             </h3>
           </div>

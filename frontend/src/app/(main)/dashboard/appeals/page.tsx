@@ -250,14 +250,14 @@ export default function AppealsPage() {
                 <CheckCircle2 className="w-8 h-8 text-emerald-400" />
               </div>
               <h3 className="text-lg font-bold text-slate-800 mb-1">Không có kháng cáo chờ xử lý</h3>
-              <p className="text-sm text-slate-500 max-w-sm">
+              <p className="text-sm text-slate-600 max-w-sm">
                 Hiện tại không có học sinh nào gửi yêu cầu phúc khảo điểm thi hoặc câu hỏi.
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left min-w-[950px]">
-                <thead className="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <thead className="bg-slate-50 text-slate-600 text-xs font-semibold uppercase tracking-wider">
                   <tr>
                     <th className="px-6 py-4">Bài thực hành</th>
                     <th className="px-6 py-4">Học sinh</th>
@@ -274,7 +274,7 @@ export default function AppealsPage() {
                       <td className="px-6 py-4 text-sm font-medium text-slate-900">
                         <div>{appeal.examName}</div>
                         {appeal.submittedAt && (
-                          <div className="text-xs text-slate-400 font-normal mt-0.5">
+                          <div className="text-xs text-slate-500 font-normal mt-0.5">
                             {new Date(appeal.submittedAt).toLocaleString('vi-VN')}
                           </div>
                         )}
@@ -282,7 +282,7 @@ export default function AppealsPage() {
                       <td className="px-6 py-4 text-sm">
                         <div className="font-semibold text-slate-800">{appeal.studentName || 'Học sinh'}</div>
                         {appeal.studentEmail && (
-                          <div className="text-xs text-slate-400">{appeal.studentEmail}</div>
+                          <div className="text-xs text-slate-500">{appeal.studentEmail}</div>
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm">
@@ -326,14 +326,14 @@ export default function AppealsPage() {
                 <CheckCircle2 className="w-8 h-8 text-emerald-400" />
               </div>
               <h3 className="text-lg font-bold text-slate-800 mb-1">Không có báo cáo lỗi câu hỏi</h3>
-              <p className="text-sm text-slate-500 max-w-sm">
+              <p className="text-sm text-slate-600 max-w-sm">
                 Tất cả các câu hỏi trong ngân hàng đều đang hoạt động tốt và không có khiếu nại lỗi.
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left min-w-[800px]">
-                <thead className="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <thead className="bg-slate-50 text-slate-600 text-xs font-semibold uppercase tracking-wider">
                   <tr>
                     <th className="px-6 py-4">Mã câu hỏi</th>
                     <th className="px-6 py-4">Nội dung câu hỏi</th>
@@ -378,7 +378,7 @@ export default function AppealsPage() {
                           </button>
                           <Link
                             href={`/dashboard/questions/create?id=${q.id}`}
-                            className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-semibold transition-colors min-h-[38px]"
+                            className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 text-primary hover:bg-blue-100 rounded-lg text-sm font-semibold transition-colors min-h-[38px]"
                             aria-label={`Sửa câu hỏi ${q.id}`}
                           >
                             <Edit className="w-4 h-4" />

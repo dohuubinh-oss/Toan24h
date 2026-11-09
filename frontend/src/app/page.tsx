@@ -34,12 +34,12 @@ export default function HomePage() {
         <Link
           href="/lectures"
           aria-label="Hỏi đáp AI Toán học và làm bài ngay"
-          className="w-14 h-14 sm:w-16 sm:h-16 bg-primary text-white rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer"
+          className="w-14 h-14 sm:w-16 sm:h-16 bg-primary text-white rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer"
         >
           <Sparkles className="w-7 h-7 sm:w-8 sm:h-8" />
         </Link>
         <div className="absolute -top-10 right-0 bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          Hỏi AI ngay! ✨
+          Hỏi AI ngay!
         </div>
       </div>
     </div>

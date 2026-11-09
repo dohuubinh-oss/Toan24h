@@ -221,7 +221,7 @@ export default function ForgotPasswordForm() {
         {/* Title */}
         <div className="mb-8 text-center">
           <h2 className="text-3xl font-bold text-slate-800 mb-2">Quên mật khẩu</h2>
-          <p className="text-slate-500 text-base">
+          <p className="text-slate-600 text-base">
             {step === 1 && "Nhập địa chỉ Email đăng ký để nhận mã khôi phục OTP qua Email (hoặc Telegram nếu đã liên kết)."}
             {step === 2 && `Mã OTP 6 chữ số đã gửi tới ${watch('email') || 'email của bạn'} (và Telegram bot nếu đã liên kết).`}
             {step === 3 && "Vui lòng đặt lại mật khẩu mới cho tài khoản của bạn."}
@@ -306,10 +306,10 @@ export default function ForgotPasswordForm() {
                     />
                   ))}
                 </div>
-                <div className="flex items-center justify-between mt-3 text-xs text-slate-500">
+                <div className="flex items-center justify-between mt-3 text-xs text-slate-600">
                   <span>Bạn có thể dán trực tiếp mã 6 số.</span>
                   {resendTimer > 0 ? (
-                    <span className="text-slate-400 font-medium">Gửi lại sau {resendTimer}s</span>
+                    <span className="text-slate-500 font-medium">Gửi lại sau {resendTimer}s</span>
                   ) : (
                     <button
                       type="button"
@@ -410,7 +410,7 @@ export default function ForgotPasswordForm() {
         </form>
 
         {/* Footer */}
-        <p className="text-center mt-10 text-slate-500 text-sm">
+        <p className="text-center mt-10 text-slate-600 text-sm">
           Nhớ mật khẩu rồi?
           <a className="text-primary font-bold hover:underline ml-1 transition-all duration-200" href="/login">Đăng nhập</a>
         </p>

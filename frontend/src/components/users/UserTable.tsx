@@ -117,7 +117,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
     switch (role) {
       case 'teacher':
         return (
-          <Badge size="sm" className="bg-purple-50 text-purple-700 border border-purple-200 font-medium">
+          <Badge size="sm" className="bg-blue-50 text-blue-700 border border-blue-200 font-medium">
             Giáo viên
           </Badge>
         )
@@ -148,12 +148,12 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
         <table className="w-full text-left">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="px-6 py-4 font-semibold text-xs text-slate-500 uppercase tracking-wider">Họ tên</th>
-              <th className="px-6 py-4 font-semibold text-xs text-slate-500 uppercase tracking-wider">Vai trò</th>
-              <th className="px-6 py-4 font-semibold text-xs text-slate-500 uppercase tracking-wider">Khối lớp</th>
-              <th className="px-6 py-4 font-semibold text-xs text-slate-500 uppercase tracking-wider">Ngày hết hạn</th>
-              <th className="px-6 py-4 font-semibold text-xs text-slate-500 uppercase tracking-wider">Trạng thái</th>
-              <th className="px-6 py-4 font-semibold text-xs text-slate-500 uppercase tracking-wider text-right">Hành động</th>
+              <th className="px-6 py-4 font-semibold text-xs text-slate-600 uppercase tracking-wider">Họ tên</th>
+              <th className="px-6 py-4 font-semibold text-xs text-slate-600 uppercase tracking-wider">Vai trò</th>
+              <th className="px-6 py-4 font-semibold text-xs text-slate-600 uppercase tracking-wider">Khối lớp</th>
+              <th className="px-6 py-4 font-semibold text-xs text-slate-600 uppercase tracking-wider">Ngày hết hạn</th>
+              <th className="px-6 py-4 font-semibold text-xs text-slate-600 uppercase tracking-wider">Trạng thái</th>
+              <th className="px-6 py-4 font-semibold text-xs text-slate-600 uppercase tracking-wider text-right">Hành động</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -161,13 +161,13 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
               const statusInfo = getStatusDisplay(user.status);
               const isExpired = Boolean(user.expiresAt && new Date(user.expiresAt).getTime() < now);
               return (
-              <tr key={user.id} className="hover:bg-slate-50 transition-colors group relative border-l-2 border-transparent hover:border-primary">
+              <tr key={user.id} className="hover:bg-slate-50 transition-colors group">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <UserAvatarCell avatar={user.avatar} name={user.name} />
                     <div>
                       <p className="font-medium text-slate-900">{user.name}</p>
-                      <p className="text-xs text-slate-500">{user.email}</p>
+                      <p className="text-xs text-slate-600">{user.email}</p>
                     </div>
                   </div>
                 </td>
@@ -184,7 +184,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
                       </span>
                     </div>
                   ) : (
-                    <span className="text-slate-500 text-xs">Chưa kích hoạt</span>
+                    <span className="text-slate-600 text-xs">Chưa kích hoạt</span>
                   )}
                 </td>
                 <td className="px-6 py-4">
@@ -252,7 +252,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
 
             <div className="p-5 sm:p-6 space-y-3">
               <label 
-                className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${selectedRole === 'teacher' ? 'border-purple-500 bg-purple-50/40 ring-1 ring-purple-500 shadow-xs' : 'border-slate-200 hover:bg-slate-50'}`}
+                className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${selectedRole === 'teacher' ? 'border-primary bg-primary/5 ring-1 ring-primary shadow-xs' : 'border-slate-200 hover:bg-slate-50'}`}
               >
                 <input 
                   type="radio" 
@@ -260,14 +260,14 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
                   value="teacher" 
                   checked={selectedRole === 'teacher'} 
                   onChange={(e) => setSelectedRole(e.target.value)} 
-                  className="mt-1 text-purple-600 focus:ring-purple-500" 
+                  className="mt-1 text-primary focus:ring-primary" 
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-800 text-sm">Giáo viên (Teacher)</span>
-                    <span className="px-2 py-0.5 text-xs font-semibold rounded bg-purple-100 text-purple-700">Hoa hồng 50%</span>
+                    <span className="px-2 py-0.5 text-xs font-semibold rounded bg-blue-100 text-blue-700">Hoa hồng 50%</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-600 mt-1">
                     Có quyền biên soạn câu hỏi, tạo đề thi, bài giảng. Hưởng 50% hoa hồng khi học sinh dùng mã voucher.
                   </p>
                 </div>

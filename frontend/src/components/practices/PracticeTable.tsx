@@ -19,12 +19,12 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50">
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Tên đề thi</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Số câu hỏi</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Thời gian</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Trạng thái</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Kết quả</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Thao tác</th>
+              <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Tên đề thi</th>
+              <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider text-center">Số câu hỏi</th>
+              <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider text-center">Thời gian</th>
+              <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider text-center">Trạng thái</th>
+              <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider text-center">Kết quả</th>
+              <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider text-right">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -72,30 +72,30 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
                       router.push(`/exam/${practice.id}/take`);
                     }
                   }}
-                  className="hover:bg-slate-50 transition-colors group relative border-l-2 border-transparent hover:border-primary cursor-pointer"
+                  className="hover:bg-slate-50 transition-colors group cursor-pointer"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-primary shrink-0">
                         <PenTool className="w-5 h-5" />
                       </div>
                       <div>
                         <p className="font-bold text-slate-800 line-clamp-1 group-hover:text-primary transition-colors">{practice.title}</p>
-                        <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">Thuộc bài: {practice.lectureName}</p>
+                        <p className="text-xs text-slate-600 line-clamp-1 mt-0.5">Thuộc bài: {practice.lectureName}</p>
                       </div>
                     </div>
                   </td>
 
                   <td className="px-6 py-4 text-center">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-100">
-                      <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+                      <HelpCircle className="w-3.5 h-3.5 text-slate-500" />
                       <span className="text-sm font-medium text-slate-700">{practice.questionCount}</span>
                     </div>
                   </td>
 
                   <td className="px-6 py-4 text-center">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-100">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
                       <span className="text-sm font-medium text-slate-700">{practice.duration}p</span>
                     </div>
                   </td>

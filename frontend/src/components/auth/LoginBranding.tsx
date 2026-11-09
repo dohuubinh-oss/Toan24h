@@ -13,7 +13,7 @@ export default function LoginBranding({
   subtitle = 'Cùng chinh phục môn Toán mỗi ngày với các phương pháp tư duy hiện đại và thú vị.'
 }: LoginBrandingProps = {}) {
   return (
-    <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900 text-white flex-col justify-between p-12 relative overflow-hidden select-none">
+    <div className="hidden lg:flex lg:w-1/2 bg-primary text-white flex-col justify-between p-12 relative overflow-hidden select-none">
       {/* Top Header trên Banner: Logo Toan6789 & Nút Về trang chủ */}
       <div className="flex items-center justify-between w-full relative z-10">
         <Link href="/" className="flex items-center gap-2.5 text-white hover:opacity-90 transition">
@@ -55,8 +55,6 @@ export default function LoginBranding({
 
       {/* Khối card ảnh cây mầm + 2 Floating Glassmorphism Badges */}
       <div className="relative z-10 flex flex-col items-center max-w-md mx-auto text-center my-auto py-6">
-        {/* Vầng sáng Ambient Glow */}
-        <div className="absolute w-72 h-72 rounded-full bg-blue-400/20 blur-3xl -z-10 pointer-events-none" />
         <div className="relative">
           {/* Khung ảnh bo góc 3xl */}
           <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-3xl overflow-hidden shadow-2xl bg-amber-100 dark:bg-slate-800 border-4 border-white/25">
@@ -72,7 +70,7 @@ export default function LoginBranding({
           {/* Floating Badge 1 (Góc trên phải) */}
           <div className="absolute -top-3.5 -right-4 px-3.5 py-1.5 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl border border-white/50 dark:border-slate-700 text-slate-800 dark:text-slate-100 flex items-center gap-1.5 text-xs font-bold">
             <Flame className="w-4 h-4 fill-amber-500 text-amber-500 shrink-0" />
-            <span>Chuỗi 7 Ngày Streak 🔥</span>
+            <span>Chuỗi 7 Ngày Streak</span>
           </div>
           {/* Floating Badge 2 (Góc dưới trái) */}
           <div className="absolute -bottom-3.5 -left-4 px-3.5 py-1.5 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl border border-white/50 dark:border-slate-700 text-slate-800 dark:text-slate-100 flex items-center gap-1.5 text-xs font-bold">

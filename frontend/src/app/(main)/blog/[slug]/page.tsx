@@ -203,19 +203,19 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
                       <span>{post.author.name}</span>
                       <span className="text-xs px-1.5 py-0.2 bg-blue-50 text-primary font-bold rounded">Tác giả</span>
                     </h4>
-                    <p className="text-xs text-slate-500 font-medium">{post.author.role}</p>
+                    <p className="text-xs text-slate-600 font-medium">{post.author.role}</p>
                   </div>
                 </div>
 
                 {/* Right: Date, ReadTime & Share */}
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-3 sm:gap-4 text-xs text-slate-500 font-medium">
+                  <div className="flex items-center gap-3 sm:gap-4 text-xs text-slate-600 font-medium">
                     <span className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <Calendar className="w-3.5 h-3.5 text-slate-500" />
                       {post.publishedAt}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
                       {post.readTime}
                     </span>
                   </div>
@@ -263,9 +263,8 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
             </article>
 
             {/* Practice CTA Banner */}
-            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-primary rounded-3xl p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md">
+            <div className="bg-primary rounded-3xl p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md">
               <div className="space-y-1.5 text-center sm:text-left">
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-200">Ôn tập thực chiến Toán THCS</span>
                 <h3 className="text-xl sm:text-2xl font-extrabold text-white">Bạn muốn rèn luyện dạng toán này?</h3>
                 <p className="text-xs sm:text-sm text-blue-100 max-w-xl">
                   Thực hành ngay với ngân hàng đề thi thử bám sát chương trình mới, tự động chấm điểm và chỉ ra lỗi sai từng bước với AI.
@@ -290,7 +289,7 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
                     href={`/blog/${prevPost.slug}`}
                     className="bg-white rounded-2xl border border-slate-200/80 p-4 hover:border-primary/40 hover:shadow-sm transition-all group flex flex-col justify-between"
                   >
-                    <span className="text-xs font-bold text-slate-400 group-hover:text-primary flex items-center gap-1">
+                    <span className="text-xs font-bold text-slate-500 group-hover:text-primary flex items-center gap-1">
                       <ArrowLeft className="w-3.5 h-3.5" />
                       Bài viết trước
                     </span>

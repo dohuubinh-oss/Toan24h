@@ -511,13 +511,13 @@ export default function BlogListPage() {
 
                     {/* Content */}
                     <div className="px-5 space-y-2.5">
-                      <div className="flex items-center gap-3 text-xs font-medium text-slate-500">
+                      <div className="flex items-center gap-3 text-xs font-medium text-slate-600">
                         <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          <Calendar className="w-3.5 h-3.5 text-slate-500" />
                           {post.publishedAt}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <Clock className="w-3.5 h-3.5 text-slate-500" />
                           {post.readTime}
                         </span>
                       </div>
@@ -619,15 +619,9 @@ export default function BlogListPage() {
         </div>
 
         {/* Full-width Newsletter Subscription Banner */}
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white rounded-3xl p-6 sm:p-8 lg:p-10 shadow-lg relative overflow-hidden">
-          <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-          
+        <div className="bg-primary text-white rounded-3xl p-6 sm:p-8 lg:p-10 shadow-lg relative overflow-hidden">
           <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="space-y-2 text-center lg:text-left max-w-xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-bold uppercase tracking-wider text-amber-300">
-                <Mail className="w-3.5 h-3.5" />
-                <span>Bản tin học tập Toan6789</span>
-              </div>
               <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
                 Đăng ký nhận mẹo giải nhanh & đề thi chọn lọc
               </h3>

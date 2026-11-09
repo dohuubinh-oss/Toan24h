@@ -127,7 +127,7 @@ export default function LoginForm() {
         {/* Title */}
         <div className="mb-8 text-center flex flex-col items-center">
           <h2 className="text-3xl font-bold text-slate-800 mb-2">Đăng nhập</h2>
-          <p className="text-slate-500 text-base">Vui lòng nhập thông tin để truy cập bài học của bạn.</p>
+          <p className="text-slate-600 text-base">Vui lòng nhập thông tin để truy cập bài học của bạn.</p>
         </div>
 
         {/* Form */}
@@ -222,21 +222,21 @@ export default function LoginForm() {
             <div className="w-full border-t border-slate-200"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-white text-slate-500">Hoặc tiếp tục với</span>
+            <span className="px-4 bg-white text-slate-600">Hoặc tiếp tục với</span>
           </div>
         </div>
 
         <div className="grid gap-4">
           <GoogleSignInButton onSuccess={handleGoogleSuccess} />
           {/* Trust Badge (Cam Kết Bảo Mật) */}
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 pt-1">
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>Bảo mật SSL 256-bit • Dữ liệu học tập được mã hóa an toàn</span>
           </div>
         </div>
 
         {/* Footer */}
-        <p className="text-center mt-10 text-slate-500 text-sm">
+        <p className="text-center mt-10 text-slate-600 text-sm">
           Bạn chưa có tài khoản?
           <a className="text-primary font-bold hover:underline ml-1 transition-all duration-200" href="/register">Đăng ký ngay</a>
         </p>
