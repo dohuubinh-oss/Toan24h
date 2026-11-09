@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useCallback, useRef } from 'react'
-import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2, Save, Sparkles, Loader2, Plus, FileQuestion } from 'lucide-react'
+import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2, Save, Sparkles, Loader2, Plus, FileQuestion, Code2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import JsonInputSection from '@/components/questions/creator/JsonInputSection'
@@ -31,8 +31,10 @@ function CreateQuestionContent() {
   const [isSaving, setIsSaving] = useState(false)
   const [isAiModalOpen, setIsAiModalOpen] = useState(false)
   const [extractedJson, setExtractedJson] = useState('')
+  const [isJsonExpanded, setIsJsonExpanded] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const editorRef = useRef<HTMLDivElement>(null)
+  const jsonSectionRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -93,6 +95,7 @@ function CreateQuestionContent() {
   const handleAiExtracted = useCallback((blocks: QuestionBlock[], rawJson?: string) => {
     const jsonStr = rawJson || JSON.stringify(blocks, null, 2);
     setExtractedJson(jsonStr);
+    setIsJsonExpanded(true);
     setQuestionBlocks(blocks);
     setCurrentBlockIndex(0);
     setCurrentQuestionIndex(0);
@@ -100,6 +103,20 @@ function CreateQuestionContent() {
 
     const totalCount = blocks.reduce((acc, b) => acc + (b.questions?.length || 0), 0);
     toast.success(`Đã bóc tách thành công ${totalCount} câu hỏi từ ảnh đề thi!`);
+  }, []);
+
+  const handleToggleJson = useCallback(() => {
+    setIsJsonExpanded(prev => {
+      const next = !prev;
+      if (next) {
+        setTimeout(() => {
+          jsonSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          const ta = jsonSectionRef.current?.querySelector('textarea');
+          ta?.focus();
+        }, 80);
+      }
+      return next;
+    });
   }, []);
 
   const handleCreateBlankQuestion = useCallback(() => {
@@ -489,60 +506,158 @@ function CreateQuestionContent() {
           
           {/* Left Column - Input and Editor */}
           <div className={totalBlocks > 0 || editId ? "lg:col-span-8 space-y-6" : "lg:col-span-12 space-y-6"}>
-            <JsonInputSection 
-              onProcessJson={handleProcessJson}
-              onAiExtract={() => setIsAiModalOpen(true)}
-              currentGlobalIndex={currentBlockIndex + 1}
-              totalQuestions={totalBlocks}
-              currentQuestion={currentQuestion}
-              onNext={handleNext}
-              onPrev={handlePrev}
-              initialValue={extractedJson}
-            />
-
             {totalBlocks === 0 && !editId ? (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-8 sm:p-12 text-center shadow-xs">
-                <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
-                  <FileQuestion className="w-6 h-6" />
+              <div className="space-y-6">
+                {/* Onboarding Starter Cards (Progressive Disclosure - Level 1: Primary paths) */}
+                <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs">
+                  <div className="max-w-2xl mb-6">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-3">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Khởi tạo câu hỏi
+                    </span>
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">
+                      Chọn phương thức bắt đầu soạn đề
+                    </h2>
+                    <p className="text-sm text-slate-600 mt-1.5 leading-relaxed">
+                      Hệ thống hỗ trợ tự động bóc tách từ ảnh đề thi bằng AI, soạn thảo trực quan với công thức KaTeX, hoặc nhập nhanh bằng mã JSON chuẩn hóa.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Card 1: AI Bóc tách (Khuyên dùng) */}
+                    <div className="relative rounded-2xl border-2 border-primary/30 bg-gradient-to-b from-blue-50/50 to-white p-5 flex flex-col justify-between hover:border-primary/60 transition-all shadow-xs group">
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="w-11 h-11 rounded-xl bg-primary text-white flex items-center justify-center shadow-md shadow-primary/25">
+                            <Sparkles className="w-5 h-5" />
+                          </div>
+                          <span className="text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            Khuyên dùng
+                          </span>
+                        </div>
+                        <h3 className="text-base font-bold text-slate-800 group-hover:text-primary transition-colors">
+                          Bóc tách từ ảnh (AI)
+                        </h3>
+                        <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                          Tải ảnh hoặc chụp đề thi. AI tự động trích xuất nội dung, hình vẽ và công thức LaTeX chuẩn xác tức thì.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={() => setIsAiModalOpen(true)}
+                        className="w-full mt-5 min-h-[44px] font-bold text-xs flex items-center justify-center gap-2 rounded-xl shadow-xs"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Tải ảnh đề thi (AI)
+                      </Button>
+                    </div>
+
+                    {/* Card 2: Soạn câu hỏi mới (Thủ công) */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 flex flex-col justify-between hover:border-slate-300 hover:shadow-xs transition-all group">
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
+                            <Plus className="w-5 h-5" />
+                          </div>
+                          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            Thủ công
+                          </span>
+                        </div>
+                        <h3 className="text-base font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">
+                          Soạn câu hỏi mới
+                        </h3>
+                        <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                          Tạo câu hỏi trống để tự soạn nội dung, 4 đáp án trắc nghiệm hoặc bài giải tự luận với công thức Toán KaTeX.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleCreateBlankQuestion}
+                        className="w-full mt-5 min-h-[44px] font-bold text-xs flex items-center justify-center gap-2 rounded-xl border-slate-200 hover:bg-slate-50"
+                      >
+                        <Plus className="w-4 h-4 text-emerald-600" />
+                        Soạn thảo thủ công
+                      </Button>
+                    </div>
+
+                    {/* Card 3: Nhập từ mã JSON (Nâng cao) */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 flex flex-col justify-between hover:border-slate-300 hover:shadow-xs transition-all group">
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
+                            <Code2 className="w-5 h-5" />
+                          </div>
+                          <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/60 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            Nâng cao
+                          </span>
+                        </div>
+                        <h3 className="text-base font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">
+                          Nhập từ mã JSON
+                        </h3>
+                        <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                          Dán dữ liệu JSON trích xuất từ ChatGPT / Claude hoặc sao chép prompt mẫu để AI tạo cấu trúc đề thi.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleToggleJson}
+                        className="w-full mt-5 min-h-[44px] font-bold text-xs flex items-center justify-center gap-2 rounded-xl border-slate-200 hover:bg-slate-50"
+                      >
+                        <Code2 className="w-4 h-4 text-indigo-600" />
+                        {isJsonExpanded ? "Thu gọn khung JSON" : "Mở khung nhập JSON"}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-base font-semibold text-slate-800 mb-1.5">
-                  Chưa có nội dung câu hỏi
-                </h3>
-                <p className="text-sm text-slate-600 max-w-md mx-auto mb-6">
-                  Tải ảnh để AI bóc tách tự động, dán mã JSON vào khung ở trên, hoặc bắt đầu soạn thảo câu hỏi mới trực tiếp.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsAiModalOpen(true)}
-                    className="min-h-[44px] px-4 font-bold text-xs flex items-center gap-2 rounded-xl"
-                  >
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    Bóc tách từ ảnh (AI)
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleCreateBlankQuestion}
-                    className="min-h-[44px] px-5 font-bold text-xs flex items-center gap-2 rounded-xl shadow-xs"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Soạn câu hỏi mới
-                  </Button>
+
+                {/* Progressive Disclosure Section for JSON Input (Level 2: Secondary disclosure) */}
+                <div ref={jsonSectionRef} className="scroll-mt-24">
+                  <JsonInputSection 
+                    onProcessJson={handleProcessJson}
+                    onAiExtract={() => setIsAiModalOpen(true)}
+                    currentGlobalIndex={currentBlockIndex + 1}
+                    totalQuestions={totalBlocks}
+                    currentQuestion={currentQuestion}
+                    onNext={handleNext}
+                    onPrev={handlePrev}
+                    initialValue={extractedJson}
+                    collapsible={true}
+                    isOpen={isJsonExpanded}
+                    onToggleOpen={setIsJsonExpanded}
+                    subtitle="Dán mã JSON từ prompt AI hoặc xuất từ ngân hàng đề thi ngoài"
+                  />
                 </div>
               </div>
             ) : (
-              <div ref={editorRef} className="scroll-mt-24">
-                <QuestionEditorSection 
-                  currentBlock={currentBlock}
+              <>
+                <JsonInputSection 
+                  onProcessJson={handleProcessJson}
+                  onAiExtract={() => setIsAiModalOpen(true)}
+                  currentGlobalIndex={currentBlockIndex + 1}
+                  totalQuestions={totalBlocks}
                   currentQuestion={currentQuestion}
-                  updateBlock={updateBlock}
-                  updateQuestion={updateQuestion}
-                  currentQuestionIndex={currentQuestionIndex}
-                  onSelectSubQuestion={(idx) => setCurrentQuestionIndex(idx)}
-                  onAddSubQuestion={handleAddSubQuestion}
+                  onNext={handleNext}
+                  onPrev={handlePrev}
+                  initialValue={extractedJson}
+                  collapsible={true}
+                  defaultOpen={false}
+                  subtitle="Dán thêm câu hỏi bằng mã JSON hoặc sao chép prompt mẫu"
                 />
-              </div>
+
+                <div ref={editorRef} className="scroll-mt-24">
+                  <QuestionEditorSection 
+                    currentBlock={currentBlock}
+                    currentQuestion={currentQuestion}
+                    updateBlock={updateBlock}
+                    updateQuestion={updateQuestion}
+                    currentQuestionIndex={currentQuestionIndex}
+                    onSelectSubQuestion={(idx) => setCurrentQuestionIndex(idx)}
+                    onAddSubQuestion={handleAddSubQuestion}
+                  />
+                </div>
+              </>
             )}
           </div>
 
