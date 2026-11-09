@@ -23,12 +23,12 @@ export default function AdminLecturesDashboard() {
               Admin & Teacher Access
             </span>
           </div>
-          <p className="text-slate-500 mt-1">Vui lòng chọn một khối lớp để xem và quản lý danh sách bài giảng.</p>
+          <p className="text-slate-600 mt-1">Vui lòng chọn một khối lớp để xem và quản lý danh sách bài giảng.</p>
         </div>
         
         <Link 
           href="/dashboard/lectures/create" 
-          className="px-5 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-md shadow-primary/20 hover:scale-105"
+          className="px-5 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-sm shadow-primary/20 active:scale-[0.98]"
         >
           <Plus size={20} />
           Tạo bài giảng mới

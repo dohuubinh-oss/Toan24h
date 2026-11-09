@@ -10,10 +10,6 @@ export default function HomeFeatures() {
     <section className="py-24 bg-white" id="features">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200 text-xs font-bold uppercase tracking-wider mb-4">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            Linh hồn Toán học thực chiến
-          </div>
           <h2 className="text-4xl font-bold mb-4 text-slate-900">Tại sao chọn chúng tôi?</h2>
           <p className="text-lg text-slate-600 leading-relaxed">
             Chúng tôi kết hợp trí tuệ nhân tạo MathAI với tư duy sư phạm chuẩn Bộ GD&ĐT từ Lớp 5 đến Lớp 9, giúp học sinh hiểu sâu bản chất thay vì học vẹt.
@@ -177,7 +173,7 @@ export default function HomeFeatures() {
                 </div>
                 <div className="pt-2 border-t border-slate-200/60 text-xs text-slate-700 space-y-1.5">
                   <div className="text-emerald-700 font-bold flex items-center gap-1">
-                    <span>🎯 Phương pháp tách phân số:</span>
+                    <span>Phương pháp tách phân số:</span>
                   </div>
                   <div className="text-slate-800 font-medium">
                     <MathText content="$S = 1 - \frac{1}{100} = \frac{99}{100}$" />

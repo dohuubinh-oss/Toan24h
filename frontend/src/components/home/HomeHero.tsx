@@ -168,17 +168,16 @@ export default function HomeHero() {
               />
               <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-xs font-bold text-slate-600">+100k</div>
             </div>
-            <p className="text-sm font-medium text-slate-500">100,000+ Học sinh tin dùng trên toàn quốc</p>
+            <p className="text-sm font-medium text-slate-600">100,000+ Học sinh tin dùng trên toàn quốc</p>
           </div>
         </div>
 
         <div className="hidden lg:block relative">
-          <div className="absolute -top-10 -left-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl opacity-50"></div>
-          <div className="relative bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-[0_10px_30px_-10px_rgba(37,99,235,0.12)] border border-slate-100">
+          <div className="relative bg-white p-6 rounded-3xl shadow-[0_10px_30px_-10px_rgba(37,99,235,0.12)] border border-slate-100">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Chào {studentName}! 👋</h2>
-                <p className="text-sm text-slate-500">Tiếp tục giải đề Toán {selectedGrade}</p>
+                <h2 className="text-xl font-bold text-slate-900">Chào {studentName}!</h2>
+                <p className="text-sm text-slate-600">Tiếp tục giải đề Toán {selectedGrade}</p>
               </div>
               <div className="flex gap-4">
                 <div className="flex items-center gap-1 bg-orange-100 px-3 py-1 rounded-full text-orange-800 font-bold">

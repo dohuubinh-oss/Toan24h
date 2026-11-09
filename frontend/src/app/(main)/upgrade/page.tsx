@@ -170,10 +170,6 @@ export default function UpgradePage() {
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold mb-4">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>NÂNG TẦM ĐIỂM SỐ TOÁN HỌC</span>
-          </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
             Chọn Gói Học Phù Hợp Với Bạn
           </h1>
@@ -208,12 +204,12 @@ export default function UpgradePage() {
                 {/* Badges */}
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
                   {plan.popular && (
-                    <span className="px-3.5 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[11px] font-black rounded-full shadow-md uppercase tracking-wider">
+                    <span className="px-3.5 py-1 bg-blue-600 text-white text-[11px] font-black rounded-full shadow-sm uppercase tracking-wider">
                       PHỔ BIẾN NHẤT
                     </span>
                   )}
                   {plan.bestValue && (
-                    <span className="px-3.5 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-black rounded-full shadow-md uppercase tracking-wider">
+                    <span className="px-3.5 py-1 bg-emerald-600 text-white text-[11px] font-black rounded-full shadow-sm uppercase tracking-wider">
                       TIẾT KIỆM NHẤT
                     </span>
                   )}
@@ -239,7 +235,7 @@ export default function UpgradePage() {
                         {plan.price.toLocaleString('vi-VN')}đ
                       </span>
                       {plan.originalPrice && (
-                        <span className="text-sm font-semibold text-slate-400 line-through">
+                        <span className="text-sm font-semibold text-slate-500 line-through">
                           {plan.originalPrice.toLocaleString('vi-VN')}đ
                         </span>
                       )}
@@ -282,7 +278,7 @@ export default function UpgradePage() {
                     ) : (
                       <>
                         <QrCode className="w-4 h-4" />
-                        <span>Tạo mã thanh toán PayOS</span>
+                        <span>Thanh toán VietQR</span>
                       </>
                     )}
                   </button>
@@ -300,8 +296,8 @@ export default function UpgradePage() {
             </div>
             <div>
               <h4 className="font-bold text-slate-900 text-sm mb-1">Kích hoạt tức thì</h4>
-              <p className="text-xs text-slate-500">
-                Hệ thống PayOS tự động cộng thời hạn VIP trong vòng vài giây ngay sau khi bạn quét mã VietQR thành công.
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Hệ thống tự động cộng thời hạn VIP trong vòng vài giây ngay sau khi bạn quét mã VietQR thành công.
               </p>
             </div>
           </div>
@@ -312,20 +308,20 @@ export default function UpgradePage() {
             </div>
             <div>
               <h4 className="font-bold text-slate-900 text-sm mb-1">Bảo mật & Chuẩn xác</h4>
-              <p className="text-xs text-slate-500">
-                Thanh toán qua cổng PayOS chuẩn Open Banking và VietQR Ngân hàng Nhà nước, an toàn tuyệt đối.
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Thanh toán qua cổng chuẩn Open Banking và VietQR Ngân hàng Nhà nước, an toàn tuyệt đối.
               </p>
             </div>
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
               <HelpCircle className="w-6 h-6" />
             </div>
             <div>
               <h4 className="font-bold text-slate-900 text-sm mb-1">Hỗ trợ 24/7</h4>
-              <p className="text-xs text-slate-500">
-                Cần hỗ trợ thanh toán hoặc hóa đơn? Liên hệ ngay Hotline / Telegram Bot để được xử lý nhanh nhất.
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Cần hỗ trợ thanh toán hoặc kích hoạt? Liên hệ ngay Hotline / Telegram Bot để được xử lý nhanh nhất.
               </p>
             </div>
           </div>

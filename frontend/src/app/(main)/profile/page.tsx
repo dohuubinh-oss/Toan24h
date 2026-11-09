@@ -303,7 +303,7 @@ export default function ProfilePage() {
 
   const roleLabelMap: Record<string, { label: string; bg: string; text: string }> = {
     admin: { label: 'Quản trị viên', bg: 'bg-rose-100', text: 'text-rose-700' },
-    teacher: { label: 'Giáo viên', bg: 'bg-indigo-100', text: 'text-indigo-700' },
+    teacher: { label: 'Giáo viên', bg: 'bg-blue-100', text: 'text-blue-800' },
     affiliate: { label: 'Đối tác Affiliate', bg: 'bg-amber-100', text: 'text-amber-700' },
     student: { label: 'Học sinh', bg: 'bg-emerald-100', text: 'text-emerald-700' },
   }
@@ -364,7 +364,7 @@ export default function ProfilePage() {
                 className="w-20 h-20 rounded-full object-cover shadow-sm border-2 border-primary/20 shrink-0"
               />
             ) : (
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-black uppercase shrink-0 shadow-md shadow-blue-500/20">
+              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center text-white text-3xl font-black uppercase shrink-0 shadow-md shadow-primary/20">
                 {user.fullName ? getAvatarInitial(user.fullName) : <User size={40} />}
               </div>
             )}
@@ -456,8 +456,8 @@ export default function ProfilePage() {
                 user.role !== 'teacher' &&
                 (!user.expiresAt ||
                   Math.ceil((new Date(user.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) <= 10)
-                  ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 shadow-red-500/20'
-                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                  ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'
+                  : 'bg-primary hover:bg-blue-700'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -504,7 +504,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
               <Calendar className="w-6 h-6" />
             </div>
             <div>
@@ -519,7 +519,7 @@ export default function ProfilePage() {
         {/* Partner & Referral Program Section */}
         {isPartner && (
           <div className="pt-2 pb-8 border-t border-slate-100">
-            <div className="bg-gradient-to-br from-white via-emerald-50/20 to-teal-50/30 rounded-2xl p-5 sm:p-6 border border-emerald-200/80 shadow-sm">
+            <div className="bg-emerald-50/40 rounded-2xl p-5 sm:p-6 border border-emerald-200/80 shadow-sm">
               {/* Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-emerald-100/80">
                 <div className="flex items-center gap-3">
@@ -534,7 +534,7 @@ export default function ProfilePage() {
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
                             Hoa hồng trực tiếp: 60%
                           </span>
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-100 text-teal-800">
                             Quản trị toàn sàn: 1%
                           </span>
                         </>
@@ -784,12 +784,12 @@ export default function ProfilePage() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
                         <Users className="w-4 h-4" />
                       </div>
                       <div>
                         <h5 className="font-bold text-slate-900 text-sm">Telegram 2 (Phụ huynh)</h5>
-                        <span className="text-xs text-purple-600 font-semibold uppercase tracking-wider">Đồng hành & Giám sát</span>
+                        <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Đồng hành & Giám sát</span>
                       </div>
                     </div>
 
@@ -819,7 +819,7 @@ export default function ProfilePage() {
                             onError={(e) => { e.currentTarget.style.display = 'none' }}
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-xs font-bold">
+                          <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center text-xs font-bold">
                             TG
                           </div>
                         )}
@@ -827,7 +827,7 @@ export default function ProfilePage() {
                           <p className="text-xs font-bold text-slate-800">
                             {user.telegramUsername2 ? `@${user.telegramUsername2}` : `ID: ${user.telegramId2}`}
                           </p>
-                          <p className="text-xs text-slate-400">ID: {user.telegramId2}</p>
+                          <p className="text-xs text-slate-500">ID: {user.telegramId2}</p>
                         </div>
                       </div>
                       <button
