@@ -6,7 +6,7 @@ import {
   MILESTONES_CONFIG,
   isMilestonePassed,
 } from '@/lib/examMilestoneProgression'
-import { Check } from 'lucide-react'
+import { Check, Target } from 'lucide-react'
 
 export interface MilestoneTabsProps {
   activeMilestone: ExamMilestone
@@ -71,7 +71,8 @@ export function MilestoneTabs({
                   }
                 `}
               >
-                <span>🎯 Đang học</span>
+                <Target className="w-3 h-3" aria-hidden="true" />
+                <span>Đang học</span>
               </span>
             )}
 

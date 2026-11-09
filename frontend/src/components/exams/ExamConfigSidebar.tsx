@@ -123,7 +123,7 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
                     <option value="Chuyên Đề">Chuyên Đề</option>
                     <option value="Ôn tập">Ôn tập</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none w-5 h-5" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none w-5 h-5" />
                 </div>
                 {errors.type && <p className="text-red-500 text-xs mt-1 font-medium ml-1">{errors.type}</p>}
               </div>
@@ -150,7 +150,7 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
                     <option value="12">Lớp 12</option>
                     <option value="chuyen_cap">Chuyển cấp</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none w-5 h-5" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none w-5 h-5" />
                 </div>
                 {errors.grade && <p className="text-red-500 text-xs mt-1 font-medium ml-1">{errors.grade}</p>}
               </div>
@@ -167,7 +167,7 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
                     error={!!errors.duration}
                     disabled={config.cate === 'practice'}
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 uppercase">Min</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500 uppercase">Min</span>
                 </div>
                 {errors.duration && <p className="text-red-500 text-xs mt-1 font-medium ml-1">{errors.duration}</p>}
               </div>
@@ -194,7 +194,7 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
                 <div 
                   className={cn(
                     "flex-1 px-3 py-2 bg-slate-50 border rounded-xl text-sm truncate flex items-center transition-colors",
-                    selectedLectureName ? "text-slate-800 font-medium border-slate-200" : "text-slate-400 italic border-slate-200"
+                    selectedLectureName ? "text-slate-800 font-medium border-slate-200" : "text-slate-500 italic border-slate-200"
                   )}
                   title={selectedLectureName || "Chưa liên kết bài giảng"}
                 >
@@ -248,7 +248,7 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-4 text-center text-slate-400">Chưa có dữ liệu</td>
+                    <td colSpan={5} className="py-4 text-center text-slate-500">Chưa có dữ liệu</td>
                   </tr>
                 )}
                 
@@ -277,24 +277,27 @@ export default function ExamConfigSidebar({ config, onChange, questions, errors 
           </div>
         </div>
 
-        {/* Gợi ý AI */}
-        <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
-          <div className="flex gap-4">
-            <Lightbulb className="text-primary w-6 h-6 flex-shrink-0 mt-1" />
+        {/* Thao tác ma trận câu hỏi */}
+        <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+              <Lightbulb className="w-4 h-4" />
+            </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900 mb-2 uppercase tracking-widest">Gợi ý từ AI</h4>
-              <p className="text-xs text-slate-600 leading-relaxed font-medium mb-4">
-                Ma trận đề thi hiện tại đang được tính toán trực tiếp từ dữ liệu câu hỏi. Bạn có thể thay đổi cấu trúc câu hỏi để ma trận cân bằng hơn.
+              <h4 className="text-sm font-bold text-slate-900">Điều chỉnh ma trận đề thi</h4>
+              <p className="text-xs text-slate-600 leading-relaxed mt-0.5">
+                Cân đối tỉ lệ các mức độ nhận thức bằng cách thêm hoặc đổi câu hỏi trực tiếp từ ngân hàng.
               </p>
-              <Button 
-                type="button"
-                onClick={() => router.push('/dashboard/questions')}
-                className="w-full h-12 text-sm font-bold shadow-sm rounded-xl cursor-pointer"
-              >
-                Chọn thêm câu hỏi từ Ngân hàng
-              </Button>
             </div>
           </div>
+          <Button 
+            type="button"
+            variant="outline"
+            onClick={() => router.push('/dashboard/questions')}
+            className="w-full min-h-[44px] h-11 text-xs font-bold rounded-xl cursor-pointer"
+          >
+            Mở ngân hàng câu hỏi
+          </Button>
         </div>
 
       </div>

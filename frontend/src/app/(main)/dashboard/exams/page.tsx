@@ -3,7 +3,7 @@
 import React, { Suspense, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { ChevronRight, FileText, CheckCircle, TrendingUp, Search, Plus, RefreshCw } from 'lucide-react'
+import { ChevronRight, Plus, RefreshCw } from 'lucide-react'
 import ExamTable, { Exam } from '@/components/exams/ExamTable'
 import { Pagination } from '@/components/ui/Pagination'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
@@ -95,11 +95,11 @@ function ExamsPageContent() {
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <div>
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-            <span className="hover:text-primary cursor-pointer transition-colors">Trang chủ</span>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-primary font-bold">Kho lưu trữ đề thi</span>
-          </div>
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-600 mb-2">
+            <Link href="/dashboard" className="hover:text-primary transition-colors">Trang chủ</Link>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+            <span className="text-primary font-semibold" aria-current="page">Kho lưu trữ đề thi</span>
+          </nav>
           <h1 className="text-2xl font-bold text-slate-900">Danh sách Bài thi <span className="text-slate-500 font-normal text-lg">( {filteredExams.length} đề )</span></h1>
         </div>
 

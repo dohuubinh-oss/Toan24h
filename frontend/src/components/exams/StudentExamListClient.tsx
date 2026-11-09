@@ -138,7 +138,7 @@ export function StudentExamListClient({
                         router.push(`/exam/${examId}/take`)
                       }
                     }}
-                    className="hover:bg-slate-50 transition-colors group relative border-l-2 border-transparent hover:border-primary cursor-pointer"
+                    className="hover:bg-slate-50 transition-colors group relative cursor-pointer"
                   >
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
@@ -157,7 +157,7 @@ export function StudentExamListClient({
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-slate-400 font-mono mt-0.5">
+                          <p className="text-xs text-slate-500 font-mono mt-0.5">
                             Mã đề: {exam.examCode || exam.code || `#${examId}`}
                           </p>
                         </div>
@@ -192,11 +192,11 @@ export function StudentExamListClient({
                             exam.type === 'Giữa kì 1'
                               ? 'bg-blue-50 text-blue-700 border-blue-200'
                               : exam.type === 'Cuối kì 1'
-                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                              ? 'bg-blue-50 text-blue-800 border-blue-200'
                               : exam.type === 'Giữa kì 2'
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : exam.type === 'Cuối kì 2'
-                              ? 'bg-purple-50 text-purple-700 border-purple-200'
+                              ? 'bg-teal-50 text-teal-800 border-teal-200'
                               : exam.type === 'Chuyên Đề'
                               ? 'bg-amber-50 text-amber-700 border-amber-200'
                               : exam.type === 'Ôn tập'
@@ -207,7 +207,7 @@ export function StudentExamListClient({
                           {exam.type}
                         </span>
                       ) : (
-                        <span className="text-sm font-medium text-slate-400">-</span>
+                        <span className="text-sm font-medium text-slate-500">-</span>
                       )}
                     </td>
                     <td className="px-3 py-3.5 text-center whitespace-nowrap">
@@ -248,7 +248,7 @@ export function StudentExamListClient({
                   <td colSpan={8} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center text-slate-500">
                       <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                        <FolderOpen className="w-8 h-8 text-slate-300" />
+                        <FolderOpen className="w-8 h-8 text-slate-400" />
                       </div>
                       <p className="text-base font-semibold text-slate-700">
                         Chưa có đề thi nào trong {activeMilestoneInfo?.title || 'chặng này'}

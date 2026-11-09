@@ -89,7 +89,7 @@ export function MilestoneExamCard({
 
         {/* Mã đề */}
         {examCode && (
-          <div className="text-xs font-mono font-medium text-slate-400 mb-1 tracking-tight">
+          <div className="text-xs font-mono font-medium text-slate-500 mb-1 tracking-tight">
             {examCode}
           </div>
         )}
@@ -102,12 +102,12 @@ export function MilestoneExamCard({
         {/* Thông số kỹ thuật đề thi (Thời gian, Số câu, Điểm đạt được) */}
         <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-slate-600 mb-5">
           <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+            <Clock className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />
             <span>{duration > 0 ? `${duration} phút` : 'Không giới hạn'}</span>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <HelpCircle className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+            <HelpCircle className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />
             <span>{questionCount} câu</span>
           </div>
 

@@ -6,8 +6,6 @@ import ExamHeader from '@/components/exams/ExamHeader'
 import ExamQuestionList from '@/components/exams/ExamQuestionList'
 import ExamConfigSidebar from '@/components/exams/ExamConfigSidebar'
 import ConfirmDeleteOrphanModal, { OrphanQuestion } from '@/components/exams/ConfirmDeleteOrphanModal'
-import { Grid, UploadCloud } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
 import { Exam } from '@/types/exam'
 import { validateExamConfig, calculateExamDifficulty, sortExamQuestions } from '@/lib/exam-utils'
 import { toast } from '@/components/ui/ToastProvider'
@@ -266,7 +264,7 @@ function CreateExamPageContent() {
   };
 
   return (
-    <div className="bg-slate-50 text-slate-900 min-h-screen pb-20 lg:pb-0 font-body">
+    <div className="bg-slate-50 text-slate-900 min-h-screen pb-12 font-body">
       <ExamHeader 
         title={exam.title}
         examCode={exam.examCode}
@@ -295,21 +293,6 @@ function CreateExamPageContent() {
           errors={errors}
         />
       </main>
-
-      {/* Mobile Footer */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 flex gap-3 z-40 shadow-2xl">
-        <Button variant="secondary" className="flex-1 h-12 rounded-xl text-sm font-bold gap-2">
-          <Grid className="w-5 h-5" />
-          Ma trận
-        </Button>
-        <Button 
-          onClick={handleSave}
-          className="flex-1 h-12 rounded-xl text-sm font-bold gap-2 shadow-lg shadow-primary/30"
-        >
-          <UploadCloud className="w-5 h-5" />
-          Lưu đề thi
-        </Button>
-      </div>
 
       <ConfirmDeleteOrphanModal
         isOpen={showOrphanModal}

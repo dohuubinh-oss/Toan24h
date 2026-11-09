@@ -48,7 +48,7 @@ export default function ExamQuestionList({ questions, onRemoveQuestion, onSwapQu
           <div className="max-w-md space-y-2">
             <h3 className="text-base font-bold text-slate-800">Chưa có câu hỏi nào trong đề thi</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Thầy cô hãy truy cập <strong>Ngân hàng câu hỏi</strong>, tích chọn các câu hỏi cần đưa vào đề thi, sau đó bấm <strong>"Tạo đề thi"</strong> từ thanh tác vụ nổi bên dưới.
+              Thầy cô hãy truy cập <strong>Ngân hàng câu hỏi</strong>, tích chọn các câu hỏi cần đưa vào đề thi, sau đó bấm <strong>"Tạo đề thi"</strong>.
             </p>
           </div>
           <Link

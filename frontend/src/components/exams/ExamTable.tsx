@@ -80,7 +80,7 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
                   sessionStorage.removeItem(`exam_state_${exam.id}`);
                   router.push(`/exam/${exam.id}/take`);
                 }}
-                className="hover:bg-slate-50 transition-colors group relative border-l-2 border-transparent hover:border-primary cursor-pointer"
+                className="hover:bg-slate-50 transition-colors group relative cursor-pointer"
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
@@ -89,7 +89,7 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-slate-800 truncate">{exam.title}</p>
-                      <p className="text-xs text-slate-400 font-mono">Mã đề: {exam.examCode || 'N/A'}</p>
+                      <p className="text-xs text-slate-500 font-mono">Mã đề: {exam.examCode || 'N/A'}</p>
                     </div>
                   </div>
                 </td>
@@ -106,9 +106,9 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
                     <span className={cn(
                       "text-xs font-semibold px-2.5 py-1 rounded-full border inline-block",
                       exam.type === 'Giữa kì 1' ? "bg-blue-50 text-blue-700 border-blue-200" :
-                      exam.type === 'Cuối kì 1' ? "bg-indigo-50 text-indigo-700 border-indigo-200" :
+                      exam.type === 'Cuối kì 1' ? "bg-blue-50 text-blue-800 border-blue-200" :
                       exam.type === 'Giữa kì 2' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                      exam.type === 'Cuối kì 2' ? "bg-purple-50 text-purple-700 border-purple-200" :
+                      exam.type === 'Cuối kì 2' ? "bg-teal-50 text-teal-800 border-teal-200" :
                       exam.type === 'Chuyên Đề' ? "bg-amber-50 text-amber-700 border-amber-200" :
                       exam.type === 'Ôn tập' ? "bg-sky-50 text-sky-700 border-sky-200" :
                       "bg-slate-100 text-slate-700 border-slate-200"
@@ -116,7 +116,7 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
                       {exam.type}
                     </span>
                   ) : (
-                    <span className="text-sm font-medium text-slate-400">-</span>
+                    <span className="text-sm font-medium text-slate-500">-</span>
                   )}
                 </td>
                 <td className="px-3 py-3 text-center whitespace-nowrap">
@@ -127,7 +127,7 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl cursor-pointer" 
+                      className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-xl cursor-pointer" 
                       title="Chỉnh sửa đề thi"
                       aria-label={`Chỉnh sửa đề thi ${exam.title}`}
                       onClick={(e) => {
@@ -141,7 +141,7 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl cursor-pointer" 
+                      className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl cursor-pointer" 
                       title="Xóa đề thi"
                       aria-label={`Xóa đề thi ${exam.title}`}
                       onClick={(e) => {
@@ -160,7 +160,7 @@ export default function ExamTable({ exams, onDelete }: ExamTableProps) {
                 <td colSpan={8} className="px-6 py-16 text-center">
                   <div className="flex flex-col items-center justify-center text-slate-500">
                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                      <Calculator className="w-8 h-8 text-slate-300" />
+                      <Calculator className="w-8 h-8 text-slate-400" />
                     </div>
                     <p className="text-base font-semibold text-slate-700">Không tìm thấy đề thi</p>
                     <p className="text-sm mt-1">Hãy thử thay đổi bộ lọc hoặc từ khoá tìm kiếm.</p>
