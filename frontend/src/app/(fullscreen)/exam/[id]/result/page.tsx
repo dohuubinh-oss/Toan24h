@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Sparkles, ArrowLeft, Loader2, Award, Save, CheckCircle, X, RotateCcw } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles, ArrowLeft, Loader2, Award, Save, CheckCircle, X, RotateCcw, FileText, Brain, PenSquare } from 'lucide-react'
 import ExamProgressNav from '@/components/exam/taking/ExamProgressNav'
 import QuestionMapSidebar, { QuestionMapItem, QuestionStatus } from '@/components/exam/taking/QuestionMapSidebar'
 import MultipleChoiceQuestion from '@/components/exam/taking/MultipleChoiceQuestion'
@@ -363,25 +363,25 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const isPending = resultData.submission?.status === 'pending' || (resultData.submission?.status !== 'graded' && resultData.submission?.status !== 'COMPLETED')
   if (isPending) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl border border-slate-100 text-center relative overflow-hidden">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-tr from-primary to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/25">
-            <Sparkles className="w-10 h-10 animate-pulse" />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6">
+        <div className="max-w-md w-full bg-white rounded-2xl p-8 shadow-sm border border-slate-200 text-center">
+          <div className="w-14 h-14 mx-auto mb-5 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+            <Loader2 className="w-7 h-7 animate-spin" />
           </div>
 
-          <h2 className="text-2xl font-bold text-slate-800 mb-3 leading-snug">
-            Bài làm của bạn đang được chấm điểm, xin vui lòng chờ...
+          <h2 className="text-xl font-bold text-slate-900 mb-2 leading-snug">
+            Hệ thống đang chấm điểm bài làm
           </h2>
           
-          <p className="text-slate-600 text-sm leading-relaxed mb-8">
-            Bài thi đang được chấm, vui lòng kiểm tra tin nhắn và quay lại sau.
+          <p className="text-slate-600 text-sm leading-relaxed mb-6">
+            Hệ thống đang phân tích chi tiết các bước giải và lập luận toán học. Kết quả sẽ tự động hiển thị trong giây lát.
           </p>
 
           <div className="flex justify-center">
             <button
               type="button"
               onClick={handleBack}
-              className="w-full sm:w-auto px-8 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               Quay lại
@@ -488,54 +488,60 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
       />
 
       {/* Attempt Switcher & Retake Action Bar */}
-      {resultData?.attempts && resultData.attempts.length > 0 && (
-        <div className="bg-white border-b border-slate-200/80 px-4 md:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3 sm:gap-4 shadow-2xs z-30">
+      {(resultData?.attempts?.length > 1 || mappedData.exam?.id) && (
+        <div className="bg-slate-50/80 border-b border-slate-200/80 px-4 md:px-8 py-2 flex flex-wrap items-center justify-between gap-3 z-30">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:inline">Lần làm bài:</span>
-            <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
-              {resultData.attempts.map((att: any) => {
-                const isCurrent = att.id === resultData.submission?.id
-                const isOfficial = att.attemptNumber === 1
-                return (
-                  <button
-                    key={att.id}
-                    onClick={() => {
-                      if (!isCurrent) {
-                        router.push(`/exam/${att.id}/result`)
-                      }
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                      isCurrent
-                        ? 'bg-white text-primary shadow-xs font-bold'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                    }`}
-                  >
-                    {isOfficial ? (
-                      <>
-                        <Award className="w-3.5 h-3.5 text-amber-500" />
-                        <span>Lần 1 (Chính thức): <strong>{att.totalScore != null ? Number(att.totalScore).toFixed(1) : 0}đ</strong></span>
-                      </>
-                    ) : (
-                      <>
-                        <RotateCcw className="w-3.5 h-3.5 text-emerald-500" />
-                        <span>Lần 2 (Ôn tập): <strong>{att.totalScore != null ? Number(att.totalScore).toFixed(1) : 0}đ</strong></span>
-                      </>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
+            {resultData?.attempts && resultData.attempts.length > 1 && (
+              <>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:inline">Lần làm bài:</span>
+                <div className="flex items-center gap-1 p-0.5 bg-slate-200/70 rounded-lg">
+                  {resultData.attempts.map((att: any) => {
+                    const isCurrent = att.id === resultData.submission?.id
+                    const isOfficial = att.attemptNumber === 1
+                    return (
+                      <button
+                        key={att.id}
+                        type="button"
+                        onClick={() => {
+                          if (!isCurrent) {
+                            router.push(`/exam/${att.id}/result`)
+                          }
+                        }}
+                        className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                          isCurrent
+                            ? 'bg-white text-slate-900 shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                        }`}
+                      >
+                        {isOfficial ? (
+                          <>
+                            <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span>Lần 1 (Chính thức): <strong>{att.totalScore != null ? Number(att.totalScore).toFixed(1) : 0}đ</strong></span>
+                          </>
+                        ) : (
+                          <>
+                            <RotateCcw className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>Lần {att.attemptNumber || 2} (Ôn tập): <strong>{att.totalScore != null ? Number(att.totalScore).toFixed(1) : 0}đ</strong></span>
+                          </>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Retake button */}
           {mappedData.exam?.id && (
             <button
+              type="button"
               onClick={() => {
                 sessionStorage.removeItem(`exam_state_${mappedData.exam.id}`)
                 sessionStorage.removeItem(`exam_end_time_${mappedData.exam.id}`)
                 router.push(`/exam/${mappedData.exam.id}/take`)
               }}
-              className="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-primary border border-primary/20 rounded-xl text-xs md:text-sm font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-primary bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer shadow-xs ml-auto"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Làm lại đề thi</span>
@@ -547,34 +553,6 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
       {/* Main Workspace Area */}
       <div className="flex-1 flex flex-col overflow-hidden relative pb-16 sm:pb-20 w-full">
         <div className="flex-1 flex overflow-hidden relative w-full">
-          {/* Left Navigation Overlay */}
-          {currentQuestionIndex > 0 && (
-            <button 
-              type="button"
-              onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
-              className="absolute left-0 top-0 bottom-16 sm:bottom-20 w-12 md:w-24 z-10 flex items-center justify-start pl-2 md:pl-4 opacity-0 hover:opacity-100 focus-visible:opacity-100 focus:outline-none hover:bg-gradient-to-r hover:from-slate-200/50 hover:to-transparent transition-all group"
-              aria-label="Câu trước"
-            >
-              <div className="w-10 h-10 rounded-full bg-white border border-slate-200/80 shadow-md flex items-center justify-center text-slate-600 group-hover:text-primary group-focus-visible:text-primary transition-colors">
-                <ChevronLeft size={24} />
-              </div>
-            </button>
-          )}
-
-          {/* Right Navigation Overlay */}
-          {currentQuestionIndex < mappedData.questions.length - 1 && (
-            <button 
-              type="button"
-              onClick={() => setCurrentQuestionIndex(prev => Math.min(mappedData.questions.length - 1, prev + 1))}
-              className="absolute right-0 top-0 bottom-16 sm:bottom-20 w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 focus-visible:opacity-100 focus:outline-none hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
-              aria-label="Câu tiếp theo"
-            >
-              <div className="w-10 h-10 rounded-full bg-white border border-slate-200/80 shadow-md flex items-center justify-center text-slate-600 group-hover:text-primary group-focus-visible:text-primary transition-colors">
-                <ChevronRight size={24} />
-              </div>
-            </button>
-          )}
-
           {/* Central Question Content */}
           <div className="flex-1 overflow-y-auto">
 
@@ -655,7 +633,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               <div className="max-w-4xl mx-auto my-6 p-5 sm:p-6 bg-slate-50 border border-slate-200/90 rounded-2xl shadow-xs space-y-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
+                    <PenSquare className="w-5 h-5 text-primary" />
                     <h4 className="font-bold text-slate-900 text-base">Giáo viên chấm điểm câu này:</h4>
                   </div>
                   <div className="flex items-center gap-2">
@@ -706,15 +684,15 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* Result Footer matching Take Footer layout */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 sm:px-6 sm:py-3.5 z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 sm:px-6 sm:py-3 z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           {/* Navigation buttons */}
-          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
               disabled={currentQuestionIndex === 0}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 text-slate-700 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap cursor-pointer shrink-0"
+              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 min-h-[44px] text-slate-700 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap cursor-pointer shrink-0"
               aria-label="Câu trước"
             >
               <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
@@ -726,7 +704,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
               type="button"
               onClick={() => setCurrentQuestionIndex(prev => Math.min(mappedData.questions.length - 1, prev + 1))}
               disabled={currentQuestionIndex >= mappedData.questions.length - 1}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 text-slate-700 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap cursor-pointer shrink-0"
+              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 min-h-[44px] text-slate-700 font-semibold hover:bg-slate-100 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs sm:text-sm whitespace-nowrap cursor-pointer shrink-0"
               aria-label="Câu tiếp theo"
             >
               <span className="hidden sm:inline">Câu tiếp theo</span>
@@ -741,7 +719,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                 type="button"
                 onClick={handleTeacherCompleteGrading}
                 disabled={isSubmittingReview}
-                className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50 text-xs sm:text-sm cursor-pointer"
+                className="flex items-center gap-2 px-4 sm:px-6 min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition-all disabled:opacity-50 text-xs sm:text-sm cursor-pointer"
               >
                 {isSubmittingReview ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <Save className="w-4 h-4 sm:w-5 sm:h-5" />}
                 <span>Lưu & Hoàn tất chấm</span>
@@ -751,16 +729,16 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                 <button
                   type="button"
                   onClick={() => setIsSummaryModalOpen(true)}
-                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer active:scale-95 border border-primary/20"
+                  className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 min-h-[44px] bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer active:scale-95 border border-primary/20"
                 >
-                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary animate-pulse" />
+                  <Sparkles className="w-4 h-4 text-primary shrink-0" />
                   <span>Xem Nhận xét AI</span>
                 </button>
                 {isVip && (
-                  <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-amber-50 text-amber-900 rounded-xl font-bold text-xs sm:text-sm border border-amber-200/80 shadow-xs">
-                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 shrink-0" />
-                    <span>Điểm tư duy: {avgReasoningScore.toFixed(1)}/10</span>
-                    <span className="text-[10px] uppercase font-black bg-amber-500 text-white px-1.5 py-0.5 rounded shadow-xs ml-0.5">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-900 rounded-xl font-semibold text-xs sm:text-sm border border-amber-200/80 shadow-xs">
+                    <Brain className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Điểm tư duy: <strong>{avgReasoningScore.toFixed(1)}/10</strong></span>
+                    <span className="text-[10px] uppercase font-black bg-amber-500 text-white px-1.5 py-0.5 rounded shadow-2xs">
                       VIP
                     </span>
                   </div>
@@ -777,63 +755,62 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           role="dialog"
           aria-modal="true"
           aria-labelledby="ai-summary-modal-title"
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200 font-sans"
         >
           <div className="fixed inset-0" onClick={() => setIsSummaryModalOpen(false)} aria-hidden="true" />
-          <div className="bg-white text-slate-800 rounded-3xl p-6 sm:p-8 w-full max-w-2xl shadow-2xl border border-slate-200/90 relative overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white text-slate-800 rounded-2xl p-6 sm:p-7 w-full max-w-2xl shadow-xl border border-slate-200 relative overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Close button */}
             <button 
               type="button"
               onClick={() => setIsSummaryModalOpen(false)}
-              className="absolute top-5 right-5 min-w-[40px] min-h-[40px] p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="absolute top-4 right-4 min-w-[40px] min-h-[40px] p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="Đóng báo cáo"
             >
               <X className="w-5 h-5" aria-hidden="true" />
             </button>
 
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-xs">
-                <Sparkles className="w-6 h-6 text-primary animate-pulse" aria-hidden="true" />
+            <div className="flex items-center gap-3.5 mb-5 pb-4 border-b border-slate-200">
+              <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5 text-primary" aria-hidden="true" />
               </div>
               <div>
-                <h3 id="ai-summary-modal-title" className="font-extrabold text-xl text-slate-900 flex items-center gap-2">
+                <h3 id="ai-summary-modal-title" className="font-bold text-lg text-slate-900">
                   Báo cáo Đánh giá AI Tổng quan
-                  <span className="text-[10px] uppercase font-black bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 rounded-full">
-                    Gemini 3.6 Flash
-                  </span>
                 </h3>
                 <p className="text-xs text-slate-500">Phân tích chi tiết phương pháp làm bài & trình bày toán học</p>
               </div>
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center gap-2 mb-4 bg-slate-100 p-1.5 rounded-xl border border-slate-200 w-fit">
+            <div className="flex items-center gap-1.5 mb-4 bg-slate-100 p-1 rounded-xl border border-slate-200/80 w-fit">
               <button
                 type="button"
                 onClick={() => setSummaryTab('essay')}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   summaryTab === 'essay' 
-                    ? 'bg-primary text-white shadow-xs' 
+                    ? 'bg-white text-primary shadow-xs font-bold' 
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                📝 Nhận xét Tự luận
+                <FileText className="w-3.5 h-3.5" />
+                <span>Nhận xét Tự luận</span>
               </button>
               <button
                 type="button"
                 onClick={() => setSummaryTab('comprehension')}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   summaryTab === 'comprehension' 
-                    ? 'bg-purple-600 text-white shadow-xs' 
+                    ? 'bg-white text-primary shadow-xs font-bold' 
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                🧠 Phân tích Tư duy
+                <Brain className="w-3.5 h-3.5" />
+                <span>Phân tích Tư duy</span>
               </button>
             </div>
 
             {/* Content */}
-            <div className="text-sm leading-relaxed text-slate-700 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <div className="text-sm leading-relaxed text-slate-700 max-h-[350px] overflow-y-auto pr-2 bg-slate-50/70 p-4 rounded-xl border border-slate-200">
               {summaryTab === 'essay' ? (
                 isTeacherMode ? (
                   <div className="space-y-2">
@@ -851,7 +828,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                     <MathText content={overallEssayFeedback} />
                   ) : (
                     <div className="p-3 text-xs text-slate-500">
-                      ✨ Bài thi đã được AI chấm tự động và đánh giá dựa trên tiêu chuẩn đáp án chuẩn.
+                      Bài thi đã được AI chấm tự động và đánh giá dựa trên tiêu chuẩn đáp án chuẩn.
                     </div>
                   )
                 )
@@ -864,7 +841,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                       value={overallComprehensionFeedback}
                       onChange={(e) => setOverallComprehensionFeedback(e.target.value)}
                       placeholder="Nhập đánh giá tổng quan tư duy toán học..."
-                      className="w-full p-3 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs focus:ring-2 focus:ring-purple-500 outline-none"
+                      className="w-full p-3 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs focus:ring-2 focus:ring-primary outline-none"
                     />
                   </div>
                 ) : (
@@ -872,7 +849,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                     <MathText content={overallComprehensionFeedback} />
                   ) : (
                     <div className="p-3 text-xs text-slate-500">
-                      🧠 AI phân tích mạch suy luận toán học và năng lực giải quyết vấn đề của bài thi.
+                      AI phân tích mạch suy luận toán học và năng lực giải quyết vấn đề của bài thi.
                     </div>
                   )
                 )
@@ -880,10 +857,11 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
             </div>
 
             {/* Action Footer */}
-            <div className="mt-6 flex justify-end">
+            <div className="mt-5 flex justify-end">
               <button
+                type="button"
                 onClick={() => setIsSummaryModalOpen(false)}
-                className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all cursor-pointer"
+                className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm rounded-xl transition-all cursor-pointer min-h-[38px]"
               >
                 Đóng
               </button>
