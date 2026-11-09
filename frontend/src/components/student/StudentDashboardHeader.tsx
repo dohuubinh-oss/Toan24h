@@ -8,15 +8,15 @@ interface Props {
 
 export default function StudentDashboardHeader({ user }: Props) {
   return (
-    <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8 p-6 rounded-2xl bg-gradient-to-br from-blue-50/70 to-slate-50 border border-slate-200/70 shadow-xs">
+    <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8 p-6 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs">
       <div className="flex items-center gap-4">
         <div className="relative shrink-0">
           <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white text-xl font-bold border-2 border-white shadow-sm">
             {user.initial}
           </div>
           {user.isPro && (
-            <div className="absolute -top-2 -right-1 text-amber-400 drop-shadow-sm">
-              <Award size={24} className="fill-amber-400" />
+            <div className="absolute -top-2 -right-1 text-amber-500 drop-shadow-sm">
+              <Award size={24} className="fill-amber-500" />
             </div>
           )}
         </div>
@@ -24,7 +24,7 @@ export default function StudentDashboardHeader({ user }: Props) {
           <div className="flex items-center gap-2.5 flex-wrap">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-800">{user.greeting}, {user.name}!</h2>
             {user.isPro && (
-              <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs">PRO</span>
+              <span className="bg-amber-500 text-white text-xs font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full">PRO</span>
             )}
             {user.grade && (
               <span className="bg-blue-50 text-blue-600 border border-blue-200/80 text-xs font-bold px-3 py-1 rounded-full shadow-2xs">
@@ -34,7 +34,7 @@ export default function StudentDashboardHeader({ user }: Props) {
           </div>
         </div>
       </div>
-      <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-3 sm:gap-6 bg-white/90 backdrop-blur-md px-4 sm:px-6 py-3 rounded-xl border border-slate-200/80 shadow-xs">
+      <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-3 sm:gap-6 bg-white px-4 sm:px-6 py-3 rounded-xl border border-slate-200/80 shadow-xs">
         <div className="flex items-center gap-2">
           <div className="p-2 bg-amber-50 rounded-full border border-amber-200/60 shadow-xs">
             <Star className="text-amber-600" size={20} aria-hidden="true" />

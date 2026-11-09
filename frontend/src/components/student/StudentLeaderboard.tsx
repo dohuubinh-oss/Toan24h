@@ -1,5 +1,5 @@
 import React from 'react'
-import { Trophy, Award, Flame } from 'lucide-react'
+import { Trophy, Award, Flame, Medal } from 'lucide-react'
 import { LeaderboardUser } from '@/types/student'
 import { getAvatarInitial } from '@/lib/utils'
 
@@ -32,13 +32,25 @@ export default function StudentLeaderboard({ leaderboard, currentUser }: Props) 
           let rankBg = 'hover:bg-slate-50'
 
           if (user.rank === 1) {
-            rankBadge = <span role="img" aria-label="Hạng 1" className="w-5 flex justify-center text-amber-500 font-extrabold">🥇</span>
+            rankBadge = (
+              <span className="w-5 flex justify-center text-amber-500" title="Hạng 1" aria-label="Hạng 1">
+                <Medal size={18} className="fill-amber-500/20" />
+              </span>
+            )
             rankBg = 'bg-amber-50/60 border border-amber-200/60'
           } else if (user.rank === 2) {
-            rankBadge = <span role="img" aria-label="Hạng 2" className="w-5 flex justify-center text-slate-400 font-extrabold">🥈</span>
+            rankBadge = (
+              <span className="w-5 flex justify-center text-slate-400" title="Hạng 2" aria-label="Hạng 2">
+                <Medal size={18} className="fill-slate-400/20" />
+              </span>
+            )
             rankBg = 'bg-slate-50/80 border border-slate-200/60'
           } else if (user.rank === 3) {
-            rankBadge = <span role="img" aria-label="Hạng 3" className="w-5 flex justify-center text-amber-700 font-extrabold">🥉</span>
+            rankBadge = (
+              <span className="w-5 flex justify-center text-amber-700" title="Hạng 3" aria-label="Hạng 3">
+                <Medal size={18} className="fill-amber-700/20" />
+              </span>
+            )
             rankBg = 'bg-orange-50/50 border border-orange-200/60'
           }
 
@@ -58,7 +70,7 @@ export default function StudentLeaderboard({ leaderboard, currentUser }: Props) 
         )}
 
         {/* Current User Bar */}
-        <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-blue-50 to-amber-50 border border-amber-300/70 rounded-xl shadow-xs mt-4">
+        <div className="flex items-center gap-3 p-3 bg-blue-50/70 border border-blue-200/80 rounded-xl shadow-xs mt-4">
           <span className="font-bold text-primary w-5 text-center">{currentUser.rank}</span>
           <div className="relative shrink-0">
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm border-2 border-white shadow-sm">
@@ -86,8 +98,8 @@ export default function StudentLeaderboard({ leaderboard, currentUser }: Props) 
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
             {currentUser.rank <= 3
-              ? '🏆 Xuất sắc! Bạn đang ở Top 3 dẫn đầu. Hãy tiếp tục giải đề để bảo toàn thứ hạng nhé!'
-              : `⚡ Bạn đang ở Hạng #${currentUser.rank}. Làm thêm bài tập hoặc 1 đề thi để bứt phá vào Top dẫn đầu!`}
+              ? 'Xuất sắc! Bạn đang ở Top 3 dẫn đầu. Hãy tiếp tục giải đề để bảo toàn thứ hạng nhé!'
+              : `Bạn đang ở Hạng #${currentUser.rank}. Làm thêm bài tập hoặc 1 đề thi để bứt phá vào Top dẫn đầu!`}
           </p>
         </div>
       </div>

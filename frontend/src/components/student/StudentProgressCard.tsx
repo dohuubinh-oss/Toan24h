@@ -1,4 +1,5 @@
 import React from 'react'
+import Link from 'next/link'
 import { ArrowRight, Compass, Target } from 'lucide-react'
 import { ProgressData } from '@/types/student'
 
@@ -41,12 +42,12 @@ export default function StudentProgressCard({ progress }: Props) {
             </div>
           </div>
           {progress.actionHref ? (
-            <a 
+            <Link 
               href={progress.actionHref}
               className="bg-white text-primary px-8 min-h-[44px] h-12 rounded-xl font-bold hover:bg-slate-50 transition-all inline-flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               <span>{progress.actionText}</span> <ArrowRight size={18} aria-hidden="true" />
-            </a>
+            </Link>
           ) : (
             <button className="bg-white text-primary px-8 min-h-[44px] h-12 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
               <span>{progress.actionText}</span> <ArrowRight size={18} aria-hidden="true" />
@@ -57,8 +58,6 @@ export default function StudentProgressCard({ progress }: Props) {
           <Compass size={120} strokeWidth={1.5} />
         </div>
       </div>
-      <div className="absolute -right-16 -bottom-16 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
-      <div className="absolute -left-16 -top-16 w-48 h-48 bg-white/5 rounded-full blur-xl pointer-events-none"></div>
     </section>
   )
 }

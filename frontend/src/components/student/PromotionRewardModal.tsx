@@ -69,13 +69,12 @@ export default function PromotionRewardModal({
           <X className="w-5 h-5" aria-hidden="true" />
         </button>
 
-        {/* Gift Icon with Glowing Ring */}
-        <div className="relative mx-auto w-20 h-20 mb-5 flex items-center justify-center">
-          <div className="absolute inset-0 bg-amber-400/20 rounded-full blur-xl animate-pulse" />
-          <div className="relative w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+        {/* Gift Icon */}
+        <div className="relative mx-auto w-16 h-16 mb-5 flex items-center justify-center">
+          <div className="w-16 h-16 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-md shadow-amber-500/20">
             <Gift className="w-8 h-8" aria-hidden="true" />
           </div>
-          <span className="absolute -top-1 -right-1 p-1 bg-blue-600 text-white rounded-full shadow-md">
+          <span className="absolute -top-1 -right-1 p-1 bg-primary text-white rounded-full shadow-sm">
             <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
           </span>
         </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useCallback, useRef } from 'react'
-import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2, Save, Sparkles, Loader2 } from 'lucide-react'
+import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2, Save, Sparkles, Loader2, Plus, FileQuestion } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import JsonInputSection from '@/components/questions/creator/JsonInputSection'
@@ -100,6 +100,35 @@ function CreateQuestionContent() {
 
     const totalCount = blocks.reduce((acc, b) => acc + (b.questions?.length || 0), 0);
     toast.success(`Đã bóc tách thành công ${totalCount} câu hỏi từ ảnh đề thi!`);
+  }, []);
+
+  const handleCreateBlankQuestion = useCallback(() => {
+    setQuestionBlocks([{
+      shared_content: '',
+      diagram_svg: null,
+      questions: [{
+        content: '',
+        type: 'Trắc nghiệm',
+        type_question: 'single',
+        grade: 9,
+        topic: '',
+        difficulty_level: 'Thông hiểu',
+        difficulty_point: 5.0,
+        point: 1,
+        tags: [],
+        options: ['', '', '', ''],
+        correct_answer: '',
+        solution_guide: '',
+        hint: '',
+        short_answer: '',
+        general_method: '',
+        mistakes: ''
+      }],
+      is_group: false
+    }]);
+    setCurrentBlockIndex(0);
+    setCurrentQuestionIndex(0);
+    scrollToEditor();
   }, []);
 
   const handleNext = useCallback(() => {
@@ -459,7 +488,7 @@ function CreateQuestionContent() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column - Input and Editor */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className={totalBlocks > 0 || editId ? "lg:col-span-8 space-y-6" : "lg:col-span-12 space-y-6"}>
             <JsonInputSection 
               onProcessJson={handleProcessJson}
               onAiExtract={() => setIsAiModalOpen(true)}
@@ -471,40 +500,61 @@ function CreateQuestionContent() {
               initialValue={extractedJson}
             />
 
-            {totalBlocks === 0 && !editId && (
-              <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-5 flex items-start gap-3.5 shadow-xs">
-                <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                  <Sparkles className="w-5 h-5" />
+            {totalBlocks === 0 && !editId ? (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-8 sm:p-12 text-center shadow-xs">
+                <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+                  <FileQuestion className="w-6 h-6" />
                 </div>
-                <div className="space-y-1 text-slate-700">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-primary">Quy trình số hóa nhanh</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    Bấm <strong>"Tải ảnh câu hỏi"</strong> phía trên (hoặc nhấn <strong>Ctrl+V</strong> trong hộp thoại) hoặc dán mã <strong>JSON</strong> để hệ thống tự động bóc tách toàn bộ câu hỏi. Sau khi bóc tách xong, thầy cô có thể xem và chỉnh sửa trực tiếp các chi tiết chưa ưng ý tại đây trước khi lưu.
-                  </p>
+                <h3 className="text-base font-semibold text-slate-800 mb-1.5">
+                  Chưa có nội dung câu hỏi
+                </h3>
+                <p className="text-sm text-slate-600 max-w-md mx-auto mb-6">
+                  Tải ảnh để AI bóc tách tự động, dán mã JSON vào khung ở trên, hoặc bắt đầu soạn thảo câu hỏi mới trực tiếp.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsAiModalOpen(true)}
+                    className="min-h-[44px] px-4 font-bold text-xs flex items-center gap-2 rounded-xl"
+                  >
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    Bóc tách từ ảnh (AI)
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleCreateBlankQuestion}
+                    className="min-h-[44px] px-5 font-bold text-xs flex items-center gap-2 rounded-xl shadow-xs"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Soạn câu hỏi mới
+                  </Button>
                 </div>
               </div>
+            ) : (
+              <div ref={editorRef} className="scroll-mt-24">
+                <QuestionEditorSection 
+                  currentBlock={currentBlock}
+                  currentQuestion={currentQuestion}
+                  updateBlock={updateBlock}
+                  updateQuestion={updateQuestion}
+                  currentQuestionIndex={currentQuestionIndex}
+                  onSelectSubQuestion={(idx) => setCurrentQuestionIndex(idx)}
+                  onAddSubQuestion={handleAddSubQuestion}
+                />
+              </div>
             )}
-
-            <div ref={editorRef} className="scroll-mt-24">
-              <QuestionEditorSection 
-                currentBlock={currentBlock}
-                currentQuestion={currentQuestion}
-                updateBlock={updateBlock}
-                updateQuestion={updateQuestion}
-                currentQuestionIndex={currentQuestionIndex}
-                onSelectSubQuestion={(idx) => setCurrentQuestionIndex(idx)}
-                onAddSubQuestion={handleAddSubQuestion}
-              />
-            </div>
           </div>
 
           {/* Right Column - Sidebar Settings */}
-          <div className="lg:col-span-4">
-            <QuestionSettingsSidebar 
-              currentQuestion={currentQuestion}
-              updateQuestion={updateQuestion}
-            />
-          </div>
+          {(totalBlocks > 0 || editId) && (
+            <div className="lg:col-span-4">
+              <QuestionSettingsSidebar 
+                currentQuestion={currentQuestion}
+                updateQuestion={updateQuestion}
+              />
+            </div>
+          )}
 
         </div>
       </main>
