@@ -217,3 +217,39 @@ describe('CreateQuestionPage - Drive Link Validation', () => {
     })
   })
 })
+
+describe('CreateQuestionPage - Initial Default Blank Question', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockSearchParams = new URLSearchParams()
+  })
+
+  it('renders empty form fields and settings sidebar immediately on initial load without JSON or AI', () => {
+    render(<CreateQuestionPage />)
+
+    // Verify empty dashed card is NOT rendered
+    expect(screen.queryByText('Chưa có nội dung câu hỏi')).not.toBeInTheDocument()
+
+    // Verify QuestionEditorSection is rendered
+    expect(screen.getByText('Nội dung câu hỏi')).toBeInTheDocument()
+    expect(screen.getByText('Đáp án')).toBeInTheDocument()
+    expect(screen.getByText('Lời giải chi tiết')).toBeInTheDocument()
+    expect(screen.getByText('Thông tin bổ trợ cho học sinh')).toBeInTheDocument()
+
+    // Verify QuestionSettingsSidebar is rendered
+    expect(screen.getByText('Thiết lập câu hỏi')).toBeInTheDocument()
+    expect(screen.getByText('Link Drive')).toBeInTheDocument()
+  })
+
+  it('allows adding another question block via Thêm câu button in floating action bar', () => {
+    render(<CreateQuestionPage />)
+
+    expect(screen.getByText('/ 1')).toBeInTheDocument()
+
+    const addBtn = screen.getByRole('button', { name: /Thêm câu hỏi mới/i })
+    fireEvent.click(addBtn)
+
+    expect(screen.getByText('/ 2')).toBeInTheDocument()
+    expect(toast.success).toHaveBeenCalledWith('Đã thêm câu hỏi mới')
+  })
+})

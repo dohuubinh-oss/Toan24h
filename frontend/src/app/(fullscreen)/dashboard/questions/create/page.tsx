@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useCallback, useRef } from 'react'
-import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2, Save, Sparkles, Loader2, Plus, FileQuestion } from 'lucide-react'
+import { ArrowLeft, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, Trash2, Save, Sparkles, Loader2, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import JsonInputSection from '@/components/questions/creator/JsonInputSection'
@@ -24,8 +24,32 @@ export default function CreateQuestionPage() {
   )
 }
 
+const createDefaultBlankBlock = (): QuestionBlock => ({
+  shared_content: '',
+  diagram_svg: null,
+  questions: [{
+    content: '',
+    type: 'Trắc nghiệm',
+    type_question: 'single',
+    grade: 9,
+    topic: '',
+    difficulty_level: 'Thông hiểu',
+    difficulty_point: 5.0,
+    point: 1,
+    tags: [],
+    options: ['', '', '', ''],
+    correct_answer: '',
+    solution_guide: '',
+    hint: '',
+    short_answer: '',
+    general_method: '',
+    mistakes: ''
+  }],
+  is_group: false
+})
+
 function CreateQuestionContent() {
-  const [questionBlocks, setQuestionBlocks] = useState<QuestionBlock[]>([])
+  const [questionBlocks, setQuestionBlocks] = useState<QuestionBlock[]>([createDefaultBlankBlock()])
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isSaving, setIsSaving] = useState(false)
@@ -103,32 +127,21 @@ function CreateQuestionContent() {
   }, []);
 
   const handleCreateBlankQuestion = useCallback(() => {
-    setQuestionBlocks([{
-      shared_content: '',
-      diagram_svg: null,
-      questions: [{
-        content: '',
-        type: 'Trắc nghiệm',
-        type_question: 'single',
-        grade: 9,
-        topic: '',
-        difficulty_level: 'Thông hiểu',
-        difficulty_point: 5.0,
-        point: 1,
-        tags: [],
-        options: ['', '', '', ''],
-        correct_answer: '',
-        solution_guide: '',
-        hint: '',
-        short_answer: '',
-        general_method: '',
-        mistakes: ''
-      }],
-      is_group: false
-    }]);
+    setQuestionBlocks([createDefaultBlankBlock()]);
     setCurrentBlockIndex(0);
     setCurrentQuestionIndex(0);
     scrollToEditor();
+  }, []);
+
+  const handleAddNewQuestion = useCallback(() => {
+    setQuestionBlocks(prev => {
+      const next = [...prev, createDefaultBlankBlock()];
+      setCurrentBlockIndex(next.length - 1);
+      setCurrentQuestionIndex(0);
+      return next;
+    });
+    scrollToEditor();
+    toast.success("Đã thêm câu hỏi mới");
   }, []);
 
   const handleNext = useCallback(() => {
@@ -197,6 +210,13 @@ function CreateQuestionContent() {
         }
         setCurrentQuestionIndex(0);
       }
+
+      if (newBlocks.length === 0) {
+        setCurrentBlockIndex(0);
+        setCurrentQuestionIndex(0);
+        return [createDefaultBlankBlock()];
+      }
+
       return newBlocks;
     });
     toast.success("Đã xóa câu hỏi");
@@ -488,7 +508,7 @@ function CreateQuestionContent() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* Left Column - Input and Editor */}
-          <div className={totalBlocks > 0 || editId ? "lg:col-span-8 space-y-6" : "lg:col-span-12 space-y-6"}>
+          <div className="lg:col-span-8 space-y-6">
             <JsonInputSection 
               onProcessJson={handleProcessJson}
               onAiExtract={() => setIsAiModalOpen(true)}
@@ -500,61 +520,26 @@ function CreateQuestionContent() {
               initialValue={extractedJson}
             />
 
-            {totalBlocks === 0 && !editId ? (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-8 sm:p-12 text-center shadow-xs">
-                <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
-                  <FileQuestion className="w-6 h-6" />
-                </div>
-                <h3 className="text-base font-semibold text-slate-800 mb-1.5">
-                  Chưa có nội dung câu hỏi
-                </h3>
-                <p className="text-sm text-slate-600 max-w-md mx-auto mb-6">
-                  Tải ảnh để AI bóc tách tự động, dán mã JSON vào khung ở trên, hoặc bắt đầu soạn thảo câu hỏi mới trực tiếp.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsAiModalOpen(true)}
-                    className="min-h-[44px] px-4 font-bold text-xs flex items-center gap-2 rounded-xl"
-                  >
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    Bóc tách từ ảnh (AI)
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleCreateBlankQuestion}
-                    className="min-h-[44px] px-5 font-bold text-xs flex items-center gap-2 rounded-xl shadow-xs"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Soạn câu hỏi mới
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div ref={editorRef} className="scroll-mt-24">
-                <QuestionEditorSection 
-                  currentBlock={currentBlock}
-                  currentQuestion={currentQuestion}
-                  updateBlock={updateBlock}
-                  updateQuestion={updateQuestion}
-                  currentQuestionIndex={currentQuestionIndex}
-                  onSelectSubQuestion={(idx) => setCurrentQuestionIndex(idx)}
-                  onAddSubQuestion={handleAddSubQuestion}
-                />
-              </div>
-            )}
+            <div ref={editorRef} className="scroll-mt-24">
+              <QuestionEditorSection 
+                currentBlock={currentBlock}
+                currentQuestion={currentQuestion}
+                updateBlock={updateBlock}
+                updateQuestion={updateQuestion}
+                currentQuestionIndex={currentQuestionIndex}
+                onSelectSubQuestion={(idx) => setCurrentQuestionIndex(idx)}
+                onAddSubQuestion={handleAddSubQuestion}
+              />
+            </div>
           </div>
 
           {/* Right Column - Sidebar Settings */}
-          {(totalBlocks > 0 || editId) && (
-            <div className="lg:col-span-4">
-              <QuestionSettingsSidebar 
-                currentQuestion={currentQuestion}
-                updateQuestion={updateQuestion}
-              />
-            </div>
-          )}
+          <div className="lg:col-span-4">
+            <QuestionSettingsSidebar 
+              currentQuestion={currentQuestion}
+              updateQuestion={updateQuestion}
+            />
+          </div>
 
         </div>
       </main>
@@ -596,7 +581,7 @@ function CreateQuestionContent() {
           </div>
           
           <button 
-            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center hover:bg-slate-100 rounded-xl transition-colors text-slate-600 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer shrink-0"
+            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center hover:bg-slate-100 rounded-xl transition-colors text-slate-600 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer shrink-0" 
             onClick={handleNext}
             disabled={isLastQuestion}
             title="Câu tiếp theo"
@@ -615,6 +600,15 @@ function CreateQuestionContent() {
           </button>
           
           <div className="w-px h-6 bg-slate-200 mx-1 shrink-0"></div>
+          <button 
+            className="min-w-[44px] min-h-[44px] px-3 flex items-center gap-1.5 hover:bg-primary/10 text-primary rounded-xl transition-colors font-bold text-xs cursor-pointer shrink-0" 
+            title="Thêm câu hỏi mới"
+            aria-label="Thêm câu hỏi mới"
+            onClick={handleAddNewQuestion}
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Thêm câu</span>
+          </button>
           <button 
             className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer shrink-0" 
             title="Xóa câu này"
