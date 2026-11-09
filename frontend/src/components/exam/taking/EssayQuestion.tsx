@@ -278,7 +278,7 @@ function EditorItem({
             <div className="mb-4 bg-white border border-slate-200 rounded-xl p-5 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-indigo-600" />
+                  <Sparkles className="w-5 h-5 text-primary" />
                   <h4 className="text-slate-800 font-bold text-base">
                     Phần vẽ hình: {aiFeedback.diagramResult.score ?? 0} / {aiFeedback.diagramResult.maxScore ?? aiFeedback.diagramResult.max_score ?? 0.5} điểm
                   </h4>
@@ -327,7 +327,7 @@ function EditorItem({
                 {isMC ? `Giải thích ${q.label}` : `Lời giải ${q.label}`}
               </label>
               {aiFeedback?.comprehensionLevel && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
                   🎯 {aiFeedback.comprehensionLevel === 'HOAN_HAO' ? 'Tư duy hoàn hảo' : aiFeedback.comprehensionLevel === 'HIEU_BAI' ? 'Hiểu bài tốt' : aiFeedback.comprehensionLevel === 'NHAM_LAN' ? 'Có sai sót nhỏ' : 'Cần xem lại'}
                 </span>
               )}
@@ -490,7 +490,7 @@ function EditorItem({
         <div className="mt-4 bg-white border border-slate-200 rounded-xl p-5 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 flex-wrap gap-2">
             <h4 className="flex items-center gap-2 text-slate-800 font-bold text-base">
-              <Sparkles className="w-5 h-5 text-indigo-600" />
+              <Sparkles className="w-5 h-5 text-primary" />
               Chi tiết chấm điểm từng bước (Rubric)
             </h4>
             {aiFeedback.isAlternativeMethod && (
@@ -818,7 +818,7 @@ function EssayQuestion({
               {lectureUrl && (
                 <Link
                   href={lectureUrl}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-full font-semibold text-sm transition-all active:scale-95"
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60 rounded-full font-semibold text-sm transition-all active:scale-95"
                   title="Xem bài giảng liên quan"
                 >
                   <BookOpen className="w-5 h-5" />

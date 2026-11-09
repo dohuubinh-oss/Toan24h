@@ -108,12 +108,10 @@ describe('ExamTakePage - Practice vs Exam Mode (/exam/[id]/take)', () => {
     expect(screen.getByText('Đề Luyện Tập Đại Số 9')).toBeInTheDocument()
 
     // Header indicator for practice mode must be visible
-    expect(
-      screen.getByText(/Chế độ Luyện tập: Cho phép mở tab bài giảng tra cứu lý thuyết/i)
-    ).toBeInTheDocument()
+    expect(screen.getByText('Luyện tập')).toBeInTheDocument()
 
     // Theory reference link should be accessible
-    const lectureLink = screen.getByRole('link', { name: /Mở bài giảng tra cứu lý thuyết/i })
+    const lectureLink = screen.getByRole('link', { name: /lý thuyết/i })
     expect(lectureLink).toBeInTheDocument()
     expect(lectureLink).toHaveAttribute('target', '_blank')
 
@@ -142,9 +140,7 @@ describe('ExamTakePage - Practice vs Exam Mode (/exam/[id]/take)', () => {
     expect(screen.getByText('Đề Thi Thử Học Kì 1 Toán 9')).toBeInTheDocument()
 
     // Header indicator for exam mode must be visible
-    expect(
-      screen.getByText(/Chế độ Thi thử: Giám sát tập trung, không rời phòng thi/i)
-    ).toBeInTheDocument()
+    expect(screen.getByText('Thi thử')).toBeInTheDocument()
 
     // First violation: student switches tab
     triggerVisibilityChange(true)

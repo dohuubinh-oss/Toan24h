@@ -475,54 +475,12 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         totalQuestions={questions.length} 
         timeLeft={timeLeftStr}
         examType={exam.cate}
+        category={exam.cate}
+        lectureUrl={lectureUrl || undefined}
         points={userPoints}
         onBack={handleBack}
       />
 
-      {/* Mode Indicator Banner */}
-      <div 
-        role="status"
-        aria-live="polite"
-        className={`w-full border-b transition-colors ${
-          exam.cate === 'practice'
-            ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
-            : 'bg-amber-50/80 border-amber-200 text-amber-900'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
-          <div className="flex items-center gap-2 flex-wrap">
-            {exam.cate === 'practice' ? (
-              <>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  Luyện tập
-                </span>
-                <span className="font-medium">
-                  Chế độ Luyện tập: Cho phép mở tab bài giảng tra cứu lý thuyết
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300">
-                  Thi thử
-                </span>
-                <span className="font-medium">
-                  Chế độ Thi thử: Giám sát tập trung, không rời phòng thi
-                </span>
-              </>
-            )}
-          </div>
-          {exam.cate === 'practice' && lectureUrl && (
-            <a
-              href={lectureUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-900 underline min-h-[44px] py-2 px-1 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded"
-            >
-              Mở bài giảng tra cứu lý thuyết ↗
-            </a>
-          )}
-        </div>
-      </div>
       <div className="flex-1 flex flex-col relative w-full overflow-x-hidden min-h-0">
         {/* Left Navigation Overlay */}
         {currentQuestionIndex > 0 && (

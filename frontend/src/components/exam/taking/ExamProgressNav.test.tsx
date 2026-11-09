@@ -72,4 +72,36 @@ describe('ExamProgressNav Component', () => {
     expect(screen.queryByText('50 xu')).not.toBeInTheDocument()
     expect(screen.getByText('Tổng điểm: 9.0/10')).toBeInTheDocument()
   })
+
+  it('renders mode badges and theory link in practice mode', () => {
+    const { rerender } = render(
+      <ExamProgressNav
+        title="Đề thi thử học kỳ 1"
+        subject="Toán Lớp 9"
+        completedQuestions={0}
+        totalQuestions={20}
+        examType="exam"
+        category="exam"
+        onBack={() => {}}
+      />
+    )
+    expect(screen.getByText('Thi thử')).toBeInTheDocument()
+
+    rerender(
+      <ExamProgressNav
+        title="Luyện tập căn bậc hai"
+        subject="Toán Lớp 9"
+        completedQuestions={3}
+        totalQuestions={10}
+        examType="practice"
+        category="practice"
+        lectureUrl="https://toan6789.vn/lectures/can-bac-hai"
+        onBack={() => {}}
+      />
+    )
+    expect(screen.getByText('Luyện tập')).toBeInTheDocument()
+    const theoryLink = screen.getByRole('link', { name: /lý thuyết/i })
+    expect(theoryLink).toBeInTheDocument()
+    expect(theoryLink).toHaveAttribute('href', 'https://toan6789.vn/lectures/can-bac-hai')
+  })
 })

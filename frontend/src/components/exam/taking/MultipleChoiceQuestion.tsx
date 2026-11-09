@@ -123,7 +123,7 @@ function MultipleChoiceQuestion({
                   Câu hỏi {index + 1}
                 </span>
                 {readonly && aiFeedback?.comprehensionLevel && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
                     🎯 {aiFeedback.comprehensionLevel === 'HOAN_HAO' ? 'Tư duy hoàn hảo' : aiFeedback.comprehensionLevel === 'HIEU_BAI' ? 'Hiểu bài tốt' : aiFeedback.comprehensionLevel === 'NHAM_LAN' ? 'Có sai sót nhỏ' : 'Chọn ngẫu nhiên'}
                   </span>
                 )}
@@ -132,7 +132,7 @@ function MultipleChoiceQuestion({
                 {lectureUrl && (
                   <Link
                     href={lectureUrl}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-full font-semibold text-sm transition-all active:scale-95"
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60 rounded-full font-semibold text-sm transition-all active:scale-95"
                     title="Xem bài giảng liên quan"
                   >
                     <BookOpen className="w-5 h-5" />
