@@ -8,6 +8,21 @@ export default function LectureAntiCheatTracker({ examId }: { examId: string }) 
   useEffect(() => {
     if (!examId) return;
 
+    // Kiểm tra xem bài thi có phải là bài luyện tập không
+    // Chế độ Luyện tập (practice) cho phép học sinh tự do tra cứu lý thuyết,
+    // chuyển tab và sao chép công thức mà KHÔNG bị tính gian lận.
+    try {
+      const savedStateStr = sessionStorage.getItem(`exam_state_${examId}`)
+      if (savedStateStr) {
+        const state = JSON.parse(savedStateStr)
+        if (state.isPractice) {
+          return
+        }
+      }
+    } catch (e) {
+      console.error('Failed to check practice state in tracker', e)
+    }
+
     const handleVisibilityChange = () => {
       if (document.hidden) {
         leaveStartTimeRef.current = Date.now()
@@ -17,8 +32,10 @@ export default function LectureAntiCheatTracker({ examId }: { examId: string }) 
           const savedStateStr = sessionStorage.getItem(`exam_state_${examId}`)
           if (savedStateStr) {
             const state = JSON.parse(savedStateStr)
-            state.cheatCount = (state.cheatCount || 0) + 1
-            sessionStorage.setItem(`exam_state_${examId}`, JSON.stringify(state))
+            if (!state.isPractice) {
+              state.cheatCount = (state.cheatCount || 0) + 1
+              sessionStorage.setItem(`exam_state_${examId}`, JSON.stringify(state))
+            }
           }
         } catch (e) {
           console.error('Failed to update cheat state', e)
@@ -32,8 +49,10 @@ export default function LectureAntiCheatTracker({ examId }: { examId: string }) 
             const savedStateStr = sessionStorage.getItem(`exam_state_${examId}`)
             if (savedStateStr) {
               const state = JSON.parse(savedStateStr)
-              state.totalAwayTime = (state.totalAwayTime || 0) + awayDuration
-              sessionStorage.setItem(`exam_state_${examId}`, JSON.stringify(state))
+              if (!state.isPractice) {
+                state.totalAwayTime = (state.totalAwayTime || 0) + awayDuration
+                sessionStorage.setItem(`exam_state_${examId}`, JSON.stringify(state))
+              }
             }
           } catch (e) {
             console.error('Failed to update total away time', e)

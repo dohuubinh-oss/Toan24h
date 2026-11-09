@@ -93,7 +93,7 @@ export function LectureCard({
         {isLocked && (
           <div className="bg-slate-800/80 text-white border border-slate-700/60 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm backdrop-blur-sm">
             <Lock className="w-3.5 h-3.5 text-slate-300" aria-hidden="true" />
-            <span>Chưa mở khóa</span>
+            <span>{returnUrl ? 'Xem lý thuyết' : 'Chưa mở khóa'}</span>
           </div>
         )}
 
@@ -148,8 +148,14 @@ export function LectureCard({
 
       {isLocked && lockReason && (
         <div className="mt-1 mb-3 p-2.5 bg-slate-100/90 border border-slate-200 text-slate-600 text-xs rounded-xl flex items-start gap-2">
-          <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" aria-hidden="true" />
-          <span className="leading-relaxed line-clamp-2">{lockReason}</span>
+          {returnUrl ? (
+            <BookOpen className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+          ) : (
+            <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" aria-hidden="true" />
+          )}
+          <span className="leading-relaxed line-clamp-2">
+            {returnUrl ? 'Đang mở cho phép xem lý thuyết & ví dụ' : lockReason}
+          </span>
         </div>
       )}
 
@@ -166,8 +172,8 @@ export function LectureCard({
     </div>
   );
 
-  // Nếu bài giảng bị khóa -> render div không click được link
-  if (isLocked) {
+  // Nếu bài giảng bị khóa -> chỉ chặn khi không có returnUrl (khi có returnUrl học sinh đang cần tra cứu lý thuyết bài tập)
+  if (isLocked && !returnUrl) {
     return (
       <div
         className="bg-slate-50/70 rounded-2xl border-2 border-slate-200/80 shadow-xs overflow-hidden flex flex-col h-full cursor-not-allowed select-none opacity-85"

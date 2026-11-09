@@ -39,6 +39,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
   const [isRestored, setIsRestored] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
+  const [userGrade, setUserGrade] = useState<string | null>(null)
 
   const toast = useToast()
   const router = useRouter()
@@ -55,7 +56,9 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         if (parsed.answers) setAnswers(parsed.answers)
         if (parsed.explanations) setExplanations(parsed.explanations)
         if (parsed.flaggedQuestions) setFlaggedQuestions(parsed.flaggedQuestions)
-        if (parsed.cheatCount !== undefined) {
+        if (parsed.isPractice) {
+          setCheatCount(0)
+        } else if (parsed.cheatCount !== undefined) {
           setCheatCount(parsed.cheatCount)
           restoredCheatCount = parsed.cheatCount
         }
@@ -79,13 +82,14 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         explanations,
         flaggedQuestions,
         cheatCount,
-        totalAwayTime: totalAwayTimeRef.current
+        totalAwayTime: totalAwayTimeRef.current,
+        isPractice: exam?.cate === 'practice'
       }
       sessionStorage.setItem(`exam_state_${id}`, JSON.stringify(stateToSave))
     } catch (e) {
       console.error('Failed to save exam state', e)
     }
-  }, [answers, explanations, flaggedQuestions, cheatCount, isRestored, id])
+  }, [answers, explanations, flaggedQuestions, cheatCount, isRestored, id, exam?.cate])
 
   useEffect(() => {
     // Get user points from backend to ensure it's up to date
@@ -94,6 +98,9 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
         const res = await getUserProfile()
         if (res && res.data) {
           setUserPoints(res.data.points != null ? Number(res.data.points) : 0)
+          if (res.data.grade) {
+            setUserGrade(String(res.data.grade))
+          }
         }
       } catch (e) {
         // Fallback to local storage
@@ -102,6 +109,9 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           try {
             const user = JSON.parse(userStr)
             setUserPoints(user.points != null ? Number(user.points) : 0)
+            if (user.grade) {
+              setUserGrade(String(user.grade))
+            }
           } catch (e) {}
         }
       }
@@ -363,7 +373,7 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
 
   let lectureUrl = undefined
   if (exam?.cate === 'practice') {
-    const gradeStr = exam?.grade || '8'
+    const gradeStr = exam?.grade || userGrade || '8'
     const returnUrl = encodeURIComponent(`/exam/${id}/take`)
     lectureUrl = `/lectures/lop/${gradeStr}?returnUrl=${returnUrl}&examId=${id}`
   }
@@ -404,8 +414,13 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
   }).length
 
   const handleBack = () => {
-    if (exam.cate === 'practice' && exam.lectureId) {
-      router.push(`/lectures/lop/${exam.grade}/${exam.lectureId}`)
+    if (exam?.cate === 'practice') {
+      const gradeStr = exam?.grade || userGrade || '8'
+      if (exam?.lectureId) {
+        router.push(`/lectures/lop/${gradeStr}/${exam.lectureId}`)
+      } else {
+        router.push(`/lectures/lop/${gradeStr}`)
+      }
     } else {
       router.push(`/student`)
     }

@@ -77,6 +77,29 @@ describe('LectureCard and PracticeLectureCard', () => {
     expect(screen.queryByRole('link')).toBeNull()
   })
 
+  it('allows clicking into locked lecture when returnUrl is present to reference theory during practice', () => {
+    render(
+      <LectureCard 
+        id="lec-locked"
+        title="Giải bài toán bằng cách lập hệ phương trình"
+        chapter="Đại số"
+        status="NOT_STARTED"
+        practiceCount={2}
+        isLocked={true}
+        lockReason="Cần hoàn thành bài trước để mở khóa"
+        grade="9"
+        returnUrl="/exam/exam-123/take"
+        examId="exam-123"
+      />
+    )
+
+    expect(screen.getByText('Xem lý thuyết')).toBeInTheDocument()
+    expect(screen.getByText('Đang mở cho phép xem lý thuyết & ví dụ')).toBeInTheDocument()
+    const link = screen.getByRole('link')
+    expect(link).toHaveAttribute('href', expect.stringContaining('/lectures/lop/9/lec-locked'))
+    expect(link).toHaveAttribute('href', expect.stringContaining('returnUrl=%2Fexam%2Fexam-123%2Ftake'))
+  })
+
   it('renders PracticeLectureCard linking to lecture detail page when href is passed', () => {
     render(
       <PracticeLectureCard 
