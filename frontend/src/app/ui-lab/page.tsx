@@ -20,7 +20,7 @@ const sampleLectureData = {
   grade: "12",
   category: "Hình học",
   createdAt: "2024-05-15T00:00:00Z",
-  basicConcept: "<p>Thể tích của một khối chóp bất kỳ bằng một phần ba tích của diện tích mặt đáy và chiều cao tương ứng của nó. Đây là nền tảng quan trọng trong hình học không gian.</p><div class=\"bg-primary/5 border-l-4 border-primary p-6 rounded-r-lg my-6\"><p class=\"text-lg font-medium text-center latex-font\">V = <span class=\"inline-block px-1\">1</span>/<span class=\"inline-block px-1\">3</span> . B . h</p><p class=\"text-sm text-slate-500 mt-4 italic text-center\">Trong đó: B là diện tích đáy, h là chiều cao khối chóp.</p></div><p>Đối với khối chóp đều, việc tính toán trở nên đơn giản hơn nhờ các tính chất đối xứng, trong đó hình chiếu của đỉnh trùng với tâm của đa giác đáy.</p>",
+  basicConcept: "<p>Thể tích của một khối chóp bất kỳ bằng một phần ba tích của diện tích mặt đáy và chiều cao tương ứng của nó. Đây là nền tảng quan trọng trong hình học không gian.</p><div class=\"bg-primary/5 border border-primary/20 p-6 rounded-xl my-6\"><p class=\"text-lg font-medium text-center latex-font\">V = <span class=\"inline-block px-1\">1</span>/<span class=\"inline-block px-1\">3</span> . B . h</p><p class=\"text-sm text-slate-500 mt-4 italic text-center\">Trong đó: B là diện tích đáy, h là chiều cao khối chóp.</p></div><p>Đối với khối chóp đều, việc tính toán trở nên đơn giản hơn nhờ các tính chất đối xứng, trong đó hình chiếu của đỉnh trùng với tâm của đa giác đáy.</p>",
   examples: [
     {
       id: "dt1",

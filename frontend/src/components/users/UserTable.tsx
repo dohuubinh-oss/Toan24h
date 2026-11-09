@@ -184,7 +184,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
                       </span>
                     </div>
                   ) : (
-                    <span className="text-slate-400 text-xs">Chưa kích hoạt</span>
+                    <span className="text-slate-500 text-xs">Chưa kích hoạt</span>
                   )}
                 </td>
                 <td className="px-6 py-4">
@@ -199,7 +199,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="min-w-[40px] min-h-[40px] text-slate-400 hover:text-indigo-600 hover:bg-indigo-50" 
+                        className="min-w-[40px] min-h-[40px] text-slate-500 hover:text-primary hover:bg-primary/10" 
                         title="Phân quyền (Teacher / Affiliate)"
                         aria-label={`Phân quyền cho ${user.name}`}
                         onClick={() => handleOpenRoleModal(user)}
@@ -210,7 +210,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="min-w-[40px] min-h-[40px] text-slate-400 hover:text-rose-600 hover:bg-rose-100" 
+                      className="min-w-[40px] min-h-[40px] text-slate-500 hover:text-rose-600 hover:bg-rose-100" 
                       title="Khóa tài khoản"
                       aria-label={`Khóa tài khoản ${user.name}`}
                       onClick={() => handleOpenLockModal(user)}
@@ -244,7 +244,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
                 type="button"
                 onClick={() => setRoleModalUser(null)}
                 aria-label="Đóng cửa sổ"
-                className="min-w-[40px] min-h-[40px] p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="min-w-[40px] min-h-[40px] p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>

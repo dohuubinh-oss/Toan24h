@@ -172,7 +172,7 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
 
               {/* Optional Lead Summary */}
               {post.summary && (
-                <p className="text-sm sm:text-base text-slate-600 font-medium italic border-l-4 border-primary pl-4 py-2 bg-slate-50/80 rounded-r-xl">
+                <p className="text-sm sm:text-base text-slate-700 font-medium italic border border-slate-200/80 p-4 bg-slate-50/80 rounded-2xl">
                   {post.summary}
                 </p>
               )}

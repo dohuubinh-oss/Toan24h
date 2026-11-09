@@ -635,7 +635,7 @@ ${tocListHtml}
                     <Layers className="w-4 h-4 text-primary" />
                     Định dạng bài viết
                   </label>
-                  <span className="text-xs text-slate-400">Chọn 1 trong 2 định dạng</span>
+                  <span className="text-xs text-slate-500 font-medium">Chọn 1 trong 2 định dạng</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <label 
@@ -655,7 +655,7 @@ ${tocListHtml}
                     />
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <FileText className={`w-4 h-4 ${postType === 'standard' ? 'text-primary' : 'text-slate-400'}`} />
+                        <FileText className={`w-4 h-4 ${postType === 'standard' ? 'text-primary' : 'text-slate-500'}`} />
                         <span className="text-xs font-bold text-slate-900">Bài viết chuẩn</span>
                       </div>
                       <span className="text-xs text-slate-500 block leading-relaxed">
@@ -681,7 +681,7 @@ ${tocListHtml}
                     />
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <Video className={`w-4 h-4 ${postType === 'shorts_playlist' ? 'text-primary' : 'text-slate-400'}`} />
+                        <Video className={`w-4 h-4 ${postType === 'shorts_playlist' ? 'text-primary' : 'text-slate-500'}`} />
                         <span className="text-xs font-bold text-slate-900">Playlist Video Shorts</span>
                       </div>
                       <span className="text-xs text-slate-500 block leading-relaxed">
@@ -701,7 +701,7 @@ ${tocListHtml}
                       <FileText className="w-4 h-4 text-primary" />
                       Tiêu đề bài viết <span className="text-red-500">*</span>
                     </label>
-                    <span className={`text-xs ${title.length > 100 ? 'text-amber-600 font-bold' : 'text-slate-400'}`}>
+                    <span className={`text-xs ${title.length > 100 ? 'text-amber-600 font-bold' : 'text-slate-500'}`}>
                       {title.length}/120 ký tự
                     </span>
                   </div>
@@ -934,7 +934,7 @@ ${tocListHtml}
                             disabled={idx === 0}
                             onClick={() => handleMoveShort(idx, 'up')}
                             aria-label={`Di chuyển bài học #${idx + 1} lên`}
-                            className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                            className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                             title="Di chuyển lên"
                           >
                             <ArrowUp className="w-4 h-4" />
@@ -944,7 +944,7 @@ ${tocListHtml}
                             disabled={idx === shortsList.length - 1}
                             onClick={() => handleMoveShort(idx, 'down')}
                             aria-label={`Di chuyển bài học #${idx + 1} xuống`}
-                            className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                            className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                             title="Di chuyển xuống"
                           >
                             <ArrowDown className="w-4 h-4" />
@@ -983,7 +983,7 @@ ${tocListHtml}
                                 <p className="text-xs font-semibold text-slate-800 line-clamp-1 max-w-[280px]">
                                   {item.title || 'Đã đính kèm ảnh bài học'}
                                 </p>
-                                <p className="text-xs text-slate-400 mt-0.5">
+                                <p className="text-xs text-slate-500 mt-0.5">
                                   Ghi chú bên dưới đã được định dạng theo cấu trúc shorts-blog-layout
                                 </p>
                               </div>
@@ -991,7 +991,7 @@ ${tocListHtml}
 
                             <div className="flex items-center gap-2 shrink-0">
                               <label className="px-3 py-1.5 min-h-[38px] rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer transition-all flex items-center gap-1.5 shadow-2xs">
-                                <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+                                <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
                                 <span>Đổi ảnh</span>
                                 <input
                                   type="file"
@@ -1043,7 +1043,7 @@ ${tocListHtml}
                                   <ImageIcon className="w-4 h-4 text-primary" />
                                   <span className="text-xs font-bold">Dán ảnh bài toán vào đây (Ctrl + V)</span>
                                 </div>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-slate-500">
                                   AI sẽ tự động nhận diện công thức và xuất hướng dẫn 2 bước & lưu ý chuẩn shorts-blog-layout
                                 </p>
                                 <div className="pt-1 flex items-center justify-center gap-2">
@@ -1198,7 +1198,7 @@ ${tocListHtml}
                     <div className="min-w-0 flex-1">
                       <h4 className="text-xs font-bold text-slate-900 line-clamp-1">{authorName}</h4>
                       <p className="text-xs text-primary font-semibold line-clamp-1">{authorRole}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">Tài khoản biên tập Toan6789</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Tài khoản biên tập Toan6789</p>
                     </div>
                   </div>
                 </div>
@@ -1297,7 +1297,7 @@ ${tocListHtml}
                   {/* Read time / item estimate */}
                   <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
                     <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
                       Quy mô nội dung:
                     </span>
                     <span className="font-bold text-slate-700">
@@ -1378,7 +1378,7 @@ ${tocListHtml}
                 </h1>
 
                 {isFeatured && summary && (
-                  <p className="text-sm sm:text-base text-slate-600 font-medium italic border-l-4 border-amber-400 pl-4 py-1.5 bg-amber-50/50 rounded-r-xl my-2">
+                  <p className="p-4 text-sm sm:text-base text-slate-700 font-medium italic border border-amber-200/80 bg-amber-50/60 rounded-xl my-2">
                     {summary}
                   </p>
                 )}
@@ -1408,11 +1408,11 @@ ${tocListHtml}
 
                   <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
                     <span className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <Calendar className="w-3.5 h-3.5 text-slate-500" />
                       Hôm nay
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
                       5 phút đọc
                     </span>
                   </div>

@@ -28,7 +28,7 @@ export function Pagination({ currentPage, totalPages, totalItems, startIndex, en
       </p>
       <div className="flex items-center gap-1 flex-wrap justify-center">
         <button 
-          className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-primary disabled:opacity-30 rounded transition-colors" 
+          className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-600 hover:text-primary hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 rounded-xl transition-colors" 
           disabled={currentPage <= 1}
           onClick={() => handlePageChange(1)}
           aria-label="Trang đầu"
@@ -36,7 +36,7 @@ export function Pagination({ currentPage, totalPages, totalItems, startIndex, en
           <ChevronsLeft className="w-5 h-5" />
         </button>
         <button 
-          className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-primary disabled:opacity-30 rounded transition-colors" 
+          className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-600 hover:text-primary hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 rounded-xl transition-colors" 
           disabled={currentPage <= 1}
           onClick={() => handlePageChange(currentPage - 1)}
           aria-label="Trang trước"
@@ -47,19 +47,19 @@ export function Pagination({ currentPage, totalPages, totalItems, startIndex, en
         {pages[0] > 1 && (
           <>
             <button 
-              className="w-11 h-11 rounded text-sm font-bold hover:bg-slate-100 text-slate-600 transition-colors"
+              className="w-11 h-11 rounded-xl text-sm font-bold hover:bg-slate-100 text-slate-600 transition-colors"
               onClick={() => handlePageChange(1)}
             >
               1
             </button>
-            {pages[0] > 2 && <span className="px-1 text-slate-400">...</span>}
+            {pages[0] > 2 && <span className="px-1 text-slate-500 font-medium">...</span>}
           </>
         )}
 
         {pages.map(page => (
           <button 
             key={page}
-            className={`w-11 h-11 rounded text-sm font-bold transition-colors ${currentPage === page ? 'bg-primary text-white shadow-sm' : 'hover:bg-slate-100 text-slate-600'}`}
+            className={`w-11 h-11 rounded-xl text-sm font-bold transition-colors ${currentPage === page ? 'bg-primary text-white shadow-sm' : 'hover:bg-slate-100 text-slate-600'}`}
             onClick={() => handlePageChange(page)}
           >
             {page}
@@ -68,9 +68,9 @@ export function Pagination({ currentPage, totalPages, totalItems, startIndex, en
         
         {pages[pages.length - 1] < totalPages && (
           <>
-            {pages[pages.length - 1] < totalPages - 1 && <span className="px-1 text-slate-400">...</span>}
+            {pages[pages.length - 1] < totalPages - 1 && <span className="px-1 text-slate-500 font-medium">...</span>}
             <button 
-              className="w-11 h-11 rounded text-sm font-bold hover:bg-slate-100 text-slate-600 transition-colors"
+              className="w-11 h-11 rounded-xl text-sm font-bold hover:bg-slate-100 text-slate-600 transition-colors"
               onClick={() => handlePageChange(totalPages)}
             >
               {totalPages}
@@ -79,7 +79,7 @@ export function Pagination({ currentPage, totalPages, totalItems, startIndex, en
         )}
         
         <button 
-          className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-primary disabled:opacity-30 rounded transition-colors" 
+          className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-600 hover:text-primary hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 rounded-xl transition-colors" 
           disabled={currentPage >= totalPages}
           onClick={() => handlePageChange(currentPage + 1)}
           aria-label="Trang sau"
@@ -87,7 +87,7 @@ export function Pagination({ currentPage, totalPages, totalItems, startIndex, en
           <ChevronRight className="w-5 h-5" />
         </button>
         <button 
-          className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-primary disabled:opacity-30 rounded transition-colors" 
+          className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-600 hover:text-primary hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 rounded-xl transition-colors" 
           disabled={currentPage >= totalPages}
           onClick={() => handlePageChange(totalPages)}
           aria-label="Trang cuối"

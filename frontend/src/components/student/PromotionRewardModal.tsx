@@ -63,7 +63,7 @@ export default function PromotionRewardModal({
         <button
           type="button"
           onClick={handleDismiss}
-          className="absolute top-3 right-3 min-w-[44px] min-h-[44px] p-2.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="absolute top-3 right-3 min-w-[44px] min-h-[44px] p-2.5 text-slate-500 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label="Đóng thông báo"
         >
           <X className="w-5 h-5" aria-hidden="true" />

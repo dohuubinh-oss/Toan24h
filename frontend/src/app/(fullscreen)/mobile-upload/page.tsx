@@ -199,7 +199,7 @@ function MobileUploadContent() {
       <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-slate-50 flex items-center justify-center p-6 text-center font-sans">
         <div className="bg-white p-8 rounded-3xl shadow-xl border border-emerald-100 max-w-sm w-full animate-in zoom-in-95 duration-200">
           <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 size={44} className="animate-bounce" />
+            <CheckCircle2 size={44} className="animate-in zoom-in-75 duration-300" />
           </div>
           <h2 className="text-2xl font-black text-slate-800 mb-2">Gửi thành công!</h2>
           <p className="text-sm text-slate-600 mb-6 leading-relaxed">

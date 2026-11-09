@@ -119,8 +119,8 @@ export default function ContentQuestion({
             />
           )}
         </div>
-        <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-400 font-medium md:hidden pointer-events-none select-none">
-          <ZoomIn size={12} className="text-primary shrink-0" />
+        <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-600 font-medium md:hidden pointer-events-none select-none">
+          <ZoomIn size={13} className="text-primary shrink-0" />
           <span>Chạm vào ảnh để xem toàn màn hình và phóng to</span>
         </div>
       </div>

@@ -540,7 +540,7 @@ function CreateQuestionContent() {
                 Chùm ({currentSubIndex}/{totalSubInBlock})
               </span>
             )}
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
               / {totalBlocks}
             </span>
           </div>

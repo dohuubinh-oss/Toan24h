@@ -79,12 +79,12 @@ export default function QuestionCard({
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
             {onSwap && (
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl" 
+                className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-xl" 
                 title="Đổi câu hỏi" 
                 aria-label={`Đổi câu hỏi ${id}`}
                 onClick={onSwap}
@@ -96,7 +96,7 @@ export default function QuestionCard({
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl" 
+                className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-xl" 
                 title="Chỉnh sửa" 
                 aria-label={`Chỉnh sửa câu hỏi ${id}`}
                 onClick={onEdit}
@@ -108,7 +108,7 @@ export default function QuestionCard({
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl" 
+                className="min-w-[44px] min-h-[44px] w-11 h-11 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl" 
                 title="Xóa" 
                 aria-label={`Xóa câu hỏi ${id}`}
                 onClick={onDelete}

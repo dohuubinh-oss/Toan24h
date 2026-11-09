@@ -24,11 +24,11 @@ export default function StudentLeaderboard({ leaderboard, currentUser }: Props) 
         {leaderboard.length === 0 ? (
           <div className="text-center py-4 px-3 bg-slate-50/60 rounded-xl border border-dashed border-slate-200">
             <p className="text-xs font-semibold text-slate-600">Chưa có dữ liệu thi đua tuần này</p>
-            <p className="text-xs text-slate-400 mt-0.5">Làm bài tập hoặc giải đề thi để ghi danh dẫn đầu!</p>
+            <p className="text-xs text-slate-500 mt-0.5">Làm bài tập hoặc giải đề thi để ghi danh dẫn đầu!</p>
           </div>
         ) : (
           leaderboard.map((user) => {
-          let rankBadge = <span className="font-bold w-5 text-center text-slate-400">{user.rank}</span>
+          let rankBadge = <span className="font-bold w-5 text-center text-slate-500">{user.rank}</span>
           let rankBg = 'hover:bg-slate-50'
 
           if (user.rank === 1) {
@@ -82,7 +82,7 @@ export default function StudentLeaderboard({ leaderboard, currentUser }: Props) 
               <Flame className="w-3.5 h-3.5 text-orange-500" aria-hidden="true" />
               Đường đua tuần
             </span>
-            <span className="text-slate-400 font-medium">Chốt 00:00 Thứ 2</span>
+            <span className="text-slate-500 font-medium">Chốt 00:00 Thứ 2</span>
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
             {currentUser.rank <= 3

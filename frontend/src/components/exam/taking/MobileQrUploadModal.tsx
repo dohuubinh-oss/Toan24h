@@ -180,7 +180,7 @@ export default function MobileQrUploadModal({
         <div className="bg-white p-4 rounded-2xl border-2 border-dashed border-primary/30 shadow-inner flex flex-col items-center justify-center relative min-h-[240px] min-w-[240px]">
           {isSuccess ? (
             <div className="flex flex-col items-center gap-3 text-emerald-600 animate-in zoom-in-95 duration-200">
-              <CheckCircle2 className="w-16 h-16 animate-bounce" />
+              <CheckCircle2 className="w-16 h-16 animate-in zoom-in-75 duration-300" />
               <span className="font-bold text-base">Đã nhận diện thành công!</span>
             </div>
           ) : isExpired ? (

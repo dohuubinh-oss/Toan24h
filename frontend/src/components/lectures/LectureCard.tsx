@@ -71,13 +71,13 @@ export function LectureCard({
           className={`w-full h-full flex items-center justify-center opacity-20 transition-transform duration-500 ${
             isLocked
               ? 'bg-slate-200'
-              : 'group-hover:scale-110 bg-gradient-to-br from-indigo-50 to-blue-50'
+              : 'group-hover:scale-105 bg-slate-50'
           }`}
         >
           {isLocked ? (
             <Lock className="w-24 h-24 text-slate-500" aria-hidden="true" />
           ) : (
-            <BookOpen className="w-32 h-32 text-indigo-500" aria-hidden="true" />
+            <BookOpen className="w-32 h-32 text-primary" aria-hidden="true" />
           )}
         </div>
       )}

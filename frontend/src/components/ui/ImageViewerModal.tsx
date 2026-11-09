@@ -321,7 +321,7 @@ export default function ImageViewerModal({
         </div>
 
         {/* Mobile touch hint */}
-        <p className="text-[11px] text-slate-400 font-medium tracking-wide">
+        <p className="text-xs text-slate-300 font-medium tracking-wide">
           Chạm 2 lần hoặc chụm 2 ngón tay để thu phóng
         </p>
       </div>

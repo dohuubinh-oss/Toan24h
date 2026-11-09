@@ -366,8 +366,8 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-6">
         <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl border border-slate-100 text-center relative overflow-hidden">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-500/25 animate-bounce">
-            <Sparkles className="w-10 h-10" />
+          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-tr from-primary to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/25">
+            <Sparkles className="w-10 h-10 animate-pulse" />
           </div>
 
           <h2 className="text-2xl font-bold text-slate-800 mb-3 leading-snug">
@@ -464,13 +464,13 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
     <div className="flex flex-col min-h-screen relative overflow-x-hidden bg-background-light">
       {/* Teacher Mode Top Banner */}
       {isTeacherMode && (
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 flex items-center justify-between shadow-md z-[110]">
+        <div className="bg-slate-900 text-white px-6 py-3 flex items-center justify-between shadow-sm z-[110] border-b border-slate-800">
           <div className="flex items-center gap-3 font-bold text-sm md:text-base">
-            <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+            <Sparkles className="w-5 h-5 text-amber-400" />
             <span>Chế độ Chấm điểm của Giáo viên — Đang duyệt chấm bài thi</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs bg-white/20 px-3 py-1 rounded-full font-semibold">
+            <span className="text-xs bg-white/10 px-3 py-1 rounded-full font-semibold border border-white/15">
               Mã nộp bài: {id}
             </span>
           </div>
@@ -551,11 +551,12 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           {/* Left Navigation Overlay */}
           {currentQuestionIndex > 0 && (
             <button 
+              type="button"
               onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
-              className="absolute left-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-start pl-2 md:pl-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-r hover:from-slate-200/50 hover:to-transparent transition-all group"
+              className="absolute left-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-start pl-2 md:pl-4 opacity-0 hover:opacity-100 focus-visible:opacity-100 focus:outline-none hover:bg-gradient-to-r hover:from-slate-200/50 hover:to-transparent transition-all group"
               aria-label="Câu trước"
             >
-              <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+              <div className="w-10 h-10 rounded-full bg-white border border-slate-200/80 shadow-md flex items-center justify-center text-slate-600 group-hover:text-primary group-focus-visible:text-primary transition-colors">
                 <ChevronLeft size={24} />
               </div>
             </button>
@@ -564,11 +565,12 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
           {/* Right Navigation Overlay */}
           {currentQuestionIndex < mappedData.questions.length - 1 && (
             <button 
+              type="button"
               onClick={() => setCurrentQuestionIndex(prev => Math.min(mappedData.questions.length - 1, prev + 1))}
-              className="absolute right-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
+              className="absolute right-0 top-0 bottom-[88px] w-12 md:w-24 z-10 flex items-center justify-end pr-2 md:pr-4 opacity-0 hover:opacity-100 focus-visible:opacity-100 focus:outline-none hover:bg-gradient-to-l hover:from-slate-200/50 hover:to-transparent transition-all group"
               aria-label="Câu tiếp theo"
             >
-              <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+              <div className="w-10 h-10 rounded-full bg-white border border-slate-200/80 shadow-md flex items-center justify-center text-slate-600 group-hover:text-primary group-focus-visible:text-primary transition-colors">
                 <ChevronRight size={24} />
               </div>
             </button>
@@ -757,10 +759,10 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                   <Sparkles className="w-4 h-4 text-primary animate-pulse" />
                   <span>Xem Nhận xét</span>
                 </button>
-                <div className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 rounded-xl font-bold text-base border border-purple-200 shadow-xs">
-                  <Sparkles className="w-5 h-5 text-purple-600" />
+                <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-900 rounded-xl font-bold text-sm sm:text-base border border-amber-200/80 shadow-xs">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" />
                   <span>Điểm tư duy: {avgReasoningScore.toFixed(1)}/10</span>
-                  <span className="text-[10px] uppercase font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-2 py-0.5 rounded-full shadow-xs ml-1">
+                  <span className="text-[10px] uppercase font-black bg-amber-500 text-white px-2 py-0.5 rounded-full shadow-xs ml-1">
                     VIP
                   </span>
                 </div>
@@ -799,7 +801,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
             <button 
               type="button"
               onClick={() => setIsSummaryModalOpen(false)}
-              className="absolute top-5 right-5 min-w-[40px] min-h-[40px] p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="absolute top-5 right-5 min-w-[40px] min-h-[40px] p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="Đóng báo cáo"
             >
               <X className="w-5 h-5" aria-hidden="true" />

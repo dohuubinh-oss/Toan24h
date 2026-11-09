@@ -148,7 +148,7 @@ function QuestionsPageContent() {
 
           {/* Swap Question Banner */}
           {swapFrom && (
-            <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl flex items-center justify-between gap-4 shadow-sm">
+            <div className="bg-amber-50 border border-amber-300 p-4 rounded-xl flex items-center justify-between gap-4 shadow-xs">
               <div>
                 <p className="font-bold text-amber-900 text-sm flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping inline-block" />

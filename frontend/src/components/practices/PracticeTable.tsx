@@ -130,9 +130,9 @@ export default function PracticeTable({ practices }: PracticeTableProps) {
                         )}
                       </div>
                     ) : isPending ? (
-                      <span className="text-sm text-slate-400 italic">Đang tính...</span>
+                      <span className="text-sm text-slate-500 italic">Đang tính...</span>
                     ) : (
-                      <span className="text-sm text-slate-400 italic">--</span>
+                      <span className="text-sm text-slate-500 italic">--</span>
                     )}
                   </td>
 

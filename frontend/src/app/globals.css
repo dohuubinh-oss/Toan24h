@@ -57,6 +57,12 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-"] {
+    animation: none !important;
+  }
+}
+
 @layer components {
   .card-premium {
     background-color: var(--color-surface);
@@ -115,18 +121,17 @@
 
   .step-box {
     background-color: var(--color-surface, #F8FAFC);
-    border: 1px solid rgba(226, 232, 240, 0.9);
+    border: 1px solid rgba(37, 99, 235, 0.2);
     border-radius: 0.75rem;
     padding: 1rem 1.15rem;
     margin-bottom: 0.875rem;
     position: relative;
-    border-left: 4px solid var(--color-primary, #2563EB);
   }
 
   .step-box.step-emerald,
   .step-box-emerald,
   .step-box:nth-of-type(2) {
-    border-left-color: #10B981;
+    border-color: rgba(16, 185, 129, 0.3);
   }
 
   .formula-highlight {

@@ -36,10 +36,10 @@ function QuestionMapSidebar({ questions, onSelectQuestion, onSubmit, mode = 'tak
       <button
         data-testid="qmap-toggle-btn"
         onClick={() => setIsOpen(!isOpen)}
-        className="absolute left-[-36px] sm:left-[-40px] top-20 sm:top-1/2 sm:-translate-y-1/2 w-9 sm:w-10 h-16 sm:h-24 bg-white border border-r-0 border-slate-200 rounded-l-xl shadow-lg flex items-center justify-center hover:w-12 active:scale-95 transition-all cursor-pointer"
-        aria-label="Toggle Question Map"
+        className="absolute left-[-44px] top-20 sm:top-1/2 sm:-translate-y-1/2 w-11 h-20 sm:h-24 bg-white border border-r-0 border-slate-200 rounded-l-xl shadow-lg flex items-center justify-center hover:w-12 active:scale-95 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        aria-label="Mở bản đồ câu hỏi"
       >
-        <div className="text-slate-500 select-none">
+        <div className="text-slate-600 select-none">
           {isOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <LayoutGrid className="w-5 h-5 sm:w-6 sm:h-6" />}
         </div>
       </button>
@@ -67,31 +67,34 @@ function QuestionMapSidebar({ questions, onSelectQuestion, onSubmit, mode = 'tak
               } else if (q.status === 'warning') {
                 btnClass = 'bg-amber-500 text-white shadow-md shadow-amber-500/30 border-amber-600'
               } else {
-                btnClass = 'bg-slate-100  text-slate-400  border border-slate-200 '
+                btnClass = 'bg-slate-100 text-slate-700 border border-slate-200'
               }
               // If flagged, it overrides 'unfinished' styles slightly based on design, but let's keep it simple or apply amber style.
               // Wait, the HTML example had amber for flagged/thinking.
               if (q.isFlagged && q.status !== 'current' && q.status !== 'done' && mode === 'take') {
-                btnClass = 'bg-amber-100  text-amber-600  border border-amber-200 '
+                btnClass = 'bg-amber-100 text-amber-800 border border-amber-200'
               }
 
               return (
-                <div
+                <button
+                  type="button"
                   key={q.id}
                   onClick={() => onSelectQuestion(q.id)}
-                  className={`relative w-full aspect-square flex items-center justify-center rounded-lg font-bold text-sm cursor-pointer transition-all hover:scale-110 ${btnClass}`}
+                  aria-label={`Câu hỏi ${q.index + 1}${q.status === 'done' ? ' (Đã làm)' : ''}${q.isFlagged ? ' (Đã đánh dấu)' : ''}`}
+                  aria-current={q.status === 'current' ? 'true' : undefined}
+                  className={`relative w-full aspect-square flex items-center justify-center rounded-lg font-bold text-sm cursor-pointer transition-all hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${btnClass}`}
                 >
                   {q.index + 1}
                   {q.isFlagged && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white" aria-hidden="true" />
                   )}
-                </div>
+                </button>
               )
             })}
           </div>
 
           <div className="mt-8 space-y-4">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Chú thích</p>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Chú thích</p>
             <div className="space-y-3">
               {mode === 'take' ? (
                 <>

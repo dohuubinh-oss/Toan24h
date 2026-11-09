@@ -157,7 +157,7 @@ export default function TelegramLoginWidget({
 
             {qrStatus === 'completed' ? (
               <div className="py-8 text-center space-y-3">
-                <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto animate-bounce" />
+                <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto animate-in zoom-in-75 duration-300" />
                 <h4 className="text-lg font-bold text-slate-800">
                   Liên kết thành công!
                 </h4>

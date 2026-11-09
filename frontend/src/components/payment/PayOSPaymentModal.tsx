@@ -175,7 +175,7 @@ export default function PayOSPaymentModal({
         <div className="p-6 overflow-y-auto">
           {isPaymentSuccess ? (
             <div className="py-12 text-center">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 animate-bounce">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 animate-in zoom-in-75 duration-300">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
               <h4 className="text-2xl font-black text-slate-900 mb-2">

@@ -69,7 +69,7 @@ export default function Sidebar({ role: initialRole, filterNode }: SidebarProps)
               <Link 
                 key={link.href}
                 href={link.href} 
-                className={`flex items-center gap-3 min-h-[44px] px-3 py-2.5 rounded-xl transition-all ${isActive ? 'bg-primary/5 text-primary border-r-4 border-primary font-bold' : 'text-slate-600 hover:bg-slate-50 font-medium'}`}
+                className={`flex items-center gap-3 min-h-[44px] px-3 py-2.5 rounded-xl transition-all ${isActive ? 'bg-primary/10 text-primary font-bold border border-primary/20 shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium border border-transparent'}`}
               >
                 <Icon className="w-5 h-5" aria-hidden="true" />
                 <span className="text-sm">{link.label}</span>

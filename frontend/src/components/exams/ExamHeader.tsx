@@ -43,7 +43,7 @@ export default function ExamHeader({
             disabled={isSaving}
             className="h-12 min-h-[44px] px-5 rounded-xl text-xs sm:text-sm font-semibold gap-2 shadow-sm shadow-primary/20 cursor-pointer"
           >
-            <UploadCloud className={`w-4 h-4 ${isSaving ? 'animate-bounce' : ''}`} />
+            <UploadCloud className={`w-4 h-4 ${isSaving ? 'animate-pulse' : ''}`} />
             {isSaving ? 'Đang lưu...' : 'Lưu & Xuất bản'}
           </Button>
         </div>

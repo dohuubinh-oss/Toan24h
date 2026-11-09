@@ -85,7 +85,7 @@ export default function AboutPage() {
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15] max-w-4xl mx-auto mb-6">
               Về Chúng Tôi &amp; Chương Trình{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-600 to-emerald-600">
+              <span className="text-primary">
                 Đối Tác Affiliate 30%
               </span>
             </h1>
@@ -133,7 +133,7 @@ export default function AboutPage() {
                 <p className="text-xs sm:text-sm font-semibold text-slate-600">Học sinh tiến bộ sau 1 kỳ</p>
               </div>
               <div className="p-4 sm:p-6 rounded-2xl bg-slate-50/80 border border-slate-100">
-                <p className="text-3xl sm:text-4xl font-black text-purple-600 mb-1">30%</p>
+                <p className="text-3xl sm:text-4xl font-black text-primary mb-1">30%</p>
                 <p className="text-xs sm:text-sm font-semibold text-slate-600">Hoa hồng chia sẻ đối tác</p>
               </div>
             </div>
@@ -216,7 +216,7 @@ export default function AboutPage() {
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight mb-4">
                 Nhận Ngay{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
+                <span className="text-emerald-600">
                   30% Hoa Hồng
                 </span>{' '}
                 Trên Mọi Đơn Hàng

@@ -119,7 +119,7 @@ function HighlightedAnswer({ content, aiFeedback }: { content: string, aiFeedbac
     if (regex.test(content)) {
       const highlightedHtml = content.replace(
         regex,
-        `<span data-highlight="true" data-deduction="${cleanAttr(deduction)}" data-error-loc="${cleanAttr(errorLocStr)}" class="bg-amber-200 text-amber-950 font-bold px-1.5 py-0.5 rounded border-b-2 border-amber-500 inline-flex items-center gap-1 shadow-xs cursor-pointer hover:bg-amber-300 transition-colors">
+        `<span data-highlight="true" data-deduction="${cleanAttr(deduction)}" data-error-loc="${cleanAttr(errorLocStr)}" class="bg-amber-100 text-amber-950 font-bold px-1.5 py-0.5 rounded border border-amber-400 inline-flex items-center gap-1 shadow-xs cursor-pointer hover:bg-amber-200 transition-colors">
           $1
           <span class="text-[10px] text-red-600 font-black">⚠️</span>
         </span>`

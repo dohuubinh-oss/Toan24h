@@ -259,10 +259,13 @@ function MultipleChoiceQuestion({
             
             return (
               <button 
+                type="button"
+                role="radio"
+                aria-checked={isSelected}
                 key={option.id}
                 disabled={readonly}
                 onClick={() => handleOptionClick(option.id)}
-                className={`flex items-center p-3.5 sm:p-5 rounded-xl border-2 transition-all text-left relative min-h-[52px] ${borderClass} ${bgClass} ${readonly ? 'cursor-default' : 'cursor-pointer active:scale-[0.99]'}`}
+                className={`flex items-center p-3.5 sm:p-5 rounded-xl border-2 transition-all text-left relative min-h-[52px] ${borderClass} ${bgClass} ${readonly ? 'cursor-default' : 'cursor-pointer active:scale-[0.99]'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary`}
               >
                 <div className="flex items-center gap-4 flex-1">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${

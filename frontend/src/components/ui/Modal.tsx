@@ -123,7 +123,7 @@ export function Modal({
                 type="button"
                 onClick={onClose}
                 aria-label="Đóng cửa sổ"
-                className="min-w-[40px] min-h-[40px] p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shrink-0"
+                className="min-w-[40px] min-h-[40px] p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shrink-0"
               >
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
