@@ -107,19 +107,41 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
           // Check for new notifications
           if (data.data.length > 0) {
             const latest = data.data[0]
-            if (!latest.isRead && lastNotificationIdRef.current !== latest.id.toString()) {
-              lastNotificationIdRef.current = latest.id.toString()
-              toast.success(
-                (t) => (
-                  <span className="flex flex-col gap-1">
-                    <span><b>Thông báo mới:</b> {latest.title} - {latest.message}</span>
-                    <Link href={latest.link} className="text-primary underline text-sm font-semibold" onClick={() => toast.dismiss(t.id)}>
-                      Nhấn link để xem chi tiết kết quả.
-                    </Link>
-                  </span>
-                ),
-                { duration: 10000 }
-              )
+            if (!latest.isRead) {
+              // Nếu người dùng đang đứng ở đúng trang bài thi này -> tự động đánh dấu đã đọc, không hiện toast thừa
+              const isCurrentPage = Boolean(latest.link && (pathname === latest.link || pathname.startsWith(latest.link)))
+              if (isCurrentPage) {
+                apiFetch(`/notifications/${latest.id}/read`, { method: 'POST' }).catch(() => {})
+                latest.isRead = true
+              } else {
+                // Kiểm tra xem thông báo này đã được toast hiển thị trong phiên trình duyệt này chưa để tránh spam mỗi lần refresh
+                const notifiedKey = `notified_${latest.id}`
+                const alreadyNotified = typeof window !== 'undefined' ? sessionStorage.getItem(notifiedKey) : null
+                if (!alreadyNotified && lastNotificationIdRef.current !== latest.id.toString()) {
+                  lastNotificationIdRef.current = latest.id.toString()
+                  if (typeof window !== 'undefined') {
+                    sessionStorage.setItem(notifiedKey, 'true')
+                  }
+                  toast.success(
+                    (t) => (
+                      <span className="flex flex-col gap-1">
+                        <span><b>Thông báo mới:</b> {latest.title} - {latest.message}</span>
+                        <Link 
+                          href={latest.link} 
+                          className="text-primary underline text-sm font-semibold" 
+                          onClick={() => {
+                            apiFetch(`/notifications/${latest.id}/read`, { method: 'POST' }).catch(() => {})
+                            toast.dismiss(t.id)
+                          }}
+                        >
+                          Nhấn link để xem chi tiết kết quả.
+                        </Link>
+                      </span>
+                    ),
+                    { duration: 10000 }
+                  )
+                }
+              }
             }
           }
         }

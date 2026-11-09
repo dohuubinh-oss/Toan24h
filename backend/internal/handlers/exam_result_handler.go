@@ -443,6 +443,12 @@ func GetExamResultByID(c *gin.Context) {
 		}
 	}
 
+	// Tự động đánh dấu đã đọc các thông báo liên quan đến bài thi này khi học sinh truy cập xem kết quả
+	resultLink := "/exam/" + submission.ID.String() + "/result"
+	config.DB.Model(&models.Notification{}).
+		Where("user_id = ? AND link LIKE ? AND is_read = ?", currentUID, "%"+resultLink+"%", false).
+		Update("is_read", true)
+
 	var answersMap map[string]models.QuestionAnswer
 	json.Unmarshal(submission.AnswersJSON, &answersMap)
 
