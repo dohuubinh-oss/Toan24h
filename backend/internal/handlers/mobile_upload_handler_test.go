@@ -167,3 +167,35 @@ func TestMobileUpload_TTL_Expiry(t *testing.T) {
 	json.Unmarshal(w.Body.Bytes(), &res)
 	assert.Equal(t, "expired", res["status"])
 }
+
+func TestMobileUpload_InvalidSessionID(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	h := handlers.NewMobileUploadHandler()
+
+	r := gin.New()
+	r.POST("/api/v1/mobile-upload/:sessionId", h.UploadFromMobile)
+	r.GET("/api/v1/mobile-upload/:sessionId", h.CheckUploadStatus)
+
+	invalidIDs := []string{
+		"session..evil",
+		"invalid session with spaces",
+		"session!@#$",
+		"session<script>",
+		"a_very_long_session_id_that_exceeds_sixty_four_characters_long_limit_123456789",
+	}
+
+	for _, badID := range invalidIDs {
+		// Test POST
+		reqPost, _ := http.NewRequest("POST", "/api/v1/mobile-upload/"+badID, nil)
+		wPost := httptest.NewRecorder()
+		r.ServeHTTP(wPost, reqPost)
+		assert.Equal(t, http.StatusBadRequest, wPost.Code, "Expected 400 for bad POST sessionId: "+badID)
+
+		// Test GET
+		reqGet, _ := http.NewRequest("GET", "/api/v1/mobile-upload/"+badID, nil)
+		wGet := httptest.NewRecorder()
+		r.ServeHTTP(wGet, reqGet)
+		assert.Equal(t, http.StatusBadRequest, wGet.Code, "Expected 400 for bad GET sessionId: "+badID)
+	}
+}
+

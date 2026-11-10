@@ -130,7 +130,10 @@ export default function ExamTakePage({ params }: { params: Promise<{ id: string 
           }
           // Fetch questions
           if (examData.questionIds && examData.questionIds.length > 0) {
-            const qRes = await getQuestions(1, 1000, { ids: examData.questionIds })
+            const qRes = await getQuestions(1, 1000, {
+              ids: examData.questionIds,
+              ...(examData.cate === 'exam' ? { mode: 'exam' } : {})
+            })
             // Sắp xếp chuẩn hóa: Trắc nghiệm trước, Tự luận sau; Dễ trước, Khó sau
             const sortedQuestions = sortExamQuestions(qRes.data as Question[])
             setQuestions(sortedQuestions)

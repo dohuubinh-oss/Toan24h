@@ -210,6 +210,16 @@ func TestForgotPasswordAndReset_GoogleUser(t *testing.T) {
 		t.Fatalf("Expected 200 OK for forgot-password, got %d. Body: %s", w.Code, w.Body.String())
 	}
 
+	// 1.1 Non-existent email should also return 200 OK (anti user enumeration)
+	nonExistentBody, _ := json.Marshal(map[string]string{"email": "nobody_exists@example.com"})
+	reqNonExistent, _ := http.NewRequest("POST", "/api/v1/auth/forgot-password", bytes.NewBuffer(nonExistentBody))
+	reqNonExistent.Header.Set("Content-Type", "application/json")
+	wNonExistent := httptest.NewRecorder()
+	r.ServeHTTP(wNonExistent, reqNonExistent)
+	if wNonExistent.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for non-existent email forgot-password to prevent enumeration, got %d", wNonExistent.Code)
+	}
+
 	// Inject OTP
 	otpService := services.NewOTPService()
 	otpService.SaveOTP("google_reset@example.com", "123456")

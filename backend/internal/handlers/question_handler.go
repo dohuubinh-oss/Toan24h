@@ -40,16 +40,27 @@ func isStaffRequester(c *gin.Context) bool {
 	return false
 }
 
-func sanitizeQuestionForPublic(q *models.Question) {
+func sanitizeQuestionForPublic(q *models.Question, hideHints ...bool) {
 	q.CorrectAnswer = ""
 	q.SolutionGuide = ""
 	q.ShortAnswer = ""
 	q.QuickSolveTips = ""
+	shouldHideHints := len(hideHints) > 0 && hideHints[0]
+	if shouldHideHints {
+		q.Hint = ""
+		q.Mistakes = ""
+		q.GeneralMethod = ""
+	}
 	for i := range q.SubQuestions {
 		q.SubQuestions[i].CorrectAnswer = ""
 		q.SubQuestions[i].SolutionGuide = ""
 		q.SubQuestions[i].ShortAnswer = ""
 		q.SubQuestions[i].QuickSolveTips = ""
+		if shouldHideHints {
+			q.SubQuestions[i].Hint = ""
+			q.SubQuestions[i].Mistakes = ""
+			q.SubQuestions[i].GeneralMethod = ""
+		}
 	}
 }
 
@@ -446,9 +457,11 @@ func GetQuestions(c *gin.Context) {
 		return
 	}
 
+	modeParam := c.Query("mode")
+	hideHints := modeParam == "exam" || c.Query("hide_hints") == "true"
 	if !isStaffRequester(c) {
 		for i := range questions {
-			sanitizeQuestionForPublic(&questions[i])
+			sanitizeQuestionForPublic(&questions[i], hideHints)
 		}
 	}
 
@@ -475,8 +488,10 @@ func GetQuestionByID(c *gin.Context) {
 		return
 	}
 
+	modeParam := c.Query("mode")
+	hideHints := modeParam == "exam" || c.Query("hide_hints") == "true"
 	if !isStaffRequester(c) {
-		sanitizeQuestionForPublic(&q)
+		sanitizeQuestionForPublic(&q, hideHints)
 	}
 
 	c.JSON(http.StatusOK, APIResponse{Status: "success", Data: q})
@@ -660,8 +675,10 @@ func ReportQuestion(c *gin.Context) {
 		return
 	}
 
+	modeParam := c.Query("mode")
+	hideHints := modeParam == "exam" || c.Query("hide_hints") == "true"
 	if !isStaffRequester(c) {
-		sanitizeQuestionForPublic(&q)
+		sanitizeQuestionForPublic(&q, hideHints)
 	}
 
 	c.JSON(http.StatusOK, APIResponse{Status: "success", Data: q})

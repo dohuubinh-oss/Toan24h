@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sync"
 	"time"
 
@@ -14,6 +15,8 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
+
+var validSessionIDRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
 
 type TextExtractorFunc func(fileBytes []byte, mimeType string) (*services.OCRResult, error)
 
@@ -106,8 +109,8 @@ func (h *MobileUploadHandler) checkRateLimit(key string) bool {
 
 func (h *MobileUploadHandler) UploadFromMobile(c *gin.Context) {
 	sessionID := c.Param("sessionId")
-	if sessionID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing sessionId"})
+	if sessionID == "" || !validSessionIDRegex.MatchString(sessionID) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã sessionId không hợp lệ"})
 		return
 	}
 
@@ -201,7 +204,8 @@ func (h *MobileUploadHandler) UploadFromMobile(c *gin.Context) {
 		if ext == "" {
 			ext = ".jpg"
 		}
-		fileName := fmt.Sprintf("%s_diagram%s", sessionID, ext)
+		safeSessionID := filepath.Base(sessionID)
+		fileName := fmt.Sprintf("%s_diagram%s", safeSessionID, ext)
 		filePath := filepath.Join(tempDir, fileName)
 		if err := os.WriteFile(filePath, fileBytes, 0644); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi khi lưu file ảnh hình vẽ"})
@@ -282,8 +286,8 @@ func (h *MobileUploadHandler) UploadFromMobile(c *gin.Context) {
 
 func (h *MobileUploadHandler) CheckUploadStatus(c *gin.Context) {
 	sessionID := c.Param("sessionId")
-	if sessionID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing sessionId"})
+	if sessionID == "" || !validSessionIDRegex.MatchString(sessionID) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Mã sessionId không hợp lệ"})
 		return
 	}
 

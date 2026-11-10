@@ -138,8 +138,14 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		}
 
 		if voucher != nil && !isSelfReferral {
-			if err := tx.Model(&models.Voucher{}).Where("id = ?", voucher.ID).Update("used_count", gorm.Expr("used_count + 1")).Error; err != nil {
-				return err
+			res := tx.Model(&models.Voucher{}).
+				Where("id = ? AND is_active = true AND (max_uses = 0 OR used_count < max_uses)", voucher.ID).
+				Update("used_count", gorm.Expr("used_count + 1"))
+			if res.Error != nil {
+				return res.Error
+			}
+			if res.RowsAffected == 0 {
+				return fmt.Errorf("mã khuyến mãi đã hết lượt sử dụng hoặc không còn hiệu lực")
 			}
 
 			usage := models.VoucherUsage{
@@ -381,20 +387,21 @@ func (h *AuthHandler) DeductPoints(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err := h.db.Where("id = ?", userID).First(&user).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+	res := h.db.Model(&models.User{}).
+		Where("id = ? AND points >= ?", userID, req.Amount).
+		Update("points", gorm.Expr("points - ?", req.Amount))
+	if res.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to deduct points"})
 		return
 	}
-
-	if user.Points < req.Amount {
+	if res.RowsAffected == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Không đủ điểm"})
 		return
 	}
 
-	user.Points -= req.Amount
-	if err := h.db.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to deduct points"})
+	var user models.User
+	if err := h.db.Select("points").First(&user, "id = ?", userID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch updated points"})
 		return
 	}
 
@@ -422,10 +429,12 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 
 	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 
-	// Check if user exists
+	// Check if user exists (ngăn chặn user enumeration: luôn trả về 200 OK)
 	var user models.User
 	if err := h.db.Where("email = ?", req.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Email này chưa được đăng ký trong hệ thống"})
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Nếu email tồn tại trong hệ thống, mã OTP đã được gửi.",
+		})
 		return
 	}
 

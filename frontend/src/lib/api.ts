@@ -217,7 +217,7 @@ export async function refineGeometrySVG(params: RefineGeometrySVGParams): Promis
 import { extractDiagramSvg } from './diagram-utils'
 export { extractDiagramSvg }
 
-export async function getQuestions(page: number = 1, limit: number = 20, filters?: { ids?: string[], grade?: string, topic?: string, type?: string, difficulty?: string, q?: string, cate?: string }): Promise<{data: Question[], total: number, totalPages?: number}> {
+export async function getQuestions(page: number = 1, limit: number = 20, filters?: { ids?: string[], grade?: string, topic?: string, type?: string, difficulty?: string, q?: string, cate?: string, mode?: string }): Promise<{data: Question[], total: number, totalPages?: number}> {
   let url = `/questions?page=${page}&limit=${limit}`
   if (filters) {
     if (filters.ids && filters.ids.length > 0) url += `&ids=${filters.ids.join(',')}`;
@@ -227,6 +227,7 @@ export async function getQuestions(page: number = 1, limit: number = 20, filters
     if (filters.difficulty) url += `&difficulty=${encodeURIComponent(filters.difficulty)}`;
     if (filters.q) url += `&q=${encodeURIComponent(filters.q)}`;
     if (filters.cate) url += `&cate=${encodeURIComponent(filters.cate)}`;
+    if (filters.mode) url += `&mode=${encodeURIComponent(filters.mode)}`;
   }
   const response = await apiFetch(url)
   if (response.status === 'success' && response.data) {
