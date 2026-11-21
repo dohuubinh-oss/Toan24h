@@ -116,7 +116,7 @@ export default function GradeSelectionModal({ show }: GradeSelectionModalProps =
           </div>
         )}
         <p className="text-slate-600 text-sm leading-relaxed max-w-md mx-auto mb-6">
-          Vui lòng chọn khối lớp của bạn để chúng tôi có thể cá nhân hóa bài học phù hợp nhất.
+          Chào bạn! Vui lòng chọn khối lớp của bạn để Toan6789 sắp xếp bài học và lộ trình phù hợp nhất nhé.
         </p>
 
         <div className="grid grid-cols-3 gap-3 mb-8">

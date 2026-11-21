@@ -80,4 +80,26 @@ func TestServeUploads(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
+
+	t.Run("Forbidden file type returns 403", func(t *testing.T) {
+		// Create a malicious file with .php extension in tmpDir
+		phpPath := filepath.Join(tmpDir, "backdoor.php")
+		_ = os.WriteFile(phpPath, []byte("<?php echo 'malicious'; ?>"), 0644)
+
+		req, _ := http.NewRequest("GET", "/uploads/backdoor.php", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		assert.Contains(t, w.Body.String(), "Forbidden file type")
+	})
+
+	t.Run("Includes Content-Security-Policy sandbox header", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/uploads/questions/sample.png", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, "default-src 'none'; sandbox", w.Header().Get("Content-Security-Policy"))
+	})
 }

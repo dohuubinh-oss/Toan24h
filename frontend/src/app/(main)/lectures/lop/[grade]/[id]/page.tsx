@@ -2,6 +2,7 @@ import React from 'react'
 import LectureHeader from '@/components/lecture/LectureHeader'
 import { LectureConcept, LectureExamples } from '@/components/lecture/LectureContent'
 import LectureDetailSidebar from '@/components/lecture/LectureDetailSidebar'
+import DynamicWatermark from '@/components/common/DynamicWatermark'
 import { getLectureById } from '@/lib/lectureApi'
 import { notFound, redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
@@ -39,18 +40,27 @@ export default async function GradeLecturePage({
     }
   }
 
-  let lecture;
-  let examples = [];
+  let lecture = null;
   try {
     lecture = await getLectureById(id);
-    examples = JSON.parse(lecture.examples || '[]');
   } catch (error) {
-    console.error("Failed to load lecture:", error);
+    console.error("Unexpected error fetching lecture:", error);
+  }
+
+  if (!lecture) {
     notFound();
   }
 
+  let examples = [];
+  try {
+    examples = JSON.parse(lecture.examples || '[]');
+  } catch {
+    examples = [];
+  }
+
   return (
-    <div className="max-w-7xl mx-auto w-full px-4 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto w-full px-4 py-8 space-y-8 relative">
+      <DynamicWatermark />
       {examId && <LectureAntiCheatTracker examId={examId} />}
 
       {returnUrl && (

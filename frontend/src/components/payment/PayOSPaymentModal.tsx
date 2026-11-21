@@ -21,6 +21,9 @@ export interface PayOSPaymentData {
   amount: number
   plan: string
   planName?: string
+  serviceName?: string
+  serviceCategory?: string
+  vatPolicy?: string
   qrCode?: string
   checkoutUrl?: string
   accountNumber?: string
@@ -73,7 +76,7 @@ export default function PayOSPaymentModal({
         const tx = res?.data || res
         if (tx && tx.status === 'completed') {
           setIsPaymentSuccess(true)
-          toast.success('🎉 Thanh toán thành công! Tài khoản của bạn đã được gia hạn.')
+          toast.success('🎉 Thanh toán thành công! Gói học của bạn đã được kích hoạt.')
           clearInterval(interval)
           setTimeout(() => {
             onClose()
@@ -93,7 +96,7 @@ export default function PayOSPaymentModal({
             )
             if (tx && tx.status === 'completed') {
               setIsPaymentSuccess(true)
-              toast.success('🎉 Thanh toán thành công! Tài khoản của bạn đã được gia hạn.')
+              toast.success('🎉 Thanh toán thành công! Gói học của bạn đã được kích hoạt.')
               clearInterval(interval)
               setTimeout(() => {
                 onClose()
@@ -179,10 +182,13 @@ export default function PayOSPaymentModal({
                 <CheckCircle2 className="w-10 h-10" />
               </div>
               <h4 className="text-2xl font-black text-slate-900 mb-2">
-                Thanh Toán Thành Công!
+                Đăng Ký Khóa Học Thành Công!
               </h4>
-              <p className="text-sm text-slate-600 max-w-sm mx-auto mb-6">
-                Tài khoản của bạn đã được nâng cấp thành công. Đang chuyển hướng bạn về trang cá nhân...
+              <p className="text-sm text-slate-600 max-w-sm mx-auto mb-2">
+                Bạn đã đăng ký thành công Khóa học trực tuyến &amp; Dịch vụ hỗ trợ giáo dục Toán.
+              </p>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto mb-6">
+                Biên lai dịch vụ giáo dục điện tử đã được ghi nhận trên hệ thống. Đang chuyển bạn về Góc học tập...
               </p>
               <button
                 onClick={() => {
@@ -191,7 +197,7 @@ export default function PayOSPaymentModal({
                 }}
                 className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-all cursor-pointer"
               >
-                Đến Hồ sơ ngay
+                Đến Góc học tập ngay
               </button>
             </div>
           ) : (
@@ -213,7 +219,7 @@ export default function PayOSPaymentModal({
 
                 <div className="flex items-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-100">
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                  <span>Đang chờ chuyển khoản PayOS...</span>
+                  <span>Đang chờ bạn quét mã thanh toán...</span>
                 </div>
 
                 {paymentData.checkoutUrl && (
@@ -231,6 +237,24 @@ export default function PayOSPaymentModal({
 
               {/* Transfer Details Column */}
               <div className="space-y-3.5">
+                {/* Educational Service Identity Box */}
+                <div className="p-3 bg-blue-50/90 rounded-xl border border-blue-200/80">
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider">
+                      Dịch vụ hỗ trợ giáo dục
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full border border-blue-200">
+                      Miễn GTGT • Thuế TNCN 2%
+                    </span>
+                  </div>
+                  <p className="font-bold text-slate-900 text-xs sm:text-sm">
+                    {paymentData.serviceName || (paymentData.planName ? `Khóa học trực tuyến - ${paymentData.planName}` : 'Khóa học trực tuyến & Dịch vụ hỗ trợ giáo dục')}
+                  </p>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    Bao gồm bài giảng trực tuyến &amp; công nghệ Chấm bài tự động
+                  </p>
+                </div>
+
                 <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/70">
                   <p className="text-[11px] font-semibold text-slate-500">Ngân hàng thụ hưởng</p>
                   <p className="font-bold text-slate-800 text-sm">{bankName}</p>
@@ -313,6 +337,13 @@ export default function PayOSPaymentModal({
                       </>
                     )}
                   </button>
+                </div>
+                <div className="text-[11px] text-slate-500 text-center pt-1">
+                  Biên lai điện tử: <em>Phí dịch vụ hỗ trợ giáo dục &amp; Khóa học trực tuyến (Miễn thuế GTGT)</em>
+                </div>
+                <div className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 py-1.5 px-3 rounded-lg border border-emerald-200 mt-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Đã xác nhận Điều khoản dịch vụ &amp; Chính sách không hoàn tiền khi kích hoạt</span>
                 </div>
               </div>
             </div>

@@ -27,9 +27,9 @@ var AvatarImageValidationOptions = ImageValidationOptions{
 	AllowedMimes: []string{"image/jpeg", "image/png", "image/webp"},
 }
 
-// MobileImageValidationOptions cấu hình cho ảnh chụp từ điện thoại (tối đa 10MB)
+// MobileImageValidationOptions cấu hình cho ảnh chụp từ điện thoại (tối đa 5MB)
 var MobileImageValidationOptions = ImageValidationOptions{
-	MaxSizeBytes: 10 * 1024 * 1024, // 10MB
+	MaxSizeBytes: 5 * 1024 * 1024, // 5MB
 	AllowedMimes: []string{"image/jpeg", "image/png", "image/webp"},
 }
 

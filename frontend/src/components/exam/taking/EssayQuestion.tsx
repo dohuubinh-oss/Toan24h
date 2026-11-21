@@ -594,6 +594,15 @@ function EditorItem({
           <p className="text-slate-700 italic">{aiFeedback.teacherFeedback}</p>
         </div>
       )}
+
+      {/* AI Result Disclaimer Note */}
+      {readonly && (
+        <div className="mt-4 pt-3 border-t border-slate-200/70">
+          <p className="text-[11px] sm:text-xs text-slate-500 italic leading-relaxed">
+            * Kết quả nhận diện chữ viết (OCR) và chấm điểm tự luận được thực hiện hoàn toàn tự động bởi Trí tuệ Nhân tạo (AI). Hệ thống có thể gặp sai sót trong quá trình phân tích. Điểm số và nhận xét chỉ mang tính chất tham khảo, giúp học sinh tự đánh giá năng lực và không thay thế cho kết quả chấm thi chính thức từ giáo viên.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

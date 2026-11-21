@@ -1,9 +1,15 @@
-import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import HomeNavigation from './HomeNavigation'
+import * as api from '@/lib/api'
+
+vi.mock('@/lib/api', () => ({
+  apiFetch: vi.fn(),
+}))
 
 describe('HomeNavigation', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     localStorage.clear()
     document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC;'
   })
@@ -58,5 +64,34 @@ describe('HomeNavigation', () => {
     expect(screen.getByText('Đề thi')).toBeInTheDocument()
     expect(screen.getByText('Về toan6789.vn')).toBeInTheDocument()
     expect(screen.getByText('Đăng xuất tài khoản')).toBeInTheDocument()
+  })
+
+  it('does not fetch notifications when user is not logged in', () => {
+    render(<HomeNavigation />)
+    expect(api.apiFetch).not.toHaveBeenCalled()
+  })
+
+  it('handles "Authorization token is required" gracefully without calling console.error', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const authError: any = new Error('Authorization token is required')
+    authError.status = 401
+    vi.mocked(api.apiFetch).mockRejectedValueOnce(authError)
+
+    localStorage.setItem('user', JSON.stringify({ id: 'user-1', fullName: 'Nguyen Van A', role: 'student' }))
+    document.cookie = 'userRole=student'
+
+    render(<HomeNavigation isLoggedIn={true} />)
+
+    await waitFor(() => {
+      expect(api.apiFetch).toHaveBeenCalledWith('/notifications')
+    })
+
+    // Should NOT call console.error for auth expired / token missing errors
+    expect(consoleErrorSpy).not.toHaveBeenCalledWith(expect.stringContaining('Failed to fetch notifications'), expect.anything())
+
+    // Should reset local user state and cookie
+    expect(localStorage.getItem('user')).toBeNull()
+
+    consoleErrorSpy.mockRestore()
   })
 })

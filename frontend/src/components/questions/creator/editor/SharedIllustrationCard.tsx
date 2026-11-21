@@ -164,6 +164,20 @@ export default function SharedIllustrationCard({
   const fullQuestionPreview = formatTextForPreview(questionContent)
   const fullSolutionPreview = formatTextForPreview(solutionContent)
 
+  // Handle Opening AI Modal with Question Context prefilled
+  const handleOpenAiModal = (prefillWithQuestion = true) => {
+    setAiError(null)
+    if (prefillWithQuestion) {
+      const qText = formatTextForPreview(questionContent)
+      if (qText) {
+        setCustomPrompt(`Vẽ hình minh họa / bảng biểu chính xác cho bài toán sau:\n${qText}`)
+      } else if (!customPrompt) {
+        setCustomPrompt('')
+      }
+    }
+    setShowAiModal(true)
+  }
+
   // Handle AI Geometry Generation / Refinement
   const handleGenerateAiSvg = async () => {
     if (!questionContent.trim() && !solutionContent.trim() && !customPrompt.trim()) {
@@ -264,8 +278,8 @@ export default function SharedIllustrationCard({
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
-          {/* AI Re-draw Button when image exists */}
-          {imgSrc && (
+          {/* Nút Tạo ảnh / Sửa hình vẽ bằng AI */}
+          {imgSrc ? (
             <button
               type="button"
               onClick={() => {
@@ -282,6 +296,21 @@ export default function SharedIllustrationCard({
                 <Sparkles className="w-3.5 h-3.5 text-amber-600" />
               )}
               <span>Sửa hình minh hoạ</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleOpenAiModal(true)}
+              disabled={isAiGenerating}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100/90 hover:bg-amber-200 border border-amber-300 rounded-lg transition-colors cursor-pointer shadow-xs disabled:opacity-50 active:scale-98"
+              title="Tự động lấy đề bài gửi Gemini để sinh ảnh minh họa hoặc vẽ bảng biểu"
+            >
+              {isAiGenerating ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              )}
+              <span>Tạo ảnh minh họa đề bài</span>
             </button>
           )}
 
@@ -377,13 +406,14 @@ export default function SharedIllustrationCard({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation()
-                  setAiError(null)
-                  setShowAiModal(true)
+                  handleOpenAiModal(true)
                 }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-amber-800 bg-amber-100/80 hover:bg-amber-200/80 rounded-xl transition-all shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-xl transition-all shadow-xs cursor-pointer active:scale-98"
+                title="Tự động lấy đề bài gửi Gemini để sinh ảnh minh họa hoặc vẽ bảng biểu"
               >
                 <Sparkles className="w-4 h-4 text-amber-600" />
-                <span>Vẽ hình minh hoạ</span>
+                <span>Tạo ảnh minh họa đề bài</span>
+                <span className="sr-only">Vẽ hình minh hoạ</span>
               </button>
               <span className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-primary bg-primary/10 rounded-xl group-hover:bg-primary group-hover:text-white transition-all cursor-pointer">
                 <Upload className="w-4 h-4" />
@@ -461,16 +491,36 @@ export default function SharedIllustrationCard({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
-                  <span>Chỉ dẫn bổ sung cho AI (Ưu tiên cao nhất khi vẽ lại / chỉ ra lỗi sai):</span>
-                  <span className="text-[10px] font-normal text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                    Ưu tiên cao nhất
-                  </span>
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="ai-custom-prompt-input" className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <span>Chỉ dẫn cho AI (Gemini):</span>
+                    <span className="text-[10px] font-normal text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                      Ưu tiên cao nhất
+                    </span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const q = formatTextForPreview(questionContent)
+                      if (q) {
+                        setCustomPrompt(`Vẽ hình minh họa / bảng biểu chính xác cho bài toán sau:\n${q}`)
+                        toast.success('Đã tự động lấy đề bài đưa vào chỉ dẫn!')
+                      } else {
+                        toast.error('Chưa có nội dung đề bài để đưa vào chỉ dẫn.')
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer"
+                    title="Tự động sao chép toàn bộ đề bài vào ô chỉ dẫn bên dưới"
+                  >
+                    <Sparkles className="w-3 h-3 text-blue-600" />
+                    <span>Tự động thêm đề bài vào chỉ dẫn</span>
+                  </button>
+                </div>
                 <textarea
+                  id="ai-custom-prompt-input"
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
-                  placeholder="Ví dụ: 'Vẽ tam giác nhọn ABC', 'Kẻ thêm đường cao AH', 'Kẻ tiếp tuyến tại M', 'Đổi góc vuông sang đỉnh A'... AI sẽ tự động tính toán tọa độ giải tích để dựng hình chuẩn xác."
+                  placeholder="Ví dụ: 'Vẽ tam giác nhọn ABC', 'Kẻ thêm đường cao AH', 'Vẽ bảng biến thiên', 'Vẽ đồ thị hàm số y = 2x + 1'... AI sẽ tự động đọc hiểu đề bài và tính toán tọa độ để dựng hình chuẩn xác."
                   rows={3}
                   className="w-full text-xs rounded-xl border border-slate-200 p-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-slate-400 resize-none font-sans"
                 />

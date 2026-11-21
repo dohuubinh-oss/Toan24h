@@ -34,4 +34,14 @@ describe('HomePricing Component', () => {
     expect(screen.getByText(/Báo cáo Telegram cho phụ huynh/i)).toBeInTheDocument()
     expect(screen.getByText(/Cam kết bảo đảm chất lượng/i)).toBeInTheDocument()
   })
+
+  it('does not render digital goods / software terms or intrusive tax disclaimer', () => {
+    render(<HomePricing />)
+    // Must NOT contain digital software / goods keywords
+    expect(screen.queryByText(/bán phần mềm/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/tài liệu số/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/sản phẩm số/i)).not.toBeInTheDocument()
+    // Tax policy is kept in /terms, not cluttering home pricing
+    expect(screen.queryByText(/không chịu thuế GTGT/i)).not.toBeInTheDocument()
+  })
 })

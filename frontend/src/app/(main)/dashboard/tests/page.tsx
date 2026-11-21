@@ -17,12 +17,7 @@ export default function AdminTestsDashboard() {
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-slate-800">Quản lý đề thi theo khối lớp</h1>
-            <span className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-full border border-primary/20">
-              Admin & Teacher Access
-            </span>
-          </div>
+          <h1 className="text-2xl font-bold text-slate-800">Quản lý đề thi theo khối lớp</h1>
           <p className="text-slate-500 mt-1">Vui lòng chọn một khối lớp để xem danh sách đề thi.</p>
         </div>
         

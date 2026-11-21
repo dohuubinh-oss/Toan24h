@@ -66,7 +66,7 @@ export function GradeRestrictionModal({
               className="min-h-[44px] px-4 py-2.5 text-slate-500 hover:text-slate-800 font-medium text-xs sm:text-sm transition-colors flex items-center justify-center gap-1.5 rounded-xl hover:bg-slate-50"
             >
               <Home className="w-4 h-4" aria-hidden="true" />
-              <span>Dashboard</span>
+              <span>Góc học tập</span>
             </Link>
           </div>
         </div>

@@ -3,6 +3,7 @@ export type ExamMilestone = 'midterm_1' | 'final_1' | 'midterm_2' | 'final_2' | 
 export interface MilestoneInfo {
   id: ExamMilestone;
   title: string;
+  timeRange: string;
   typeMatch: string[]; // ['Giữa kì 1'], ['Cuối kì 1'], etc.
   order: number;
 }
@@ -11,6 +12,7 @@ export const MILESTONES_CONFIG: MilestoneInfo[] = [
   {
     id: 'midterm_1',
     title: 'Giữa kì 1',
+    timeRange: 'Tháng 10 - 11',
     typeMatch: [
       'Giữa kì 1',
       'Giữa kỳ 1',
@@ -27,6 +29,7 @@ export const MILESTONES_CONFIG: MilestoneInfo[] = [
   {
     id: 'final_1',
     title: 'Cuối kì 1',
+    timeRange: 'Tháng 12 - 01',
     typeMatch: [
       'Cuối kì 1',
       'Cuối kỳ 1',
@@ -48,6 +51,7 @@ export const MILESTONES_CONFIG: MilestoneInfo[] = [
   {
     id: 'midterm_2',
     title: 'Giữa kì 2',
+    timeRange: 'Tháng 03 - 04',
     typeMatch: [
       'Giữa kì 2',
       'Giữa kỳ 2',
@@ -64,6 +68,7 @@ export const MILESTONES_CONFIG: MilestoneInfo[] = [
   {
     id: 'final_2',
     title: 'Cuối kì 2',
+    timeRange: 'Tháng 05',
     typeMatch: [
       'Cuối kì 2',
       'Cuối kỳ 2',
@@ -85,6 +90,7 @@ export const MILESTONES_CONFIG: MilestoneInfo[] = [
   {
     id: 'topics',
     title: 'Chuyên đề & Ôn tập',
+    timeRange: 'Hè & Nâng cao',
     typeMatch: [
       'Chuyên Đề',
       'Chuyên đề',

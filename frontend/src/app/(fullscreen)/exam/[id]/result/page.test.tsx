@@ -146,6 +146,11 @@ describe('ExamResultPage - Distill UI Verification', () => {
     // Retake button
     expect(screen.getByText('Làm lại đề thi')).toBeInTheDocument()
 
+    // AI Result Disclaimer
+    expect(
+      screen.getAllByText(/Kết quả nhận diện chữ viết \(OCR\) và chấm điểm tự luận được thực hiện hoàn toàn tự động bởi Trí tuệ Nhân tạo \(AI\)/i).length
+    ).toBeGreaterThan(0)
+
     // Footer navigation
     expect(screen.getByRole('button', { name: /Câu trước/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Câu tiếp theo/i })).toBeInTheDocument()
@@ -184,6 +189,11 @@ describe('ExamResultPage - Distill UI Verification', () => {
     // Tabs
     expect(screen.getByText('Nhận xét Tự luận')).toBeInTheDocument()
     expect(screen.getByText('Phân tích Tư duy')).toBeInTheDocument()
+
+    // AI disclaimer in modal
+    expect(
+      screen.getAllByText(/Kết quả nhận diện chữ viết \(OCR\) và chấm điểm tự luận được thực hiện hoàn toàn tự động bởi Trí tuệ Nhân tạo \(AI\)/i).length
+    ).toBeGreaterThan(0)
 
     // Switch to Comprehension Tab
     const compTab = screen.getByRole('button', { name: /Phân tích Tư duy/i })

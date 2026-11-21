@@ -19,6 +19,7 @@ type Claims struct {
 	UserID    uuid.UUID `json:"userId"`
 	Role      string    `json:"role"`
 	Grade     string    `json:"grade"`
+	SessionID string    `json:"sessionId,omitempty"`
 	TokenType string    `json:"tokenType"` // "access" | "refresh"
 	jwt.RegisteredClaims
 }
@@ -32,13 +33,18 @@ func getJWTSecret() []byte {
 }
 
 // GenerateAccessToken generates a short-lived access token
-func GenerateAccessToken(userID uuid.UUID, role string, grade string) (string, error) {
+func GenerateAccessToken(userID uuid.UUID, role string, grade string, sessionID ...string) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour) // 24 hours for access token
+	var sid string
+	if len(sessionID) > 0 {
+		sid = sessionID[0]
+	}
 
 	claims := &Claims{
 		UserID:    userID,
 		Role:      role,
 		Grade:     grade,
+		SessionID: sid,
 		TokenType: "access",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
@@ -52,12 +58,17 @@ func GenerateAccessToken(userID uuid.UUID, role string, grade string) (string, e
 }
 
 // GenerateRefreshToken generates a long-lived refresh token
-func GenerateRefreshToken(userID uuid.UUID) (string, error) {
+func GenerateRefreshToken(userID uuid.UUID, sessionID ...string) (string, error) {
 	expirationTime := time.Now().Add(7 * 24 * time.Hour) // 7 days for refresh token
+	var sid string
+	if len(sessionID) > 0 {
+		sid = sessionID[0]
+	}
 
 	claims := &Claims{
 		UserID:    userID,
 		Role:      "", // Refresh token usually doesn't need to carry roles, just identity
+		SessionID: sid,
 		TokenType: "refresh",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),

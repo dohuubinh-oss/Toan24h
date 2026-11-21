@@ -40,7 +40,7 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
     const method = (options.method || 'GET').toUpperCase();
     const isIdempotent = ['GET', 'HEAD', 'OPTIONS'].includes(method);
     if (!isIdempotent) {
-      throw new Error(`Không thể kết nối đến máy chủ Backend (Port 8080). Bạn vui lòng kiểm tra xem Backend đã khởi động chưa.`);
+      throw new Error(`Chưa thể kết nối tới máy chủ. Bạn vui lòng kiểm tra lại đường truyền mạng hoặc thử lại sau ít phút nhé.`);
     }
 
     // Retry once after short delay for network glitches / cold start on idempotent methods
@@ -52,12 +52,39 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
         credentials: 'include',
       });
     } catch (secondErr: any) {
-      throw new Error(`Không thể kết nối đến máy chủ Backend (Port 8080). Bạn vui lòng kiểm tra xem Backend đã khởi động chưa.`);
+      throw new Error(`Chưa thể kết nối tới máy chủ. Bạn vui lòng kiểm tra lại đường truyền mạng hoặc thử lại sau ít phút nhé.`);
     }
   }
 
   if (!response.ok) {
-    const isAuthEndpoint = endpoint.includes('/auth/login') || endpoint.includes('/auth/register') || endpoint.includes('/auth/refresh');
+    let errorData: any = null
+    try {
+      const clone = response.clone()
+      errorData = await clone.json()
+    } catch (_) {}
+
+    const isConcurrentKick = errorData?.code === 'CONCURRENT_SESSION_TERMINATED' || 
+      (typeof errorData?.error === 'string' && errorData.error.includes('thiết bị khác'))
+
+    if (isConcurrentKick && typeof window !== 'undefined') {
+      localStorage.removeItem('user')
+      document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+      document.cookie = 'userGrade=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+      document.cookie = 'userExpiresAt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+      document.cookie = 'accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+      document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login?reason=concurrent_session'
+      }
+      const error: any = new Error(errorData?.error || 'Tài khoản của bạn đã được đăng nhập từ một thiết bị khác.')
+      error.status = 401
+      error.data = errorData
+      error.code = 'CONCURRENT_SESSION_TERMINATED'
+      throw error
+    }
+
+    const isAuthEndpoint = endpoint.includes('/auth/login') || endpoint.includes('/auth/register') || endpoint.includes('/auth/refresh')
     if (response.status === 401 && typeof window !== 'undefined' && !options.url_is_refresh && !isAuthEndpoint) {
       // Try refresh token
       // Try refresh token via HttpOnly cookies
@@ -79,32 +106,50 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
           if (retryRes.ok) {
             return retryRes.json()
           }
+          response = retryRes
         } else {
+          let refreshErrorData: any = null
+          try {
+            refreshErrorData = await refreshRes.json()
+          } catch (_) {}
+
+          const isRefreshConcurrentKick = refreshErrorData?.code === 'CONCURRENT_SESSION_TERMINATED' ||
+            (typeof refreshErrorData?.error === 'string' && refreshErrorData.error.includes('thiết bị khác'))
+
           // Refresh failed, clear client user data and cookies
           localStorage.removeItem('user')
           document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
           document.cookie = 'userGrade=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+          document.cookie = 'userExpiresAt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+          document.cookie = 'accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+          document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
 
           const currentPath = window.location.pathname
           const isProtectedRoute = currentPath.startsWith('/dashboard') || 
                                    currentPath.startsWith('/student') || 
                                    currentPath.startsWith('/profile') || 
-                                   currentPath.startsWith('/exam')
+                                   currentPath.startsWith('/exam') ||
+                                   currentPath.startsWith('/lectures')
           
-          if (isProtectedRoute && currentPath !== '/login') {
-            window.location.href = '/login'
+          if (currentPath !== '/login') {
+            if (isRefreshConcurrentKick) {
+              window.location.href = '/login?reason=concurrent_session'
+            } else if (isProtectedRoute) {
+              window.location.href = '/login'
+            }
           }
         }
       } catch (e) {
-        console.error("Refresh token error", e)
+        console.warn("Refresh token error", e)
       }
     }
 
-    let errorData
-    try {
-      errorData = await response.json()
-    } catch (e) {
-      errorData = response.statusText
+    if (!errorData) {
+      try {
+        errorData = await response.json()
+      } catch (e) {
+        errorData = response.statusText
+      }
     }
     
     let errorMessage = `API Error: ${response.status}`
@@ -116,13 +161,19 @@ export async function apiFetch(endpoint: string, options: ApiOptions = {}) {
       errorMessage = `${errorMessage} - ${JSON.stringify(errorData)}`
     }
     
-    throw new Error(errorMessage)
+    const error: any = new Error(errorMessage)
+    error.status = response.status
+    error.data = errorData
+    throw error
   }
 
   return response.json()
 }
 
 export async function uploadTempImage(file: File | Blob): Promise<string> {
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('Dung lượng ảnh vượt quá giới hạn tối đa 5MB. Vui lòng chọn ảnh nhỏ hơn.')
+  }
   const filename = file instanceof File ? file.name : 'upload.png'
 
   const doUpload = async () => {
@@ -583,11 +634,16 @@ export async function getMyExamResults(token?: string): Promise<Submission[]> {
     }
     return []
   } catch (error: any) {
-    if (error?.message?.includes('Invalid or expired token') || error?.message?.includes('401')) {
+    if (
+      error?.status === 401 ||
+      error?.message?.includes('Invalid or expired token') || 
+      error?.message?.includes('Authorization') || 
+      error?.message?.includes('401')
+    ) {
       // Silently return empty array on auth failure during SSR
       return []
     }
-    console.error(`Failed to fetch my exam results:`, error)
+    console.warn(`Failed to fetch my exam results:`, error)
     return []
   }
 }
@@ -695,6 +751,9 @@ export async function getWeeklyLeaderboard(grade?: string, token?: string): Prom
 }
 
 export async function uploadUserAvatar(file: File): Promise<string> {
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('Dung lượng ảnh đại diện vượt quá giới hạn tối đa 5MB.')
+  }
   const formData = new FormData();
   formData.append('file', file);
   const res = await apiFetch('/users/me/avatar', {

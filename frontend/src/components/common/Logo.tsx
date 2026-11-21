@@ -90,11 +90,11 @@ export default function Logo({
   // Dạng 2: Icon PNG ở trên + Chữ MathAI ở dưới (Stacked)
   if (layout === 'stacked') {
     return (
-      <div className={`inline-flex flex-col items-center justify-center gap-1.5 select-none ${className}`}>
+      <div className={`inline-flex flex-col items-center justify-center gap-1 select-none ${className}`}>
         <LogoIcon size={size} priority={priority} />
-        <span className={`${textSizes[size]} font-bold tracking-tight text-slate-900 flex items-center`}>
+        <span className={`${textSizes[size]} font-bold tracking-tight text-slate-900 flex items-center leading-none`}>
           <span>Math</span>
-          <span className="text-primary font-bold">AI</span>
+          <span className="text-primary font-extrabold">AI</span>
         </span>
       </div>
     )
@@ -106,7 +106,7 @@ export default function Logo({
       <LogoIcon size={size} priority={priority} />
       <span className={`${textSizes[size]} font-bold tracking-tight text-slate-900 flex items-center leading-none`}>
         <span>Math</span>
-        <span className="text-primary font-bold">AI</span>
+        <span className="text-primary font-extrabold">AI</span>
       </span>
     </div>
   )

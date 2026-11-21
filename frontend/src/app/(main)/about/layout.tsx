@@ -1,16 +1,16 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Về Chúng Tôi & Chương Trình Đối Tác Affiliate 30% | toan6789.vn',
+  title: 'Về Chúng Tôi - Sứ Mệnh & Đội Ngũ | toan6789.vn',
   description:
-    'Tìm hiểu về sứ mệnh cách mạng hóa học Toán THCS của toan6789.vn và tham gia chương trình Đối tác Affiliate nhận ngay 30% hoa hồng trên mọi đơn hàng nâng cấp.',
+    'Tìm hiểu về sứ mệnh cách mạng hóa học Toán THCS của toan6789.vn, đội ngũ giáo viên chuyên môn và công nghệ trợ lý học tập MathAI.',
   alternates: {
     canonical: '/about',
   },
   openGraph: {
-    title: 'Về Chúng Tôi & Chương Trình Đối Tác Affiliate 30% | toan6789.vn',
+    title: 'Về Chúng Tôi - Sứ Mệnh & Đội Ngũ | toan6789.vn',
     description:
-      'Nền tảng học và luyện thi Toán THCS bám sát chương trình mới cùng đội ngũ giáo viên chuyên môn. Tham gia mạng lưới đối tác toan6789.vn và nhận 30% hoa hồng chia sẻ doanh thu hấp dẫn.',
+      'Nền tảng học và luyện thi Toán THCS bám sát chương trình mới cùng đội ngũ giáo viên chuyên môn và trợ lý học tập thông minh MathAI.',
   },
 }
 

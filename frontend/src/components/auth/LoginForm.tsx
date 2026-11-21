@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
-import { Eye, EyeOff, GraduationCap, ArrowLeft, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff, GraduationCap, ArrowLeft, AlertTriangle } from 'lucide-react'
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
@@ -24,6 +24,16 @@ export default function LoginForm() {
   const [errorMessage, setErrorMessage] = useState('')
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
   const [isResending, setIsResending] = useState(false)
+  const [concurrentWarning, setConcurrentWarning] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('reason') === 'concurrent_session') {
+        setConcurrentWarning(true)
+      }
+    }
+  }, [])
 
   const {
     register,
@@ -67,10 +77,10 @@ export default function LoginForm() {
         setUnverifiedEmail(null)
       }
       if (msg.includes('Invalid email or password') || msg.includes('401')) {
-        msg = 'Email hoặc mật khẩu không chính xác.'
+        msg = 'Email hoặc mật khẩu chưa chính xác. Bạn kiểm tra lại nhé.'
       }
-      setErrorMessage(msg || 'Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.')
-      toast.error(msg || 'Đăng nhập thất bại')
+      setErrorMessage(msg || 'Đăng nhập chưa thành công. Bạn vui lòng kiểm tra lại email và mật khẩu nhé.')
+      toast.error(msg || 'Đăng nhập chưa thành công.')
     } finally {
       setIsLoading(false)
     }
@@ -81,9 +91,9 @@ export default function LoginForm() {
     setIsResending(true)
     try {
       await resendVerification(unverifiedEmail)
-      toast.success('Đã gửi lại liên kết kích hoạt vào email của bạn!')
+      toast.success('Đã gửi lại liên kết kích hoạt vào hòm thư của bạn!')
     } catch (err: any) {
-      toast.error(err.message || 'Không thể gửi lại email kích hoạt')
+      toast.error(err.message || 'Chưa thể gửi lại email kích hoạt lúc này. Bạn vui lòng thử lại sau nhé.')
     } finally {
       setIsResending(false)
     }
@@ -132,6 +142,20 @@ export default function LoginForm() {
 
         {/* Form */}
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
+          {concurrentWarning && (
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200/90 text-amber-900 text-xs sm:text-sm flex items-start gap-3 shadow-xs">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-semibold text-amber-950">
+                  Tài khoản đã đăng nhập ở thiết bị khác
+                </p>
+                <p className="text-amber-800 leading-relaxed text-[11px] sm:text-xs">
+                  Hệ thống toan6789.vn chỉ cho phép duy nhất 1 thiết bị hoạt động tại một thời điểm nhằm bảo vệ an toàn tài khoản. Phiên đăng nhập trên thiết bị này đã được tự động đăng xuất.
+                </p>
+              </div>
+            </div>
+          )}
+
           {errorMessage && (
             <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl space-y-2">
               <p>{errorMessage}</p>
@@ -228,11 +252,6 @@ export default function LoginForm() {
 
         <div className="grid gap-4">
           <GoogleSignInButton onSuccess={handleGoogleSuccess} />
-          {/* Trust Badge (Cam Kết Bảo Mật) */}
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>Bảo mật SSL 256-bit • Dữ liệu học tập được mã hóa an toàn</span>
-          </div>
         </div>
 
         {/* Footer */}

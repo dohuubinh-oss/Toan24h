@@ -29,7 +29,7 @@ describe('VerifyEmailPage', () => {
     mockGet.mockReturnValue(null);
     render(<VerifyEmailPage />);
 
-    expect(screen.getByText(/Không tìm thấy mã kích hoạt/i)).toBeInTheDocument();
+    expect(screen.getByText(/(Chưa|Không) tìm thấy mã kích hoạt/i)).toBeInTheDocument();
   });
 
   it('shows success message when token verification succeeds', async () => {
@@ -59,7 +59,7 @@ describe('VerifyEmailPage', () => {
     render(<VerifyEmailPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Kích hoạt không thành công/i)).toBeInTheDocument();
+      expect(screen.getByText(/Kích hoạt (chưa|không) thành công/i)).toBeInTheDocument();
     });
     expect(screen.getByPlaceholderText(/Nhập email của bạn/i)).toBeInTheDocument();
   });

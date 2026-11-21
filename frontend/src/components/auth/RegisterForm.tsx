@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Eye, EyeOff, Gift, GraduationCap, ArrowLeft, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff, Gift, GraduationCap, ArrowLeft } from 'lucide-react'
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Button } from '../ui/Button'
@@ -19,6 +19,8 @@ type RegisterFormValues = {
   password: string
   confirmPassword: string
   voucherCode?: string
+  ageConsent: boolean
+  termsConsent: boolean
 }
 
 export default function RegisterForm() {
@@ -45,6 +47,9 @@ export default function RegisterForm() {
   })
 
   const password = watch('password') || ''
+  const isAgeAgreed = watch('ageConsent')
+  const isTermsAgreed = watch('termsConsent')
+  const canSubmit = Boolean(isAgeAgreed && isTermsAgreed)
 
   const passwordStrength = useMemo(() => {
     if (!password) return 0
@@ -85,7 +90,8 @@ export default function RegisterForm() {
         fullName: data.fullname,
         email: data.identity,
         password: data.password,
-        voucherCode: data.voucherCode?.trim() || undefined
+        voucherCode: data.voucherCode?.trim() || undefined,
+        termsAgreedAt: new Date().toISOString(),
       })
       if (res?.freeMonths && res.freeMonths > 0) {
         if (typeof window !== 'undefined') {
@@ -104,10 +110,10 @@ export default function RegisterForm() {
     } catch (error: any) {
       let msg = error.message
       if (msg.includes('Email already in use') || msg.includes('email')) {
-        msg = 'Đăng ký thất bại. Email này đã được sử dụng.'
+        msg = 'Email này đã có tài khoản trên Toan6789. Bạn có thể đăng nhập hoặc dùng email khác nhé.'
       }
-      setErrorMessage(msg || 'Đăng ký thất bại. Vui lòng thử lại sau.')
-      toast.error(msg || 'Đăng ký thất bại.')
+      setErrorMessage(msg || 'Đăng ký chưa thành công. Bạn vui lòng thử lại sau nhé.')
+      toast.error(msg || 'Đăng ký chưa thành công.')
     } finally {
       setIsLoading(false)
     }
@@ -318,10 +324,55 @@ export default function RegisterForm() {
             </div>
           </div>
 
+          {/* Bắt buộc xác nhận độ tuổi / người giám hộ */}
+          <div className="pt-1">
+            <div className="flex items-start gap-2.5">
+              <input
+                {...register('ageConsent', {
+                  required: 'Bạn cần xác nhận đã trên 18 tuổi hoặc có sự đồng ý của cha mẹ/người giám hộ'
+                })}
+                id="ageConsent"
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              />
+              <label htmlFor="ageConsent" className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-snug cursor-pointer select-none">
+                Tôi đã trên 18 tuổi, hoặc đã được sự đồng ý của cha mẹ/người giám hộ hợp pháp
+              </label>
+            </div>
+            {errors.ageConsent && (
+              <p className="text-red-500 text-xs mt-1 font-medium">{errors.ageConsent.message}</p>
+            )}
+          </div>
+
+          {/* Bắt buộc đồng ý Điều khoản dịch vụ và Chính sách bảo mật */}
+          <div>
+            <div className="flex items-start gap-2.5">
+              <input
+                {...register('termsConsent', {
+                  required: 'Bạn cần đồng ý với Điều khoản dịch vụ và Chính sách bảo mật'
+                })}
+                id="termsConsent"
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              />
+              <label htmlFor="termsConsent" className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-snug cursor-pointer select-none">
+                Tôi đã đọc, hiểu và đồng ý với{' '}
+                <Link href="/terms" target="_blank" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                  Điều khoản dịch vụ
+                </Link>{' '}
+                và Chính sách bảo mật của Toan6789
+              </label>
+            </div>
+            {errors.termsConsent && (
+              <p className="text-red-500 text-xs mt-1 font-medium">{errors.termsConsent.message}</p>
+            )}
+          </div>
+
           <Button
             type="submit"
-            className="w-full gap-2 text-base sm:text-lg h-12 font-semibold shadow-sm mt-1"
+            className="w-full gap-2 text-base sm:text-lg h-12 font-semibold shadow-sm mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
             isLoading={isLoading}
+            disabled={!canSubmit || isLoading}
           >
             Đăng ký
           </Button>
@@ -342,11 +393,6 @@ export default function RegisterForm() {
             onSuccess={handleGoogleSuccess}
             refCode={watch('voucherCode')?.trim() || refParam.trim()}
           />
-          {/* Trust Badge (Cam Kết Bảo Mật) */}
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-0.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>Bảo mật SSL 256-bit • Dữ liệu học tập được mã hóa an toàn</span>
-          </div>
         </div>
 
         {/* Footer */}

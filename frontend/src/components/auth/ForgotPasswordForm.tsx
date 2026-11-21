@@ -119,11 +119,11 @@ export default function ForgotPasswordForm() {
         body: JSON.stringify({ email })
       })
 
-      setServerSuccess(data?.message || 'Mã OTP đã được gửi đến email của bạn.')
+      setServerSuccess(data?.message || 'Mã xác thực OTP đã được gửi đến email của bạn. Bạn kiểm tra hòm thư nhé.')
       setStep(2)
       startResendTimer()
     } catch (err: any) {
-      setServerError(err.message || 'Không thể gửi mã OTP. Vui lòng thử lại sau.')
+      setServerError(err.message || 'Chưa thể gửi mã OTP lúc này. Bạn vui lòng thử lại sau ít phút nhé.')
     } finally {
       setIsLoading(false)
     }
@@ -142,10 +142,10 @@ export default function ForgotPasswordForm() {
         body: JSON.stringify({ email })
       })
 
-      setServerSuccess(data?.message || 'Mã OTP mới đã được gửi lại vào email.')
+      setServerSuccess(data?.message || 'Mã OTP mới đã được gửi lại vào hòm thư của bạn.')
       startResendTimer()
     } catch (err: any) {
-      setServerError(err.message || 'Lỗi gửi lại mã OTP.')
+      setServerError(err.message || 'Chưa thể gửi lại mã OTP lúc này. Bạn thử lại sau nhé.')
     } finally {
       setIsLoading(false)
     }
@@ -159,7 +159,7 @@ export default function ForgotPasswordForm() {
     setValue('otp', combinedOtp)
 
     if (combinedOtp.length < 6) {
-      setServerError('Vui lòng nhập đủ 6 chữ số mã OTP')
+      setServerError('Bạn vui lòng nhập đủ 6 chữ số của mã OTP nhé.')
       return
     }
 
@@ -172,10 +172,10 @@ export default function ForgotPasswordForm() {
         body: JSON.stringify({ email, otp: combinedOtp })
       })
 
-      setServerSuccess(data?.message || 'Xác thực OTP thành công. Vui lòng đặt mật khẩu mới.')
+      setServerSuccess(data?.message || 'Xác thực mã OTP thành công! Mời bạn đặt mật khẩu mới.')
       setStep(3)
     } catch (err: any) {
-      setServerError(err.message || 'Mã OTP không đúng hoặc đã hết hạn.')
+      setServerError(err.message || 'Mã OTP chưa chính xác hoặc đã hết hạn. Bạn kiểm tra lại nhé.')
     } finally {
       setIsLoading(false)
     }
@@ -199,12 +199,12 @@ export default function ForgotPasswordForm() {
         body: JSON.stringify({ email, otp: combinedOtp, newPassword })
       })
 
-      setServerSuccess(data?.message || 'Đặt lại mật khẩu thành công! Đang chuyển đến trang đăng nhập...')
+      setServerSuccess(data?.message || 'Đặt lại mật khẩu thành công! Đang chuyển bạn đến trang đăng nhập...')
       setTimeout(() => {
         router.push('/login')
       }, 1500)
     } catch (err: any) {
-      setServerError(err.message || 'Không thể đặt lại mật khẩu. Vui lòng thử lại.')
+      setServerError(err.message || 'Chưa thể đặt lại mật khẩu lúc này. Bạn vui lòng thử lại nhé.')
       setIsLoading(false)
     }
   }
@@ -222,9 +222,9 @@ export default function ForgotPasswordForm() {
         <div className="mb-8 text-center">
           <h2 className="text-3xl font-bold text-slate-800 mb-2">Quên mật khẩu</h2>
           <p className="text-slate-600 text-base">
-            {step === 1 && "Nhập địa chỉ Email đăng ký để nhận mã khôi phục OTP qua Email (hoặc Telegram nếu đã liên kết)."}
-            {step === 2 && `Mã OTP 6 chữ số đã gửi tới ${watch('email') || 'email của bạn'} (và Telegram bot nếu đã liên kết).`}
-            {step === 3 && "Vui lòng đặt lại mật khẩu mới cho tài khoản của bạn."}
+            {step === 1 && "Nhập địa chỉ email đăng ký để nhận mã khôi phục OTP qua email."}
+            {step === 2 && `Mã OTP gồm 6 chữ số đã được gửi tới ${watch('email') || 'email của bạn'}.`}
+            {step === 3 && "Bạn hãy đặt mật khẩu mới dễ nhớ và an toàn cho tài khoản nhé."}
           </p>
         </div>
 
@@ -307,7 +307,7 @@ export default function ForgotPasswordForm() {
                   ))}
                 </div>
                 <div className="flex items-center justify-between mt-3 text-xs text-slate-600">
-                  <span>Bạn có thể dán trực tiếp mã 6 số.</span>
+                  <span>Bạn có thể dán (paste) trực tiếp mã 6 số vào đây.</span>
                   {resendTimer > 0 ? (
                     <span className="text-slate-500 font-medium">Gửi lại sau {resendTimer}s</span>
                   ) : (

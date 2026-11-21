@@ -42,12 +42,13 @@ func NewAuthHandler(db *gorm.DB) *AuthHandler {
 }
 
 type RegisterRequest struct {
-	Email       string `json:"email" binding:"required,email"`
-	Password    string `json:"password" binding:"required,min=6"`
-	FullName    string `json:"fullName" binding:"required"`
-	Role        string `json:"role"`
-	Grade       string `json:"grade"`
-	VoucherCode string `json:"voucherCode"`
+	Email         string     `json:"email" binding:"required,email"`
+	Password      string     `json:"password" binding:"required,min=6"`
+	FullName      string     `json:"fullName" binding:"required"`
+	Role          string     `json:"role"`
+	Grade         string     `json:"grade"`
+	VoucherCode   string     `json:"voucherCode"`
+	TermsAgreedAt *time.Time `json:"termsAgreedAt,omitempty"`
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -97,9 +98,9 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	if voucher != nil {
 		if voucher.AffiliateID != nil {
-			var affiliate models.User
-			if err := h.db.Select("id, email").First(&affiliate, "id = ?", *voucher.AffiliateID).Error; err == nil {
-				if strings.EqualFold(affiliate.Email, req.Email) {
+			var voucherOwner models.User
+			if err := h.db.Select("id, email").First(&voucherOwner, "id = ?", *voucher.AffiliateID).Error; err == nil {
+				if strings.EqualFold(voucherOwner.Email, req.Email) {
 					isSelfReferral = true
 				}
 			}
@@ -119,6 +120,12 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	verificationToken := uuid.New().String()
 	verificationExpires := time.Now().Add(24 * time.Hour)
 
+	termsAgreedAt := req.TermsAgreedAt
+	if termsAgreedAt == nil {
+		now := time.Now()
+		termsAgreedAt = &now
+	}
+
 	user := models.User{
 		Email:                      req.Email,
 		PasswordHash:               hashedPassword,
@@ -127,6 +134,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Grade:                      req.Grade,
 		ExpiresAt:                  userExpiresAt,
 		ReferrerID:                 referrerID,
+		TermsAgreedAt:              termsAgreedAt,
 		IsVerified:                 false, // Bắt buộc kích hoạt qua email mới dùng được
 		VerificationToken:          &verificationToken,
 		VerificationTokenExpiresAt: &verificationExpires,
@@ -229,13 +237,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role, user.Grade)
+	// Generate a unique session ID for single active session enforcement (Concurrent Sessions Limit)
+	sessionID := uuid.New().String()
+	_ = services.SetActiveSession(c.Request.Context(), h.db, user.ID, sessionID)
+
+	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role, user.Grade, sessionID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate access token"})
 		return
 	}
 
-	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	refreshToken, err := utils.GenerateRefreshToken(user.ID, sessionID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate refresh token"})
 		return
@@ -286,7 +298,20 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role, user.Grade)
+	// Verify that the session is still active (not kicked by another device login)
+	if claims.SessionID != "" {
+		valid, err := services.ValidateActiveSession(c.Request.Context(), h.db, user.ID, claims.SessionID)
+		if err == nil && !valid {
+			clearAuthCookies(c)
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Tài khoản của bạn đã được đăng nhập từ một thiết bị khác. Vui lòng đăng nhập lại.",
+				"code":  "CONCURRENT_SESSION_TERMINATED",
+			})
+			return
+		}
+	}
+
+	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role, user.Grade, claims.SessionID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new access token"})
 		return
@@ -337,14 +362,18 @@ func (h *AuthHandler) UpdateGrade(c *gin.Context) {
 		return
 	}
 
-	// Generate new tokens
-	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role, user.Grade)
+	// Generate new tokens preserving active session
+	activeSID := ""
+	if user.ActiveSessionID != nil {
+		activeSID = *user.ActiveSessionID
+	}
+	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role, user.Grade, activeSID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate access token"})
 		return
 	}
 	
-	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	refreshToken, err := utils.GenerateRefreshToken(user.ID, activeSID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate refresh token"})
 		return
@@ -412,8 +441,33 @@ func (h *AuthHandler) DeductPoints(c *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
+	// Invalidate active session if token is provided
+	tokenString := ""
+	authHeader := c.GetHeader("Authorization")
+	if authHeader != "" {
+		parts := strings.Split(authHeader, " ")
+		if len(parts) == 2 && parts[0] == "Bearer" {
+			tokenString = parts[1]
+		}
+	}
+	if tokenString == "" {
+		if cookieToken, err := c.Cookie("accessToken"); err == nil {
+			tokenString = cookieToken
+		}
+	}
+	if tokenString != "" {
+		if claims, err := utils.ValidateToken(tokenString); err == nil {
+			_ = services.InvalidateSession(c.Request.Context(), h.db, claims.UserID)
+		}
+	}
+
 	clearAuthCookies(c)
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+}
+
+// CheckSession is a lightweight endpoint to check if the current session is still valid
+func (h *AuthHandler) CheckSession(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": "active"})
 }
 
 type ForgotPasswordRequest struct {

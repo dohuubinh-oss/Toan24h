@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   CheckCircle2,
@@ -33,66 +34,66 @@ interface Plan {
 const PLANS: Plan[] = [
   {
     id: '1_month',
-    name: 'Gói 1 Tháng',
+    name: 'Khóa học trực tuyến 1 Tháng',
     durationMonths: 1,
     price: 300000,
     pricePerMonth: '300.000đ / tháng',
-    description: 'Trải nghiệm học tập và làm quen với phương pháp luyện thi thông minh.',
+    description: 'Khóa học trực tuyến và dịch vụ hỗ trợ giáo dục, làm quen phương pháp học thông minh.',
     features: [
-      'Toàn quyền truy cập tất cả bài giảng',
-      'Làm đề thi trắc nghiệm & tự luận chuẩn cấu trúc',
-      'Xem đáp án chi tiết và phương pháp giải',
-      'Theo dõi tiến độ học tập cơ bản',
+      'Toàn quyền tham gia bài giảng khóa học trực tuyến',
+      'Hệ thống chấm bài tự động & hướng dẫn chi tiết từng bước',
+      'Dịch vụ hỗ trợ giáo dục & giải đáp câu hỏi 24/7',
+      'Theo dõi tiến độ học tập và năng lực cơ bản',
     ],
   },
   {
     id: '3_months',
-    name: 'Gói 3 Tháng',
+    name: 'Khóa học trực tuyến 3 Tháng',
     durationMonths: 3,
     price: 675000,
     originalPrice: 900000,
     pricePerMonth: '225.000đ / tháng',
     discountBadge: 'Tiết kiệm 25%',
     popular: true,
-    description: 'Lựa chọn phổ biến nhất cho giai đoạn ôn tập và bứt phá điểm số.',
+    description: 'Khóa học trực tuyến và dịch vụ hỗ trợ giáo dục bứt phá điểm số thi giữa kỳ & cuối kỳ.',
     features: [
-      'Toàn bộ quyền lợi gói 1 tháng',
-      'Ngân hàng 50.000+ câu hỏi phân loại theo độ khó',
-      'Hệ thống gợi ý bài tập khắc phục điểm yếu',
-      'Ưu tiên hỗ trợ giải đáp thắc mắc 24/7',
+      'Toàn bộ quyền lợi khóa học 1 tháng',
+      'Kho 50.000+ câu hỏi luyện thi có chấm bài tự động',
+      'Dịch vụ hỗ trợ giáo dục và tư vấn khắc phục điểm yếu',
+      'Báo cáo điểm số & thời gian học qua Telegram cho phụ huynh',
     ],
   },
   {
     id: '9_months',
-    name: 'Gói 9 Tháng',
+    name: 'Khóa học trực tuyến 9 Tháng',
     durationMonths: 9,
     price: 1755000,
     originalPrice: 2700000,
     pricePerMonth: '195.000đ / tháng',
     discountBadge: 'Tiết kiệm 35%',
-    description: 'Đồng hành trọn vẹn năm học từ kiến thức nền tảng đến ôn thi cuối kỳ.',
+    description: 'Khóa học trực tuyến và dịch vụ hỗ trợ giáo dục đồng hành trọn vẹn cả năm học.',
     features: [
-      'Toàn bộ quyền lợi gói 3 tháng',
+      'Toàn bộ quyền lợi khóa học 3 tháng',
       'Đồng hành xuyên suốt cả năm học (Kỳ 1 + Kỳ 2)',
-      'Bộ đề thi thử học kỳ chọn lọc của các trường điểm',
-      'Chuyên đề ôn thi chuyên sâu & mẹo bấm máy tính',
+      'Khóa học ôn thi học kỳ & đề thi thử chọn lọc của các trường điểm',
+      'Chấm bài tự động bằng AI & chuyên đề ôn thi nâng cao',
     ],
   },
   {
     id: '1_year',
-    name: 'Gói 1 Năm',
+    name: 'Khóa học trực tuyến 1 Năm',
     durationMonths: 12,
     price: 1800000,
     originalPrice: 3600000,
     pricePerMonth: '150.000đ / tháng',
     discountBadge: 'Tiết kiệm 50%',
     bestValue: true,
-    description: 'Giải pháp đầu tư tiết kiệm và hiệu quả nhất cho cả năm học và ôn thi chuyển cấp.',
+    description: 'Khóa học trực tuyến và dịch vụ hỗ trợ giáo dục toàn diện cả năm và luyện thi vào 10.',
     features: [
-      'Toàn bộ đặc quyền VIP cao cấp nhất',
-      'Học tập không giới hạn trong 365 ngày',
-      'Kho đề thi vào 10 độc quyền cập nhật mới liên tục',
-      'Hỗ trợ lộ trình học tập cá nhân hóa 1-1',
+      'Đặc quyền tham gia toàn bộ Khóa học trực tuyến 365 ngày',
+      'Kho đề thi vào 10 độc quyền có chấm bài tự động cập nhật liên tục',
+      'Dịch vụ hỗ trợ giáo dục toàn diện & định hướng lộ trình 1-1',
+      'Phân tích năng lực học sinh và dự đoán phổ điểm thi bằng AI',
     ],
   },
 ]
@@ -102,6 +103,8 @@ export default function UpgradePage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan>(PLANS[1]) // Default 3_months
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [termsAgreed, setTermsAgreed] = useState(false)
+  const [termsAgreedAt, setTermsAgreedAt] = useState<string | null>(null)
 
   // PayOS Modal state
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -117,6 +120,11 @@ export default function UpgradePage() {
       return
     }
 
+    if (!termsAgreed) {
+      toast.error('Vui lòng tích chọn đồng ý với Điều khoản dịch vụ và Chính sách hoàn tiền trước khi thanh toán.')
+      return
+    }
+
     setSelectedPlan(plan)
     setLoadingPlanId(plan.id)
     setError(null)
@@ -124,7 +132,10 @@ export default function UpgradePage() {
     try {
       const res = await apiFetch('/payments/create', {
         method: 'POST',
-        body: JSON.stringify({ plan: plan.id }),
+        body: JSON.stringify({ 
+          plan: plan.id,
+          termsAgreedAt: termsAgreedAt || new Date().toISOString()
+        }),
       })
 
       if (res && res.error) {
@@ -184,6 +195,38 @@ export default function UpgradePage() {
             <span>{error}</span>
           </div>
         )}
+
+        {/* Checkbox Chấp thuận Điều khoản & Chính sách hoàn tiền (Bắt buộc theo chuẩn Bộ Công Thương) */}
+        <div className="max-w-2xl mx-auto mb-10 p-4 sm:p-5 bg-white rounded-2xl border border-slate-200/90 shadow-xs">
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="upgrade-terms-consent"
+              checked={termsAgreed}
+              onChange={(e) => {
+                setTermsAgreed(e.target.checked)
+                if (e.target.checked) {
+                  setTermsAgreedAt(new Date().toISOString())
+                } else {
+                  setTermsAgreedAt(null)
+                }
+              }}
+              className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+            />
+            <label htmlFor="upgrade-terms-consent" className="text-xs sm:text-sm text-slate-700 leading-snug cursor-pointer select-none">
+              Tôi đã đọc, hiểu và đồng ý với{' '}
+              <Link href="/terms" target="_blank" className="text-blue-600 hover:underline font-semibold">
+                Điều khoản dịch vụ
+              </Link>{' '}
+              và <strong>Chính sách hoàn tiền</strong> của Toan6789.vn (dịch vụ giáo dục trực tuyến được kích hoạt ngay lập tức, không áp dụng hoàn tiền trừ trường hợp gián đoạn kỹ thuật quá 48 giờ theo quy định của Bộ Công Thương).
+            </label>
+          </div>
+          {!termsAgreed && (
+            <p className="text-[11px] text-amber-700 mt-2 ml-7 font-medium">
+              * Vui lòng tích chọn ô trên để mở khóa nút thanh toán.
+            </p>
+          )}
+        </div>
 
         {/* Pricing Cards Grid (4 plans) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
@@ -261,14 +304,15 @@ export default function UpgradePage() {
                   {/* Create Payment Button */}
                   <button
                     onClick={() => handleCreatePayment(plan)}
-                    disabled={isLoading}
+                    disabled={isLoading || !termsAgreed}
+                    title={!termsAgreed ? 'Vui lòng tích chọn đồng ý điều khoản dịch vụ ở trên' : undefined}
                     className={`w-full py-3.5 px-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm ${
                       plan.popular
                         ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/25'
                         : plan.bestValue
                         ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/25'
                         : 'bg-slate-900 hover:bg-slate-800 text-white'
-                    } disabled:opacity-50`}
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {isLoading ? (
                       <>
@@ -297,7 +341,7 @@ export default function UpgradePage() {
             <div>
               <h4 className="font-bold text-slate-900 text-sm mb-1">Kích hoạt tức thì</h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Hệ thống tự động cộng thời hạn VIP trong vòng vài giây ngay sau khi bạn quét mã VietQR thành công.
+                Tài khoản được kích hoạt ngay lập tức chỉ sau vài giây quét mã VietQR thành công.
               </p>
             </div>
           </div>
@@ -321,10 +365,23 @@ export default function UpgradePage() {
             <div>
               <h4 className="font-bold text-slate-900 text-sm mb-1">Hỗ trợ 24/7</h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Cần hỗ trợ thanh toán hoặc kích hoạt? Liên hệ ngay Hotline / Telegram Bot để được xử lý nhanh nhất.
+                Cần hỗ trợ thanh toán hoặc kích hoạt gói học? Liên hệ ngay Hotline hoặc Telegram để được hỗ trợ nhanh nhất.
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Education Service Identification & Tax Policy Compact Note */}
+        <div className="mt-8 pt-6 border-t border-slate-200/80 text-center">
+          <p className="text-xs text-slate-500 leading-relaxed max-w-2xl mx-auto">
+            Dịch vụ đào tạo trực tuyến thuộc đối tượng không chịu thuế GTGT theo QĐ Pháp luật.{' '}
+            <Link
+              href="/terms#dieu-5"
+              className="text-primary hover:underline font-medium inline-flex items-center gap-1"
+            >
+              <span>Xem chi tiết Chính sách định danh dịch vụ &amp; Hóa đơn học phí</span>
+            </Link>
+          </p>
         </div>
       </div>
 

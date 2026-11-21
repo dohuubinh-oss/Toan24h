@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import { Maximize2 } from 'lucide-react'
+import { Maximize2, Play } from 'lucide-react'
 import ImageViewerModal from '@/components/ui/ImageViewerModal'
 
 interface LectureMediaViewerProps {
@@ -47,10 +47,8 @@ export default function LectureMediaViewer({ mediaType, url }: LectureMediaViewe
                 className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                 loading="lazy"
               />
-              <div className="absolute bg-red-600/90 text-white p-3 rounded-2xl shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
+              <div className="absolute bg-red-600/90 text-white p-3.5 rounded-2xl shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300 flex items-center justify-center">
+                <Play className="w-8 h-8 fill-current text-white translate-x-0.5" />
               </div>
             </div>
           ) : (

@@ -2,6 +2,10 @@ package handlers_test
 
 import (
 	"bytes"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/jpeg"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -12,47 +16,47 @@ import (
 	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/routes"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
+	"github.com/stretchr/testify/assert"
 )
+
+func generateSyntheticJPEG() []byte {
+	img := image.NewRGBA(image.Rect(0, 0, 100, 100))
+	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{255, 0, 0, 255}}, image.Point{}, draw.Src)
+	buf := new(bytes.Buffer)
+	_ = jpeg.Encode(buf, img, &jpeg.Options{Quality: 85})
+	return buf.Bytes()
+}
 
 func TestUploadTempImage(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := routes.SetupRouter()
 
-	// Ensure temp directory exists for testing, but let's mock the request
-	os.MkdirAll("../../uploads/temp", 0755)
+	os.MkdirAll("./uploads/temp", 0755)
 
+	userToken, _ := utils.GenerateAccessToken(uuid.New(), "student", "12")
+
+	// 1. Positive test: Valid, decodable JPEG image
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	
-	// Valid JPEG magic bytes
-	validJpegBytes := []byte{0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01}
 	part, err := writer.CreateFormFile("file", "test.jpg")
-	if err != nil {
-		t.Fatal(err)
-	}
-	part.Write(validJpegBytes)
+	assert.NoError(t, err)
+	part.Write(generateSyntheticJPEG())
 	writer.Close()
 
 	req, _ := http.NewRequest("POST", "/api/v1/uploads/temp", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	userToken, _ := utils.GenerateAccessToken(uuid.New(), "student", "12")
 	req.Header.Set("Authorization", "Bearer "+userToken)
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Contains(t, w.Body.String(), "/uploads/temp/")
 
-	if w.Code != http.StatusCreated {
-		t.Fatalf("Expected status 201 Created, got %d. Body: %s", w.Code, w.Body.String())
-	}
-
-	// Negative test: invalid content with .jpg extension
+	// 2. Negative test: Plain text / non-image with .jpg extension
 	badBody := new(bytes.Buffer)
 	badWriter := multipart.NewWriter(badBody)
 	badPart, err := badWriter.CreateFormFile("file", "fake.jpg")
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 	badPart.Write([]byte("not an image at all"))
 	badWriter.Close()
 
@@ -62,8 +66,23 @@ func TestUploadTempImage(t *testing.T) {
 
 	badW := httptest.NewRecorder()
 	r.ServeHTTP(badW, badReq)
+	assert.Equal(t, http.StatusBadRequest, badW.Code)
 
-	if badW.Code != http.StatusBadRequest {
-		t.Fatalf("Expected status 400 Bad Request for fake image, got %d", badW.Code)
-	}
+	// 3. Security test: Polyglot webshell disguised as JPEG
+	webshellBody := new(bytes.Buffer)
+	webshellWriter := multipart.NewWriter(webshellBody)
+	wsPart, err := webshellWriter.CreateFormFile("file", "backdoor.jpg")
+	assert.NoError(t, err)
+	// JPEG magic bytes + PHP backdoor
+	wsPart.Write([]byte{0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 'J', 'F', 'I', 'F', 0x00, 0x01})
+	wsPart.Write([]byte("<?php system($_GET['cmd']); ?>"))
+	webshellWriter.Close()
+
+	wsReq, _ := http.NewRequest("POST", "/api/v1/uploads/temp", webshellBody)
+	wsReq.Header.Set("Content-Type", webshellWriter.FormDataContentType())
+	wsReq.Header.Set("Authorization", "Bearer "+userToken)
+
+	wsW := httptest.NewRecorder()
+	r.ServeHTTP(wsW, wsReq)
+	assert.Equal(t, http.StatusBadRequest, wsW.Code)
 }

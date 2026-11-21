@@ -88,4 +88,37 @@ func TestPaymentHandler_ValidationAndAuth(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 		assert.Contains(t, w.Body.String(), "Invalid orderCode format")
 	})
+
+	t.Run("EducationServiceTaxStrategy_ConstantsAndNaming", func(t *testing.T) {
+		// Category & VAT policy for 2% PIT education service tax regime
+		assert.Contains(t, handlers.EducationServiceCategory, "Dịch vụ hỗ trợ giáo dục")
+		assert.Contains(t, handlers.EducationServiceCategory, "Khóa học trực tuyến")
+		assert.Contains(t, handlers.EducationServiceVATPolicy, "Không chịu thuế GTGT")
+		assert.Contains(t, handlers.EducationServiceVATPolicy, "Khoản 13 Điều 5 Luật Thuế GTGT")
+
+		// Plan names should use "Khóa học trực tuyến & Dịch vụ hỗ trợ giáo dục"
+		plans := []string{"1_month", "3_months", "9_months", "1_year", "12_months"}
+		for _, p := range plans {
+			serviceName := handlers.GetPlanEducationServiceName(p)
+			assert.Contains(t, serviceName, "Khóa học trực tuyến")
+			assert.Contains(t, serviceName, "Dịch vụ hỗ trợ giáo dục")
+
+			// Must NOT contain digital software / goods keywords (which trigger 7% tax)
+			assert.NotContains(t, serviceName, "phần mềm")
+			assert.NotContains(t, serviceName, "tài liệu số")
+			assert.NotContains(t, serviceName, "sản phẩm số")
+		}
+	})
+
+	t.Run("CreatePaymentRequest_WithTermsAgreedAt", func(t *testing.T) {
+		body, _ := json.Marshal(map[string]interface{}{
+			"plan":          "3_months",
+			"termsAgreedAt": "2026-11-16T12:00:00Z",
+		})
+		var req handlers.CreatePaymentRequest
+		err := json.Unmarshal(body, &req)
+		assert.NoError(t, err)
+		assert.Equal(t, "3_months", req.Plan)
+		assert.NotNil(t, req.TermsAgreedAt)
+	})
 }

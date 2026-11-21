@@ -380,3 +380,18 @@ math-field::part(virtual-keyboard-toggle) {
   color: #f59e0b; /* amber */
   margin-bottom: 0.5rem;
 }
+
+/* Drag to scroll support */
+.overflow-x-auto,
+.overflow-x-scroll,
+[data-drag-scroll] {
+  scroll-behavior: auto;
+}
+
+body.drag-scrolling,
+body.drag-scrolling * {
+  cursor: grabbing !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+

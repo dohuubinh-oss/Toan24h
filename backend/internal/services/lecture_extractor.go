@@ -90,8 +90,9 @@ func ParseAndProcessExtractedLecture(rawJson string, sourceImages []image.Image,
 	return processedJson, nil
 }
 
-// ExtractLectureFromImages calls Gemini Vision to extract math lecture types, methods and step-by-step examples
-func ExtractLectureFromImages(files [][]byte, mimeTypes []string) (string, error) {
+// ExtractLectureFromImages calls Gemini Vision to extract math lecture types, methods and step-by-step examples.
+// If paraphrase is true, Gemini is instructed to change names, contexts, and numbers in example problems while preserving theory and methods.
+func ExtractLectureFromImages(files [][]byte, mimeTypes []string, paraphrase ...bool) (string, error) {
 	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
 		utils.InitGlobalGeminiPool()
 	}
@@ -130,32 +131,60 @@ func ExtractLectureFromImages(files [][]byte, mimeTypes []string) (string, error
 		}
 	}
 
-	prompt := `Bạn là chuyên gia sư phạm và số hóa bài giảng Toán học Việt Nam.
-Hãy đọc các trang ảnh tài liệu bài giảng/sách tham khảo đính kèm (theo thứ tự từ trang đầu đến trang cuối) và bóc tách TOÀN BỘ các Dạng toán, Phương pháp giải và Bài tập ví dụ mẫu thành định dạng JSON chuẩn.
+	isParaphrase := false
+	if len(paraphrase) > 0 && paraphrase[0] {
+		isParaphrase = true
+	}
 
-Yêu cầu nghiêm ngặt về nội dung và định dạng văn bản:
-1. Tất cả công thức toán học phải được định dạng bằng cú pháp LaTeX chuẩn: trong dòng dùng $...$, công thức quan trọng hiển thị riêng dòng dùng $$\n...\n$$.
-2. Với Bảng biến thiên, Bảng xét dấu, Bảng số liệu thống kê hoặc Bảng giá trị: BẮT BUỘC XEM LÀ HÌNH VẼ / MINH HỌA (DIAGRAM).
-   - TUYỆT ĐỐI KHÔNG chuyển đổi thành văn bản, mảng số hay bảng HTML/Markdown rời rạc vì sẽ làm vỡ cấu trúc và mất tính trực quan khiến học sinh khó hiểu.
-   - Hãy xử lý bảng giống hệt như một hình vẽ/đồ thị: điền mã định danh [DIAGRAM_0_1] tại vị trí xuất hiện của bảng trong nội dung và khai báo thông tin vào mảng "diagrams" kèm tọa độ box_2d [ymin, xmin, ymax, xmax] (thang đo 0-1000) bao quanh bảng để hệ thống tự động cắt ảnh gốc sắc nét chèn vào bài giảng.
-3. Quy tắc trình bày và ngắt dòng trong trường "solution" (Phương pháp giải):
+	paraphraseInstruction := ""
+	if isParaphrase {
+		paraphraseInstruction = `
+QUY TẮC ĐẶC BIỆT: CHẾ ĐỘ LÀM MỚI BÀI TOÁN TRÁNH VI PHẠM BẢN QUYỀN (ANTI-COPYRIGHT PARAPHRASING):
+Người dùng đã tích chọn "Làm mới số liệu ví dụ & bối cảnh". Bạn BẮT BUỘC tuân thủ 4 nguyên tắc sư phạm:
+1. BẢO TOÀN LÝ THUYẾT & LÀM MỚI VĂN PHONG:
+   - Giữ nguyên 100% tên dạng toán ("mathType") và các công thức, định lý gốc.
+   - Diễn đạt lại phương pháp giải tổng quát bằng văn phong sư phạm mới mẻ, gãy gọn, hiện đại, không sao chép nguyên văn câu từ của sách gốc.
+2. LÀM MỚI BÀI TẬP VÍ DỤ VỚI "BỘ SỐ ĐẸP CHUẨN SƯ PHẠM":
+   - BẮT BUỘC THIẾT KẾ BÀI TOÁN NGƯỢC: Chọn trước nghiệm là số nguyên đẹp ($x = 1, 2, -3$) hoặc phân số tối giản mẫu số nhỏ ($1/2, 3/4$), sau đó mới tính ra hệ số của đề bài mới. TUYỆT ĐỐI KHÔNG sinh số liệu ngẫu nhiên tạo ra nghiệm vô tỉ hoặc phân số cồng kềnh.
+   - Với bài hình học: Áp dụng các bộ số Pytago kinh điển ($3-4-5$, $5-12-13$, $6-8-10$) hoặc góc đẹp ($30^\circ, 45^\circ, 60^\circ$).
+   - Bài toán thực tế: Đổi tên nhân vật (An $\rightarrow$ Minh, Nam $\rightarrow$ Hùng...), tình huống và vật phẩm gần gũi với đời sống học sinh hiện đại.
+3. ĐỒNG BỘ TUYỆT ĐỐI GIỮA ĐỀ MỚI VÀ LỜI GIẢI MỚI (CHỐNG "RÂU ÔNG NỌ CẮM CẰM BÀ KIA"):
+   - Tính toán lại 100% toàn bộ các bước giải ("steps"), công thức ("formula") và đáp số ("conclusion") theo bộ số liệu mới. Đảm bảo tính nhất quán tuyệt đối, không để sót bất kỳ số liệu hay dấu vết nào của đề bài cũ.
+4. QUY TẮC BẢO TOÀN SỐ LIỆU ĐỐI VỚI HÌNH VẼ CẮT ([DIAGRAM]):
+   - Nếu bài toán có hình vẽ/đồ thị/bảng số liệu minh họa cắt từ ảnh gốc ([DIAGRAM]) mà trên hình ĐÃ IN SẴN CÁC SỐ ĐO CỐ ĐỊNH (ví dụ cạnh $AB = 4\text{ cm}$, góc $60^\circ$ ghi trực tiếp trên hình): BẮT BUỘC GIỮ NGUYÊN các số đo đó trong đề bài mới để khớp 100% với hình vẽ cắt.
+   - Chỉ làm mới số liệu cho các bài toán mà hình vẽ là hình thuần túy không in chết số đo, hoặc các bài toán đại số không có hình vẽ.
+`
+	}
+
+	prompt := `Bạn là Chuyên gia Sư phạm và Tổng chủ biên Số hóa Bài giảng Toán học THCS (Lớp 6, 7, 8, 9) chuẩn chương trình GDPT mới tại Việt Nam.
+Hãy đọc các trang ảnh tài liệu bài giảng/sách đính kèm (theo thứ tự từ trang đầu đến trang cuối) và bóc tách TOÀN BỘ các Dạng toán, Phương pháp giải và Bài tập ví dụ mẫu thành định dạng JSON chuẩn.
+` + paraphraseInstruction + `
+YÊU CẦU BÓC TÁCH & ĐỊNH DẠNG SƯ PHẠM NGHIÊM NGẶT:
+1. CHUẨN CÔNG THỨC TOÁN LATEX (TƯƠNG THÍCH KATEX 100%):
+   - 100% công thức toán học phải bọc trong cặp dấu $...$ (trong dòng) hoặc $$\n...\n$$ (công thức quan trọng đặt riêng dòng).
+   - Ký hiệu góc hình học: Dùng \widehat{ABC} hoặc \hat{A}. TUYỆT ĐỐI KHÔNG dùng \angle.
+   - Quan hệ hình học: \Delta ABC (tam giác), \parallel (song song), \perp (vuông góc).
+   - Số thập phân tiếng Việt viết liền mạch dạng $2{,}5$.
+2. QUY TẮC TRÌNH BÀY PHƯƠNG PHÁP GIẢI ("methods[].solution"):
+   - Viết bằng văn phong sư phạm súc tích, mạch lạc, hiện đại, dễ hiểu cho học sinh THCS.
    - TUYỆT ĐỐI KHÔNG viết thành một khối văn bản dính liền nhau.
-   - Mỗi định lý, quy tắc hoặc bước phương pháp phải được ngắt đoạn bằng 2 dấu xuống dòng (\n\n).
-   - Sử dụng dấu gạch đầu dòng ("- ") hoặc đánh số ("1. ", "2. ") cho từng ý rõ ràng.
+   - Mỗi định lý, quy tắc hoặc bước giải phải cách nhau 2 dấu xuống dòng (\n\n). Dùng gạch đầu dòng ("- ") hoặc đánh số ("Bước 1: ", "Bước 2: ") rõ ràng.
    - Các công thức toán cốt lõi phải được đặt trên một dòng riêng biệt.
-4. Quy tắc trình bày trong trường "problem" (Đề bài ví dụ mẫu):
-   - Tách biệt câu dẫn đề bài và các ý con (a, b, c...): mỗi ý con bắt buộc phải xuống dòng riêng biệt (\n hoặc \n\n).
-5. Quy tắc trình bày trong mảng "steps" (Các bước giải chi tiết của ví dụ mẫu):
-   - Nếu Bài tập ví dụ mẫu trong tài liệu CHƯA CÓ LỜI GIẢI hoặc lời giải vắn tắt: Bạn hãy TỰ ĐỘNG GIẢI CHI TIẾT TỪNG BƯỚC một cách sư phạm.
-   - "title": Tiêu đề ngắn gọn của bước (ví dụ: "Bước 1: Tìm tập xác định", "Bước 2: Giải phương trình").
-   - "content": Diễn giải sư phạm, súc tích. Nếu có nhiều ý nhỏ trong 1 bước, ngắt dòng (\n) hoặc dùng gạch đầu dòng ("- ").
-   - "formula": Chứa phép biến đổi hoặc công thức toán trọng tâm của bước (dạng LaTeX).
-   - "conclusion": Kết luận rõ ràng đáp số / kết quả bài toán.
-   - "tips": Gợi ý, lưu ý hoặc mẹo giải nhanh (nếu có).
-6. Với Hình vẽ hình học, Đồ thị hàm số, và Bảng biến thiên / Bảng số liệu:
-   - Điền một mã định danh vào vị trí tương ứng trong đề bài, phương pháp hoặc lời giải, ví dụ: [DIAGRAM_0_1] (trong đó 0 là chỉ số trang ảnh 0-indexed, 1 là thứ tự hình hoặc bảng).
-   - Khai báo thông tin vào mảng "diagrams" với tọa độ chuẩn hóa box_2d [ymin, xmin, ymax, xmax] (thang đo 0-1000) bao trọn toàn bộ hình vẽ hoặc bảng dữ liệu đó.
-7. Cấu trúc JSON bắt buộc phải là một mảng [] các Dạng toán theo cấu trúc:
+3. QUY TẮC TRÌNH BÀY VÀ TỰ ĐỘNG GIẢI VÍ DỤ MẪU ("problems"):
+   - Đề bài ("problem"): Tách biệt câu dẫn và các ý con a), b), c) bằng dấu xuống dòng (\n hoặc \n\n).
+   - TỰ ĐỘNG GIẢI CHI TIẾT THEO BƯỚC ("steps"): Nếu tài liệu chưa có lời giải hoặc lời giải vắn tắt, bạn BẮT BUỘC tự giải chi tiết từng bước theo chuẩn sư phạm:
+     + "title": Tên bước ngắn gọn (ví dụ: "Bước 1: Đặt điều kiện xác định", "Bước 2: Phân tích thành nhân tử").
+     + "content": Lời giải thích sư phạm, nêu rõ định lý/công thức áp dụng.
+     + "formula": Biểu thức toán học LaTeX trọng tâm của bước đó.
+     + "conclusion": Kết luận rõ ràng đáp số cuối cùng của bài toán.
+     + "tips": Mẹo giải nhanh, cách nhớ công thức hoặc lưu ý tránh bẫy sai lầm thường gặp.
+4. BẢNG BIẾN THIÊN, BẢNG SỐ LIỆU & HÌNH VẼ HÌNH HỌC (DIAGRAM):
+   - Bảng biến thiên, bảng xét dấu, bảng giá trị tọa độ hoặc đồ thị: BẮT BUỘC XEM LÀ HÌNH MINH HỌA (DIAGRAM).
+   - TUYỆT ĐỐI KHÔNG chuyển thành văn bản hoặc bảng Markdown rời rạc làm vỡ cấu trúc bài giảng.
+   - Chèn mã định danh [DIAGRAM_0_1] (trang 0, hình 1) vào đúng vị trí xuất hiện trong đề bài, phương pháp hoặc lời giải.
+   - Khai báo thông tin vào mảng "diagrams" với tọa độ chuẩn hóa box_2d [ymin, xmin, ymax, xmax] (thang đo 0-1000) bao trọn toàn bộ hình vẽ hoặc bảng dữ liệu đó để hệ thống tự cắt ảnh sắc nét từ bản gốc.
+5. CẤU TRÚC JSON ĐẦU RA BẮT BUỘC:
+   - Trả về DUY NHẤT một mảng JSON thuần túy theo định dạng sau (tuyệt đối KHÔNG kèm markdown fences như ` + "```" + `json hay bất kỳ văn bản giải thích nào ngoài JSON):
 [
   {
     "mathType": "Dạng 1. Tên dạng toán",
@@ -194,8 +223,7 @@ Yêu cầu nghiêm ngặt về nội dung và định dạng văn bản:
       }
     ]
   }
-]
-8. CHỈ trả về duy nhất chuỗi JSON hợp lệ, tuyệt đối KHÔNG kèm markdown fences (như ` + "```" + `json) hay bất kỳ văn bản giải thích nào ngoài JSON.`
+]`
 
 	parts := []map[string]interface{}{
 		{"text": prompt},

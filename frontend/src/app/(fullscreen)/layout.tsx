@@ -2,6 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { ExamProvider } from '@/contexts/ExamContext'
 import SubscriptionBanner from '@/components/layout/SubscriptionBanner'
+import DynamicWatermark from '@/components/common/DynamicWatermark'
 
 export const metadata: Metadata = {
   robots: {
@@ -17,7 +18,8 @@ export default function FullscreenLayout({
 }) {
   return (
     <ExamProvider>
-      <div className="flex flex-col min-h-screen bg-slate-50">
+      <div className="flex flex-col min-h-screen bg-slate-50 relative">
+        <DynamicWatermark zIndex={50} />
         <SubscriptionBanner hideVisuals={true} />
         <main className="flex-1 min-w-0">
           {children}

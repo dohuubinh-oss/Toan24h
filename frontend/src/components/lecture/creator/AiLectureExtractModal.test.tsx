@@ -116,4 +116,36 @@ describe('AiLectureExtractModal Component', () => {
     expect(screen.getByText(/Vui lòng chọn ít nhất 1 ảnh bài giảng/i)).toBeInTheDocument()
     expect(api.apiFetch).not.toHaveBeenCalled()
   })
+
+  it('allows toggling paraphrase checkbox to avoid copyright infringement and includes it in formData', async () => {
+    vi.mocked(api.apiFetch).mockResolvedValueOnce({
+      status: 'success',
+      data: '[]',
+    })
+
+    renderComponent()
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: /Làm mới số liệu ví dụ & bối cảnh/i,
+    }) as HTMLInputElement
+    expect(checkbox).toBeInTheDocument()
+    expect(checkbox.checked).toBe(false)
+
+    fireEvent.click(checkbox)
+    expect(checkbox.checked).toBe(true)
+
+    const file = new File(['image bytes'], 'lecture_sample.png', { type: 'image/png' })
+    const fileInput = screen.getByLabelText(/Chọn ảnh bài giảng/i)
+    fireEvent.change(fileInput, { target: { files: [file] } })
+
+    const submitBtn = screen.getByRole('button', { name: /Bắt đầu bóc tách/i })
+    fireEvent.click(submitBtn)
+
+    await waitFor(() => {
+      expect(api.apiFetch).toHaveBeenCalledTimes(1)
+      const callArgs = vi.mocked(api.apiFetch).mock.calls[0]
+      const formData = callArgs[1]?.body as FormData
+      expect(formData.get('paraphrase')).toBe('true')
+    })
+  })
 })

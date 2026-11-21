@@ -15,6 +15,27 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	EducationServiceCategory  = "Dịch vụ hỗ trợ giáo dục & Khóa học trực tuyến"
+	EducationServiceVATPolicy = "Không chịu thuế GTGT (Khoản 13 Điều 5 Luật Thuế GTGT)"
+)
+
+// GetPlanEducationServiceName returns the formal education service name for taxation & invoicing
+func GetPlanEducationServiceName(plan string) string {
+	switch plan {
+	case "1_month":
+		return "Khóa học trực tuyến & Dịch vụ hỗ trợ giáo dục Toán (1 tháng)"
+	case "3_months":
+		return "Khóa học trực tuyến & Dịch vụ hỗ trợ giáo dục Toán (3 tháng)"
+	case "9_months":
+		return "Khóa học trực tuyến & Dịch vụ hỗ trợ giáo dục Toán (9 tháng)"
+	case "1_year", "12_months":
+		return "Khóa học trực tuyến & Dịch vụ hỗ trợ giáo dục Toán (12 tháng)"
+	default:
+		return "Khóa học trực tuyến & Dịch vụ hỗ trợ giáo dục Toán"
+	}
+}
+
 type PaymentHandler struct {
 	DB           *gorm.DB
 	PayOSService *services.PayOSService
@@ -35,7 +56,8 @@ func NewPaymentHandler(db *gorm.DB, payosServices ...*services.PayOSService) *Pa
 }
 
 type CreatePaymentRequest struct {
-	Plan string `json:"plan" binding:"required"`
+	Plan          string     `json:"plan" binding:"required"`
+	TermsAgreedAt *time.Time `json:"termsAgreedAt,omitempty"`
 }
 
 func (h *PaymentHandler) CreatePayment(c *gin.Context) {
@@ -56,16 +78,16 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 	switch req.Plan {
 	case "1_month":
 		amount = 300000
-		description = "TOAN6789 1 thang"
+		description = "Khoa hoc truc tuyen 1T"
 	case "3_months":
 		amount = 675000
-		description = "TOAN6789 3 thang"
+		description = "Khoa hoc truc tuyen 3T"
 	case "9_months":
 		amount = 1755000
-		description = "TOAN6789 9 thang"
+		description = "Khoa hoc truc tuyen 9T"
 	case "1_year", "12_months":
 		amount = 1800000
-		description = "TOAN6789 12 thang"
+		description = "Khoa hoc truc tuyen 12T"
 	default:
 		c.JSON(400, gin.H{"error": "Gói nâng cấp không hợp lệ"})
 		return
@@ -81,16 +103,19 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 			accountName = "TOAN6789 EDUCATION"
 		}
 		c.JSON(200, gin.H{
-			"transactionId": existingTx.ID,
-			"orderCode":     existingTx.OrderCode,
-			"amount":        existingTx.Amount,
-			"plan":          existingTx.Plan,
-			"qrCode":        existingTx.QRCode,
-			"checkoutUrl":   existingTx.CheckoutURL,
-			"accountNumber": "1234567890",
-			"accountName":   accountName,
-			"bin":           "970422",
-			"content":       fmt.Sprintf("TOAN6789 %d", existingTx.OrderCode),
+			"transactionId":   existingTx.ID,
+			"orderCode":       existingTx.OrderCode,
+			"amount":          existingTx.Amount,
+			"plan":            existingTx.Plan,
+			"serviceName":     GetPlanEducationServiceName(existingTx.Plan),
+			"serviceCategory": EducationServiceCategory,
+			"vatPolicy":       EducationServiceVATPolicy,
+			"qrCode":          existingTx.QRCode,
+			"checkoutUrl":     existingTx.CheckoutURL,
+			"accountNumber":   "1234567890",
+			"accountName":     accountName,
+			"bin":             "970422",
+			"content":         fmt.Sprintf("TOAN6789 %d", existingTx.OrderCode),
 		})
 		return
 	}
@@ -138,6 +163,12 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 		}
 	}
 
+	termsAgreedAt := req.TermsAgreedAt
+	if termsAgreedAt == nil {
+		now := time.Now()
+		termsAgreedAt = &now
+	}
+
 	tx := models.Transaction{
 		ID:            uuid.New(),
 		UserID:        userUUID,
@@ -148,6 +179,7 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 		PaymentLinkID: paymentLinkID,
 		CheckoutURL:   checkoutURL,
 		QRCode:        qrCode,
+		TermsAgreedAt: termsAgreedAt,
 	}
 
 	if err := h.DB.Create(&tx).Error; err != nil {
@@ -156,16 +188,19 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"transactionId": tx.ID,
-		"orderCode":     tx.OrderCode,
-		"amount":        tx.Amount,
-		"plan":          tx.Plan,
-		"qrCode":        qrCode,
-		"checkoutUrl":   checkoutURL,
-		"accountNumber": accountNumber,
-		"accountName":   accountName,
-		"bin":           bin,
-		"content":       fmt.Sprintf("TOAN6789 %d", tx.OrderCode),
+		"transactionId":   tx.ID,
+		"orderCode":       tx.OrderCode,
+		"amount":          tx.Amount,
+		"plan":            tx.Plan,
+		"serviceName":     GetPlanEducationServiceName(tx.Plan),
+		"serviceCategory": EducationServiceCategory,
+		"vatPolicy":       EducationServiceVATPolicy,
+		"qrCode":          qrCode,
+		"checkoutUrl":     checkoutURL,
+		"accountNumber":   accountNumber,
+		"accountName":     accountName,
+		"bin":             bin,
+		"content":         fmt.Sprintf("TOAN6789 %d", tx.OrderCode),
 	})
 }
 
@@ -200,12 +235,15 @@ func (h *PaymentHandler) GetPaymentStatus(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"transactionId": tx.ID,
-		"orderCode":     tx.OrderCode,
-		"status":        tx.Status,
-		"plan":          tx.Plan,
-		"amount":        tx.Amount,
-		"updatedAt":     tx.UpdatedAt,
+		"transactionId":   tx.ID,
+		"orderCode":       tx.OrderCode,
+		"status":          tx.Status,
+		"plan":            tx.Plan,
+		"serviceName":     GetPlanEducationServiceName(tx.Plan),
+		"serviceCategory": EducationServiceCategory,
+		"vatPolicy":       EducationServiceVATPolicy,
+		"amount":          tx.Amount,
+		"updatedAt":       tx.UpdatedAt,
 	})
 }
 
@@ -226,5 +264,25 @@ func (h *PaymentHandler) GetMyTransactions(c *gin.Context) {
 	var transactions []models.Transaction
 	h.DB.Where("user_id = ?", userUUID).Order("created_at desc").Limit(limit).Find(&transactions)
 
-	c.JSON(200, transactions)
+	var response []gin.H
+	for _, tx := range transactions {
+		response = append(response, gin.H{
+			"id":              tx.ID,
+			"orderCode":       tx.OrderCode,
+			"amount":          tx.Amount,
+			"plan":            tx.Plan,
+			"serviceName":     GetPlanEducationServiceName(tx.Plan),
+			"serviceCategory": EducationServiceCategory,
+			"vatPolicy":       EducationServiceVATPolicy,
+			"status":          tx.Status,
+			"createdAt":       tx.CreatedAt,
+			"updatedAt":       tx.UpdatedAt,
+		})
+	}
+
+	if response == nil {
+		response = []gin.H{}
+	}
+
+	c.JSON(200, response)
 }

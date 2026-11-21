@@ -30,6 +30,23 @@ describe('MilestoneTabs Component', () => {
     expect(screen.getByText('Chuyên đề & Ôn tập')).toBeInTheDocument()
   })
 
+  it('renders time ranges for each milestone corresponding to the school year timeline', () => {
+    render(
+      <MilestoneTabs
+        activeMilestone="midterm_1"
+        currentProgressMilestone="midterm_1"
+        counts={defaultCounts}
+        onSelect={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText('Tháng 10 - 11')).toBeInTheDocument()
+    expect(screen.getByText('Tháng 12 - 01')).toBeInTheDocument()
+    expect(screen.getByText('Tháng 03 - 04')).toBeInTheDocument()
+    expect(screen.getByText('Tháng 05')).toBeInTheDocument()
+    expect(screen.getByText('Hè & Nâng cao')).toBeInTheDocument()
+  })
+
   it('displays the correct exam count badge for each milestone', () => {
     render(
       <MilestoneTabs

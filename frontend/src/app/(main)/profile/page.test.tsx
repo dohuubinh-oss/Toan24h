@@ -128,7 +128,7 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
     localStorage.clear()
   })
 
-  it('renders partner card with referral code, commission rates and balance for teacher', async () => {
+  it('renders partner card with referral code and trial benefit for teacher', async () => {
     const mockTeacher = {
       id: 'teacher-123',
       email: 'teacher@example.com',
@@ -137,8 +137,6 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
       grade: '9',
       points: 500,
       referralCode: 'GT123456',
-      commissionBalance: 180000,
-      totalCommissionReceived: 1500000,
     }
 
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
@@ -148,13 +146,15 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
     render(<ProfilePage />)
 
     await waitFor(() => {
-      expect(screen.getByText(/Mã Giới Thiệu & Hoa Hồng Đối Tác/i)).toBeInTheDocument()
+      expect(screen.getByText(/Mã Giới Thiệu & Ưu Đãi Học Thử/i)).toBeInTheDocument()
       expect(screen.getByText('GT123456')).toBeInTheDocument()
-      expect(screen.getByText(/180\.000\s*đ/)).toBeInTheDocument()
-      expect(screen.getByText(/1\.500\.000\s*đ/)).toBeInTheDocument()
+      expect(screen.getByText(/Giáo viên phụ trách Khối 9/i)).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /Sao chép mã/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /Sao chép link đăng ký/i })).toBeInTheDocument()
     })
+
+    // Assert that commission references are NOT present
+    expect(screen.queryByText(/Hoa hồng/i)).not.toBeInTheDocument()
 
     // Test copy referral code
     const copyCodeBtn = screen.getByRole('button', { name: /Sao chép mã/i })
@@ -171,15 +171,13 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(`${window.location.origin}/register?ref=GT123456`)
   })
 
-  it('renders correct commission rates for admin (60% + 1%), teacher (50% + 3%), and affiliate (30%)', async () => {
+  it('renders correct partner badges for admin and teacher without cash commissions', async () => {
     const mockAdmin = {
       id: 'admin-123',
       email: 'admin@example.com',
       fullName: 'Quản Trị Viên',
       role: 'admin',
       referralCode: 'GTADMIN1',
-      commissionBalance: 500000,
-      totalCommissionReceived: 2000000,
     }
 
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
@@ -190,8 +188,8 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
 
     await waitFor(() => {
       expect(screen.getByText('GTADMIN1')).toBeInTheDocument()
-      expect(screen.getByText(/Hoa hồng trực tiếp: 60%/)).toBeInTheDocument()
-      expect(screen.getByText(/Quản trị toàn sàn: 1%/)).toBeInTheDocument()
+      expect(screen.getByText(/Quản trị viên hệ thống/i)).toBeInTheDocument()
+      expect(screen.queryByText(/Hoa hồng trực tiếp/i)).not.toBeInTheDocument()
     })
 
     unmount()
@@ -203,43 +201,18 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
       role: 'teacher',
       grade: '9',
       referralCode: 'GTTEACH9',
-      commissionBalance: 300000,
-      totalCommissionReceived: 1000000,
     }
 
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
       data: mockTeacher,
     } as any)
 
-    const { unmount: unmountTeacher } = render(<ProfilePage />)
-
-    await waitFor(() => {
-      expect(screen.getByText('GTTEACH9')).toBeInTheDocument()
-      expect(screen.getByText(/Hoa hồng trực tiếp: 50%/)).toBeInTheDocument()
-      expect(screen.getByText(/Quản lý Khối 9: 3%/)).toBeInTheDocument()
-    })
-
-    unmountTeacher()
-
-    const mockAffiliate = {
-      id: 'aff-123',
-      email: 'affiliate@example.com',
-      fullName: 'Đối Tác Affiliate',
-      role: 'affiliate',
-      referralCode: 'GTAFF123',
-      commissionBalance: 100000,
-      totalCommissionReceived: 300000,
-    }
-
-    vi.mocked(api.apiFetch).mockResolvedValueOnce({
-      data: mockAffiliate,
-    } as any)
-
     render(<ProfilePage />)
 
     await waitFor(() => {
-      expect(screen.getByText('GTAFF123')).toBeInTheDocument()
-      expect(screen.getByText(/Hoa hồng trực tiếp: 30%/)).toBeInTheDocument()
+      expect(screen.getByText('GTTEACH9')).toBeInTheDocument()
+      expect(screen.getByText(/Giáo viên phụ trách Khối 9/i)).toBeInTheDocument()
+      expect(screen.queryByText(/Hoa hồng trực tiếp/i)).not.toBeInTheDocument()
     })
   })
 
@@ -252,8 +225,6 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
       grade: '8',
       points: 100,
       referralCode: null,
-      commissionBalance: 0,
-      totalCommissionReceived: 0,
     }
 
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
@@ -300,5 +271,83 @@ describe('ProfilePage Component - Partner & Referral Program', () => {
 
     expect(screen.getByRole('heading', { name: /Yêu cầu Đổi Khối lớp/i })).toBeInTheDocument()
     expect(screen.getByText(/@toan6789_admin/i)).toBeInTheDocument()
+  })
+})
+
+describe('ProfilePage Component - Permanent Account Deletion', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorage.clear()
+  })
+
+  it('renders Danger Zone with "Yêu cầu xóa tài khoản vĩnh viễn" button', async () => {
+    const mockUser = {
+      id: 'user-delete-1',
+      email: 'delete_me@example.com',
+      fullName: 'Người Dùng Sắp Xóa',
+      role: 'student',
+      grade: '8',
+    }
+
+    vi.mocked(api.apiFetch).mockResolvedValueOnce({
+      data: mockUser,
+    } as any)
+
+    render(<ProfilePage />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Khu vực nguy hiểm')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Yêu cầu xóa tài khoản vĩnh viễn/i })).toBeInTheDocument()
+    })
+  })
+
+  it('opens confirm modal and calls delete account API when confirmed', async () => {
+    const mockUser = {
+      id: 'user-delete-1',
+      email: 'delete_me@example.com',
+      fullName: 'Người Dùng Sắp Xóa',
+      role: 'student',
+      grade: '8',
+    }
+
+    // 1. Initial user profile load
+    vi.mocked(api.apiFetch).mockResolvedValueOnce({
+      data: mockUser,
+    } as any)
+
+    render(<ProfilePage />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Yêu cầu xóa tài khoản vĩnh viễn/i })).toBeInTheDocument()
+    })
+
+    // Click delete request button
+    const deleteBtn = screen.getByRole('button', { name: /Yêu cầu xóa tài khoản vĩnh viễn/i })
+    await act(async () => {
+      fireEvent.click(deleteBtn)
+    })
+
+    // Expect modal with title and warning description
+    expect(screen.getAllByText('Yêu cầu xóa tài khoản vĩnh viễn').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText(/Thao tác này là xóa vật lý \(Hard delete\) và không thể khôi phục\./i)).toBeInTheDocument()
+
+    // 2. DELETE /users/me response
+    vi.mocked(api.apiFetch).mockResolvedValueOnce({
+      message: 'Tài khoản và toàn bộ dữ liệu của bạn đã được xóa vĩnh viễn.',
+    } as any)
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: /Xác nhận xóa vĩnh viễn/i })
+    await act(async () => {
+      fireEvent.click(confirmBtn)
+    })
+
+    await waitFor(() => {
+      expect(api.apiFetch).toHaveBeenCalledWith('/users/me', {
+        method: 'DELETE',
+      })
+      expect(toast.success).toHaveBeenCalledWith(expect.stringContaining('Tài khoản và toàn bộ dữ liệu của bạn đã được xóa vĩnh viễn.'))
+      expect(mockPush).toHaveBeenCalledWith('/login?deleted=true')
+    })
   })
 })

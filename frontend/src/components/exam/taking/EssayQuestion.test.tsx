@@ -322,6 +322,9 @@ describe('EssayQuestion Component', () => {
     expect(screen.getByText(/Phần vẽ hình: 0.5 \/ 0.5 điểm/i)).toBeInTheDocument()
     expect(screen.getByText(/Hình vẽ các đỉnh, đường cao AH và ký hiệu vuông góc chính xác./i)).toBeInTheDocument()
     expect(screen.getByAltText(/Ảnh hình vẽ bài làm/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Kết quả nhận diện chữ viết \(OCR\) và chấm điểm tự luận được thực hiện hoàn toàn tự động bởi Trí tuệ Nhân tạo \(AI\)/i)
+    ).toBeInTheDocument()
   })
 
   it('renders inline QuestionHintTabs below question content when isHintOpen is true in practice mode', () => {

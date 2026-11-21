@@ -48,14 +48,13 @@ func main() {
 		&models.XPTransaction{},
 		&models.Voucher{},
 		&models.VoucherUsage{},
-		&models.CommissionTransaction{},
 	); err != nil {
 		log.Fatalf("Auto Migrate failed: %v", err)
 	}
 
-	// 2.2.1. Cấp mã giới thiệu GT... cho tài khoản Admin, Teacher, Affiliate cũ chưa có mã
+	// 2.2.1. Cấp mã giới thiệu GT... cho tài khoản Admin, Teacher cũ chưa có mã
 	if migratedCount, err := services.MigrateExistingAffiliateCodes(config.DB); err != nil {
-		log.Printf("[MIGRATION WARNING] Failed to migrate affiliate codes: %v", err)
+		log.Printf("[MIGRATION WARNING] Failed to migrate partner referral codes: %v", err)
 	} else if migratedCount > 0 {
 		log.Printf("[MIGRATION] Successfully generated GT referral codes for %d users", migratedCount)
 	}

@@ -21,16 +21,6 @@ const (
 	MaxGenerateAttempts = 5
 )
 
-// Commission rates by role
-const (
-	CommissionRateTeacher   float32 = 50.0 // Điều chỉnh từ 60%
-	CommissionRateAdmin     float32 = 60.0 // Điều chỉnh từ 70%
-	CommissionRateAffiliate float32 = 30.0 // Giữ nguyên
-	CommissionRateDefault   float32 = 30.0 // Mặc định
-	CommissionRateGrade     float32 = 3.0  // Hoa hồng quản lý khối lớp
-	CommissionRatePlatform  float32 = 1.0  // Hoa hồng quản trị nền tảng sàn
-)
-
 // NormalizeGrade cleans and extracts standard secondary school grade numbers ("6", "7", "8", "9").
 // Returns empty string if not a recognized secondary school grade.
 func NormalizeGrade(grade string) string {
@@ -95,27 +85,13 @@ func GetSystemAdmin(db *gorm.DB) (*models.User, error) {
 	return &admin, nil
 }
 
-// IsPartnerRole kiểm tra xem role có phải là đối tác được cấp mã GT và hưởng hoa hồng (admin, teacher, affiliate) hay không
+// IsPartnerRole kiểm tra xem role có phải là đối tác được cấp mã GT (admin, teacher) hay không
 func IsPartnerRole(role string) bool {
 	switch strings.ToLower(strings.TrimSpace(role)) {
-	case "admin", "teacher", "affiliate":
+	case "admin", "teacher":
 		return true
 	default:
 		return false
-	}
-}
-
-// GetCommissionRateByRole trả về tỷ lệ hoa hồng voucher tương ứng theo vai trò người dùng
-func GetCommissionRateByRole(role string) float32 {
-	switch strings.ToLower(strings.TrimSpace(role)) {
-	case "admin":
-		return CommissionRateAdmin
-	case "teacher":
-		return CommissionRateTeacher
-	case "affiliate":
-		return CommissionRateAffiliate
-	default:
-		return CommissionRateDefault
 	}
 }
 
@@ -182,12 +158,10 @@ func EnsureUserReferralCode(db *gorm.DB, user *models.User) (*models.Voucher, er
 		return nil, errors.New("db is required")
 	}
 
-	// Chỉ cấp mã giới thiệu GT... và Voucher đối tác cho admin, teacher, affiliate
+	// Chỉ cấp mã giới thiệu GT... và Voucher cho admin, teacher
 	if !IsPartnerRole(user.Role) {
 		return nil, nil
 	}
-
-	targetCommission := GetCommissionRateByRole(user.Role)
 
 	// Sinh mã trực tiếp từ 8 ký tự cuối của User ID
 	code := GenerateReferralCodeFromID(user.ID)
@@ -203,31 +177,24 @@ func EnsureUserReferralCode(db *gorm.DB, user *models.User) (*models.Voucher, er
 		}
 	}
 
-	// Tạo/Cập nhật Voucher đối tác tương ứng để tương thích hệ thống voucher
+	// Tạo/Cập nhật Voucher tương ứng để tương thích hệ thống voucher
 	var voucher models.Voucher
 	err := db.Where("code = ?", code).First(&voucher).Error
 	if err == nil {
-		if voucher.CommissionPercent != targetCommission {
-			if updateErr := db.Model(&voucher).Update("commission_percent", targetCommission).Error; updateErr != nil {
-				return nil, fmt.Errorf("failed to update voucher commission percent: %w", updateErr)
-			}
-			voucher.CommissionPercent = targetCommission
-		}
 		return &voucher, nil
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("failed to query existing voucher: %w", err)
 	}
 
 	newVoucher := models.Voucher{
-		Code:              code,
-		AffiliateID:       &user.ID,
-		FreeMonths:        1,
-		DiscountPercent:   0,
-		CommissionPercent: targetCommission,
-		MaxUses:           0,
-		UsedCount:         0,
-		ExpiresAt:         nil,
-		IsActive:          true,
+		Code:            code,
+		AffiliateID:     &user.ID,
+		FreeMonths:      1,
+		DiscountPercent: 0,
+		MaxUses:         0,
+		UsedCount:       0,
+		ExpiresAt:       nil,
+		IsActive:        true,
 	}
 	if createErr := db.Create(&newVoucher).Error; createErr != nil {
 		return nil, fmt.Errorf("failed to create voucher for referral code: %w", createErr)
@@ -239,7 +206,7 @@ func EnsureUserReferralCode(db *gorm.DB, user *models.User) (*models.Voucher, er
 	return &newVoucher, nil
 }
 
-// MigrateExistingAffiliateCodes quét tất cả các tài khoản admin, teacher, affiliate chưa có ReferralCode
+// MigrateExistingAffiliateCodes quét tất cả các tài khoản admin, teacher chưa có ReferralCode
 // và tự động sinh mã GT... cùng Voucher tương ứng cho họ.
 func MigrateExistingAffiliateCodes(db *gorm.DB) (int64, error) {
 	if db == nil {
@@ -247,9 +214,9 @@ func MigrateExistingAffiliateCodes(db *gorm.DB) (int64, error) {
 	}
 
 	var users []models.User
-	err := db.Where("role IN ? AND (referral_code IS NULL OR referral_code = '')", []string{"admin", "teacher", "affiliate"}).Find(&users).Error
+	err := db.Where("role IN ? AND (referral_code IS NULL OR referral_code = '')", []string{"admin", "teacher"}).Find(&users).Error
 	if err != nil {
-		return 0, fmt.Errorf("failed to query users for affiliate code migration: %w", err)
+		return 0, fmt.Errorf("failed to query users for referral code migration: %w", err)
 	}
 
 	var migratedCount int64

@@ -76,7 +76,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
 
   const handleOpenRoleModal = (user: User) => {
     setRoleModalUser(user)
-    setSelectedRole(user.role === 'affiliate' ? 'affiliate' : 'teacher')
+    setSelectedRole(user.role === 'teacher' ? 'teacher' : 'student')
   }
 
   const handleConfirmRoleChange = () => {
@@ -119,12 +119,6 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
         return (
           <Badge size="sm" className="bg-blue-50 text-blue-700 border border-blue-200 font-medium">
             Giáo viên
-          </Badge>
-        )
-      case 'affiliate':
-        return (
-          <Badge size="sm" className="bg-amber-50 text-amber-700 border border-amber-200 font-medium">
-            Affiliate
           </Badge>
         )
       case 'admin':
@@ -200,7 +194,7 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
                         variant="ghost" 
                         size="icon" 
                         className="min-w-[40px] min-h-[40px] text-slate-500 hover:text-primary hover:bg-primary/10" 
-                        title="Phân quyền (Teacher / Affiliate)"
+                        title="Phân quyền (Giáo viên / Học sinh)"
                         aria-label={`Phân quyền cho ${user.name}`}
                         onClick={() => handleOpenRoleModal(user)}
                       >
@@ -265,32 +259,30 @@ export default function UserTable({ users, onSoftDelete, isAdmin = false, onUpda
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-800 text-sm">Giáo viên (Teacher)</span>
-                    <span className="px-2 py-0.5 text-xs font-semibold rounded bg-blue-100 text-blue-700">Hoa hồng 50%</span>
                   </div>
                   <p className="text-xs text-slate-600 mt-1">
-                    Có quyền biên soạn câu hỏi, tạo đề thi, bài giảng. Hưởng 50% hoa hồng khi học sinh dùng mã voucher.
+                    Có quyền biên soạn câu hỏi, tạo đề thi, quản lý bài giảng theo khối lớp phụ trách.
                   </p>
                 </div>
               </label>
 
               <label 
-                className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${selectedRole === 'affiliate' ? 'border-amber-500 bg-amber-50/40 ring-1 ring-amber-500 shadow-xs' : 'border-slate-200 hover:bg-slate-50'}`}
+                className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${selectedRole === 'student' ? 'border-primary bg-primary/5 ring-1 ring-primary shadow-xs' : 'border-slate-200 hover:bg-slate-50'}`}
               >
                 <input 
                   type="radio" 
                   name="userRole" 
-                  value="affiliate" 
-                  checked={selectedRole === 'affiliate'} 
+                  value="student" 
+                  checked={selectedRole === 'student'} 
                   onChange={(e) => setSelectedRole(e.target.value)} 
-                  className="mt-1 text-amber-600 focus:ring-amber-500" 
+                  className="mt-1 text-primary focus:ring-primary" 
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-800 text-sm">Affiliate (Cộng tác viên)</span>
-                    <span className="px-2 py-0.5 text-xs font-semibold rounded bg-amber-100 text-amber-700">Hoa hồng 30%</span>
+                    <span className="font-semibold text-slate-800 text-sm">Học sinh (Student)</span>
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    Vai trò giới thiệu học sinh và hưởng 30% hoa hồng khi học sinh đăng ký hoặc nâng cấp.
+                    Tài khoản học sinh tham gia học tập lý thuyết, luyện đề thi thử và theo dõi tiến độ.
                   </p>
                 </div>
               </label>

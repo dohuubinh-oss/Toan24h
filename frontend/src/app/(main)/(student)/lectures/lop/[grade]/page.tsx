@@ -85,7 +85,7 @@ export default async function GradeLecturesPage({
   // Tính toán trạng thái học tập và khóa/mở khóa liên hoàn trên toàn bộ bài giảng của khối
   const allMappedLectures = calculateLectureProgression(allLectures, examsData, resultsData);
 
-  // Phân quyền hiển thị: Học sinh và Affiliate chỉ thấy bài đã xuất bản, Teacher và Admin thấy cả bài đã xuất bản và bản nháp
+  // Phân quyền hiển thị: Học sinh chỉ thấy bài đã xuất bản, Teacher và Admin thấy cả bài đã xuất bản và bản nháp
   const visibleLectures = isStaff
     ? allMappedLectures
     : allMappedLectures.filter(l => l.isPublished !== false);

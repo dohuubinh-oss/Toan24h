@@ -111,7 +111,7 @@ func getPublishedOnlyFromContext(c *gin.Context) bool {
 		}
 	}
 
-	// Default for student, affiliate, or unauthenticated/guest -> published only
+	// Default for student or unauthenticated/guest -> published only
 	return true
 }
 

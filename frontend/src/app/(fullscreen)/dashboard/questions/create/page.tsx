@@ -268,7 +268,7 @@ function CreateQuestionContent() {
       const newBlocks = [...prev];
       
       if (field === 'gg_drive' || field === 'book_name') {
-        // Đồng bộ Link Drive cho TẤT CẢ các câu hỏi trong tất cả các block
+        // Đồng bộ nguồn Tham khảo cho TẤT CẢ các câu hỏi trong tất cả các block
         return newBlocks.map(block => ({
           ...block,
           questions: block.questions.map(q => ({
@@ -324,26 +324,22 @@ function CreateQuestionContent() {
       return;
     }
 
-    // Yêu cầu: Đảm bảo Link Drive phải có trước khi lưu vào ngân hàng
-    const driveLink = (
+    // Đồng bộ nguồn Tham khảo (nếu có) cho tất cả các câu hỏi
+    const referenceLink = (
       questionBlocks[0]?.questions?.[0]?.gg_drive || 
       questionBlocks[0]?.questions?.[0]?.book_name || 
       (questionBlocks[0] as any)?.gg_drive || 
       ''
     ).trim();
 
-    if (!driveLink) {
-      toast.error("Vui lòng nhập Link Drive trước khi lưu vào ngân hàng!");
-      return;
-    }
-
-    // Đảm bảo tất cả các câu hỏi đều mang link drive này
-    questionBlocks.forEach(b => {
-      b.questions.forEach(q => {
-        if (!q.gg_drive?.trim()) q.gg_drive = driveLink;
-        if (!q.book_name?.trim()) q.book_name = driveLink;
+    if (referenceLink) {
+      questionBlocks.forEach(b => {
+        b.questions.forEach(q => {
+          if (!q.gg_drive?.trim()) q.gg_drive = referenceLink;
+          if (!q.book_name?.trim()) q.book_name = referenceLink;
+        });
       });
-    });
+    }
 
     try {
       setIsSaving(true);

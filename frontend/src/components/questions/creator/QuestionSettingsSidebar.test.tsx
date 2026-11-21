@@ -3,12 +3,13 @@ import { describe, it, expect, vi } from 'vitest'
 import QuestionSettingsSidebar from './QuestionSettingsSidebar'
 
 describe('QuestionSettingsSidebar Component', () => {
-  it('renders settings fields with Link Drive instead of Tên Sách', () => {
+  it('renders settings fields with Tham khảo instead of Tên Sách', () => {
     render(<QuestionSettingsSidebar currentQuestion={{ grade: 8, cate: 'practice', gg_drive: 'https://drive.google.com/test' } as any} />)
     expect(screen.getByText('Thiết lập câu hỏi')).toBeInTheDocument()
     expect(screen.getByText('Phân loại')).toBeInTheDocument()
-    expect(screen.getByText('Link Drive')).toBeInTheDocument()
+    expect(screen.getByText('Tham khảo')).toBeInTheDocument()
     expect(screen.queryByText('Tên Sách')).not.toBeInTheDocument()
+    expect(screen.queryByText('Link Drive')).not.toBeInTheDocument()
     expect(screen.getByText('Khối lớp')).toBeInTheDocument()
     expect(screen.getByText('Chuyên đề')).toBeInTheDocument()
     expect(screen.getByText('Độ khó')).toBeInTheDocument()

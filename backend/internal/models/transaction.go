@@ -16,6 +16,7 @@ type Transaction struct {
 	PaymentLinkID string    `gorm:"type:varchar(255)" json:"paymentLinkId,omitempty"`
 	CheckoutURL   string    `gorm:"type:text" json:"checkoutUrl,omitempty"`
 	QRCode        string    `gorm:"type:text" json:"qrCode,omitempty"`
+	TermsAgreedAt *time.Time `json:"termsAgreedAt,omitempty"`
 	CreatedAt     time.Time `gorm:"index:idx_transaction_user_created,priority:2" json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 }

@@ -99,32 +99,32 @@ describe('UserTable', () => {
     expect(handleUpdateRole).toHaveBeenCalledWith('1', 'Nguyen Van A', 'teacher')
   })
 
-  it('allows admin to set role to affiliate', () => {
+  it('allows admin to set role to student', () => {
     const handleUpdateRole = vi.fn()
     render(<UserTable users={mockUsers} onSoftDelete={vi.fn()} isAdmin={true} onUpdateRole={handleUpdateRole} />)
 
     const roleButtons = screen.getAllByTitle(/Phân quyền/i)
     fireEvent.click(roleButtons[0])
 
-    // Select 'Affiliate' option
-    const affiliateOption = screen.getByLabelText(/Affiliate/i)
-    fireEvent.click(affiliateOption)
+    // Select 'Học sinh' option
+    const studentOption = screen.getByLabelText(/Học sinh/i)
+    fireEvent.click(studentOption)
 
     // Click confirm
     const saveButton = screen.getByRole('button', { name: /Lưu thay đổi/i })
     fireEvent.click(saveButton)
 
-    expect(handleUpdateRole).toHaveBeenCalledWith('1', 'Nguyen Van A', 'affiliate')
+    expect(handleUpdateRole).toHaveBeenCalledWith('1', 'Nguyen Van A', 'student')
   })
 
-  it('does not display student option in role management modal', () => {
+  it('does not display affiliate option in role management modal', () => {
     render(<UserTable users={mockUsers} onSoftDelete={vi.fn()} isAdmin={true} onUpdateRole={vi.fn()} />)
     const roleButtons = screen.getAllByTitle(/Phân quyền/i)
     fireEvent.click(roleButtons[0])
 
-    expect(screen.queryByLabelText(/Học sinh \(Student\)/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Affiliate/i)).not.toBeInTheDocument()
     expect(screen.getByLabelText(/Giáo viên/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Affiliate/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Học sinh/i)).toBeInTheDocument()
   })
 })
 

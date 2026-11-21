@@ -40,12 +40,28 @@ func ExtractTextFromImageWithGemini(fileBytes []byte, mimeType string) (*OCRResu
 		candidateModels = append([]string{envModel}, candidateModels...)
 	}
 
-	prompt := `Bạn là một chuyên gia nhận dạng chữ viết tay và toán học.
-Hãy nhận dạng văn bản và công thức toán học trong bức ảnh này.
-Yêu cầu:
-1. Trả về đúng nội dung trong ảnh.
-2. Các công thức toán học phải được viết bằng cú pháp LaTeX chuẩn. Ví dụ phân số là \frac{a}{b}, căn bậc hai là \sqrt{a}, số mũ là x^2. Đặt công thức toán học trong cặp dấu $...$ nếu là trong dòng, hoặc $$...$$ nếu là đoạn riêng.
-3. CHỈ trả về nội dung nhận dạng được, tuyệt đối KHÔNG thêm bất kỳ văn bản giải thích, chào hỏi hay bình luận nào khác. Nếu không nhận dạng được gì, hãy trả về chuỗi rỗng.`
+	prompt := `Bạn là chuyên gia nhận dạng chữ viết tay và số hóa bài giải Toán học THCS (Lớp 6, 7, 8, 9) tại Việt Nam.
+Nhiệm vụ của bạn là bóc tách toàn bộ văn bản và công thức toán học từ ảnh chụp bài làm của học sinh.
+
+YÊU CẦU BÓC TÁCH NGHIÊM NGẶT:
+1. TRẢ VỀ NỘI DUNG CHÍNH XÁC & BẢO TOÀN CẤU TRÚC:
+   - Giữ nguyên cấu trúc xuống dòng (\n) của từng bước giải bài toán. Không gom thành một khối văn bản liền nhau.
+   - BỎ QUA các phần chữ viết bị gạch xoá, bôi đen, nháp bên lề mép giấy, hoặc hình ảnh ngón tay/thước kẻ chụp dính vào ảnh.
+   - CHỈ lấy phần bài làm chính thức mà học sinh muốn nộp.
+
+2. CÔNG THỨC TOÁN HỌC CHUẨN LATEX (TƯƠNG THÍCH KATEX 100%):
+   - Mọi biểu thức, số liệu, biến số, phương trình toán học BẮT BUỘC đặt trong cặp dấu $...$ (nếu trong dòng) hoặc $$...$$ (nếu là một dòng biến đổi độc lập).
+   - Phân số dùng \frac{a}{b}, căn thức dùng \sqrt{a}, số mũ dùng x^{2}.
+   - Ký hiệu góc hình học: BẮT BUỘC dùng \widehat{ABC} hoặc \hat{A}. TUYỆT ĐỐI KHÔNG dùng \angle hoặc ký tự ∠.
+   - Ký hiệu quan hệ hình học: \Delta ABC (tam giác), \parallel (song song), \perp (vuông góc), \sim (đồng dạng).
+   - Hệ phương trình: Dùng môi trường \begin{cases} ... \end{cases}.
+   - Phép nhân đại số: Dùng \cdot (ví dụ $2 \cdot 3$), không dùng chữ cái x làm dấu nhân.
+   - Số thập phân tiếng Việt: Viết ở dạng $2{,}5$ thay vì $2,5$ để hiển thị khoảng cách đẹp mắt.
+
+3. NGUYÊN TẮC ĐẦU RA (OUTPUT):
+   - CHỈ trả về đúng nội dung bài làm đã số hóa.
+   - TUYỆT ĐỐI KHÔNG tự ý giải thêm, không sửa lỗi sai của học sinh, không thêm nhận xét, chào hỏi hay giải thích ("Dưới đây là nội dung...", "Bài làm gồm có...").
+   - Nếu ảnh bị mờ, trắng tinh hoặc không chứa chữ viết bài làm, hãy trả về chuỗi rỗng "".`
 
 	compressedBytes, compressedMimeType, err := utils.CompressAndResizeImage(fileBytes, 1024)
 	if err != nil {

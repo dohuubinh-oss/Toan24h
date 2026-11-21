@@ -132,10 +132,14 @@ func SetupRouter() *gin.Engine {
 	protected := r.Group("/api/v1")
 	protected.Use(middleware.AuthMiddleware())
 	{
+		// Lightweight session heartbeat check
+		protected.GET("/auth/session-check", authHandler.CheckSession)
+
 		// User Routes
 		users := protected.Group("/users")
 		{
 			users.GET("/me", userHandler.GetProfile)
+			users.DELETE("/me", userHandler.DeleteMyAccount)
 			users.GET("", middleware.RoleMiddleware("admin"), userHandler.GetUsers)
 			users.PUT("/:id/status", middleware.RoleMiddleware("admin"), userHandler.UpdateUserStatus)
 			users.PUT("/:id/role", middleware.RoleMiddleware("admin"), userHandler.UpdateUserRole)
@@ -217,9 +221,9 @@ func SetupRouter() *gin.Engine {
 			staff.POST("/vouchers", voucherHandler.CreateVoucher)
 		}
 
-		// Voucher & Affiliate Access (admin, teacher, affiliate)
+		// Voucher Access (admin, teacher)
 		voucherAccess := protected.Group("")
-		voucherAccess.Use(middleware.RoleMiddleware("admin", "teacher", "affiliate"))
+		voucherAccess.Use(middleware.RoleMiddleware("admin", "teacher"))
 		{
 			voucherHandler := handlers.NewVoucherHandler(config.DB)
 			voucherAccess.GET("/vouchers", voucherHandler.GetVouchers)

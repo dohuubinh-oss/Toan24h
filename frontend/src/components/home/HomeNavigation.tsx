@@ -72,21 +72,32 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const userStr = localStorage.getItem('user')
-      const isLoggedIn = document.cookie.includes('userRole=')
-      if (userStr && isLoggedIn) {
-        setIsLoggedState(true)
+      const getCookie = (name: string) => {
+        const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'))
+        return match ? decodeURIComponent(match[2]) : null
+      }
+      const role = getCookie('userRole')
+      const hasValidUserStr = Boolean(userStr && userStr !== 'null' && userStr !== 'undefined')
+      const hasValidRole = Boolean(role && role.trim() !== '')
+
+      if (hasValidUserStr && hasValidRole) {
         try {
-          const user = JSON.parse(userStr)
-          if (user.fullName) setUserName(user.fullName)
-          if (user.role === 'admin') {
-            setUserGrade('Admin')
-          } else if (user.role === 'teacher') {
-            setUserGrade('Teacher')
-          } else if (user.grade) {
-            setUserGrade(`Toán ${user.grade}`)
+          const user = JSON.parse(userStr!)
+          if (user && typeof user === 'object' && (user.id || user.email || user.fullName)) {
+            setIsLoggedState(true)
+            if (user.fullName) setUserName(user.fullName)
+            if (user.role === 'admin') {
+              setUserGrade('Admin')
+            } else if (user.role === 'teacher') {
+              setUserGrade('Teacher')
+            } else if (user.grade) {
+              setUserGrade(`Toán ${user.grade}`)
+            }
+          } else {
+            setIsLoggedState(false)
           }
-        } catch (e) {
-          console.error('Failed to parse user from localStorage', e)
+        } catch {
+          setIsLoggedState(false)
         }
       } else {
         setIsLoggedState(false)
@@ -128,13 +139,13 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                         <span><b>Thông báo mới:</b> {latest.title} - {latest.message}</span>
                         <Link 
                           href={latest.link} 
-                          className="text-primary underline text-sm font-semibold" 
+                          className="text-primary underline text-sm font-semibold inline-flex items-center gap-1 hover:opacity-80" 
                           onClick={() => {
                             apiFetch(`/notifications/${latest.id}/read`, { method: 'POST' }).catch(() => {})
                             toast.dismiss(t.id)
                           }}
                         >
-                          Nhấn link để xem chi tiết kết quả.
+                          Xem chi tiết ngay &rarr;
                         </Link>
                       </span>
                     ),
@@ -146,10 +157,27 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
           }
         }
       } catch (e: any) {
-        if (e?.message?.includes('401') || e?.message?.includes('Unauthorized')) {
+        const msg = e?.message || ''
+        const isAuthError = 
+          e?.status === 401 ||
+          msg.includes('401') || 
+          msg.includes('Unauthorized') || 
+          msg.includes('Authorization') || 
+          msg.includes('token') ||
+          msg.includes('Forbidden')
+
+        if (isAuthError) {
           setIsLoggedState(false)
+          setNotifications([])
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('user')
+            document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+            document.cookie = 'userGrade=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+            document.cookie = 'userExpiresAt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+          }
+          return
         }
-        console.error('Failed to fetch notifications', e)
+        console.warn('Failed to fetch notifications:', e)
       }
     }
 
@@ -210,19 +238,23 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
               <div className="relative" ref={notificationRef}>
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors text-slate-600 relative cursor-pointer"
+                  aria-expanded={showNotifications}
+                  aria-haspopup="true"
+                  className="min-w-[44px] min-h-[44px] rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors text-slate-600 relative cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   aria-label="Thông báo"
                 >
                   <Bell size={20} />
                   {unreadCount > 0 && (
-                    <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full"></span>
+                    <span className="absolute top-2.5 right-3 w-2 h-2 bg-red-500 rounded-full">
+                      <span className="sr-only">Có thông báo mới</span>
+                    </span>
                   )}
                 </button>
 
                 {showNotifications && (
                   <div className="fixed inset-x-4 top-20 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full mt-2 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200 z-50 overflow-hidden max-w-sm mx-auto sm:max-w-none">
                     <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/60">
-                      <h3 className="font-bold text-sm text-slate-800">Thông báo</h3>
+                      <p className="font-bold text-sm text-slate-800">Thông báo</p>
                       {notifications.length > 0 && (
                         <button
                           onClick={async () => {
@@ -233,7 +265,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                               console.error('Failed to delete all notifications', err)
                             }
                           }}
-                          className="text-xs text-red-500 hover:text-red-700 font-medium cursor-pointer"
+                          className="text-xs text-red-600 hover:text-red-800 font-semibold cursor-pointer"
                         >
                           Xóa tất cả
                         </button>
@@ -244,7 +276,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                       {notifications.length === 0 ? (
                         <div className="p-8 text-center text-slate-500">
                           <Bell className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-                          <p className="text-sm">Chưa có thông báo nào</p>
+                          <p className="text-sm font-medium">Hòm thư trống, bạn chưa có thông báo mới.</p>
                         </div>
                       ) : (
                         notifications.map(n => {
@@ -271,6 +303,9 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                                 <div className="pr-6">
                                   <p className={`text-sm ${!n.isRead ? 'font-semibold text-slate-800' : 'text-slate-600'}`}>{n.title}</p>
                                   <p className="text-xs text-slate-500 mt-1 line-clamp-2">{n.message}</p>
+                                  <span className="text-[11px] font-semibold text-primary mt-1.5 inline-flex items-center gap-1 hover:underline">
+                                    Xem chi tiết ngay →
+                                  </span>
                                 </div>
                               </Link>
                             )
@@ -292,7 +327,12 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
               </div>
 
               <div className="relative group pl-3 sm:pl-4 border-l border-slate-200">
-                <div className="flex items-center gap-3 cursor-pointer">
+                <button
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-label="Menu tài khoản"
+                  className="flex items-center gap-3 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 -m-1 text-left"
+                >
                   <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold uppercase shrink-0 border border-primary/20">
                     {userName ? getAvatarInitial(userName) : <User size={20} />}
                   </div>
@@ -301,7 +341,7 @@ export default function HomeNavigation({ isLoggedIn = false }: HomeNavigationPro
                     <p className="text-xs text-slate-500">{userGrade}</p>
                   </div>
                   <ChevronDown size={16} className="text-slate-400 group-hover:text-primary transition-colors hidden sm:block" />
-                </div>
+                </button>
 
                 {/* Dropdown Menu Desktop */}
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 translate-y-2 group-hover:translate-y-0">

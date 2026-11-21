@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -90,8 +88,6 @@ func (h *WebhookHandler) HandlePayOSWebhook(c *gin.Context) {
 	// Wrap in DB Transaction to prevent race conditions
 	var updatedUser models.User
 	var updatedPlan string
-	var processedTx models.Transaction
-	var alreadyCompleted bool
 
 	err = h.DB.Transaction(func(db *gorm.DB) error {
 		var tx models.Transaction
@@ -101,7 +97,6 @@ func (h *WebhookHandler) HandlePayOSWebhook(c *gin.Context) {
 
 		if tx.Status == "completed" {
 			// Idempotent: already completed
-			alreadyCompleted = true
 			return nil
 		}
 
@@ -145,19 +140,12 @@ func (h *WebhookHandler) HandlePayOSWebhook(c *gin.Context) {
 		}
 
 		updatedPlan = tx.Plan
-		processedTx = tx
 		return nil
 	})
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": -1, "message": err.Error(), "data": nil})
 		return
-	}
-
-	// Process multi-tier lifetime commissions (Direct, Grade 3%, Platform 1%)
-	// Any commission error is logged and must NOT fail or rollback VIP activation
-	if !alreadyCompleted {
-		h.processMultiTierCommissions(processedTx, updatedUser)
 	}
 
 	// Send Telegram notification if user has linked Telegram (Slot 1 or Slot 2)
@@ -195,152 +183,4 @@ func (h *WebhookHandler) HandlePayOSWebhook(c *gin.Context) {
 		"message": "success",
 		"data":    nil,
 	})
-}
-
-// processMultiTierCommissions safely calculates and allocates multi-tier commissions
-// (Direct referral, Grade management 3%, and Platform override 1%) inside an atomic DB transaction.
-func (h *WebhookHandler) processMultiTierCommissions(tx models.Transaction, student models.User) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Printf("[Webhook PayOS] Panic recovered during multi-tier commission processing for orderCode %d: %v", tx.OrderCode, r)
-		}
-	}()
-
-	if h.DB == nil {
-		return
-	}
-
-	// 1. Pre-check idempotency outside transaction
-	var existingCount int64
-	if err := h.DB.Model(&models.CommissionTransaction{}).Where("order_code = ?", tx.OrderCode).Count(&existingCount).Error; err != nil {
-		log.Printf("[Webhook PayOS] Error checking existing commission for orderCode %d: %v", tx.OrderCode, err)
-		return
-	}
-	if existingCount > 0 {
-		return
-	}
-
-	// 2. Perform all allocations within a single database transaction
-	err := h.DB.Transaction(func(commDB *gorm.DB) error {
-		// Double check idempotency inside transaction
-		var countInside int64
-		if err := commDB.Model(&models.CommissionTransaction{}).Where("order_code = ?", tx.OrderCode).Count(&countInside).Error; err != nil {
-			return err
-		}
-		if countInside > 0 {
-			return nil
-		}
-
-		var directReferrerID *uuid.UUID
-
-		// --- TIER 1: Direct Referral Commission (Teacher 50%, Admin 60%, Affiliate 30%) ---
-		if student.ReferrerID != nil && *student.ReferrerID != uuid.Nil {
-			var referrer models.User
-			if err := commDB.First(&referrer, "id = ?", *student.ReferrerID).Error; err == nil {
-				if referrer.Status == "active" {
-					role := strings.ToLower(strings.TrimSpace(referrer.Role))
-					if role == "admin" || role == "teacher" || role == "affiliate" {
-						rate := services.GetCommissionRateByRole(role)
-						amount := int(float64(tx.Amount) * float64(rate) / 100.0)
-
-						if amount > 0 {
-							if err := commDB.Model(&models.User{}).Where("id = ?", referrer.ID).
-								Update("commission_balance", gorm.Expr("commission_balance + ?", amount)).Error; err != nil {
-								return err
-							}
-
-							commTx := models.CommissionTransaction{
-								OrderCode:        tx.OrderCode,
-								ReferrerID:       referrer.ID,
-								StudentID:        student.ID,
-								StudentAmount:    tx.Amount,
-								CommissionRate:   rate,
-								CommissionAmount: amount,
-								CommissionType:   "direct",
-								Note:             "Hoa hồng giới thiệu trực tiếp",
-								Status:           "pending",
-							}
-							if err := commDB.Create(&commTx).Error; err != nil {
-								return err
-							}
-							directReferrerID = &referrer.ID
-						}
-					}
-				}
-			}
-		}
-
-		// --- TIER 2: Grade Management Commission (Teacher 3%) ---
-		normGrade := services.NormalizeGrade(student.Grade)
-		if normGrade != "" {
-			teacher, err := services.GetTeacherForGrade(commDB, normGrade)
-			if err == nil && teacher != nil {
-				// Anti-goal: Skip if teacher was already the direct referrer
-				if directReferrerID == nil || *directReferrerID != teacher.ID {
-					rate := services.CommissionRateGrade // 3.0%
-					amount := int(float64(tx.Amount) * float64(rate) / 100.0)
-
-					if amount > 0 {
-						if err := commDB.Model(&models.User{}).Where("id = ?", teacher.ID).
-							Update("commission_balance", gorm.Expr("commission_balance + ?", amount)).Error; err != nil {
-							return err
-						}
-
-						commTx := models.CommissionTransaction{
-							OrderCode:        tx.OrderCode,
-							ReferrerID:       teacher.ID,
-							StudentID:        student.ID,
-							StudentAmount:    tx.Amount,
-							CommissionRate:   rate,
-							CommissionAmount: amount,
-							CommissionType:   "grade_management",
-							Note:             fmt.Sprintf("Hoa hồng quản lý Khối %s", normGrade),
-							Status:           "pending",
-						}
-						if err := commDB.Create(&commTx).Error; err != nil {
-							return err
-						}
-					}
-				}
-			}
-		}
-
-		// --- TIER 3: Platform Management Commission (Admin 1%) ---
-		admin, err := services.GetSystemAdmin(commDB)
-		if err == nil && admin != nil {
-			// Anti-goal: Skip if admin was already the direct referrer
-			if directReferrerID == nil || *directReferrerID != admin.ID {
-				rate := services.CommissionRatePlatform // 1.0%
-				amount := int(float64(tx.Amount) * float64(rate) / 100.0)
-
-				if amount > 0 {
-					if err := commDB.Model(&models.User{}).Where("id = ?", admin.ID).
-						Update("commission_balance", gorm.Expr("commission_balance + ?", amount)).Error; err != nil {
-						return err
-					}
-
-					commTx := models.CommissionTransaction{
-						OrderCode:        tx.OrderCode,
-						ReferrerID:       admin.ID,
-						StudentID:        student.ID,
-						StudentAmount:    tx.Amount,
-						CommissionRate:   rate,
-						CommissionAmount: amount,
-						CommissionType:   "platform_override",
-						Note:             "Hoa hồng quản trị sàn",
-						Status:           "pending",
-					}
-					if err := commDB.Create(&commTx).Error; err != nil {
-						return err
-					}
-				}
-			}
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		log.Printf("[Webhook PayOS] Failed to complete multi-tier commission processing for orderCode %d: %v", tx.OrderCode, err)
-	}
 }

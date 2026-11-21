@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -8,6 +8,7 @@ import {
   MILESTONES_CONFIG,
   getMilestoneInfo,
 } from '@/lib/examMilestoneProgression'
+import { useStudentExamFilter } from '@/contexts/StudentExamFilterContext'
 import { MilestoneTabs } from '@/components/exams/MilestoneTabs'
 import { Calculator, Award, ArrowRight, Sparkles, FolderOpen } from 'lucide-react'
 
@@ -20,7 +21,7 @@ export interface StudentExamListClientProps {
 
 /**
  * Client component hiển thị giao diện luyện đề thi theo 5 chặng học tập:
- * - Tab chọn 5 chặng (MilestoneTabs).
+ * - Trục thời gian tiến độ năm học (MilestoneTabs Horizontal Timeline).
  * - Bảng danh sách đề thi (Exam Table) đồng bộ giao diện như trang /dashboard/exams.
  * - Hỗ trợ vào thi trực tiếp, hiển thị kết quả điểm số cao nhất của học sinh.
  */
@@ -31,9 +32,23 @@ export function StudentExamListClient({
   bestSubmissions,
 }: StudentExamListClientProps) {
   const router = useRouter()
-  const [activeMilestone, setActiveMilestone] = useState<ExamMilestone>(currentMilestone)
+  const contextFilter = useStudentExamFilter()
 
-  // Đếm số lượng đề thi trong mỗi chặng cho Tabs
+  // Local state fallback khi chạy ngoài Context (ví dụ test cô lập)
+  const [localActiveMilestone, setLocalActiveMilestone] = useState<ExamMilestone>(currentMilestone)
+
+  const activeMilestone = contextFilter
+    ? contextFilter.activeMilestone
+    : localActiveMilestone
+  const setActiveMilestone = (milestone: ExamMilestone) => {
+    if (contextFilter) {
+      contextFilter.setActiveMilestone(milestone)
+    } else {
+      setLocalActiveMilestone(milestone)
+    }
+  }
+
+  // Đếm số lượng đề thi trong mỗi chặng
   const counts = useMemo(() => {
     const map: Record<ExamMilestone, number> = {
       midterm_1: 0,
@@ -48,7 +63,41 @@ export function StudentExamListClient({
     return map
   }, [examsByMilestone])
 
-  // Lấy danh sách đề thi của chặng hiện đang chọn
+  // Tổng số đề thi và số đề thi đã hoàn thành trên toàn bộ khối lớp
+  const { totalExams, completedExams } = useMemo(() => {
+    let total = 0
+    let completed = 0
+    for (const milestone of MILESTONES_CONFIG) {
+      const list = examsByMilestone?.[milestone.id] ?? []
+      total += list.length
+      for (const e of list) {
+        const id = e.id || e._id || ''
+        if (id && bestSubmissions?.[String(id)]) {
+          completed++
+        }
+      }
+    }
+    return { totalExams: total, completedExams: completed }
+  }, [examsByMilestone, bestSubmissions])
+
+  // Đồng bộ dữ liệu sang contextFilter để Sidebar hiển thị tiến độ luyện đề
+  useEffect(() => {
+    if (contextFilter) {
+      contextFilter.setCounts(counts)
+      contextFilter.setTotalExams(totalExams)
+      contextFilter.setCompletedExams(completedExams)
+      contextFilter.setCurrentProgressMilestone(currentMilestone)
+      if (!contextFilter.activeMilestone) {
+        contextFilter.setActiveMilestone(currentMilestone)
+      }
+      contextFilter.setIsAvailable(true)
+      return () => {
+        contextFilter.setIsAvailable(false)
+      }
+    }
+  }, [contextFilter, counts, totalExams, completedExams, currentMilestone])
+
+  // Lấy danh sách đề thi của chặng đang chọn
   const activeExams = examsByMilestone?.[activeMilestone] ?? []
 
   // Tìm chỉ mục của đề thi đầu tiên chưa được làm trong chặng hiện tại để đề xuất làm bài
@@ -63,15 +112,13 @@ export function StudentExamListClient({
 
   return (
     <div className="space-y-6">
-      {/* 1. Thanh chuyển đổi 5 chặng đề thi */}
-      <section aria-label="Bộ lọc chặng học tập">
+      {/* 1. Trục thời gian tiến độ luyện thi theo năm học (Horizontal Timeline Roadmap Stepper) */}
+      <section aria-label="Lộ trình tiến độ luyện thi theo năm học">
         <MilestoneTabs
           activeMilestone={activeMilestone}
           currentProgressMilestone={currentMilestone}
           counts={counts}
-          onSelect={(milestone) => {
-            setActiveMilestone(milestone)
-          }}
+          onSelect={setActiveMilestone}
         />
       </section>
 
@@ -197,7 +244,7 @@ export function StudentExamListClient({
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : exam.type === 'Cuối kì 2'
                               ? 'bg-teal-50 text-teal-800 border-teal-200'
-                              : exam.type === 'Chuyên Đề'
+                              : exam.type === 'Chuyên Đề' || exam.type === 'Chuyên đề'
                               ? 'bg-amber-50 text-amber-700 border-amber-200'
                               : exam.type === 'Ôn tập'
                               ? 'bg-sky-50 text-sky-700 border-sky-200'

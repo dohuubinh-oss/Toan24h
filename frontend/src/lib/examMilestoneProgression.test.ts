@@ -19,9 +19,11 @@ describe('examMilestoneProgression', () => {
       MILESTONES_CONFIG.forEach((m) => {
         expect(m).toHaveProperty('id');
         expect(m).toHaveProperty('title');
+        expect(m).toHaveProperty('timeRange');
         expect(m).toHaveProperty('typeMatch');
         expect(m).toHaveProperty('order');
         expect(Array.isArray(m.typeMatch)).toBe(true);
+        expect(typeof m.timeRange).toBe('string');
       });
     });
   });

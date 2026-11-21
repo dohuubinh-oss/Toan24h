@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	json "encoding/json/v2"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/modeptrai/exam-model-backend/internal/models"
 	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -152,10 +154,9 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 
 	newRole := strings.ToLower(strings.TrimSpace(req.Role))
 	validRoles := map[string]bool{
-		"admin":     true,
-		"teacher":   true,
-		"affiliate": true,
-		"student":   true,
+		"admin":   true,
+		"teacher": true,
+		"student": true,
 	}
 
 	if !validRoles[newRole] {
@@ -241,7 +242,7 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	// Tự động cấp mã referral nếu role là admin, teacher hoặc affiliate mà chưa có mã
+	// Tự động cấp mã referral nếu role là admin hoặc teacher mà chưa có mã
 	if services.IsPartnerRole(user.Role) {
 		if user.ReferralCode == nil || strings.TrimSpace(*user.ReferralCode) == "" {
 			_, _ = services.EnsureUserReferralCode(h.db, &user)
@@ -263,11 +264,9 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 			"telegramId2":             user.TelegramID2,
 			"telegramUsername2":       user.TelegramUser2,
 			"telegramAvt2":            user.TelegramAvt2,
-			"expiresAt":               user.ExpiresAt,
-			"referralCode":            user.ReferralCode,
-			"commissionBalance":       user.CommissionBalance,
-			"totalCommissionReceived": user.TotalCommissionReceived,
-			"createdAt":               user.CreatedAt,
+			"expiresAt":         user.ExpiresAt,
+			"referralCode":      user.ReferralCode,
+			"createdAt":         user.CreatedAt,
 		},
 	})
 }
@@ -305,10 +304,11 @@ func (h *UserHandler) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	// 3. Tự động resize ảnh về max 400x400 và nén JPEG 85% để tối ưu kích thước, đồng thời xóa bỏ EXIF nhạy cảm
-	compBytes, _, err := utils.CompressAndResizeImage(fileBytes, 400)
+	// 3. Khử mã độc, xóa bỏ 100% EXIF và nén JPEG 85% về max 400x400
+	compBytes, err := utils.SanitizeAndCompressImage(fileBytes, 400)
 	if err != nil {
-		compBytes = fileBytes
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu ảnh đại diện không hợp lệ hoặc chứa mã độc: " + err.Error()})
+		return
 	}
 
 	// 4. Tạo thư mục nếu chưa tồn tại
@@ -352,4 +352,101 @@ func (h *UserHandler) UploadAvatar(c *gin.Context) {
 		},
 	})
 }
+
+// DeleteMyAccount xử lý yêu cầu xóa tài khoản vĩnh viễn (Hard delete) theo Luật BVQLNTD 2023 & Nghị định 13/2023/NĐ-CP
+// Quét sạch họ tên, email, và đặc biệt là toàn bộ lịch sử hình ảnh bài tự luận mà người dùng đã tải lên.
+func (h *UserHandler) DeleteMyAccount(c *gin.Context) {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	if h.db == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection not available"})
+		return
+	}
+
+	// 1. Quét sạch tất cả các file ảnh bài tự luận (diagrams / uploads) do học sinh này tải lên
+	var submissions []models.Submission
+	if err := h.db.Where("user_id = ?", userID).Find(&submissions).Error; err == nil {
+		for _, sub := range submissions {
+			var answers map[string]models.QuestionAnswer
+			if len(sub.AnswersJSON) > 0 && json.Unmarshal(sub.AnswersJSON, &answers) == nil {
+				for _, ans := range answers {
+					if ans.StudentDiagramURL != "" {
+						deletePhysicalUploadFile(ans.StudentDiagramURL)
+					}
+					for _, imgURL := range ans.ImageURLs {
+						deletePhysicalUploadFile(imgURL)
+					}
+				}
+			}
+		}
+	}
+
+	// 2. Quét sạch file ảnh đại diện (avatar) nếu có
+	var user models.User
+	if err := h.db.Where("id = ?", userID).First(&user).Error; err == nil {
+		if user.TelegramAvt != nil && *user.TelegramAvt != "" {
+			deletePhysicalUploadFile(*user.TelegramAvt)
+		}
+		if user.TelegramAvt2 != nil && *user.TelegramAvt2 != "" {
+			deletePhysicalUploadFile(*user.TelegramAvt2)
+		}
+	}
+
+	// 3. Ẩn danh hóa các bản ghi điểm số để phục vụ thống kê chung (giữ lại điểm, gỡ bỏ thông tin định danh và bài làm)
+	h.db.Model(&models.Submission{}).
+		Where("user_id = ?", userID).
+		Updates(map[string]interface{}{
+			"user_id":                        nil,
+			"answers_json":                   datatypes.JSON([]byte("{}")),
+			"overall_essay_feedback":         "",
+			"overall_comprehension_feedback": "",
+		})
+
+	// 4. Gỡ bỏ liên kết người giới thiệu để tránh orphan references
+	h.db.Model(&models.Voucher{}).Where("affiliate_id = ?", userID).Update("affiliate_id", nil)
+	h.db.Model(&models.User{}).Where("referrer_id = ?", userID).Update("referrer_id", nil)
+
+	// 5. Thực hiện Hard Delete (xóa vật lý hoàn toàn khỏi CSDL) các dữ liệu liên quan
+	h.db.Unscoped().Where("user_id = ?", userID).Delete(&models.LectureBookmark{})
+	h.db.Unscoped().Where("user_id = ?", userID).Delete(&models.Notification{})
+	h.db.Unscoped().Where("user_id = ?", userID).Delete(&models.XPTransaction{})
+	h.db.Unscoped().Where("user_id = ?", userID).Delete(&models.VoucherUsage{})
+	h.db.Unscoped().Where("user_id = ?", userID).Delete(&models.Transaction{})
+
+	// 6. Xóa vật lý bản ghi người dùng (quét sạch họ tên, email, mật khẩu, tài khoản)
+	if err := h.db.Unscoped().Where("id = ?", userID).Delete(&models.User{}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể xóa tài khoản: " + err.Error()})
+		return
+	}
+
+	// 7. Xóa cookie phiên làm việc
+	c.SetCookie("accessToken", "", -1, "/", "", false, true)
+	c.SetCookie("refreshToken", "", -1, "/", "", false, true)
+	c.SetCookie("userRole", "", -1, "/", "", false, false)
+	c.SetCookie("userGrade", "", -1, "/", "", false, false)
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Tài khoản và toàn bộ dữ liệu định danh của bạn đã được xóa vĩnh viễn khỏi hệ thống.",
+	})
+}
+
+// deletePhysicalUploadFile kiểm tra an toàn đường dẫn và xóa file vật lý trên đĩa cứng
+func deletePhysicalUploadFile(rawURL string) {
+	clean := strings.TrimPrefix(rawURL, "/")
+	cleanPath := filepath.Clean(clean)
+	// Ngăn chặn Path Traversal
+	if strings.HasPrefix(cleanPath, "..") {
+		return
+	}
+	if strings.HasPrefix(cleanPath, "uploads/") {
+		filePath := filepath.Join(".", cleanPath)
+		_ = os.Remove(filePath)
+	}
+}
+
 

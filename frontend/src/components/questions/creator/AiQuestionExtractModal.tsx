@@ -10,6 +10,8 @@ import {
   Loader2,
   AlertCircle,
   FileCheck2,
+  ShieldCheck,
+  GraduationCap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { QuestionBlock } from '@/types/question'
@@ -37,9 +39,8 @@ export default function AiQuestionExtractModal({
   defaultGrade,
 }: AiQuestionExtractModalProps) {
   const [images, setImages] = useState<ImageFileItem[]>([])
-  const [selectedGrade, setSelectedGrade] = useState<string>(
-    defaultGrade ? defaultGrade.toString() : ''
-  )
+  const [selectedGrade, setSelectedGrade] = useState<string>('')
+  const [isParaphrase, setIsParaphrase] = useState(true)
   const [isExtracting, setIsExtracting] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -49,18 +50,19 @@ export default function AiQuestionExtractModal({
   // Reset state when modal opens or closes
   useEffect(() => {
     if (isOpen) {
-      if (defaultGrade) {
-        setSelectedGrade(defaultGrade.toString())
-      }
+      setSelectedGrade('')
+      setIsParaphrase(true)
     } else {
       // Clean up object URLs to avoid memory leaks
       images.forEach((item) => URL.revokeObjectURL(item.previewUrl))
       setImages([])
+      setSelectedGrade('')
+      setIsParaphrase(true)
       setIsExtracting(false)
       setStatusMessage('')
       setErrorMessage(null)
     }
-  }, [isOpen, defaultGrade])
+  }, [isOpen])
 
   const handleAddFiles = (selectedFiles: FileList | File[]) => {
     setErrorMessage(null)
@@ -177,6 +179,11 @@ export default function AiQuestionExtractModal({
     e.preventDefault()
     setErrorMessage(null)
 
+    if (!selectedGrade) {
+      setErrorMessage('Vui lòng chọn khối lớp trước khi bóc tách câu hỏi')
+      return
+    }
+
     if (images.length === 0) {
       setErrorMessage('Vui lòng chọn ít nhất 1 ảnh đề thi')
       return
@@ -193,6 +200,7 @@ export default function AiQuestionExtractModal({
       if (selectedGrade) {
         formData.append('grade', selectedGrade)
       }
+      formData.append('paraphrase', isParaphrase ? 'true' : 'false')
 
       setStatusMessage('Gemini AI đang bóc tách câu hỏi, công thức LaTeX & cắt hình học...')
 
@@ -361,6 +369,52 @@ export default function AiQuestionExtractModal({
             </div>
           )}
 
+          {/* Grade Selector */}
+          <div className="space-y-1.5 p-3.5 bg-slate-50/90 border border-slate-200/90 rounded-2xl">
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="ai-extract-grade-select"
+                className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5"
+              >
+                <GraduationCap className="w-4 h-4 text-primary" />
+                <span>
+                  Chọn khối lớp <span className="text-rose-500">*</span>
+                </span>
+              </label>
+              {selectedGrade ? (
+                <span className="text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                  Lớp {selectedGrade}
+                </span>
+              ) : (
+                <span className="text-[11px] font-semibold text-rose-500 bg-rose-50 border border-rose-200/60 px-2 py-0.5 rounded-md">
+                  Bắt buộc chọn
+                </span>
+              )}
+            </div>
+            <select
+              id="ai-extract-grade-select"
+              aria-label="Chọn khối lớp"
+              value={selectedGrade}
+              onChange={(e) => {
+                setSelectedGrade(e.target.value)
+                if (errorMessage) setErrorMessage(null)
+              }}
+              disabled={isExtracting}
+              className={`w-full text-xs sm:text-sm font-semibold rounded-xl border p-2.5 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer disabled:opacity-50 transition-all shadow-xs ${
+                !selectedGrade && errorMessage?.includes('khối lớp')
+                  ? 'border-rose-400 bg-rose-50/30 ring-2 ring-rose-400/20'
+                  : 'border-slate-200'
+              }`}
+            >
+              <option value="">-- Vui lòng chọn khối lớp (Bắt buộc) --</option>
+              <option value="9">Lớp 9 (Chương trình GDPT mới)</option>
+              <option value="8">Lớp 8 (Chương trình GDPT mới)</option>
+              <option value="7">Lớp 7 (Chương trình GDPT mới)</option>
+              <option value="6">Lớp 6 (Chương trình GDPT mới)</option>
+              <option value="5">Lớp 5 (Tiểu học)</option>
+            </select>
+          </div>
+
           {/* Upload Dropzone */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -465,6 +519,30 @@ export default function AiQuestionExtractModal({
               </div>
             </div>
           )}
+
+          {/* Paraphrase / Anti-Copyright Infringement Checkbox */}
+          <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-2xl flex items-start gap-3 select-none transition-colors hover:bg-blue-50">
+            <input
+              type="checkbox"
+              id="ai-question-paraphrase-checkbox"
+              checked={isParaphrase}
+              onChange={(e) => setIsParaphrase(e.target.checked)}
+              disabled={isExtracting}
+              className="mt-1 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer disabled:opacity-50"
+            />
+            <label
+              htmlFor="ai-question-paraphrase-checkbox"
+              className="text-xs sm:text-sm text-slate-800 cursor-pointer leading-snug"
+            >
+              <span className="font-bold text-slate-900 flex items-center gap-1.5 mb-1">
+                <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                <span>Làm mới số liệu, nhân vật &amp; bối cảnh (Tránh vi phạm bản quyền)</span>
+              </span>
+              <span className="text-slate-600 text-xs block leading-relaxed">
+                Giữ nguyên dạng toán và phương pháp giải, nhưng AI sẽ tự động thay đổi tên nhân vật, bối cảnh thực tế và số liệu tính toán (Ví dụ: &ldquo;Nam mua 5 quả táo&rdquo; &rarr; &ldquo;Hùng mua 10 quả cam&rdquo;) để tạo nội dung mới độc quyền, tránh trùng lặp tài liệu gốc.
+              </span>
+            </label>
+          </div>
 
           {/* Extraction In-Progress Indicator */}
           {isExtracting && (

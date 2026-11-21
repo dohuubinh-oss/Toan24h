@@ -9,6 +9,7 @@ import {
   Trash2,
   Loader2,
   AlertCircle,
+  ShieldCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { apiFetch } from '@/lib/api'
@@ -37,6 +38,7 @@ export default function AiLectureExtractModal({
 }: AiLectureExtractModalProps) {
   const [images, setImages] = useState<ImageFileItem[]>([])
   const [isExtracting, setIsExtracting] = useState(false)
+  const [isParaphrase, setIsParaphrase] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
@@ -47,6 +49,7 @@ export default function AiLectureExtractModal({
       images.forEach((item) => URL.revokeObjectURL(item.previewUrl))
       setImages([])
       setIsExtracting(false)
+      setIsParaphrase(false)
       setStatusMessage('')
       setErrorMessage(null)
     }
@@ -140,6 +143,7 @@ export default function AiLectureExtractModal({
       images.forEach((item) => {
         formData.append('files', item.file)
       })
+      formData.append('paraphrase', isParaphrase ? 'true' : 'false')
 
       setStatusMessage('Gemini AI đang bóc tách Dạng toán, Phương pháp & giải chi tiết ví dụ mẫu...')
 
@@ -326,6 +330,30 @@ export default function AiLectureExtractModal({
               </div>
             </div>
           )}
+
+          {/* Paraphrase / Anti-Copyright Infringement Checkbox */}
+          <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-2xl flex items-start gap-3 select-none transition-colors hover:bg-blue-50">
+            <input
+              type="checkbox"
+              id="ai-lecture-paraphrase-checkbox"
+              checked={isParaphrase}
+              onChange={(e) => setIsParaphrase(e.target.checked)}
+              disabled={isExtracting}
+              className="mt-1 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer disabled:opacity-50"
+            />
+            <label
+              htmlFor="ai-lecture-paraphrase-checkbox"
+              className="text-xs sm:text-sm text-slate-800 cursor-pointer leading-snug"
+            >
+              <span className="font-bold text-slate-900 flex items-center gap-1.5 mb-1">
+                <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                <span>Làm mới số liệu ví dụ &amp; bối cảnh (Tránh vi phạm bản quyền)</span>
+              </span>
+              <span className="text-slate-600 text-xs block leading-relaxed">
+                Giữ nguyên phương pháp và dạng toán, nhưng AI sẽ tự động thay đổi số liệu bài tập ví dụ mẫu, tên nhân vật và bài toán thực tế để tạo nội dung mới độc quyền, tránh sao chép nguyên văn tài liệu gốc.
+              </span>
+            </label>
+          </div>
 
           {/* Extraction In-Progress Indicator */}
           {isExtracting && (

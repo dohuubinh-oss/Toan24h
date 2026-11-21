@@ -81,7 +81,14 @@ func ExtractAIQuestions(c *gin.Context) {
 		targetGrade = c.PostForm("grade")
 	}
 
-	blocks, err := services.ExtractQuestionsFromImages(fileBytesList, mimeTypes, targetGrade)
+	paraphrase := false
+	if pVals, ok := form.Value["paraphrase"]; ok && len(pVals) > 0 {
+		paraphrase = pVals[0] == "true"
+	} else if c.PostForm("paraphrase") == "true" {
+		paraphrase = true
+	}
+
+	blocks, err := services.ExtractQuestionsFromImages(fileBytesList, mimeTypes, targetGrade, paraphrase)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Bóc tách câu hỏi thất bại: " + err.Error()})
 		return

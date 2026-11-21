@@ -10,7 +10,6 @@ export function UserFilter() {
   const roles = [
     { label: 'Học sinh', value: 'student' },
     { label: 'Giáo viên', value: 'teacher' },
-    { label: 'Affiliate', value: 'affiliate' },
   ];
 
   return (

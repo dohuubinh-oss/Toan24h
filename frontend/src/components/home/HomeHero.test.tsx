@@ -12,8 +12,8 @@ describe('HomeHero', () => {
     expect(screen.getByText(/Luyện Toán thông minh, bứt phá/i)).toBeInTheDocument()
     expect(screen.getByText(/điểm 9\+/i)).toBeInTheDocument()
     expect(screen.getByText(/Chương trình chuẩn Bộ Giáo dục từ lớp 5 đến lớp 9/i)).toBeInTheDocument()
-    expect(screen.getByText('Bắt đầu')).toBeInTheDocument()
-    expect(screen.getByText('Xem demo')).toBeInTheDocument()
+    expect(screen.getByText(/Học thử miễn phí ngay/i)).toBeInTheDocument()
+    expect(screen.getByText(/Xem video giới thiệu/i)).toBeInTheDocument()
     expect(screen.getByText(/Thi thử vào 10 • Toán 9/i)).toBeInTheDocument()
     expect(screen.getByText('Học ngay')).toBeInTheDocument()
     expect(screen.getByText(/90 phút/i)).toBeInTheDocument()
@@ -47,7 +47,7 @@ describe('HomeHero', () => {
 
   it('opens and closes YouTube demo video modal', () => {
     render(<HomeHero />)
-    const demoBtn = screen.getByRole('button', { name: /Xem demo/i })
+    const demoBtn = screen.getByRole('button', { name: /Xem video giới thiệu/i })
     fireEvent.click(demoBtn)
 
     expect(screen.getByRole('dialog', { name: /Video giới thiệu/i })).toBeInTheDocument()

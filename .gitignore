@@ -45,6 +45,7 @@ Thumbs.db
 .gemini/
 .archify/
 .superpowers/
+.impeccable/
 
 # Docs and Examples
 docs/*

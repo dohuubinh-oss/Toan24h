@@ -14,17 +14,29 @@ vi.mock('../components/home/HomeFeatures', () => ({
 vi.mock('../components/home/HomePricing', () => ({
   default: () => <div data-testid="home-pricing">Pricing</div>
 }))
+vi.mock('../components/home/HomeTestimonials', () => ({
+  default: () => <div data-testid="home-testimonials">Testimonials</div>
+}))
+vi.mock('../components/home/HomeFAQ', () => ({
+  default: () => <div data-testid="home-faq">FAQ</div>
+}))
 vi.mock('../components/home/HomeFooter', () => ({
   default: () => <div data-testid="home-footer">Footer</div>
 }))
+vi.mock('../components/home/HomeAiAssistantButton', () => ({
+  default: () => <div data-testid="home-ai-btn">AI Button</div>
+}))
 
 describe('HomePage', () => {
-  it('renders all sections', () => {
+  it('renders all sections and interactive AI assistant button', () => {
     render(<HomePage />)
     expect(screen.getByTestId('home-nav')).toBeInTheDocument()
     expect(screen.getByTestId('home-hero')).toBeInTheDocument()
     expect(screen.getByTestId('home-features')).toBeInTheDocument()
     expect(screen.getByTestId('home-pricing')).toBeInTheDocument()
+    expect(screen.getByTestId('home-testimonials')).toBeInTheDocument()
+    expect(screen.getByTestId('home-faq')).toBeInTheDocument()
     expect(screen.getByTestId('home-footer')).toBeInTheDocument()
+    expect(screen.getByTestId('home-ai-btn')).toBeInTheDocument()
   })
 })

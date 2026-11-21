@@ -116,7 +116,6 @@ function UsersPageContent() {
       });
       const roleMap: Record<string, string> = {
         teacher: 'Giáo viên',
-        affiliate: 'Affiliate',
         student: 'Học sinh',
         admin: 'Admin'
       };

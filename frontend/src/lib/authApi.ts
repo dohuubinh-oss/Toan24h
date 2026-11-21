@@ -28,6 +28,15 @@ export async function login(data: any) {
   return res
 }
 
+export async function loginWithGoogle(credential: string, refCode?: string) {
+  const res = await apiFetch('/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({ credential, refCode })
+  })
+  syncAuthSession(res)
+  return res
+}
+
 export interface RegisterData {
   email: string
   password: string
@@ -35,6 +44,7 @@ export interface RegisterData {
   role?: string
   grade?: string
   voucherCode?: string
+  termsAgreedAt?: string
 }
 
 export async function registerUser(data: RegisterData) {
@@ -46,56 +56,44 @@ export async function registerUser(data: RegisterData) {
 }
 
 export async function verifyEmail(token: string) {
-  return await apiFetch('/auth/verify-email', {
+  const res = await apiFetch('/auth/verify-email', {
     method: 'POST',
-    body: JSON.stringify({ token }),
+    body: JSON.stringify({ token })
   })
-}
-
-export async function resendVerification(email: string) {
-  return await apiFetch('/auth/resend-verification', {
-    method: 'POST',
-    body: JSON.stringify({ email }),
-  })
-}
-
-export async function loginWithGoogle(credential: string, refCode?: string) {
-  const res = await apiFetch('/auth/google', {
-    method: 'POST',
-    body: JSON.stringify({
-      credential,
-      ...(refCode ? { refCode: refCode.trim() } : {}),
-    })
-  })
-  syncAuthSession(res)
   return res
 }
 
-export async function forgotPassword(email: string) {
-  return await apiFetch('/auth/forgot-password', {
-    method: 'POST',
-    body: JSON.stringify({ email }),
-  })
-}
-
-export async function verifyOTP(email: string, otp: string) {
-  return await apiFetch('/auth/verify-otp', {
-    method: 'POST',
-    body: JSON.stringify({ email, otp }),
-  })
-}
-
-export async function resetPassword(email: string, otp: string, newPassword: string) {
-  return await apiFetch('/auth/reset-password', {
-    method: 'POST',
-    body: JSON.stringify({ email, otp, newPassword }),
-  })
-}
-
-export async function updateGrade(grade: string) {
+export async function updateGrade(grade: number | string) {
   const res = await apiFetch('/users/me/grade', {
     method: 'PUT',
-    body: JSON.stringify({ grade }),
+    body: JSON.stringify({ grade: String(grade) })
+  })
+  if (typeof window !== 'undefined') {
+    document.cookie = `userGrade=${grade}; path=/; max-age=86400; SameSite=Lax`
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        user.grade = String(grade)
+        localStorage.setItem('user', JSON.stringify(user))
+      } catch (e) {}
+    }
+  }
+  return res
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const res = await apiFetch('/users/me/password', {
+    method: 'PUT',
+    body: JSON.stringify({ currentPassword, newPassword })
+  })
+  return res
+}
+
+export async function resendVerification(email: string) {
+  const res = await apiFetch('/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email })
   })
   return res
 }
@@ -103,13 +101,9 @@ export async function updateGrade(grade: string) {
 export async function logout() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('user')
-    
-    // Explicitly clear non-HttpOnly cookies
-    document.cookie = 'userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-    document.cookie = 'userGrade=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-    document.cookie = 'userExpiresAt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-    
-    // Call backend to clear HttpOnly cookies
+    document.cookie = 'userRole=; path=/; max-age=0; SameSite=Lax'
+    document.cookie = 'userExpiresAt=; path=/; max-age=0; SameSite=Lax'
+    document.cookie = 'userGrade=; path=/; max-age=0; SameSite=Lax'
     try {
       await apiFetch('/auth/logout', { method: 'POST' })
     } catch (error) {
@@ -161,6 +155,19 @@ export async function getUserProfile(token?: string) {
         document.cookie = `userExpiresAt=; path=/; max-age=0; SameSite=Lax`
       }
     }
+  }
+  return res
+}
+
+export async function deleteMyAccount() {
+  const res = await apiFetch('/users/me', {
+    method: 'DELETE',
+  })
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('user')
+    document.cookie = 'userRole=; path=/; max-age=0; SameSite=Lax'
+    document.cookie = 'userExpiresAt=; path=/; max-age=0; SameSite=Lax'
+    document.cookie = 'userGrade=; path=/; max-age=0; SameSite=Lax'
   }
   return res
 }

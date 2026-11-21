@@ -552,6 +552,15 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
+      {/* AI Result Disclaimer Note */}
+      <div className="w-full bg-slate-50/70 border-b border-slate-200/60 py-2 px-3 sm:px-6 z-20">
+        <div className="max-w-7xl mx-auto text-center sm:text-left">
+          <p className="text-xs text-slate-500 italic leading-relaxed">
+            * Kết quả nhận diện chữ viết (OCR) và chấm điểm tự luận được thực hiện hoàn toàn tự động bởi Trí tuệ Nhân tạo (AI). Hệ thống có thể gặp sai sót trong quá trình phân tích. Điểm số và nhận xét chỉ mang tính chất tham khảo, giúp học sinh tự đánh giá năng lực và không thay thế cho kết quả chấm thi chính thức từ giáo viên.
+          </p>
+        </div>
+      </div>
+
       {/* Main Workspace Area */}
       <div className="flex-1 flex flex-col overflow-hidden relative pb-16 sm:pb-20 w-full">
         <div className="flex-1 flex overflow-hidden relative w-full">
@@ -859,11 +868,14 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
             </div>
 
             {/* Action Footer */}
-            <div className="mt-5 flex justify-end">
+            <div className="mt-5 pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <p className="text-[11px] sm:text-xs text-slate-500 italic text-center sm:text-left leading-relaxed">
+                * Kết quả nhận diện chữ viết (OCR) và chấm điểm tự luận được thực hiện hoàn toàn tự động bởi Trí tuệ Nhân tạo (AI). Hệ thống có thể gặp sai sót trong quá trình phân tích. Điểm số và nhận xét chỉ mang tính chất tham khảo, giúp học sinh tự đánh giá năng lực và không thay thế cho kết quả chấm thi chính thức từ giáo viên.
+              </p>
               <button
                 type="button"
                 onClick={() => setIsSummaryModalOpen(false)}
-                className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm rounded-xl transition-all cursor-pointer min-h-[38px]"
+                className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm rounded-xl transition-all cursor-pointer min-h-[38px] shrink-0"
               >
                 Đóng
               </button>

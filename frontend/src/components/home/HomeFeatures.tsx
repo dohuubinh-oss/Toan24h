@@ -58,7 +58,7 @@ export default function HomeFeatures() {
                     <MathText content="$\Leftrightarrow (x - 2)(x - 3) = 0 \implies x_1 = 2,\ x_2 = 3$" />
                   </div>
                   <div className="text-slate-600 text-xs pt-1 flex items-start gap-1">
-                    <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <MathText content="Hệ thức Viète: $x_1 + x_2 = 5$ và $x_1 \cdot x_2 = 6$." />
                     </div>

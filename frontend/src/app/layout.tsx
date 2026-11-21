@@ -2,8 +2,11 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Lexend } from 'next/font/google'
 import GradeSelectionModal from '@/components/auth/GradeSelectionModal'
+import SessionGuard from '@/components/common/SessionGuard'
+import CookieConsentBanner from '@/components/common/CookieConsentBanner'
 import { ToastProvider } from '@/components/ui/ToastProvider'
 import { ImageViewerProvider } from '@/components/ui/ImageViewerProvider'
+import DragScrollProvider from '@/components/common/DragScrollProvider'
 
 const lexend = Lexend({ 
   subsets: ['latin', 'vietnamese'],
@@ -126,8 +129,12 @@ export default function RootLayout({
       <body className="bg-page-bg text-slate-900 min-h-screen flex flex-col font-sans">
         <ToastProvider>
           <ImageViewerProvider>
-            <GradeSelectionModal />
-            {children}
+            <DragScrollProvider>
+              <GradeSelectionModal />
+              <SessionGuard />
+              <CookieConsentBanner />
+              {children}
+            </DragScrollProvider>
           </ImageViewerProvider>
         </ToastProvider>
       </body>

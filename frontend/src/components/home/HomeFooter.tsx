@@ -13,7 +13,7 @@ export default function HomeFooter() {
               <Logo size="md" />
             </div>
             <p className="text-slate-600 max-w-sm mb-6 leading-relaxed text-sm">
-              Nền tảng luyện thi và học Toán THCS bứt phá điểm số từ lớp 6 đến lớp 9, giúp học sinh tự tin chinh phục các kỳ thi.
+              Cung cấp Khóa học trực tuyến, Dịch vụ hỗ trợ giáo dục và công nghệ Chấm bài tự động giúp học sinh THCS bứt phá điểm số và tự tin làm chủ môn Toán.
             </p>
             <div className="flex gap-4">
               <Link 
@@ -43,7 +43,7 @@ export default function HomeFooter() {
           </div>
 
           <div>
-            <h4 className="font-bold mb-6 text-slate-900">Liên kết</h4>
+            <h3 className="font-bold mb-6 text-slate-900 text-sm tracking-wide">Liên kết</h3>
             <ul className="space-y-4 text-slate-600 text-sm">
               <li><Link className="hover:text-primary transition-colors" href="/about">Về chúng tôi</Link></li>
               <li><Link className="hover:text-primary transition-colors" href="/lectures">Bài giảng lý thuyết</Link></li>
@@ -53,9 +53,11 @@ export default function HomeFooter() {
           </div>
 
           <div>
-            <h4 className="font-bold mb-6 text-slate-900">Hỗ trợ</h4>
+            <h3 className="font-bold mb-6 text-slate-900 text-sm tracking-wide">Hỗ trợ</h3>
             <ul className="space-y-4 text-slate-600 text-sm">
               <li><Link className="hover:text-primary transition-colors" href="/upgrade">Gói cước & Học phí</Link></li>
+              <li><Link className="hover:text-primary transition-colors" href="/terms">Điều khoản dịch vụ &amp; Chính sách</Link></li>
+              <li><Link className="hover:text-primary transition-colors" href="/privacy">Chính sách bảo mật dữ liệu</Link></li>
               <li><a className="hover:text-primary transition-colors" href="mailto:support@toan6789.vn">Trung tâm trợ giúp</a></li>
               <li><a className="hover:text-primary transition-colors" href="mailto:support@toan6789.vn">Liên hệ</a></li>
             </ul>
@@ -63,7 +65,7 @@ export default function HomeFooter() {
         </div>
 
         <div className="pt-8 border-t border-slate-200 text-center text-slate-600 text-sm">
-          <p>© 2026 toan6789.vn - Nền tảng Học và Luyện thi Toán THCS Lớp 6, 7, 8, 9.</p>
+          <p>© 2026 toan6789.vn - Khóa học trực tuyến & Dịch vụ hỗ trợ giáo dục Toán THCS.</p>
         </div>
       </div>
     </footer>

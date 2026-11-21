@@ -67,7 +67,7 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
     )
   }
 
-  // Ẩn bài nháp đối với học sinh, affiliate hoặc khách
+  // Ẩn bài nháp đối với học sinh hoặc khách
   if (!post || (post.isPublished === false && !isAdminOrTeacher)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">

@@ -49,9 +49,38 @@ describe('RegisterForm Component', () => {
     expect(screen.getByLabelText(/Xác nhận mật khẩu/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Mã giới thiệu \/ Khuyến mãi/i)).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/Nhập mã \(ví dụ: CHAOMUNG1M\)/i)).toBeInTheDocument()
+    expect(
+      screen.getByLabelText(/Tôi đã trên 18 tuổi, hoặc đã được sự đồng ý của cha mẹ\/người giám hộ hợp pháp/i)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByLabelText(/Tôi đã đọc, hiểu và đồng ý với/i)
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Điều khoản dịch vụ/i })).toHaveAttribute('href', '/terms')
+    expect(screen.getByRole('button', { name: 'Đăng ký' })).toBeDisabled()
   })
 
-  it('submits form without voucher code when left empty', async () => {
+  it('disables submit button until both age consent and terms consent are checked', async () => {
+    render(<RegisterForm />)
+    const submitBtn = screen.getByRole('button', { name: 'Đăng ký' })
+    const ageCheckbox = screen.getByLabelText(/Tôi đã trên 18 tuổi, hoặc đã được sự đồng ý của cha mẹ\/người giám hộ hợp pháp/i)
+    const termsCheckbox = screen.getByLabelText(/Tôi đã đọc, hiểu và đồng ý với/i)
+
+    expect(submitBtn).toBeDisabled()
+
+    // Check only age
+    fireEvent.click(ageCheckbox)
+    expect(submitBtn).toBeDisabled()
+
+    // Check terms as well
+    fireEvent.click(termsCheckbox)
+    expect(submitBtn).not.toBeDisabled()
+
+    // Uncheck age
+    fireEvent.click(ageCheckbox)
+    expect(submitBtn).toBeDisabled()
+  })
+
+  it('submits form without voucher code when left empty and both consents are checked', async () => {
     vi.mocked(authApi.registerUser).mockResolvedValueOnce({ message: 'User registered successfully', id: 'user-1' })
 
     render(<RegisterForm />)
@@ -60,6 +89,12 @@ describe('RegisterForm Component', () => {
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'nguyenvana@gmail.com' } })
     fireEvent.change(screen.getByLabelText(/^Mật khẩu/i), { target: { value: 'StrongPass123@' } })
     fireEvent.change(screen.getByLabelText(/Xác nhận mật khẩu/i), { target: { value: 'StrongPass123@' } })
+    fireEvent.click(
+      screen.getByLabelText(/Tôi đã trên 18 tuổi, hoặc đã được sự đồng ý của cha mẹ\/người giám hộ hợp pháp/i)
+    )
+    fireEvent.click(
+      screen.getByLabelText(/Tôi đã đọc, hiểu và đồng ý với/i)
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'Đăng ký' }))
 
@@ -69,11 +104,12 @@ describe('RegisterForm Component', () => {
         email: 'nguyenvana@gmail.com',
         password: 'StrongPass123@',
         voucherCode: undefined,
+        termsAgreedAt: expect.any(String),
       })
     })
   })
 
-  it('submits form with voucher code when provided', async () => {
+  it('submits form with voucher code when provided and both consents are checked', async () => {
     vi.mocked(authApi.registerUser).mockResolvedValueOnce({
       message: 'User registered successfully',
       id: 'user-2',
@@ -87,6 +123,12 @@ describe('RegisterForm Component', () => {
     fireEvent.change(screen.getByLabelText(/^Mật khẩu/i), { target: { value: 'StrongPass123@' } })
     fireEvent.change(screen.getByLabelText(/Xác nhận mật khẩu/i), { target: { value: 'StrongPass123@' } })
     fireEvent.change(screen.getByPlaceholderText(/Nhập mã \(ví dụ: CHAOMUNG1M\)/i), { target: { value: 'TOANVIP3M' } })
+    fireEvent.click(
+      screen.getByLabelText(/Tôi đã trên 18 tuổi, hoặc đã được sự đồng ý của cha mẹ\/người giám hộ hợp pháp/i)
+    )
+    fireEvent.click(
+      screen.getByLabelText(/Tôi đã đọc, hiểu và đồng ý với/i)
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'Đăng ký' }))
 
@@ -96,6 +138,7 @@ describe('RegisterForm Component', () => {
         email: 'tranthib@gmail.com',
         password: 'StrongPass123@',
         voucherCode: 'TOANVIP3M',
+        termsAgreedAt: expect.any(String),
       })
     })
   })
@@ -118,11 +161,11 @@ describe('RegisterForm Component', () => {
     expect(googleBtn).toHaveAttribute('data-refcode', 'GT999888')
   })
 
-  it('renders mobile top header and security trust badge', () => {
+  it('renders mobile top header and does not render security trust badge', () => {
     render(<RegisterForm />)
     expect(screen.getByText('Toan6789')).toBeInTheDocument()
     expect(screen.getByText('Trang chủ')).toBeInTheDocument()
-    expect(screen.getByText(/Bảo mật SSL 256-bit • Dữ liệu học tập được mã hóa an toàn/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Bảo mật SSL 256-bit • Dữ liệu học tập được mã hóa an toàn/i)).not.toBeInTheDocument()
   })
 
   it('calculates and shows password strength levels', () => {

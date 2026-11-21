@@ -48,6 +48,13 @@ describe('PayOSPaymentModal', () => {
     expect(screen.getByText(/450\.000\s*đ/)).toBeInTheDocument()
     expect(screen.getByText('TOAN6789 1710900000000')).toBeInTheDocument()
     expect(screen.getByText('Mở trang thanh toán PayOS')).toBeInTheDocument()
+    expect(screen.getByText('Dịch vụ hỗ trợ giáo dục')).toBeInTheDocument()
+    expect(screen.getByText('Miễn GTGT • Thuế TNCN 2%')).toBeInTheDocument()
+    expect(screen.getByText(/Chấm bài tự động/i)).toBeInTheDocument()
+
+    // Must NOT contain digital goods / software terms
+    expect(screen.queryByText(/bán phần mềm/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/tài liệu số/i)).not.toBeInTheDocument()
   })
 
   it('calls onClose when close button clicked', () => {

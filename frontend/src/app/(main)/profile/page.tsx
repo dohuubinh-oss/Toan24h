@@ -6,6 +6,7 @@ import {
   User,
   Shield,
   AlertCircle,
+  AlertTriangle,
   CheckCircle2,
   BookOpen,
   Award,
@@ -25,11 +26,13 @@ import {
   Check,
   Share2,
   Coins,
+  Trash2,
 } from 'lucide-react'
 import TelegramLoginWidget from '@/components/auth/TelegramLoginWidget'
 import GradeChangeContactModal from '@/components/profile/GradeChangeContactModal'
+import ConfirmModal from '@/components/ui/ConfirmModal'
 import { apiFetch, uploadUserAvatar } from '@/lib/api'
-import { logout } from '@/lib/authApi'
+import { logout, deleteMyAccount } from '@/lib/authApi'
 import { getAvatarInitial } from '@/lib/utils'
 import { toast } from '@/components/ui/ToastProvider'
 
@@ -37,7 +40,7 @@ interface UserProfile {
   id: string
   email: string
   fullName: string
-  role: 'student' | 'teacher' | 'admin' | 'affiliate' | string
+  role: 'student' | 'teacher' | 'admin' | string
   grade?: string
   points?: number
   status?: string
@@ -49,8 +52,6 @@ interface UserProfile {
   telegramAvt2?: string
   expiresAt?: string
   referralCode?: string
-  commissionBalance?: number
-  totalCommissionReceived?: number
   createdAt?: string
 }
 
@@ -72,7 +73,11 @@ export default function ProfilePage() {
   // Grade change contact modal state
   const [isGradeContactModalOpen, setIsGradeContactModalOpen] = useState(false)
 
-  // Referral / Affiliate copy states
+  // Account permanent deletion state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
+
+  // Referral copy states
   const [copiedCode, setCopiedCode] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
 
@@ -291,6 +296,18 @@ export default function ProfilePage() {
     router.push('/login')
   }
 
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true)
+    try {
+      await deleteMyAccount()
+      toast.success('Tài khoản và toàn bộ dữ liệu của bạn đã được xóa vĩnh viễn.')
+      router.push('/login?deleted=true')
+    } catch (err: any) {
+      toast.error(err.message || 'Chưa thể xóa tài khoản lúc này. Bạn vui lòng thử lại sau nhé.')
+      setIsDeletingAccount(false)
+    }
+  }
+
   if (isLoading && !user) {
     return (
       <div className="flex justify-center items-center h-[60vh]">
@@ -304,7 +321,6 @@ export default function ProfilePage() {
   const roleLabelMap: Record<string, { label: string; bg: string; text: string }> = {
     admin: { label: 'Quản trị viên', bg: 'bg-rose-100', text: 'text-rose-700' },
     teacher: { label: 'Giáo viên', bg: 'bg-blue-100', text: 'text-blue-800' },
-    affiliate: { label: 'Đối tác Affiliate', bg: 'bg-amber-100', text: 'text-amber-700' },
     student: { label: 'Học sinh', bg: 'bg-emerald-100', text: 'text-emerald-700' },
   }
   const roleBadge = roleLabelMap[user.role] || {
@@ -313,7 +329,7 @@ export default function ProfilePage() {
     text: 'text-slate-700',
   }
 
-  const isPartner = user.role === 'admin' || user.role === 'teacher' || user.role === 'affiliate'
+  const isPartner = user.role === 'admin' || user.role === 'teacher'
 
   const isVipActive = user.expiresAt && new Date(user.expiresAt) > new Date()
   const isAdminOrTeacher = user.role === 'admin' || user.role === 'teacher'
@@ -527,31 +543,16 @@ export default function ProfilePage() {
                     <Gift className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900">Mã Giới Thiệu & Hoa Hồng Đối Tác</h3>
+                    <h3 className="text-lg font-bold text-slate-900">Mã Giới Thiệu &amp; Ưu Đãi Học Thử</h3>
                     <div className="flex flex-wrap items-center gap-2 mt-1.5">
                       {user.role === 'admin' && (
-                        <>
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                            Hoa hồng trực tiếp: 60%
-                          </span>
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-100 text-teal-800">
-                            Quản trị toàn sàn: 1%
-                          </span>
-                        </>
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
+                          Quản trị viên hệ thống
+                        </span>
                       )}
                       {user.role === 'teacher' && (
-                        <>
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                            Hoa hồng trực tiếp: 50%
-                          </span>
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
-                            Quản lý {user.grade ? `Khối ${user.grade}` : 'khối lớp'}: 3%
-                          </span>
-                        </>
-                      )}
-                      {user.role === 'affiliate' && (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                          Hoa hồng trực tiếp: 30%
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                          Giáo viên phụ trách {user.grade ? `Khối ${user.grade}` : 'khối lớp'}
                         </span>
                       )}
                     </div>
@@ -561,13 +562,18 @@ export default function ProfilePage() {
 
               {/* Referral Code & Action Buttons */}
               <div className="my-5 p-4 bg-white rounded-xl border border-slate-200/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Mã của bạn:
-                  </span>
-                  <span className="px-3.5 py-1.5 bg-slate-900 text-white font-mono text-base font-bold tracking-wider rounded-lg shadow-sm selection:bg-emerald-500">
-                    {user.referralCode || 'Đang cập nhật...'}
-                  </span>
+                <div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Mã ưu đãi của bạn:
+                    </span>
+                    <span className="px-3.5 py-1.5 bg-slate-900 text-white font-mono text-base font-bold tracking-wider rounded-lg shadow-sm selection:bg-emerald-500">
+                      {user.referralCode || 'Đang cập nhật...'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1.5">
+                    Học sinh nhập mã này khi đăng ký sẽ nhận ngay 1 tháng học thử VIP miễn phí.
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-2.5 flex-wrap w-full md:w-auto">
@@ -590,35 +596,6 @@ export default function ProfilePage() {
                     {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
                     <span>{copiedLink ? 'Đã sao chép' : 'Sao chép link đăng ký'}</span>
                   </button>
-                </div>
-              </div>
-
-              {/* Commission Stats 2 Columns */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white rounded-xl p-4 border border-emerald-100/90 shadow-sm flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-slate-500">Hoa hồng tháng này (chờ chốt)</span>
-                    <Coins className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <div className="my-1">
-                    <span className="text-2xl font-black text-emerald-600 font-mono tracking-tight">
-                      {new Intl.NumberFormat('vi-VN').format(user.commissionBalance || 0)} đ
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400">Tự động chốt sổ vào ngày 01 hàng tháng</p>
-                </div>
-
-                <div className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-sm flex flex-col justify-between">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-slate-500">Tổng hoa hồng đã nhận</span>
-                    <Award className="w-4 h-4 text-amber-500" />
-                  </div>
-                  <div className="my-1">
-                    <span className="text-2xl font-black text-slate-900 font-mono tracking-tight">
-                      {new Intl.NumberFormat('vi-VN').format(user.totalCommissionReceived || 0)} đ
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400">Lũy kế các tháng trước đã thanh toán</p>
                 </div>
               </div>
             </div>
@@ -860,6 +837,34 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Danger Zone: Yêu cầu xóa tài khoản vĩnh viễn (Hard delete) */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-rose-200/80 shadow-sm mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 text-rose-600 font-bold text-base">
+              <AlertTriangle className="w-5 h-5 shrink-0" />
+              <span>Khu vực nguy hiểm</span>
+            </div>
+            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-xl">
+              Hành động này sẽ thực hiện lệnh xóa vật lý (Hard delete) để quét sạch toàn bộ họ tên, email, ảnh đại diện và toàn bộ lịch sử hình ảnh bài tự luận bạn đã tải lên. Dữ liệu sau khi xóa sẽ không thể khôi phục.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsDeleteModalOpen(true)}
+            disabled={isDeletingAccount}
+            className="min-h-[44px] px-5 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-98 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs shrink-0 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDeletingAccount ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            <span>Yêu cầu xóa tài khoản vĩnh viễn</span>
+          </button>
+        </div>
+      </div>
+
       {/* Popup thông tin liên hệ Admin xin thay đổi khối lớp */}
       <GradeChangeContactModal
         isOpen={isGradeContactModalOpen}
@@ -867,6 +872,18 @@ export default function ProfilePage() {
         userEmail={user.email}
         userName={user.fullName}
         currentGrade={user.grade}
+      />
+
+      {/* Modal xác nhận xóa tài khoản vĩnh viễn */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => !isDeletingAccount && setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteAccount}
+        title="Yêu cầu xóa tài khoản vĩnh viễn"
+        description="Bạn có chắc chắn muốn xóa tài khoản vĩnh viễn không? Hệ thống sẽ quét sạch toàn bộ họ tên, email và toàn bộ lịch sử hình ảnh bài tự luận bạn đã tải lên. Thao tác này là xóa vật lý (Hard delete) và không thể khôi phục."
+        confirmText={isDeletingAccount ? 'Đang xóa...' : 'Xác nhận xóa vĩnh viễn'}
+        cancelText="Hủy bỏ"
+        isDestructive={true}
       />
     </div>
   )

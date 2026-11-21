@@ -120,9 +120,22 @@ describe('LoginForm Component', () => {
     expect(screen.getByText('Trang chủ')).toBeInTheDocument()
   })
 
-  it('renders security trust badge', () => {
+  it('does not render security trust badge', () => {
     render(<LoginForm />)
-    expect(screen.getByText(/Bảo mật SSL 256-bit • Dữ liệu học tập được mã hóa an toàn/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Bảo mật SSL 256-bit • Dữ liệu học tập được mã hóa an toàn/i)).not.toBeInTheDocument()
+  })
+
+  it('displays warning notification when kicked due to concurrent session', () => {
+    const originalSearch = window.location.search
+    delete (window as any).location
+    window.location = { ...window.location, search: '?reason=concurrent_session' } as any
+
+    render(<LoginForm />)
+
+    expect(screen.getByText(/Tài khoản đã đăng nhập ở thiết bị khác/i)).toBeInTheDocument()
+    expect(screen.getByText(/Hệ thống toan6789.vn chỉ cho phép duy nhất 1 thiết bị hoạt động/i)).toBeInTheDocument()
+
+    window.location.search = originalSearch
   })
 })
 

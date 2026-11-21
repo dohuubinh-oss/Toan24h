@@ -93,6 +93,10 @@ describe('AiQuestionExtractModal Component', () => {
       onClose: onCloseMock,
     })
 
+    // Select grade
+    const gradeSelect = screen.getByLabelText(/Chọn khối lớp/i)
+    fireEvent.change(gradeSelect, { target: { value: '9' } })
+
     // Add image
     const file = new File(['image bytes'], 'page1.jpg', { type: 'image/jpeg' })
     const fileInput = screen.getByLabelText(/Chọn ảnh đề thi/i)
@@ -138,7 +142,7 @@ describe('AiQuestionExtractModal Component', () => {
     })
   })
 
-  it('includes defaultGrade in extraction form data when provided and does not render grade select dropdown', async () => {
+  it('requires selecting grade before extraction even if defaultGrade is provided', async () => {
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
       status: 'success',
       data: [
@@ -163,14 +167,20 @@ describe('AiQuestionExtractModal Component', () => {
       defaultGrade: '8',
     })
 
-    // Assert that the dropdown is no longer rendered
-    expect(screen.queryByLabelText(/Khối lớp mục tiêu/i)).not.toBeInTheDocument()
-
     const file = new File(['content'], 'test.jpg', { type: 'image/jpeg' })
     const fileInput = screen.getByLabelText(/Chọn ảnh đề thi/i)
     fireEvent.change(fileInput, { target: { files: [file] } })
 
+    // Grade is NOT pre-selected: submitting without choosing grade shows error
     const submitBtn = screen.getByRole('button', { name: /Bóc tách câu hỏi/i })
+    fireEvent.click(submitBtn)
+    expect(screen.getByText(/Vui lòng chọn khối lớp trước khi bóc tách câu hỏi/i)).toBeInTheDocument()
+    expect(api.apiFetch).not.toHaveBeenCalled()
+
+    // Select grade 8 and submit
+    const gradeSelect = screen.getByLabelText(/Chọn khối lớp/i)
+    fireEvent.change(gradeSelect, { target: { value: '8' } })
+
     fireEvent.click(submitBtn)
 
     await waitFor(() => {
@@ -181,12 +191,18 @@ describe('AiQuestionExtractModal Component', () => {
     })
   })
 
-  it('shows error if submitted without selecting images', async () => {
+  it('shows error if submitted without selecting grade or images', async () => {
     renderComponent()
 
     const submitBtn = screen.getByRole('button', { name: /Bóc tách câu hỏi/i })
     fireEvent.click(submitBtn)
+    expect(screen.getByText(/Vui lòng chọn khối lớp trước khi bóc tách câu hỏi/i)).toBeInTheDocument()
+    expect(api.apiFetch).not.toHaveBeenCalled()
 
+    const gradeSelect = screen.getByLabelText(/Chọn khối lớp/i)
+    fireEvent.change(gradeSelect, { target: { value: '9' } })
+
+    fireEvent.click(submitBtn)
     expect(screen.getByText(/Vui lòng chọn ít nhất 1 ảnh đề thi/i)).toBeInTheDocument()
     expect(api.apiFetch).not.toHaveBeenCalled()
   })
@@ -209,6 +225,44 @@ describe('AiQuestionExtractModal Component', () => {
     await waitFor(() => {
       expect(screen.getByText('pasted_screenshot.png')).toBeInTheDocument()
       expect(screen.getByText(/Đã chọn 1\/10 ảnh/i)).toBeInTheDocument()
+    })
+  })
+
+  it('allows toggling paraphrase checkbox to avoid copyright infringement and includes it in formData', async () => {
+    vi.mocked(api.apiFetch).mockResolvedValueOnce({
+      status: 'success',
+      data: [],
+    })
+
+    renderComponent()
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: /Làm mới số liệu, nhân vật & bối cảnh/i,
+    }) as HTMLInputElement
+    expect(checkbox).toBeInTheDocument()
+    expect(checkbox.checked).toBe(true)
+
+    // Can be toggled off and on
+    fireEvent.click(checkbox)
+    expect(checkbox.checked).toBe(false)
+    fireEvent.click(checkbox)
+    expect(checkbox.checked).toBe(true)
+
+    const gradeSelect = screen.getByLabelText(/Chọn khối lớp/i)
+    fireEvent.change(gradeSelect, { target: { value: '9' } })
+
+    const file = new File(['image bytes'], 'test.png', { type: 'image/png' })
+    const fileInput = screen.getByLabelText(/Chọn ảnh đề thi/i)
+    fireEvent.change(fileInput, { target: { files: [file] } })
+
+    const submitBtn = screen.getByRole('button', { name: /Bóc tách câu hỏi/i })
+    fireEvent.click(submitBtn)
+
+    await waitFor(() => {
+      expect(api.apiFetch).toHaveBeenCalledTimes(1)
+      const callArgs = vi.mocked(api.apiFetch).mock.calls[0]
+      const formData = callArgs[1]?.body as FormData
+      expect(formData.get('paraphrase')).toBe('true')
     })
   })
 })

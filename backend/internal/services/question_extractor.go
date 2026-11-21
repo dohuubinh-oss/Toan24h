@@ -908,8 +908,9 @@ func ParseAndProcessExtractedBlocks(rawJson string, sourceImages []image.Image, 
 	return blocks, nil
 }
 
-// ExtractQuestionsFromImages calls Gemini Vision to extract math questions across multiple exam images
-func ExtractQuestionsFromImages(files [][]byte, mimeTypes []string, targetGradeStr ...string) ([]ExtractedQuestionBlock, error) {
+// ExtractQuestionsFromImages calls Gemini Vision to extract math questions across multiple exam images.
+// If paraphrase is true, Gemini is instructed to change names, contexts, and numbers while preserving math types.
+func ExtractQuestionsFromImages(files [][]byte, mimeTypes []string, targetGradeStr string, paraphrase ...bool) ([]ExtractedQuestionBlock, error) {
 	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
 		utils.InitGlobalGeminiPool()
 	}
@@ -917,9 +918,14 @@ func ExtractQuestionsFromImages(files [][]byte, mimeTypes []string, targetGradeS
 		return nil, fmt.Errorf("GEMINI_API_KEY is not configured")
 	}
 
+	isParaphrase := false
+	if len(paraphrase) > 0 && paraphrase[0] {
+		isParaphrase = true
+	}
+
 	targetGradeInt := 0
-	if len(targetGradeStr) > 0 && targetGradeStr[0] != "" {
-		if g, err := strconv.Atoi(strings.TrimSpace(targetGradeStr[0])); err == nil {
+	if targetGradeStr != "" {
+		if g, err := strconv.Atoi(strings.TrimSpace(targetGradeStr)); err == nil {
 			targetGradeInt = g
 		}
 	}
@@ -960,15 +966,52 @@ func ExtractQuestionsFromImages(files [][]byte, mimeTypes []string, targetGradeS
 		gradeHint = fmt.Sprintf("\nLƯU Ý KHỐI LỚP: Người dùng yêu cầu bóc tách câu hỏi cho LỚP %d. Bạn BẮT BUỘC đặt \"grade\": %d cho TẤT CẢ các câu hỏi và CHỈ ĐƯỢC CHỌN 1 \"topic\" duy nhất từ danh mục chủ đề của Lớp %d dưới đây.\n", targetGradeInt, targetGradeInt, targetGradeInt)
 	}
 
-	prompt := fmt.Sprintf(`Bạn là chuyên gia biên tập và số hóa đề thi Toán học Việt Nam.
-Hãy đọc các trang ảnh đề thi đính kèm (theo thứ tự từ trang đầu đến trang cuối) và bóc tách TOÀN BỘ các câu hỏi có trong tài liệu thành định dạng JSON chuẩn.
-%s
-HỆ THỐNG CHỦ ĐỀ CHUẨN THEO TỪNG KHỐI LỚP (BẮT BUỘC CHỌN 1 VÀ CHỈ 1 CHỦ ĐỀ CHÍNH XÁC PHÙ HỢP NHẤT TƯƠNG ỨNG VỚI KHỐI LỚP, TUYỆT ĐỐI KHÔNG TỰ NGHĨ TÊN KHÁC):
+	paraphraseInstruction := ""
+	if isParaphrase {
+		paraphraseInstruction = `
+QUY TẮC ĐẶC BIỆT: BẬT CHẾ ĐỘ LÀM MỚI SỐ LIỆU & BỐI CẢNH ĐỂ TRÁNH VI PHẠM BẢN QUYỀN (ANTI-COPYRIGHT PARAPHRASING):
+Người dùng đã tích chọn "Làm mới số liệu, nhân vật & bối cảnh". Bạn BẮT BUỘC tuân thủ nghiêm ngặt 4 nguyên tắc sư phạm sau:
+1. NGUYÊN TẮC BẢO TOÀN (GIỮ NGUYÊN 100%):
+   - Giữ nguyên 100% dạng toán, cấu trúc câu hỏi, dạng bài (hình học, đại số, xác suất, phương trình, hàm số...), mức độ nhận thức (nhận biết, thông hiểu, vận dụng, vận dụng cao) và phương pháp tư duy giải toán cốt lõi.
+2. LÀM MỚI BÀI TOÁN VỚI "BỘ SỐ ĐẸP CHUẨN SƯ PHẠM":
+   - BẮT BUỘC THIẾT KẾ BÀI TOÁN NGƯỢC: Chọn trước nghiệm là số nguyên đẹp ($x = 1, 2, -3$) hoặc phân số tối giản mẫu số nhỏ ($1/2, 3/4$), sau đó mới tính ra hệ số của đề bài mới. TUYỆT ĐỐI KHÔNG sinh số liệu ngẫu nhiên tạo ra nghiệm vô tỉ hoặc phân số cồng kềnh.
+   - Với bài hình học: Áp dụng các bộ số Pytago kinh điển ($3-4-5$, $5-12-13$, $6-8-10$) hoặc góc đẹp ($30^\circ, 45^\circ, 60^\circ$).
+   - ĐỔI TÊN NHÂN VẬT & BỐI CẢNH THỰC TẾ: Đổi tên nhân vật (An $\rightarrow$ Minh, Nam $\rightarrow$ Hùng, Lan, Mai, Tuấn, Linh...), bối cảnh thực tế (mua táo $\rightarrow$ mua cam, chạy xe đạp $\rightarrow$ đi xe máy, xây bể bơi $\rightarrow$ lát nền sân vườn...) gần gũi với học sinh hiện đại.
+3. ĐỒNG BỘ TUYỆT ĐỐI GIỮA ĐỀ MỚI VÀ LỜI GIẢI MỚI (CHỐNG "RÂU ÔNG NỌ CẮM CẰM BÀ KIA"):
+   - Toàn bộ nội dung đề bài, các phương án lựa chọn ("options"), đáp án đúng ("correct_answer"), các bước giải chi tiết ("steps"), công thức ("formula") và kết luận ("conclusion") PHẢI ĐƯỢC TÍNH TOÁN LẠI 100% ĐỒNG BỘ theo bộ số liệu mới. Không để sót bất kỳ số liệu hay dấu vết nào của đề bài cũ.
+4. BẢO VỆ BẢN QUYỀN HÌNH VẼ & BẢNG BIỂU:
+   - TUYỆT ĐỐI KHÔNG trích xuất hoặc cắt ảnh từ tài liệu gốc. Mọi hình vẽ minh họa hoặc bảng biểu của bài toán sẽ được tạo mới bằng AI sau khi bóc tách.
+`
+	}
+
+	topicsInstruction := ""
+	if targetGradeInt >= 5 && targetGradeInt <= 9 {
+		switch targetGradeInt {
+		case 9:
+			topicsInstruction = "HỆ THỐNG CHỦ ĐỀ CHUẨN LỚP 9 (BẮT BUỘC CHỌN 1 VÀ CHỈ 1 CHỦ ĐỀ CHÍNH XÁC PHÙ HỢP NHẤT, TUYỆT ĐỐI KHÔNG TỰ NGHĨ TÊN KHÁC):\n- Lớp 9: Phương trình bậc nhất hai ẩn, Hệ hai phương trình bậc nhất hai ẩn, Hàm số y = ax^2 (a khác 0), Đồ thị hàm số bậc hai đơn giản, Công thức nghiệm phương trình bậc hai, Định lý Viète và ứng dụng, Tỉ số lượng giác của góc nhọn, Hệ thức giữa cạnh và góc, Sự xác định đường tròn và vị trí tương đối, Góc với đường tròn (Góc nội tiếp, góc ở tâm), Hình trụ, Hình nón, Hình cầu"
+		case 8:
+			topicsInstruction = "HỆ THỐNG CHỦ ĐỀ CHUẨN LỚP 8 (BẮT BUỘC CHỌN 1 VÀ CHỈ 1 CHỦ ĐỀ CHÍNH XÁC PHÙ HỢP NHẤT, TUYỆT ĐỐI KHÔNG TỰ NGHĨ TÊN KHÁC):\n- Lớp 8: Đơn thức và đa thức nhiều biến, Các phép tính với đa thức, Hằng đẳng thức đáng nhớ, Khái niệm phân thức, Các phép toán cộng, trừ, nhân, chia phân thức, Khái niệm hàm số, Hàm số bậc nhất y = ax + b, Hệ số góc của đường thẳng, Cách giải phương trình bậc nhất một ẩn, Giải bài toán bằng cách lập phương trình, Định lý Thalès thuận và đảo, Đường trung bình của tam giác, Các trường hợp đồng dạng của tam giác, Tam giác vuông đồng dạng, Hình chóp tam giác đều, Hình chóp tứ giác đều"
+		case 7:
+			topicsInstruction = "HỆ THỐNG CHỦ ĐỀ CHUẨN LỚP 7 (BẮT BUỘC CHỌN 1 VÀ CHỈ 1 CHỦ ĐỀ CHÍNH XÁC PHÙ HỢP NHẤT, TUYỆT ĐỐI KHÔNG TỰ NGHĨ TÊN KHÁC):\n- Lớp 7: Tập hợp số hữu tỉ, Căn bậc hai số học và số thực, Tỉ lệ thức và tính chất dãy tỉ số bằng nhau, Đại lượng tỉ lệ thuận, tỉ lệ nghịch, Biểu thức đại số, Đa thức một biến và nghiệm của đa thức, Hai góc kề bù, đối đỉnh, Dấu hiệu hai đường thẳng song song, Tổng các góc trong một tam giác, Tam giác bằng nhau (c.c.c, c.g.c, g.c.g), Tam giác cân và định lý Pythagoras, Làm quen với xác suất của biến cố ngẫu nhiên"
+		case 6:
+			topicsInstruction = "HỆ THỐNG CHỦ ĐỀ CHUẨN LỚP 6 (BẮT BUỘC CHỌN 1 VÀ CHỈ 1 CHỦ ĐỀ CHÍNH XÁC PHÙ HỢP NHẤT, TUYỆT ĐỐI KHÔNG TỰ NGHĨ TÊN KHÁC):\n- Lớp 6: Tập hợp số tự nhiên, Tính chất chia hết và ước số, Tập hợp số nguyên và phép tính, Phân số bằng nhau và rút gọn, Các phép tính với số thập phân, Hình vuông, tam giác đều, lục giác đều, Hình chữ nhật, hình thoi, hình bình hành, Hình có trục đối xứng, Hình có tâm đối xứng, Điểm, đường thẳng, đoạn thẳng, Trung điểm của đoạn thẳng, Góc và số đo góc"
+		case 5:
+			topicsInstruction = "HỆ THỐNG CHỦ ĐỀ CHUẨN LỚP 5 (BẮT BUỘC CHỌN 1 VÀ CHỈ 1 CHỦ ĐỀ CHÍNH XÁC PHÙ HỢP NHẤT, TUYỆT ĐỐI KHÔNG TỰ NGHĨ TÊN KHÁC):\n- Lớp 5: Phân số thập phân và hỗn số, Số thập phân và các phép toán, Diện tích hình tam giác, hình thang, Chu vi và diện tích hình tròn, Hình hộp chữ nhật, hình lập phương, Hình trụ, hình cầu, Đo thể tích và chuyển đổi đơn vị, Toán chuyển động đều, Giải toán tỉ số phần trăm"
+		}
+	} else {
+		topicsInstruction = `HỆ THỐNG CHỦ ĐỀ CHUẨN THEO TỪNG KHỐI LỚP (BẮT BUỘC CHỌN 1 VÀ CHỈ 1 CHỦ ĐỀ CHÍNH XÁC PHÙ HỢP NHẤT TƯƠNG ỨNG VỚI KHỐI LỚP, TUYỆT ĐỐI KHÔNG TỰ NGHĨ TÊN KHÁC):
 - Lớp 9: Phương trình bậc nhất hai ẩn, Hệ hai phương trình bậc nhất hai ẩn, Hàm số y = ax^2 (a khác 0), Đồ thị hàm số bậc hai đơn giản, Công thức nghiệm phương trình bậc hai, Định lý Viète và ứng dụng, Tỉ số lượng giác của góc nhọn, Hệ thức giữa cạnh và góc, Sự xác định đường tròn và vị trí tương đối, Góc với đường tròn (Góc nội tiếp, góc ở tâm), Hình trụ, Hình nón, Hình cầu
 - Lớp 8: Đơn thức và đa thức nhiều biến, Các phép tính với đa thức, Hằng đẳng thức đáng nhớ, Khái niệm phân thức, Các phép toán cộng, trừ, nhân, chia phân thức, Khái niệm hàm số, Hàm số bậc nhất y = ax + b, Hệ số góc của đường thẳng, Cách giải phương trình bậc nhất một ẩn, Giải bài toán bằng cách lập phương trình, Định lý Thalès thuận và đảo, Đường trung bình của tam giác, Các trường hợp đồng dạng của tam giác, Tam giác vuông đồng dạng, Hình chóp tam giác đều, Hình chóp tứ giác đều
 - Lớp 7: Tập hợp số hữu tỉ, Căn bậc hai số học và số thực, Tỉ lệ thức và tính chất dãy tỉ số bằng nhau, Đại lượng tỉ lệ thuận, tỉ lệ nghịch, Biểu thức đại số, Đa thức một biến và nghiệm của đa thức, Hai góc kề bù, đối đỉnh, Dấu hiệu hai đường thẳng song song, Tổng các góc trong một tam giác, Tam giác bằng nhau (c.c.c, c.g.c, g.c.g), Tam giác cân và định lý Pythagoras, Làm quen với xác suất của biến cố ngẫu nhiên
 - Lớp 6: Tập hợp số tự nhiên, Tính chất chia hết và ước số, Tập hợp số nguyên và phép tính, Phân số bằng nhau và rút gọn, Các phép tính với số thập phân, Hình vuông, tam giác đều, lục giác đều, Hình chữ nhật, hình thoi, hình bình hành, Hình có trục đối xứng, Hình có tâm đối xứng, Điểm, đường thẳng, đoạn thẳng, Trung điểm của đoạn thẳng, Góc và số đo góc
-- Lớp 5: Phân số thập phân và hỗn số, Số thập phân và các phép toán, Diện tích hình tam giác, hình thang, Chu vi và diện tích hình tròn, Hình hộp chữ nhật, hình lập phương, Hình trụ, hình cầu, Đo thể tích và chuyển đổi đơn vị, Toán chuyển động đều, Giải toán tỉ số phần trăm
+- Lớp 5: Phân số thập phân và hỗn số, Số thập phân và các phép toán, Diện tích hình tam giác, hình thang, Chu vi và diện tích hình tròn, Hình hộp chữ nhật, hình lập phương, Hình trụ, hình cầu, Đo thể tích và chuyển đổi đơn vị, Toán chuyển động đều, Giải toán tỉ số phần trăm`
+	}
+
+	prompt := fmt.Sprintf(`Bạn là chuyên gia biên tập và số hóa đề thi Toán học Việt Nam.
+Hãy đọc các trang ảnh đề thi đính kèm (theo thứ tự từ trang đầu đến trang cuối) và bóc tách TOÀN BỘ các câu hỏi có trong tài liệu thành định dạng JSON chuẩn.
+%s
+%s
+%s
 
 QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU HỎI:
 1. "shared_content": Chuỗi nội dung dẫn chung (nếu là câu hỏi chùm) hoặc null (nếu là câu hỏi đơn lẻ).
@@ -987,6 +1030,8 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
        * NẾU CHỈ CÓ 1 CÂU HỎI DUY NHẤT, TUYỆT ĐỐI KHÔNG ĐƯỢC ĐỂ "type_question": "group"!
 3. QUY TẮC BẮT BUỘC VỀ CÔNG THỨC TOÁN HỌC (TUYỆT ĐỐI KHÔNG CÓ TRƯỜNG NGOẠI LỆ):
    - BẮT BUỘC 100%% TẤT CẢ các công thức toán học, biểu thức, phương trình, hệ phương trình, ký hiệu, phân số, căn thức, biến số và đáp số toán học trong TOÀN BỘ file JSON (trong "content", từng phương án trong "options", "correct_answer", "formula", "conclusion", "hint", "short_answer") ĐỀU PHẢI ĐƯỢC BỌC TRONG CẶP DẤU $...$ (hoặc $$...$$).
+   - SỐ THẬP PHÂN: BẮT BUỘC viết dạng $2{,}5$, $0{,}75$ (đặt dấu phẩy trong ngoặc nhọn để không bị lỗi khoảng cách trong KaTeX).
+   - ĐƠN VỊ ĐO LƯỜNG: BẮT BUỘC bọc trong \text{...} (ví dụ: $60\text{ km/h}$, $15\text{ cm}$, $45^\circ$).
    - KÝ HIỆU GÓC HÌNH HỌC: BẮT BUỘC dùng dấu mũ trên đỉnh chữ cái theo cú pháp LaTeX chuẩn: dùng \hat{A}, \hat{B}, \hat{C} cho góc 1 chữ cái hoặc \widehat{ABC}, \widehat{xOy} cho góc 3 chữ cái (ví dụ: \hat{A} = \hat{C}, \widehat{ABC} = 60^\circ). TUYỆT ĐỐI KHÔNG dùng \angle hoặc ký tự Unicode ∠.
    - Tuyệt đối không để biểu thức hay đáp án toán trần trụi không có dấu $...$.
      Ví dụ ĐÚNG:
@@ -999,7 +1044,7 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
    - TUYỆT ĐỐI LOẠI BỎ TOÀN BỘ TIỀN TỐ ĐÁNH SỐ CÂU HỎI như "Câu 1.", "Câu 18.", "Câu 18:", "Bài 1.", "Bài 18:" ở đầu câu hỏi vì hệ thống quản lý đề thi sẽ tự động đánh số thứ tự. Chỉ lấy phần câu hỏi thực sự bắt đầu sau số câu (ví dụ: đề gốc ghi "Câu 18. Cho đa thức A = ..." thì chỉ lấy "Cho đa thức A = ...").
    - KHÔNG bao gồm các phương án lựa chọn A, B, C, D (các phương án phải đưa vào trường "options").
    - Mọi biểu thức/ký hiệu toán học BẮT BUỘC phải viết bằng LaTeX chuẩn ($...$ hoặc $$...$$) để hiển thị đẹp bằng KaTeX.
-5. "type": string (Chỉ chọn một trong hai: 'Trắc nghiệm' hoặc 'Tự luận').
+5. "type": string (Chỉ chọn một trong hai: 'Trắc nghiệm' hoặc 'Tự luận'). (Nếu gặp câu trả lời ngắn điền số, chọn 'Tự luận' và điền đáp số vào 'correct_answer').
 6. "grade": int (Chỉ chọn một trong các số: 5, 6, 7, 8, 9).
 7. "topic": string (Tùy theo khối lớp và nội dung câu hỏi, chọn 1 và chỉ 1 chủ đề tương ứng lớp và phù hợp nhất trong danh mục chủ đề ở trên).
 8. "difficulty_level": string (Chỉ chọn một trong: 'Nhận biết', 'Thông hiểu', 'Vận dụng', 'Vận dụng cao').
@@ -1030,31 +1075,21 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
     - Đồng thời gán giá trị này cho cả "quick_solve_tips".
 17. "general_method": Công thức tổng quát hóa cho dạng bài toán này.
 18. "mistakes": Các lỗi sai học sinh thường vấp phải.
-19. BẢNG BIẾN THIÊN, BẢNG XÉT DẤU HOẶC BẢNG SỐ LIỆU THỐNG KÊ:
-    - BẮT BUỘC COI LÀ HÌNH ẢNH (DIAGRAM), TUYỆT ĐỐI KHÔNG chuyển đổi thành văn bản, mảng số hay bảng HTML/Markdown rời rạc làm học sinh khó hiểu.
-    - Xử lý bảng giống hệt như một hình vẽ/đồ thị toán học: đặt placeholder [DIAGRAM] tại vị trí của bảng trong nội dung và khai báo trong mảng "diagrams" kèm tọa độ box_2d [ymin, xmin, ymax, xmax] (thang đo 0-1000) bao quanh bảng.
-20. QUY TẮC PHÁT HIỆN HÌNH VẼ HOẶC BẢNG DỮ LIỆU CỦA ĐỀ BÀI (HÌNH/BẢNG CÓ SẴN TRONG ẢNH TẢI LÊN):
-    - CHỈ KHI TRONG ẢNH ĐỀ BÀI GỐC CÓ IN SẴN HÌNH VẼ, HÌNH HỌC, ĐỒ THỊ HOẶC BẢNG BIẾN THIÊN / BẢNG SỐ LIỆU ĐI KÈM ĐỀ:
-      + Mới được đặt placeholder [DIAGRAM] và khai báo trong mảng "diagrams": [{"placeholder": "[DIAGRAM]", "box_2d": [ymin, xmin, ymax, xmax], "image_index": 0}].
-      + VỚI CÂU HỎI CHÙM ('group'): BẮT BUỘC đặt [DIAGRAM] ở CUỐI CÙNG của "shared_content" (Nội dung dẫn chung). TUYỆT ĐỐI KHÔNG đặt [DIAGRAM] trong "content" của các câu hỏi con a, b, c... (vì toàn bộ các câu hỏi con đều dùng chung hình ảnh/bảng đặt tại phần dẫn chung).
-      + VỚI CÂU HỎI ĐƠN ('single'): Đặt [DIAGRAM] ở CUỐI CÙNG của trường "content".
-    - NẾU ĐỀ BÀI TRONG ẢNH LÀ DẠNG THUẦN CHỮ (bài toán mô tả bằng lời văn, KHÔNG có in sẵn hình vẽ hay bảng số liệu):
-      + TUYỆT ĐỐI KHÔNG ĐƯỢC chèn [DIAGRAM] vào "content" hay "shared_content"!
-      + TUYỆT ĐỐI KHÔNG khai báo mảng "diagrams" (để mảng rỗng [] hoặc bỏ qua)!
-      + Hệ thống sẽ KHÔNG chèn hình ảnh nếu đề bài gốc không có in sẵn hình/bảng.
+19. NGUYÊN TẮC BẢO VỆ BẢN QUYỀN HÌNH ẢNH & ĐỒ THỊ (TUYỆT ĐỐI KHÔNG CẮT ẢNH TỪ TÀI LIỆU GỐC):
+    - ĐỂ TRÁNH VI PHẠM BẢN QUYỀN: TUYỆT ĐỐI KHÔNG cắt ảnh, không trích xuất hình vẽ hoặc bảng biểu từ tài liệu gốc. Mọi hình vẽ minh họa, bảng biến thiên hay đồ thị sẽ được giáo viên tạo mới bằng AI sau khi bóc tách.
+    - Trường "diagrams" luôn trả về mảng rỗng [].
+    - Trong trường "content" và "shared_content": TUYỆT ĐỐI KHÔNG chèn thẻ [DIAGRAM] hay bất kỳ thẻ placeholder hình ảnh nào. Nếu đề bài gốc có câu dẫn như "Cho hình vẽ bên", "Quan sát đồ thị sau", hãy giữ nguyên câu dẫn đề bài tự nhiên bằng văn bản để làm căn cứ cho AI vẽ hình sau này.
+20. BẢNG BIẾN THIÊN, BẢNG XÉT DẤU HOẶC BẢNG SỐ LIỆU:
+    - Hãy chuyển đổi bảng thành bảng Markdown / văn bản mô tả toán học rõ ràng hoặc biểu thức LaTeX trong trường "content", tuyệt đối không cắt ảnh.
 21. CẤU TRÚC ĐẦU RA JSON MẪU (OUTPUT SCHEMA - TUYỆT ĐỐI KHÔNG CÓ TRƯỜNG "is_group"):
 [
   {
     "shared_content": null,
     "type_question": "single",
-    "diagrams": [
-      {
-        "placeholder": "[DIAGRAM]"
-      }
-    ],
+    "diagrams": [],
     "questions": [
       {
-        "content": "Nhà bạn An (vị trí A trên hình vẽ) cách nhà bạn Châu 600m và cách nhà bạn Bình 450m. Biết rằng 3 vị trí... Khoảng cách từ nhà Bình đến nhà Châu bằng:\n[DIAGRAM]",
+        "content": "Nhà bạn An cách nhà bạn Châu 600m và cách nhà bạn Bình 450m. Biết rằng 3 vị trí tạo thành tam giác vuông tại Bình. Khoảng cách từ nhà Bình đến nhà Châu bằng:",
         "type": "Trắc nghiệm",
         "grade": 8,
         "topic": "Định lý Pythagore",
@@ -1085,13 +1120,9 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
     ]
   },
   {
-    "shared_content": "Cho tam giác $ABC$ vuông tại $A$, đường cao $AH$. Biết $AB = 6\\text{ cm}$, $AC = 8\\text{ cm}$.\n[DIAGRAM]",
+    "shared_content": "Cho tam giác $ABC$ vuông tại $A$, đường cao $AH$. Biết $AB = 6\\text{ cm}$, $AC = 8\\text{ cm}$.",
     "type_question": "group",
-    "diagrams": [
-      {
-        "placeholder": "[DIAGRAM]"
-      }
-    ],
+    "diagrams": [],
     "questions": [
       {
         "content": "Tính độ dài cạnh huyền $BC$.",
@@ -1154,7 +1185,7 @@ QUY TẮC BÓC TÁCH VÀ TỰ ĐỘNG GIẢI TOÁN BẮT BUỘC CHO MỖI CÂU H
 ]
 CHỈ trả về DUY NHẤT chuỗi JSON hợp lệ (mảng các block), tuyệt đối KHÔNG kèm lời chào hay giải thích nào khác ngoài JSON.
 22. QUY TẮC ĐẶC BIỆT VỀ DẤU GẠCH CHÉO NGƯỢC (\) TRONG JSON:
-    - Trong chuỗi JSON, mọi dấu gạch chéo ngược (\) của công thức LaTeX (ví dụ: \frac, \sqrt, \quad, \pm, \left, \right) PHẢI ĐƯỢC ESCAPE thành hai dấu gạch chéo ngược (ví dụ: "\\frac", "\\sqrt", "\\quad", "\\pm").`, gradeHint)
+    - Trong chuỗi JSON, mọi dấu gạch chéo ngược (\) của công thức LaTeX (ví dụ: \frac, \sqrt, \quad, \pm, \left, \right) PHẢI ĐƯỢC ESCAPE thành hai dấu gạch chéo ngược (ví dụ: "\\frac", "\\sqrt", "\\quad", "\\pm").`, gradeHint, paraphraseInstruction, topicsInstruction)
 
 	parts := []map[string]interface{}{
 		{"text": prompt},

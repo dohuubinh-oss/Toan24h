@@ -22,12 +22,12 @@ vi.mock('next/navigation', () => ({
 }))
 
 describe('UserFilter Component', () => {
-  it('renders standard roles (Học sinh, Giáo viên, Affiliate) and excludes Admin', () => {
+  it('renders standard roles (Học sinh, Giáo viên) and excludes Admin and Affiliate', () => {
     render(<UserFilter />)
     expect(screen.getByText('Vai trò')).toBeInTheDocument()
     expect(screen.getByText('Học sinh')).toBeInTheDocument()
     expect(screen.getByText('Giáo viên')).toBeInTheDocument()
-    expect(screen.getByText('Affiliate')).toBeInTheDocument()
+    expect(screen.queryByText('Affiliate')).not.toBeInTheDocument()
     expect(screen.queryByText('Admin')).not.toBeInTheDocument()
   })
 

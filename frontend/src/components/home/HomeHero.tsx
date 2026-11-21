@@ -71,7 +71,7 @@ const GRADE_EXAMS: Record<number, GradeExamInfo> = {
 
 export default function HomeHero() {
   const [selectedGrade, setSelectedGrade] = useState<number>(9)
-  const [studentName, setStudentName] = useState<string>('Minh')
+  const [studentName, setStudentName] = useState<string>('')
   const [isVideoOpen, setIsVideoOpen] = useState<boolean>(false)
 
   useEffect(() => {
@@ -131,7 +131,7 @@ export default function HomeHero() {
               href="/register"
               className="px-8 py-4 bg-primary text-white rounded-xl font-bold text-lg shadow-xl shadow-primary/30 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 min-h-[48px] cursor-pointer"
             >
-              Bắt đầu <ArrowRight className="w-5 h-5" />
+              Học thử miễn phí ngay <ArrowRight className="w-5 h-5" />
             </Link>
             <button
               type="button"
@@ -139,28 +139,31 @@ export default function HomeHero() {
               className="px-8 py-4 bg-white rounded-xl font-bold text-lg border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-center gap-2 text-slate-800 min-h-[48px] cursor-pointer shadow-xs active:scale-98"
             >
               <Play className="w-4 h-4 fill-slate-700 text-slate-700" />
-              <span>Xem demo</span>
+              <span>Xem video giới thiệu</span>
             </button>
           </div>
 
-          <div className="hidden md:flex items-center gap-4 py-6 border-t border-slate-200">
+          <div className="flex items-center gap-4 py-6 border-t border-slate-200">
             <div className="flex -space-x-3">
               <Image
-                alt="Student 1"
+                alt=""
+                aria-hidden="true"
                 width={40}
                 height={40}
                 className="w-10 h-10 rounded-full border-2 border-white object-cover"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkg2j1eQxe8m9S3Yhptdh96e6OUu_RZ-rwmBhDF5piZGVUws4S2-y8OF4EikVbhklBkU9IB6_9GrPb1F8AOblKwxq1FGUtKjOydvTMfYkLsYVL5Ape6mJ27plYyHP47fJpwLrAgtbxy-AcoLBDCdh8xGSsrd7xTjlV0zcF9QaEaTtotCSe8Cy5J_XO3WCCTnMNKNQVrXIEsl5uhPYsnSmcVzYxjUjCdwkDZNfXOkSV9HTD8QvdaxO63ZhfE0ZV4GcHm8pxX3tMEMZm"
               />
               <Image
-                alt="Student 2"
+                alt=""
+                aria-hidden="true"
                 width={40}
                 height={40}
                 className="w-10 h-10 rounded-full border-2 border-white object-cover"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLLhO8u-iBzfHpy648Tt1cNuk7COYKl_yWeI7H15Y31w-DcTYEKRakeXWZPldOxjwFG6-H0FYqimLhGecYjcHLbxvGP1fnwbrHHM45u-7WeBDYBckxr5GSkWUFxLoS7nzWogEP1Ni45cd8_g-alCnQuUDJ6EnB7uPUZkEFT3h1qj10GKXTuylWvrQPEwIuX-g13g_x2YffKW2IwtKt2rI3gPnTIvbqOiTERMeO10H7Rb429QwrhIm1DlRzauvGXW037bu7r-dOYBMn"
               />
               <Image
-                alt="Student 3"
+                alt=""
+                aria-hidden="true"
                 width={40}
                 height={40}
                 className="w-10 h-10 rounded-full border-2 border-white object-cover"
@@ -168,7 +171,7 @@ export default function HomeHero() {
               />
               <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-xs font-bold text-slate-600">+100k</div>
             </div>
-            <p className="text-sm font-medium text-slate-600">100,000+ Học sinh tin dùng trên toàn quốc</p>
+            <p className="text-sm font-medium text-slate-600">Hơn 100.000 học sinh trên toàn quốc tin tưởng theo học</p>
           </div>
         </div>
 
@@ -176,8 +179,12 @@ export default function HomeHero() {
           <div className="relative bg-white p-6 rounded-3xl shadow-[0_10px_30px_-10px_rgba(37,99,235,0.12)] border border-slate-100">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Chào {studentName}!</h2>
-                <p className="text-sm text-slate-600">Tiếp tục giải đề Toán {selectedGrade}</p>
+                <h2 className="text-xl font-bold text-slate-900">
+                  {studentName ? `Chào ${studentName}!` : `Phòng thi Toán ${selectedGrade}`}
+                </h2>
+                <p className="text-sm text-slate-600">
+                  {studentName ? `Tiếp tục giải đề Toán ${selectedGrade}` : 'Khảo sát năng lực & Luyện đề chuẩn GDPT'}
+                </p>
               </div>
               <div className="flex gap-4">
                 <div className="flex items-center gap-1 bg-orange-100 px-3 py-1 rounded-full text-orange-800 font-bold">
@@ -268,7 +275,7 @@ export default function HomeHero() {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                   <Link
-                    href={currentExam.examUrl}
+                    href={`/lectures/lop/${selectedGrade}`}
                     className="px-3 py-2.5 min-h-[44px] bg-white/5 hover:bg-white/10 text-slate-300 font-semibold rounded-xl border border-white/10 transition-colors flex items-center cursor-pointer"
                   >
                     Xem bài giảng
@@ -317,7 +324,7 @@ export default function HomeHero() {
               <button
                 type="button"
                 onClick={() => setIsVideoOpen(false)}
-                className="min-w-[40px] min-h-[40px] p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="min-w-[44px] min-h-[44px] p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 aria-label="Đóng video"
               >
                 <X size={20} />

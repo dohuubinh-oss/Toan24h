@@ -188,14 +188,11 @@ func TestVoucherHandler_CreateAndList(t *testing.T) {
 		if resp.Voucher.AffiliateID == nil || *resp.Voucher.AffiliateID != teacherUser.ID {
 			t.Errorf("Expected affiliateId to be teacher ID %v, got %v", teacherUser.ID, resp.Voucher.AffiliateID)
 		}
-		if resp.Voucher.CommissionPercent != 50.0 {
-			t.Errorf("Expected teacher commissionPercent to default to 50%%, got %f", resp.Voucher.CommissionPercent)
-		}
 	})
 
-	t.Run("Admin creates voucher defaults commissionPercent to 30%", func(t *testing.T) {
+	t.Run("Admin creates voucher successfully without commission", func(t *testing.T) {
 		reqBody := handlers.CreateVoucherRequest{
-			Code:       "DEFAULT30",
+			Code:       "TESTVOUCHER",
 			FreeMonths: 1,
 		}
 		jsonBody, _ := json.Marshal(reqBody)
@@ -215,8 +212,8 @@ func TestVoucherHandler_CreateAndList(t *testing.T) {
 		}
 		_ = json.Unmarshal(w.Body.Bytes(), &resp)
 
-		if resp.Voucher.CommissionPercent != 30.0 {
-			t.Errorf("Expected default commissionPercent to be 30%%, got %f", resp.Voucher.CommissionPercent)
+		if resp.Voucher.Code != "TESTVOUCHER" || resp.Voucher.FreeMonths != 1 {
+			t.Errorf("Unexpected voucher created: %+v", resp.Voucher)
 		}
 	})
 

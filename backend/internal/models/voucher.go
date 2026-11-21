@@ -14,7 +14,6 @@ type Voucher struct {
 	AffiliateID       *uuid.UUID `gorm:"type:uuid;index" json:"affiliateId,omitempty"`
 	FreeMonths        int        `gorm:"not null;default:0" json:"freeMonths"`
 	DiscountPercent   int        `gorm:"not null;default:0" json:"discountPercent"`
-	CommissionPercent float32    `gorm:"not null;default:30" json:"commissionPercent"`
 	MaxUses           int        `gorm:"not null;default:100" json:"maxUses"`
 	UsedCount         int        `gorm:"not null;default:0" json:"usedCount"`
 	ExpiresAt         *time.Time `gorm:"index" json:"expiresAt,omitempty"`

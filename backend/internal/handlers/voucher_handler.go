@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/modeptrai/exam-model-backend/internal/models"
-	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 	"gorm.io/gorm"
 )
@@ -22,14 +21,13 @@ func NewVoucherHandler(db *gorm.DB) *VoucherHandler {
 }
 
 type CreateVoucherRequest struct {
-	Code              string     `json:"code" binding:"required"`
-	AffiliateID       *uuid.UUID `json:"affiliateId"`
-	FreeMonths        int        `json:"freeMonths"`
-	DiscountPercent   int        `json:"discountPercent"`
-	CommissionPercent float32    `json:"commissionPercent"`
-	MaxUses           int        `json:"maxUses"`
-	ExpiresAt         *time.Time `json:"expiresAt"`
-	IsActive          *bool      `json:"isActive"`
+	Code            string     `json:"code" binding:"required"`
+	AffiliateID     *uuid.UUID `json:"affiliateId"`
+	FreeMonths      int        `json:"freeMonths"`
+	DiscountPercent int        `json:"discountPercent"`
+	MaxUses         int        `json:"maxUses"`
+	ExpiresAt       *time.Time `json:"expiresAt"`
+	IsActive        *bool      `json:"isActive"`
 }
 
 // CreateVoucher xử lý tạo mã khuyến mãi mới (Admin & Teacher)
@@ -76,28 +74,14 @@ func (h *VoucherHandler) CreateVoucher(c *gin.Context) {
 		isActive = *req.IsActive
 	}
 
-	commissionPercent := req.CommissionPercent
-	if commissionPercent <= 0 {
-		targetRole := role
-		if role == "admin" && affiliateID != nil {
-			var affUser models.User
-			if err := h.db.Select("id, role").First(&affUser, "id = ?", affiliateID).Error; err == nil {
-				targetRole = affUser.Role
-			}
-		}
-
-		commissionPercent = services.GetCommissionRateByRole(targetRole)
-	}
-
 	voucher := models.Voucher{
-		Code:              code,
-		AffiliateID:       affiliateID,
-		FreeMonths:        req.FreeMonths,
-		DiscountPercent:   req.DiscountPercent,
-		CommissionPercent: commissionPercent,
-		MaxUses:           maxUses,
-		ExpiresAt:         req.ExpiresAt,
-		IsActive:          isActive,
+		Code:            code,
+		AffiliateID:     affiliateID,
+		FreeMonths:      req.FreeMonths,
+		DiscountPercent: req.DiscountPercent,
+		MaxUses:         maxUses,
+		ExpiresAt:       req.ExpiresAt,
+		IsActive:        isActive,
 	}
 
 	if err := h.db.Create(&voucher).Error; err != nil {
@@ -112,7 +96,7 @@ func (h *VoucherHandler) CreateVoucher(c *gin.Context) {
 }
 
 // GetVouchers lấy danh sách mã khuyến mãi
-// Admin xem toàn bộ, Teacher/Affiliate chỉ xem mã do mình quản lý
+// Admin xem toàn bộ, Teacher chỉ xem mã do mình quản lý
 func (h *VoucherHandler) GetVouchers(c *gin.Context) {
 	role := c.GetString("userRole")
 	userID, err := utils.GetUserID(c)
@@ -130,7 +114,7 @@ func (h *VoucherHandler) GetVouchers(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-	case "teacher", "affiliate":
+	case "teacher":
 		if err := query.Where("affiliate_id = ?", userID).Find(&vouchers).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

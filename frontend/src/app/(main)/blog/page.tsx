@@ -54,7 +54,7 @@ export default function BlogListPage() {
 
   // Lọc bài viết theo quyền hạn:
   // - Nếu là giáo viên (teacher) hoặc admin: thấy cả bài xuất bản và bản nháp
-  // - Nếu là học sinh (student), affiliate hoặc khách: CHỈ thấy bài đã xuất bản (isPublished !== false)
+  // - Nếu là học sinh (student) hoặc khách: CHỈ thấy bài đã xuất bản (isPublished !== false)
   const visiblePosts = useMemo(() => {
     if (isAdminOrTeacher) return posts;
     return posts.filter(post => post.isPublished !== false);

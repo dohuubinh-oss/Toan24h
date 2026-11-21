@@ -200,14 +200,17 @@ func (h *MobileUploadHandler) UploadFromMobile(c *gin.Context) {
 			return
 		}
 
-		ext := filepath.Ext(header.Filename)
-		if ext == "" {
-			ext = ".jpg"
+		// Khử mã độc, loại bỏ EXIF và nén ảnh về JPEG chuẩn
+		sanitizedBytes, err := utils.SanitizeAndCompressImage(fileBytes, 1920)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu ảnh hình vẽ không hợp lệ hoặc chứa mã độc: " + err.Error()})
+			return
 		}
+
 		safeSessionID := filepath.Base(sessionID)
-		fileName := fmt.Sprintf("%s_diagram%s", safeSessionID, ext)
+		fileName := fmt.Sprintf("%s_diagram.jpg", safeSessionID)
 		filePath := filepath.Join(tempDir, fileName)
-		if err := os.WriteFile(filePath, fileBytes, 0644); err != nil {
+		if err := os.WriteFile(filePath, sanitizedBytes, 0644); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi khi lưu file ảnh hình vẽ"})
 			return
 		}

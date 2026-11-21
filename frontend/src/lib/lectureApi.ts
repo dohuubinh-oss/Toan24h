@@ -152,7 +152,7 @@ export async function getLecturesByGrade(grade: string, page: number = 1, limit:
   };
 }
 
-export async function getLectureById(id: string, token?: string): Promise<BackendLecture> {
+export async function getLectureById(id: string, token?: string): Promise<BackendLecture | null> {
   const url = `${API_BASE_URL}/lectures/${id}`;
   const headers: Record<string, string> = {};
   if (token) {
@@ -163,6 +163,10 @@ export async function getLectureById(id: string, token?: string): Promise<Backen
     cache: 'no-store',
     headers,
   });
+
+  if (response.status === 404) {
+    return null;
+  }
 
   if (!response.ok) {
     throw new Error(`Failed to fetch lecture: ${response.statusText}`);

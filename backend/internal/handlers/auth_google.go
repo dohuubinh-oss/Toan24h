@@ -143,9 +143,9 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 					if v.IsValid() {
 						isSelfReferral := false
 						if v.AffiliateID != nil {
-							var affiliate models.User
-							if err := h.db.Select("id, email").First(&affiliate, "id = ?", *v.AffiliateID).Error; err == nil {
-								if strings.EqualFold(affiliate.Email, email) {
+							var voucherOwner models.User
+							if err := h.db.Select("id, email").First(&voucherOwner, "id = ?", *v.AffiliateID).Error; err == nil {
+								if strings.EqualFold(voucherOwner.Email, email) {
 									isSelfReferral = true
 								}
 							}
@@ -165,15 +165,17 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 				}
 			}
 
+			now := time.Now()
 			user = models.User{
-				Email:      email,
-				FullName:   fullName,
-				GoogleID:   &claims.Sub,
-				Role:       "student",
-				Status:     "active",
-				IsVerified: true, // Google đã xác thực email
-				ExpiresAt:  userExpiresAt,
-				ReferrerID: referrerID,
+				Email:         email,
+				FullName:      fullName,
+				GoogleID:      &claims.Sub,
+				Role:          "student",
+				Status:        "active",
+				IsVerified:    true, // Google đã xác thực email
+				ExpiresAt:     userExpiresAt,
+				ReferrerID:    referrerID,
+				TermsAgreedAt: &now,
 			}
 
 			err = h.db.Transaction(func(tx *gorm.DB) error {
@@ -227,14 +229,18 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 		}
 	}
 
+	// Generate a unique session ID for single active session enforcement (Concurrent Sessions Limit)
+	sessionID := uuid.New().String()
+	_ = services.SetActiveSession(c.Request.Context(), h.db, user.ID, sessionID)
+
 	// Generate access & refresh tokens
-	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role, user.Grade)
+	accessToken, err := utils.GenerateAccessToken(user.ID, user.Role, user.Grade, sessionID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo mã truy cập access token"})
 		return
 	}
 
-	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	refreshToken, err := utils.GenerateRefreshToken(user.ID, sessionID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo mã refresh token"})
 		return

@@ -81,8 +81,8 @@ function VerifyEmailContent() {
             <div className="w-16 h-16 bg-blue-50 text-primary rounded-2xl flex items-center justify-center mx-auto shadow-xs">
               <Loader2 className="w-8 h-8 animate-spin" aria-hidden="true" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Đang xác thực tài khoản...</h2>
-            <p className="text-sm text-slate-500">Vui lòng chờ trong giây lát.</p>
+            <h2 className="text-xl font-bold text-slate-900">Đang xác thực tài khoản của bạn...</h2>
+            <p className="text-sm text-slate-500">Chờ một xíu nhé, hệ thống đang kiểm tra...</p>
           </div>
         )}
 
@@ -110,7 +110,7 @@ function VerifyEmailContent() {
               </div>
             )}
             <p className="text-sm text-slate-600 leading-relaxed max-w-sm mx-auto">
-              Tài khoản của bạn đã sẵn sàng. Hãy đăng nhập để bắt đầu hành trình học tập và làm bài tập ngay hôm nay.
+              Tài khoản của bạn đã sẵn sàng! Đăng nhập ngay để khám phá kho bài giảng và bắt đầu chinh phục môn Toán nhé.
             </p>
             <div className="pt-4">
               <Link
@@ -134,7 +134,7 @@ function VerifyEmailContent() {
               Bước tiếp theo
             </span>
             <h2 className="text-2xl font-bold text-slate-900">
-              Kiểm tra hộp thư của bạn 📩
+              Kiểm tra hộp thư của bạn nhé 📩
             </h2>
             {promoMonths && (
               <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl flex items-center gap-3 text-left shadow-xs">
@@ -148,8 +148,8 @@ function VerifyEmailContent() {
               </div>
             )}
             <p className="text-sm text-slate-600 leading-relaxed max-w-sm mx-auto">
-              Chúng tôi đã gửi liên kết kích hoạt đến địa chỉ{' '}
-              <strong className="text-slate-900 font-semibold">{emailParam}</strong>. Vui lòng mở email và nhấn vào nút kích hoạt (kể cả mục Thư rác/Spam).
+              Toan6789 đã gửi liên kết kích hoạt đến địa chỉ{' '}
+              <strong className="text-slate-900 font-semibold">{emailParam}</strong>. Bạn mở hòm thư và nhấn nút kích hoạt để bắt đầu học nhé (đừng quên kiểm tra cả mục Spam/Thư rác nếu chưa thấy thư gửi tới).
             </p>
 
             {resendSuccess ? (
@@ -165,7 +165,7 @@ function VerifyEmailContent() {
                   className="w-full min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded-xl text-sm"
                 >
                   <Send className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />
-                  <span>Chưa nhận được? Gửi lại email</span>
+                  <span>Chưa thấy thư? Nhấn để gửi lại</span>
                 </Button>
               </div>
             )}
@@ -175,7 +175,7 @@ function VerifyEmailContent() {
                 href="/login"
                 className="inline-flex items-center text-xs text-slate-500 hover:text-slate-800 font-medium"
               >
-                Trở về trang Đăng nhập
+                Quay lại trang Đăng nhập
               </Link>
             </div>
           </div>
@@ -187,16 +187,16 @@ function VerifyEmailContent() {
             <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
               <Mail className="w-8 h-8" aria-hidden="true" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Không tìm thấy mã kích hoạt</h2>
+            <h2 className="text-xl font-bold text-slate-900">Chưa tìm thấy mã kích hoạt</h2>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Vui lòng nhấp vào liên kết kích hoạt được gửi trong hòm thư email của bạn (kể cả mục Spam/Thư rác).
+              Bạn vui lòng bấm vào liên kết kích hoạt trong email Toan6789 gửi cho bạn nhé (đừng quên kiểm tra cả mục Spam/Thư rác).
             </p>
             <div className="pt-2">
               <Link
                 href="/login"
                 className="inline-flex items-center text-sm font-bold text-primary hover:underline"
               >
-                Trở về trang Đăng nhập
+                Quay lại trang Đăng nhập
               </Link>
             </div>
           </div>
@@ -208,7 +208,7 @@ function VerifyEmailContent() {
             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
               <AlertCircle className="w-8 h-8" aria-hidden="true" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Kích hoạt không thành công</h2>
+            <h2 className="text-xl font-bold text-slate-900">Kích hoạt chưa thành công</h2>
             <p className="text-sm text-slate-600 leading-relaxed">
               {errorMessage || 'Liên kết kích hoạt đã hết hạn hoặc không tồn tại.'}
             </p>
@@ -248,7 +248,7 @@ function VerifyEmailContent() {
                 href="/login"
                 className="inline-flex items-center text-xs text-slate-500 hover:text-slate-800 font-medium"
               >
-                Trở về trang Đăng nhập
+                Quay lại trang Đăng nhập
               </Link>
             </div>
           </div>

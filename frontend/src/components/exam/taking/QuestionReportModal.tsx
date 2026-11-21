@@ -39,15 +39,15 @@ export function QuestionReportModal({
         await onSubmit(reportMessage)
       } else if (readonly && resultId && !isGroup && detailId) {
         await submitAppeal(resultId, detailId, reportMessage)
-        toast.success('Kháng cáo đã được gửi thành công!')
+        toast.success('Đã gửi phản hồi kháng cáo. Thầy Cô và hệ thống sẽ xem xét lại nhé!')
       } else {
         await reportQuestion(questionId.toString(), reportMessage)
-        toast.success('Báo lỗi câu hỏi thành công!')
+        toast.success('Cảm ơn bạn đã báo lỗi. Đội ngũ giáo viên sẽ kiểm tra lại câu hỏi này nhé!')
       }
       setReportMessage('')
       onClose()
     } catch (err: any) {
-      toast.error(err?.response?.data?.error || err?.message || 'Lỗi khi gửi yêu cầu')
+      toast.error(err?.response?.data?.error || err?.message || 'Chưa thể gửi yêu cầu lúc này. Bạn thử lại sau nhé.')
     } finally {
       setIsSubmitting(false)
     }
@@ -92,8 +92,8 @@ export function QuestionReportModal({
           </h3>
           <p className="text-slate-500 text-xs mt-1 leading-relaxed">
             {readonly
-              ? 'Nêu rõ lý do bạn muốn giáo viên và AI xem xét lại kết quả câu hỏi này.'
-              : 'Vui lòng mô tả lỗi (sai đề, thiếu thông tin, lỗi chính tả, ...)'}
+              ? 'Nêu rõ lý do bạn muốn giáo viên và hệ thống xem xét lại kết quả câu hỏi này nhé.'
+              : 'Bạn hãy mô tả lỗi (sai đề, thiếu thông tin, lỗi chính tả...) để Thầy Cô kiểm tra nhé.'}
           </p>
         </div>
       </div>
@@ -102,7 +102,7 @@ export function QuestionReportModal({
       <textarea
         value={reportMessage}
         onChange={(e) => setReportMessage(e.target.value)}
-        placeholder="Nhập chi tiết nội dung cần phản hồi..."
+        placeholder="Nhập chi tiết nội dung cần phản hồi hoặc báo lỗi..."
         disabled={isSubmitting}
         className="w-full min-h-[120px] p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none text-slate-700 text-sm"
       />

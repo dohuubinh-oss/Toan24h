@@ -44,8 +44,16 @@ func ServeUploads(baseDir string) gin.HandlerFunc {
 			return
 		}
 
-		// Security headers: ngăn chặn MIME type sniffing
+		// Chỉ cho phép phục vụ các định dạng tài nguyên ảnh an toàn
+		ext := strings.ToLower(filepath.Ext(absTarget))
+		if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" && ext != ".svg" {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Forbidden file type"})
+			return
+		}
+
+		// Security headers: ngăn chặn MIME sniffing và vô hiệu hóa mã script trong sandbox
 		c.Header("X-Content-Type-Options", "nosniff")
+		c.Header("Content-Security-Policy", "default-src 'none'; sandbox")
 
 		// Cache-Control headers tối ưu theo vòng đời tài nguyên
 		if strings.HasPrefix(cleanRel, "temp/") || cleanRel == "temp" {

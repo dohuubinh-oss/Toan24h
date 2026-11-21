@@ -37,13 +37,14 @@ vi.mock('@/lib/api', () => ({
   extractDiagramSvg: (diagram: any) => diagram || null,
 }))
 
-describe('CreateQuestionPage - Drive Link Validation', () => {
+describe('CreateQuestionPage - Reference Link Handling', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockSearchParams = new URLSearchParams()
   })
 
-  it('blocks saving and shows toast error when Link Drive is missing', async () => {
+  it('allows saving when Tham khảo is omitted', async () => {
+    mockApiFetch.mockResolvedValueOnce({ status: 'success' })
     const { container } = render(<CreateQuestionPage />)
 
     const textarea = container.querySelector('textarea')!
@@ -53,7 +54,7 @@ describe('CreateQuestionPage - Drive Link Validation', () => {
         value: JSON.stringify([
           {
             type_question: 'single',
-            content: 'Câu hỏi test không có Link Drive',
+            content: 'Câu hỏi test không có Tham khảo',
             type: 'Trắc nghiệm',
             grade: 10,
             topic: 'Đại số',
@@ -76,12 +77,14 @@ describe('CreateQuestionPage - Drive Link Validation', () => {
     fireEvent.click(saveBtn)
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Vui lòng nhập Link Drive trước khi lưu vào ngân hàng!')
-      expect(mockApiFetch).not.toHaveBeenCalled()
+      expect(mockApiFetch).toHaveBeenCalledWith('/questions/bulk', expect.objectContaining({
+        method: 'POST'
+      }))
+      expect(mockBack).toHaveBeenCalled()
     })
   })
 
-  it('allows saving when Link Drive is provided', async () => {
+  it('allows saving and syncs when Tham khảo is provided', async () => {
     mockApiFetch.mockResolvedValueOnce({ status: 'success' })
     const { container } = render(<CreateQuestionPage />)
 
@@ -238,7 +241,7 @@ describe('CreateQuestionPage - Initial Default Blank Question', () => {
 
     // Verify QuestionSettingsSidebar is rendered
     expect(screen.getByText('Thiết lập câu hỏi')).toBeInTheDocument()
-    expect(screen.getByText('Link Drive')).toBeInTheDocument()
+    expect(screen.getByText('Tham khảo')).toBeInTheDocument()
   })
 
   it('allows adding another question block via Thêm câu button in floating action bar', () => {

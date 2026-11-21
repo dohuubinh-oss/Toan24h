@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/modeptrai/exam-model-backend/internal/config"
+	"github.com/modeptrai/exam-model-backend/internal/services"
 	"github.com/modeptrai/exam-model-backend/internal/utils"
 )
 
@@ -40,9 +42,25 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Set UserID and Role in context
+		// Enforce single active session (Concurrent Sessions Limit)
+		if claims.SessionID != "" {
+			valid, err := services.ValidateActiveSession(c.Request.Context(), config.DB, claims.UserID, claims.SessionID)
+			if err == nil && !valid {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"error": "Tài khoản của bạn đã được đăng nhập từ một thiết bị khác. Vui lòng đăng nhập lại.",
+					"code":  "CONCURRENT_SESSION_TERMINATED",
+				})
+				c.Abort()
+				return
+			}
+		}
+
+		// Set UserID, Role, and SessionID in context
 		c.Set("userID", claims.UserID)
 		c.Set("userRole", claims.Role)
+		if claims.SessionID != "" {
+			c.Set("sessionID", claims.SessionID)
+		}
 		c.Next()
 	}
 }

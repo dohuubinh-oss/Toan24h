@@ -43,31 +43,6 @@ func TestReferralCodeFormat_RandomGTCode(t *testing.T) {
 	assert.Greater(t, len(seen), 40, "Generated codes should have high randomness")
 }
 
-func TestReferralCommissionRatesByRole(t *testing.T) {
-	testCases := []struct {
-		role         string
-		expectedRate float32
-	}{
-		{"teacher", 50.0},
-		{"Teacher", 50.0},
-		{"TEACHER", 50.0},
-		{"admin", 60.0},
-		{"Admin", 60.0},
-		{"affiliate", 30.0},
-		{"Affiliate", 30.0},
-		{"student", 30.0},
-		{"", 30.0},
-		{"unknown_role", 30.0},
-	}
-
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("Role_%s", tc.role), func(t *testing.T) {
-			rate := services.GetCommissionRateByRole(tc.role)
-			assert.Equal(t, tc.expectedRate, rate)
-		})
-	}
-}
-
 func TestNormalizeGrade(t *testing.T) {
 	testCases := []struct {
 		input    string
@@ -105,77 +80,14 @@ func TestGetTeacherForGrade_NilDB(t *testing.T) {
 	assert.Nil(t, admin)
 }
 
-func TestMultiTierCommissionCalculationScenarios(t *testing.T) {
-	// 5 Scenarios tested according to business spec:
-	// 1. Direct student (no referrer): Direct 0%, Teacher 3%, Admin 1% -> Total 4%
-	// 2. Teacher 7 direct: Direct 50%, Teacher 7 Grade (0% - skipped), Admin 1% -> Total 51%
-	// 3. Teacher 8 direct (student grade 7): Direct 50%, Teacher 7 Grade 3%, Admin 1% -> Total 54%
-	// 4. Admin direct: Direct 60%, Teacher 7 Grade 3%, Admin Platform (0% - skipped) -> Total 63%
-	// 5. Affiliate direct: Direct 30%, Teacher 7 Grade 3%, Admin 1% -> Total 34%
-
-	amount := 100000
-
-	calcMultiTier := func(studentGrade string, referrerRole string, isReferrerTeacherOfGrade bool, isReferrerAdmin bool) (directAmt int, gradeAmt int, platformAmt int) {
-		// Tier 1: Direct
-		if referrerRole != "" {
-			rate := services.GetCommissionRateByRole(referrerRole)
-			directAmt = int(float64(amount) * float64(rate) / 100.0)
-		}
-		// Tier 2: Grade 3%
-		if services.NormalizeGrade(studentGrade) != "" && !isReferrerTeacherOfGrade {
-			gradeAmt = int(float64(amount) * float64(services.CommissionRateGrade) / 100.0)
-		}
-		// Tier 3: Platform 1%
-		if !isReferrerAdmin {
-			platformAmt = int(float64(amount) * float64(services.CommissionRatePlatform) / 100.0)
-		}
-		return
-	}
-
-	// Scenario 1:
-	d, g, p := calcMultiTier("7", "", false, false)
-	assert.Equal(t, 0, d)
-	assert.Equal(t, 3000, g)
-	assert.Equal(t, 1000, p)
-	assert.Equal(t, 4000, d+g+p)
-
-	// Scenario 2:
-	d, g, p = calcMultiTier("7", "teacher", true, false)
-	assert.Equal(t, 50000, d)
-	assert.Equal(t, 0, g)
-	assert.Equal(t, 1000, p)
-	assert.Equal(t, 51000, d+g+p)
-
-	// Scenario 3:
-	d, g, p = calcMultiTier("7", "teacher", false, false)
-	assert.Equal(t, 50000, d)
-	assert.Equal(t, 3000, g)
-	assert.Equal(t, 1000, p)
-	assert.Equal(t, 54000, d+g+p)
-
-	// Scenario 4:
-	d, g, p = calcMultiTier("7", "admin", false, true)
-	assert.Equal(t, 60000, d)
-	assert.Equal(t, 3000, g)
-	assert.Equal(t, 0, p)
-	assert.Equal(t, 63000, d+g+p)
-
-	// Scenario 5:
-	d, g, p = calcMultiTier("7", "affiliate", false, false)
-	assert.Equal(t, 30000, d)
-	assert.Equal(t, 3000, g)
-	assert.Equal(t, 1000, p)
-	assert.Equal(t, 34000, d+g+p)
-}
-
 func TestIsPartnerRole(t *testing.T) {
 	assert.True(t, services.IsPartnerRole("admin"))
 	assert.True(t, services.IsPartnerRole("Admin"))
 	assert.True(t, services.IsPartnerRole("teacher"))
 	assert.True(t, services.IsPartnerRole("Teacher"))
-	assert.True(t, services.IsPartnerRole("affiliate"))
-	assert.True(t, services.IsPartnerRole("Affiliate"))
 
+	assert.False(t, services.IsPartnerRole("affiliate"))
+	assert.False(t, services.IsPartnerRole("Affiliate"))
 	assert.False(t, services.IsPartnerRole("student"))
 	assert.False(t, services.IsPartnerRole("Student"))
 	assert.False(t, services.IsPartnerRole(""))
@@ -267,7 +179,6 @@ func TestReferralService_DBLifecycle(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, voucher)
 
-	assert.Equal(t, float32(60.0), voucher.CommissionPercent)
 	assert.Equal(t, 1, voucher.FreeMonths)
 	assert.Equal(t, 0, voucher.MaxUses)
 	assert.Nil(t, voucher.ExpiresAt)
@@ -290,7 +201,6 @@ func TestReferralService_DBLifecycle(t *testing.T) {
 	voucherUpdated, err := services.EnsureUserReferralCode(db, teacher)
 	require.NoError(t, err)
 	assert.Equal(t, voucher.Code, voucherUpdated.Code)
-	assert.Equal(t, float32(70.0), voucherUpdated.CommissionPercent)
 
 	// 4.5. Test EnsureUserReferralCode for Student - must NOT generate referral code or voucher
 	student := &models.User{
@@ -317,11 +227,11 @@ func TestReferralService_DBLifecycle(t *testing.T) {
 		FullName: "Admin Migration Test",
 		Role:     "admin",
 	}
-	affiliateUser := models.User{
+	teacherUser := models.User{
 		ID:       uuid.New(),
-		Email:    fmt.Sprintf("affiliate_%s@test.com", uuid.New().String()[:8]),
-		FullName: "Affiliate Migration Test",
-		Role:     "affiliate",
+		Email:    fmt.Sprintf("teacher_mig_%s@test.com", uuid.New().String()[:8]),
+		FullName: "Teacher Migration Test",
+		Role:     "teacher",
 	}
 	studentUser := models.User{
 		ID:       uuid.New(),
@@ -330,32 +240,32 @@ func TestReferralService_DBLifecycle(t *testing.T) {
 		Role:     "student",
 	}
 	require.NoError(t, db.Create(&adminUser).Error)
-	require.NoError(t, db.Create(&affiliateUser).Error)
+	require.NoError(t, db.Create(&teacherUser).Error)
 	require.NoError(t, db.Create(&studentUser).Error)
 
 	migrated, err := services.MigrateExistingAffiliateCodes(db)
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, migrated, int64(2))
 
-	// Verify admin received GT code and voucher with 70%
+	// Verify admin received GT code and voucher
 	var refAdmin models.User
 	require.NoError(t, db.First(&refAdmin, "id = ?", adminUser.ID).Error)
 	require.NotNil(t, refAdmin.ReferralCode)
-	assert.Regexp(t, `^GT\d{6}$`, *refAdmin.ReferralCode)
+	assert.Regexp(t, `^GT[A-F0-9]{8}$`, *refAdmin.ReferralCode)
 
 	var adminVoucher models.Voucher
 	require.NoError(t, db.First(&adminVoucher, "code = ?", *refAdmin.ReferralCode).Error)
-	assert.Equal(t, float32(70.0), adminVoucher.CommissionPercent)
+	assert.Equal(t, 1, adminVoucher.FreeMonths)
 
-	// Verify affiliate received GT code and voucher with 30%
-	var refAffiliate models.User
-	require.NoError(t, db.First(&refAffiliate, "id = ?", affiliateUser.ID).Error)
-	require.NotNil(t, refAffiliate.ReferralCode)
-	assert.Regexp(t, `^GT\d{6}$`, *refAffiliate.ReferralCode)
+	// Verify teacher received GT code and voucher
+	var refTeacher models.User
+	require.NoError(t, db.First(&refTeacher, "id = ?", teacherUser.ID).Error)
+	require.NotNil(t, refTeacher.ReferralCode)
+	assert.Regexp(t, `^GT[A-F0-9]{8}$`, *refTeacher.ReferralCode)
 
-	var affiliateVoucher models.Voucher
-	require.NoError(t, db.First(&affiliateVoucher, "code = ?", *refAffiliate.ReferralCode).Error)
-	assert.Equal(t, float32(30.0), affiliateVoucher.CommissionPercent)
+	var tVoucher models.Voucher
+	require.NoError(t, db.First(&tVoucher, "code = ?", *refTeacher.ReferralCode).Error)
+	assert.Equal(t, 1, tVoucher.FreeMonths)
 
 	// Verify student did NOT receive a referral code
 	var refStudent models.User
