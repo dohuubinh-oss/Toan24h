@@ -10,6 +10,7 @@ import {
 import { getBlogPosts, BLOG_CATEGORIES, BlogPost } from '@/data/blogData'
 import { Pagination } from '@/components/ui/Pagination'
 import { getAvatarInitial } from '@/lib/utils'
+import HomeFooter from '@/components/home/HomeFooter'
 
 export default function BlogListPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
@@ -121,8 +122,9 @@ export default function BlogListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
+      <main className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 flex-1">
+        <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Standard System Header with Breadcrumbs & Action Button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-6">
@@ -661,6 +663,10 @@ export default function BlogListPage() {
         </div>
 
       </div>
-    </div>
+    </main>
+
+    {/* Footer */}
+    <HomeFooter />
+  </div>
   )
 }

@@ -39,7 +39,7 @@ describe('UpgradePage Component (Terms & Legal Compliance)', () => {
     expect(checkbox.checked).toBe(false)
 
     // Link to /terms should be present
-    const termsLink = screen.getByRole('link', { name: /Điều khoản dịch vụ/i })
+    const termsLink = screen.getByRole('link', { name: /^Điều khoản dịch vụ$/i })
     expect(termsLink).toHaveAttribute('href', '/terms')
 
     // Helper prompt message is visible
@@ -69,7 +69,7 @@ describe('UpgradePage Component (Terms & Legal Compliance)', () => {
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
       transactionId: 'tx-123',
       orderCode: 987654321,
-      amount: 675000,
+      amount: 450000,
       plan: '3_months',
       qrCode: 'vietqr://mock-qr',
     })
@@ -103,5 +103,11 @@ describe('UpgradePage Component (Terms & Legal Compliance)', () => {
     const callBody = JSON.parse(vi.mocked(api.apiFetch).mock.calls[0][1]?.body as string)
     expect(callBody.plan).toBe('3_months')
     expect(callBody.termsAgreedAt).toBeDefined()
+  })
+
+  it('renders footer with copyright and essential links', () => {
+    render(<UpgradePage />)
+    expect(screen.getByText(/© 2026 toan6789\.vn/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Về chúng tôi/i })).toBeInTheDocument()
   })
 })

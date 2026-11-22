@@ -114,4 +114,52 @@ describe('SharedIllustrationCard Component', () => {
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(svgCode)
   })
+
+  it('distinguishes between question diagram and full solution diagram in status badge', () => {
+    const onUpdateDiagram = vi.fn()
+
+    // Test with solid question SVG
+    const { rerender } = render(
+      <SharedIllustrationCard
+        diagramSvg='<svg><line x1="0" y1="0" x2="100" y2="100" stroke="#0f172a" /></svg>'
+        onUpdateDiagram={onUpdateDiagram}
+      />
+    )
+    expect(screen.getByText('Hình đề bài (Nét liền)')).toBeInTheDocument()
+
+    // Test with solution SVG containing auxiliary dashed line
+    rerender(
+      <SharedIllustrationCard
+        diagramSvg='<svg><line x1="0" y1="0" x2="100" y2="100" stroke="#2563eb" stroke-dasharray="6,4" /></svg>'
+        onUpdateDiagram={onUpdateDiagram}
+      />
+    )
+    expect(screen.getByText('Hình bài giải (Kèm nét đứt)')).toBeInTheDocument()
+  })
+
+  it('allows opening modal specifically for solution diagram and switching between targets', () => {
+    const onUpdateDiagram = vi.fn()
+
+    render(
+      <SharedIllustrationCard
+        diagramSvg={null}
+        questionContent="Cho hình thang cân ABCD"
+        solutionContent="Kẻ đường cao AH và BK vuông góc CD"
+        onUpdateDiagram={onUpdateDiagram}
+      />
+    )
+
+    // Open directly with "Tạo hình bài giải"
+    const solutionBtn = screen.getAllByText('Tạo hình bài giải')[0]
+    fireEvent.click(solutionBtn)
+
+    expect(screen.getByText('Bài giải (Kèm nét đứt)')).toBeInTheDocument()
+    expect(screen.getByText('2. Hình vẽ TOÀN BỘ BÀI GIẢI')).toBeInTheDocument()
+
+    // Switch to question diagram mode
+    const questionToggleBtn = screen.getByText('1. Hình vẽ ĐỀ BÀI (Câu hỏi)')
+    fireEvent.click(questionToggleBtn)
+
+    expect(screen.getByText('Đề bài (Nét liền)')).toBeInTheDocument()
+  })
 })

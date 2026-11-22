@@ -104,3 +104,36 @@ func TestBuildGeometryContext_Priority(t *testing.T) {
 		t.Errorf("Expected solution guide in context, not found")
 	}
 }
+
+func TestBuildGeometryContext_TargetQuestionVsSolution(t *testing.T) {
+	// Test Target = "question"
+	reqQ := GeometryVisualizerRequest{
+		Content:       "Cho tam giác ABC nhọn.",
+		SolutionGuide: "Kẻ đường cao AH và BK.",
+		Target:        "question",
+	}
+	ctxQ := BuildGeometryContext(reqQ)
+	if !strings.Contains(ctxQ, "CHỈ DỰNG HÌNH VẼ CHO CÂU HỎI (ĐỀ BÀI GỐC)") {
+		t.Errorf("Expected target question banner in context, got:\n%s", ctxQ)
+	}
+	if !strings.Contains(ctxQ, "TUYỆT ĐỐI KHÔNG vẽ bất kỳ đường kẻ phụ") {
+		t.Errorf("Expected question guardrail in context, got:\n%s", ctxQ)
+	}
+	if !strings.Contains(ctxQ, "TUYỆT ĐỐI KHÔNG VẼ ĐƯỜNG KẺ PHỤ CỦA LỜI GIẢI VÀO HÌNH NÀY") {
+		t.Errorf("Expected solution warning in context, got:\n%s", ctxQ)
+	}
+
+	// Test Target = "solution"
+	reqS := GeometryVisualizerRequest{
+		Content:       "Cho tam giác ABC nhọn.",
+		SolutionGuide: "Kẻ đường cao AH và BK.",
+		Target:        "solution",
+	}
+	ctxS := BuildGeometryContext(reqS)
+	if !strings.Contains(ctxS, "DỰNG HÌNH VẼ CHO TOÀN BỘ BÀI GIẢI (FULL SOLUTION)") {
+		t.Errorf("Expected target solution banner in context, got:\n%s", ctxS)
+	}
+	if !strings.Contains(ctxS, "Nét dựng thêm của bài giải BẮT BUỘC dùng nét đứt (style: \"dashed\", color: \"#2563eb\")") {
+		t.Errorf("Expected solution dashed line rule in context, got:\n%s", ctxS)
+	}
+}

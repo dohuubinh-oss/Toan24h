@@ -21,7 +21,7 @@ import { uploadTempImage, recognizeHandwriting } from '@/lib/api'
 import { getAvatarInitial } from '@/lib/utils'
 import { Suspense } from 'react'
 
-export function generateShortsGuidanceTemplate(options?: {
+function generateShortsGuidanceTemplate(options?: {
   problemText?: string
   formula?: string
   quickSolveStep?: string

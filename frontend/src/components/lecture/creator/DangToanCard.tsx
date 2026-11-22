@@ -3,7 +3,7 @@ import { Microscope, Plus, Trash2, ChevronDown, ChevronRight, GripVertical, Chec
 import { Button } from '../../ui/Button'
 import SharedEditorCard from '@/components/questions/creator/editor/SharedEditorCard'
 import RichTextEditor from '@/components/questions/creator/editor/RichTextEditor'
-import { DangToanItem, MethodItem, ExampleExercise, ExampleStep } from './LectureCreatorContext'
+import { DangToanItem, MethodItem, ExampleExercise, ExampleStep, useLectureCreatorOptional } from './LectureCreatorContext'
 import AiLectureExtractModal from './AiLectureExtractModal'
 import { parseLectureJson } from './utils/lectureJsonParser'
 import { toast } from '@/components/ui/ToastProvider'
@@ -78,6 +78,8 @@ export default function DangToanCard({
   onChange,
   onRemove,
 }: DangToanCardProps) {
+  const lectureContext = useLectureCreatorOptional()
+  const grade = lectureContext?.grade || ''
   const [isAiModalOpen, setIsAiModalOpen] = useState(false)
 
   const handleAiExtracted = (jsonString: string) => {
@@ -202,6 +204,7 @@ export default function DangToanCard({
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
         onExtracted={handleAiExtracted}
+        defaultGrade={grade}
         title={`Bóc tách & Cập nhật Dạng toán ${index + 1} bằng AI`}
         description="Tự động nhận diện nội dung dạng toán, phương pháp giải và ví dụ mẫu từ ảnh để cập nhật cho dạng toán này"
       />

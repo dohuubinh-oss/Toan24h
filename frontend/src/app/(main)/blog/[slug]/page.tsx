@@ -13,6 +13,7 @@ import { useToast } from '@/components/ui/ToastProvider'
 import { ShortsPlaylistStage } from '@/components/blog/ShortsPlaylistStage'
 import { parseShortsPlaylist } from '@/lib/youtubeUtils'
 import { getAvatarInitial } from '@/lib/utils'
+import HomeFooter from '@/components/home/HomeFooter'
 
 export default function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params)
@@ -70,19 +71,22 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
   // Ẩn bài nháp đối với học sinh hoặc khách
   if (!post || (post.isPublished === false && !isAdminOrTeacher)) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
-        <div className="bg-white p-8 sm:p-12 rounded-3xl border border-slate-200/80 shadow-xs max-w-md space-y-4">
-          <BookOpen className="w-12 h-12 text-slate-300 mx-auto" />
-          <h2 className="text-xl font-bold text-slate-800">Không tìm thấy bài viết</h2>
-          <p className="text-xs text-slate-500">Bài viết bạn tìm kiếm không tồn tại hoặc chưa được xuất bản công khai.</p>
-          <Link 
-            href="/blog"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-xl shadow-xs hover:bg-primary/90 transition-all min-h-[42px]"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Quay lại trang Blog
-          </Link>
-        </div>
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
+        <main className="flex-1 flex items-center justify-center p-6 text-center">
+          <div className="bg-white p-8 sm:p-12 rounded-3xl border border-slate-200/80 shadow-xs max-w-md space-y-4">
+            <BookOpen className="w-12 h-12 text-slate-300 mx-auto" />
+            <h2 className="text-xl font-bold text-slate-800">Không tìm thấy bài viết</h2>
+            <p className="text-xs text-slate-500">Bài viết bạn tìm kiếm không tồn tại hoặc chưa được xuất bản công khai.</p>
+            <Link 
+              href="/blog"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-xl shadow-xs hover:bg-primary/90 transition-all min-h-[42px]"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Quay lại trang Blog
+            </Link>
+          </div>
+        </main>
+        <HomeFooter />
       </div>
     )
   }
@@ -107,8 +111,9 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
   const isShortsPlaylist = post.postType === 'shorts_playlist'
 
   return (
-    <div className="min-h-screen bg-slate-50 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
+      <main className="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 flex-1">
+        <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Breadcrumb Navigation - Consistent with /blog and system */}
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 font-medium border-b border-slate-200/80 pb-4">
@@ -437,6 +442,10 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
         </div>
 
       </div>
-    </div>
+    </main>
+
+    {/* Footer */}
+    <HomeFooter />
+  </div>
   )
 }

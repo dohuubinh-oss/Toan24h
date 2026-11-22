@@ -8,7 +8,6 @@ import HomePricing from '../components/home/HomePricing'
 import HomeTestimonials from '../components/home/HomeTestimonials'
 import HomeFAQ from '../components/home/HomeFAQ'
 import HomeFooter from '../components/home/HomeFooter'
-import HomeAiAssistantButton from '../components/home/HomeAiAssistantButton'
 
 export const metadata: Metadata = {
   title: 'Học và Luyện thi Toán THCS Lớp 6, 7, 8, 9 Thông Minh | toan6789.vn',
@@ -32,9 +31,6 @@ export default function HomePage() {
       </main>
 
       <HomeFooter />
-
-      {/* Floating Action Button with Interactive AI Math Assistant */}
-      <HomeAiAssistantButton />
     </div>
   )
 }

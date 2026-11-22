@@ -59,7 +59,7 @@ interface LectureCreatorState {
   editId?: string | null;
 }
 
-const LectureCreatorContext = createContext<LectureCreatorState | undefined>(undefined)
+export const LectureCreatorContext = createContext<LectureCreatorState | undefined>(undefined)
 
 export function LectureCreatorProvider({ children, editId }: { children: React.ReactNode; editId?: string | null }) {
   const router = useRouter()
@@ -310,4 +310,8 @@ export function useLectureCreator() {
     throw new Error('useLectureCreator must be used within a LectureCreatorProvider')
   }
   return context
+}
+
+export function useLectureCreatorOptional() {
+  return useContext(LectureCreatorContext)
 }

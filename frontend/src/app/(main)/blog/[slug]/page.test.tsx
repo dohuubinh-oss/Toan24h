@@ -166,4 +166,19 @@ describe('BlogDetailPage', () => {
     expect(screen.getAllByText('Bản Nháp Bài Viết Toán').length).toBeGreaterThan(0)
     expect(screen.getByText(/Bạn đang xem trước bài viết chưa xuất bản/i)).toBeInTheDocument()
   })
+
+  it('renders footer on blog detail page', async () => {
+    const params = Promise.resolve({ slug: 'meo-giai-toan-9-vao-10' })
+    await act(async () => {
+      render(
+        <ToastProvider>
+          <Suspense fallback={<div>Đang tải...</div>}>
+            <BlogDetailPage params={params} />
+          </Suspense>
+        </ToastProvider>
+      )
+    })
+    expect(screen.getByText(/© 2026 toan6789\.vn/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Về chúng tôi/i })).toBeInTheDocument()
+  })
 })

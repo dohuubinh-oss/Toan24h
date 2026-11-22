@@ -31,6 +31,7 @@ const LECTURE_JSON_HINT = `[
 
 export default function LectureContentEditor() {
   const { 
+    grade,
     contentType, 
     dangToanList, 
     setDangToanList,
@@ -129,6 +130,7 @@ export default function LectureContentEditor() {
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
         onExtracted={handleAiExtracted}
+        defaultGrade={grade}
       />
     </div>
   )

@@ -83,6 +83,7 @@ describe('AiLectureExtractModal Component', () => {
     const onCloseMock = vi.fn()
 
     renderComponent({
+      defaultGrade: '9',
       onExtracted: onExtractedMock,
       onClose: onCloseMock,
     })
@@ -107,8 +108,18 @@ describe('AiLectureExtractModal Component', () => {
     })
   })
 
+  it('shows error if submitted without selecting grade', () => {
+    renderComponent({ defaultGrade: '' })
+
+    const submitBtn = screen.getByRole('button', { name: /Bắt đầu bóc tách/i })
+    fireEvent.click(submitBtn)
+
+    expect(screen.getByText(/Vui lòng chọn khối lớp của bài giảng trước khi bóc tách/i)).toBeInTheDocument()
+    expect(api.apiFetch).not.toHaveBeenCalled()
+  })
+
   it('shows error if submitted without selecting images', () => {
-    renderComponent()
+    renderComponent({ defaultGrade: '8' })
 
     const submitBtn = screen.getByRole('button', { name: /Bắt đầu bóc tách/i })
     fireEvent.click(submitBtn)
@@ -117,7 +128,7 @@ describe('AiLectureExtractModal Component', () => {
     expect(api.apiFetch).not.toHaveBeenCalled()
   })
 
-  it('allows toggling paraphrase checkbox to avoid copyright infringement and includes it in formData', async () => {
+  it('defaults paraphrase checkbox to true and includes grade and paraphrase in formData', async () => {
     vi.mocked(api.apiFetch).mockResolvedValueOnce({
       status: 'success',
       data: '[]',
@@ -125,14 +136,15 @@ describe('AiLectureExtractModal Component', () => {
 
     renderComponent()
 
+    // Select grade
+    const gradeSelect = screen.getByLabelText(/Chọn khối lớp/i)
+    fireEvent.change(gradeSelect, { target: { value: '9' } })
+
     const checkbox = screen.getByRole('checkbox', {
       name: /Làm mới số liệu ví dụ & bối cảnh/i,
     }) as HTMLInputElement
     expect(checkbox).toBeInTheDocument()
-    expect(checkbox.checked).toBe(false)
-
-    fireEvent.click(checkbox)
-    expect(checkbox.checked).toBe(true)
+    expect(checkbox.checked).toBe(true) // Default is now true for anti-copyright protection
 
     const file = new File(['image bytes'], 'lecture_sample.png', { type: 'image/png' })
     const fileInput = screen.getByLabelText(/Chọn ảnh bài giảng/i)
@@ -145,6 +157,7 @@ describe('AiLectureExtractModal Component', () => {
       expect(api.apiFetch).toHaveBeenCalledTimes(1)
       const callArgs = vi.mocked(api.apiFetch).mock.calls[0]
       const formData = callArgs[1]?.body as FormData
+      expect(formData.get('grade')).toBe('9')
       expect(formData.get('paraphrase')).toBe('true')
     })
   })

@@ -78,6 +78,8 @@ func SetupRouter() *gin.Engine {
 	userHandler := handlers.NewUserHandler(config.DB)
 	paymentHandler := handlers.NewPaymentHandler(config.DB, payosService)
 	webhookHandler := handlers.NewWebhookHandler(config.DB, payosService)
+	faqRagService := services.NewFAQRagService(config.DB)
+	faqChatHandler := handlers.NewFAQChatHandler(faqRagService)
 
 	// Direct root Webhook endpoints for external gateways (PayOS)
 	r.POST("/webhook/payos", webhookHandler.HandlePayOSWebhook)
@@ -126,6 +128,9 @@ func SetupRouter() *gin.Engine {
 		// Mobile QR Upload & Sync
 		v1.POST("/mobile-upload/:sessionId", mobileUploadHandler.UploadFromMobile)
 		v1.GET("/mobile-upload/:sessionId", mobileUploadHandler.CheckUploadStatus)
+
+		// FAQ RAG Chat
+		v1.POST("/chat/faq", faqChatHandler.HandleChatFAQ)
 	}
 
 	// Protected API routes

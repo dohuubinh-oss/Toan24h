@@ -36,6 +36,7 @@ export default function SharedIllustrationCard({
   const [isAiGenerating, setIsAiGenerating] = useState(false)
   const [showAiModal, setShowAiModal] = useState(false)
   const [customPrompt, setCustomPrompt] = useState('')
+  const [diagramTarget, setDiagramTarget] = useState<'question' | 'solution'>('question')
   const [aiError, setAiError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -164,18 +165,41 @@ export default function SharedIllustrationCard({
   const fullQuestionPreview = formatTextForPreview(questionContent)
   const fullSolutionPreview = formatTextForPreview(solutionContent)
 
+  const buildPrefillPrompt = (target: 'question' | 'solution') => {
+    const qText = formatTextForPreview(questionContent)
+    const solText = formatTextForPreview(solutionContent)
+    if (target === 'question') {
+      return qText
+        ? `Dựng hình minh họa cho ĐỀ BÀI (chỉ vẽ các đối tượng đề bài gốc, nét liền #0f172a, không vẽ đường phụ của lời giải):\n${qText}`
+        : ''
+    } else {
+      return qText
+        ? `Dựng hình minh họa ĐẦY ĐỦ CHO BÀI GIẢI (bao gồm cả nét đề bài #0f172a và các đường kẻ phụ nét đứt #2563eb theo lời giải):\n${qText}${solText ? `\n\nLời giải chi tiết:\n${solText}` : ''}`
+        : ''
+    }
+  }
+
   // Handle Opening AI Modal with Question Context prefilled
-  const handleOpenAiModal = (prefillWithQuestion = true) => {
+  const handleOpenAiModal = (prefillWithQuestion = true, initialTarget: 'question' | 'solution' = 'question') => {
     setAiError(null)
+    setDiagramTarget(initialTarget)
     if (prefillWithQuestion) {
-      const qText = formatTextForPreview(questionContent)
-      if (qText) {
-        setCustomPrompt(`Vẽ hình minh họa / bảng biểu chính xác cho bài toán sau:\n${qText}`)
+      const prompt = buildPrefillPrompt(initialTarget)
+      if (prompt) {
+        setCustomPrompt(prompt)
       } else if (!customPrompt) {
         setCustomPrompt('')
       }
     }
     setShowAiModal(true)
+  }
+
+  const handleSwitchTarget = (newTarget: 'question' | 'solution') => {
+    setDiagramTarget(newTarget)
+    const prompt = buildPrefillPrompt(newTarget)
+    if (prompt) {
+      setCustomPrompt(prompt)
+    }
   }
 
   // Handle AI Geometry Generation / Refinement
@@ -192,14 +216,19 @@ export default function SharedIllustrationCard({
         content: fullQuestionPreview || questionContent,
         solution_guide: fullSolutionPreview || solutionContent,
         current_svg: diagramSvg || undefined,
-        custom_prompt: customPrompt.trim() || undefined
+        custom_prompt: customPrompt.trim() || undefined,
+        target: diagramTarget,
       })
 
       onUpdateDiagram(generatedSvg)
       setShowAiModal(false)
       setCustomPrompt('')
       setAiError(null)
-      toast.success('✨ Đã dựng hoàn chỉnh hình vẽ minh họa bài toán bằng AI!')
+      toast.success(
+        diagramTarget === 'question'
+          ? '✨ Đã dựng hoàn chỉnh hình vẽ cho ĐỀ BÀI (Nét liền)!'
+          : '✨ Đã dựng hoàn chỉnh hình vẽ cho TOÀN BỘ BÀI GIẢI (Kèm đường phụ nét đứt)!'
+      )
     } catch (err: any) {
       console.error('Lỗi khi AI dựng hình:', err)
       const errorMsg = err?.message || 'Chưa thể tạo hình vẽ AI. Thầy cô vui lòng kiểm tra lại chỉ dẫn hoặc dán ảnh chụp từ GeoGebra.'
@@ -230,6 +259,7 @@ export default function SharedIllustrationCard({
   let imgSrc: string | null = null
   let isSvgDiagram = false
   let rawSvgContent = ''
+  let isSolutionDiagram = false
   if (diagramSvg && typeof diagramSvg === 'string' && diagramSvg.trim() !== '') {
     let cleanSvg = diagramSvg.trim()
     if (cleanSvg === 'null' || cleanSvg === 'undefined' || cleanSvg === 'none' || cleanSvg === '[]' || cleanSvg === '{}') {
@@ -255,6 +285,12 @@ export default function SharedIllustrationCard({
       imgSrc = `/${cleanSvg}`
       isSvgDiagram = false
     }
+
+    isSolutionDiagram = Boolean(
+      cleanSvg.includes('stroke-dasharray') ||
+      cleanSvg.includes('dashed') ||
+      cleanSvg.includes('#2563eb')
+    )
   }
 
   return (
@@ -275,6 +311,27 @@ export default function SharedIllustrationCard({
           <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">
             Hình vẽ minh họa bài toán
           </h2>
+          {imgSrc && (
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-semibold rounded-full border ${
+                isSolutionDiagram
+                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              }`}
+              title={
+                isSolutionDiagram
+                  ? 'Hình vẽ bao gồm cả đường phụ chứng minh (nét đứt #2563eb)'
+                  : 'Hình vẽ chỉ bao gồm các đối tượng trong đề bài gốc (nét liền)'
+              }
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  isSolutionDiagram ? 'bg-indigo-500' : 'bg-emerald-500'
+                }`}
+              />
+              <span>{isSolutionDiagram ? 'Hình bài giải (Kèm nét đứt)' : 'Hình đề bài (Nét liền)'}</span>
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
@@ -298,20 +355,37 @@ export default function SharedIllustrationCard({
               <span>Sửa hình minh hoạ</span>
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={() => handleOpenAiModal(true)}
-              disabled={isAiGenerating}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-amber-800 bg-amber-100/90 hover:bg-amber-200 border border-amber-300 rounded-lg transition-colors cursor-pointer shadow-xs disabled:opacity-50 active:scale-98"
-              title="Tự động lấy đề bài gửi Gemini để sinh ảnh minh họa hoặc vẽ bảng biểu"
-            >
-              {isAiGenerating ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              )}
-              <span>Tạo ảnh minh họa đề bài</span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleOpenAiModal(true, 'question')}
+                disabled={isAiGenerating}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer shadow-xs disabled:opacity-50 active:scale-98"
+                title="Dựng hình chỉ có các yếu tố đề bài gốc (nét liền, không vẽ nét đứt của bài giải)"
+              >
+                {isAiGenerating && diagramTarget === 'question' ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                )}
+                <span>Tạo hình đề bài</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleOpenAiModal(true, 'solution')}
+                disabled={isAiGenerating}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors cursor-pointer shadow-xs disabled:opacity-50 active:scale-98"
+                title="Dựng toàn bộ hình vẽ bao gồm cả đường kẻ phụ bài giải (nét đứt #2563eb)"
+              >
+                {isAiGenerating && diagramTarget === 'solution' ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                )}
+                <span>Tạo hình bài giải</span>
+              </button>
+            </div>
           )}
 
           <input
@@ -406,15 +480,29 @@ export default function SharedIllustrationCard({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation()
-                  handleOpenAiModal(true)
+                  handleOpenAiModal(true, 'question')
                 }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-xl transition-all shadow-xs cursor-pointer active:scale-98"
-                title="Tự động lấy đề bài gửi Gemini để sinh ảnh minh họa hoặc vẽ bảng biểu"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-all shadow-xs cursor-pointer active:scale-98"
+                title="Dựng hình chỉ có các yếu tố đề bài gốc (nét liền #0f172a, không vẽ nét đứt của bài giải)"
               >
-                <Sparkles className="w-4 h-4 text-amber-600" />
-                <span>Tạo ảnh minh họa đề bài</span>
+                <Sparkles className="w-4 h-4 text-blue-600" />
+                <span>Tạo hình đề bài (Nét liền)</span>
                 <span className="sr-only">Vẽ hình minh hoạ</span>
               </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleOpenAiModal(true, 'solution')
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl transition-all shadow-xs cursor-pointer active:scale-98"
+                title="Dựng toàn bộ hình vẽ bao gồm cả đường kẻ phụ bài giải (nét đứt #2563eb)"
+              >
+                <Sparkles className="w-4 h-4 text-indigo-600" />
+                <span>Tạo hình bài giải (Kèm nét đứt)</span>
+              </button>
+
               <span className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-primary bg-primary/10 rounded-xl group-hover:bg-primary group-hover:text-white transition-all cursor-pointer">
                 <Upload className="w-4 h-4" />
                 <span>Tải ảnh lên</span>
@@ -440,12 +528,29 @@ export default function SharedIllustrationCard({
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4 flex-shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-amber-600 shadow-xs">
+                <div className={`w-10 h-10 rounded-2xl border flex items-center justify-center shadow-xs ${
+                  diagramTarget === 'solution'
+                    ? 'bg-indigo-50 border-indigo-200/60 text-indigo-600'
+                    : 'bg-blue-50 border-blue-200/60 text-blue-600'
+                }`}>
                   <Sparkles className="w-5 h-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 id="ai-geom-modal-title" className="text-base font-bold text-slate-900">
-                    {imgSrc ? 'Sửa hình minh hoạ' : 'Vẽ hình minh hoạ'}
+                  <h3 id="ai-geom-modal-title" className="text-base font-bold text-slate-900 flex items-center gap-1.5">
+                    {imgSrc ? (
+                      <span>Sửa hình minh hoạ</span>
+                    ) : (
+                      <>
+                        <span>Vẽ hình minh hoạ</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${
+                          diagramTarget === 'question'
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                        }`}>
+                          {diagramTarget === 'question' ? 'Đề bài (Nét liền)' : 'Bài giải (Kèm nét đứt)'}
+                        </span>
+                      </>
+                    )}
                   </h3>
                 </div>
               </div>
@@ -461,6 +566,75 @@ export default function SharedIllustrationCard({
 
             {/* Context Information: Hiển thị ĐẦY ĐỦ đề bài và lời giải như khi gửi lên Gemini */}
             <div className="space-y-4 mb-4 overflow-y-auto pr-1">
+              {/* Phân biệt Mục tiêu dựng hình: Đề bài vs Toàn bộ bài giải */}
+              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <span>Mục tiêu dựng hình:</span>
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-medium">
+                    {diagramTarget === 'question' ? 'Chỉ vẽ đề bài gốc' : 'Vẽ cả bài giải + đường phụ'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchTarget('question')}
+                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      diagramTarget === 'question'
+                        ? 'bg-blue-50/80 border-blue-500 ring-2 ring-blue-500/10 shadow-xs text-blue-950'
+                        : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'
+                    }`}
+                  >
+                    <div
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
+                        diagramTarget === 'question'
+                          ? 'border-blue-600 bg-blue-600 text-white'
+                          : 'border-slate-300'
+                      }`}
+                    >
+                      {diagramTarget === 'question' && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-blue-900 flex items-center gap-1">
+                        <span>1. Hình vẽ ĐỀ BÀI (Câu hỏi)</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                        Chỉ vẽ đối tượng trong đề gốc (nét liền <code className="text-[#0f172a] font-mono bg-white px-1 py-0.5 rounded border border-slate-200">#0f172a</code>). Không vẽ đường phụ giải.
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchTarget('solution')}
+                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      diagramTarget === 'solution'
+                        ? 'bg-indigo-50/80 border-indigo-500 ring-2 ring-indigo-500/10 shadow-xs text-indigo-950'
+                        : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'
+                    }`}
+                  >
+                    <div
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
+                        diagramTarget === 'solution'
+                          ? 'border-indigo-600 bg-indigo-600 text-white'
+                          : 'border-slate-300'
+                      }`}
+                    >
+                      {diagramTarget === 'solution' && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-indigo-900 flex items-center gap-1">
+                        <span>2. Hình vẽ TOÀN BỘ BÀI GIẢI</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                        Vẽ đầy đủ hình đề bài + các đường kẻ phụ chứng minh (nét đứt <code className="text-blue-600 font-mono bg-white px-1 py-0.5 rounded border border-slate-200">#2563eb</code>).
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <div className="bg-slate-50/90 rounded-xl p-3.5 border border-slate-200/90 text-xs text-slate-700 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
@@ -481,9 +655,20 @@ export default function SharedIllustrationCard({
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
-                    Lời giải chi tiết:
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                      Lời giải chi tiết:
+                    </span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                      diagramTarget === 'question'
+                        ? 'bg-slate-200 text-slate-600'
+                        : 'bg-indigo-100 text-indigo-700'
+                    }`}>
+                      {diagramTarget === 'question'
+                        ? 'Chỉ dùng kiểm chứng tọa độ (Bỏ qua đường phụ)'
+                        : 'Nguồn trích xuất đường dựng phụ nét đứt #2563eb'}
+                    </span>
+                  </div>
                   <div className="bg-white p-2.5 rounded-lg border border-slate-200 text-xs text-slate-800 max-h-48 overflow-y-auto whitespace-pre-wrap leading-relaxed select-text font-sans">
                     {fullSolutionPreview || '(Chưa có lời giải chi tiết)'}
                   </div>
@@ -501,19 +686,23 @@ export default function SharedIllustrationCard({
                   <button
                     type="button"
                     onClick={() => {
-                      const q = formatTextForPreview(questionContent)
-                      if (q) {
-                        setCustomPrompt(`Vẽ hình minh họa / bảng biểu chính xác cho bài toán sau:\n${q}`)
-                        toast.success('Đã tự động lấy đề bài đưa vào chỉ dẫn!')
+                      const prompt = buildPrefillPrompt(diagramTarget)
+                      if (prompt) {
+                        setCustomPrompt(prompt)
+                        toast.success(
+                          diagramTarget === 'question'
+                            ? 'Đã tự động nạp chỉ dẫn dựng hình cho Đề bài!'
+                            : 'Đã tự động nạp chỉ dẫn dựng hình cho Bài giải!'
+                        )
                       } else {
-                        toast.error('Chưa có nội dung đề bài để đưa vào chỉ dẫn.')
+                        toast.error('Chưa có nội dung để đưa vào chỉ dẫn.')
                       }
                     }}
                     className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer"
-                    title="Tự động sao chép toàn bộ đề bài vào ô chỉ dẫn bên dưới"
+                    title="Tự động sao chép nội dung phù hợp vào ô chỉ dẫn bên dưới"
                   >
                     <Sparkles className="w-3 h-3 text-blue-600" />
-                    <span>Tự động thêm đề bài vào chỉ dẫn</span>
+                    <span>Tự động nạp chỉ dẫn theo mục tiêu</span>
                   </button>
                 </div>
                 <textarea

@@ -239,6 +239,7 @@ export interface RefineGeometrySVGParams {
   solution_guide?: string
   current_svg?: string
   custom_prompt?: string
+  target?: 'question' | 'solution'
 }
 
 export async function refineGeometrySVG(params: RefineGeometrySVGParams): Promise<string> {
@@ -762,6 +763,29 @@ export async function uploadUserAvatar(file: File): Promise<string> {
   });
   return res.data?.avatarUrl || res.avatarUrl;
 }
+
+export interface FaqChatSource {
+  id: string
+  question: string
+  category: string
+}
+
+export interface FaqChatResponse {
+  answer: string
+  sources?: FaqChatSource[]
+}
+
+export async function sendFaqChatMessage(message: string): Promise<FaqChatResponse> {
+  const res = await apiFetch('/chat/faq', {
+    method: 'POST',
+    body: JSON.stringify({ message }),
+  })
+  if (res && res.success && res.data) {
+    return res.data
+  }
+  throw new Error(res?.error || 'Không nhận được phản hồi từ hệ thống.')
+}
+
 
 
 

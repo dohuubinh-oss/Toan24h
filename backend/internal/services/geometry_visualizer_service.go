@@ -23,6 +23,7 @@ type GeometryVisualizerRequest struct {
 	SolutionGuide string `json:"solution_guide"` // Lời giải chi tiết
 	CurrentSVG    string `json:"current_svg"`    // SVG hiện có nếu muốn bổ sung nét
 	CustomPrompt  string `json:"custom_prompt"`  // Ghi chú bổ sung từ giáo viên
+	Target        string `json:"target"`         // "question" (chỉ hình vẽ đề bài) hoặc "solution" (hình vẽ toàn bộ bài giải)
 }
 
 // ExtractCleanSVG finds and normalizes the <svg>...</svg> block from raw model output
@@ -75,12 +76,32 @@ func BuildGeometryContext(req GeometryVisualizerRequest) string {
 		contextBuilder.WriteString("=================================================================\n\n")
 	}
 
+	// Phân định mục tiêu dựng hình: Cho đề bài (câu hỏi) hay cho toàn bộ bài giải
+	if req.Target == "question" {
+		contextBuilder.WriteString("=================================================================\n")
+		contextBuilder.WriteString("🎯 PHÂN LOẠI MỤC TIÊU DỰNG HÌNH: CHỈ DỰNG HÌNH VẼ CHO CÂU HỎI (ĐỀ BÀI GỐC)\n")
+		contextBuilder.WriteString("👉 BẮT BUỘC: CHỈ vẽ các điểm, đoạn thẳng, đường tròn đã cho trực tiếp trong đề bài.\n")
+		contextBuilder.WriteString("👉 TUYỆT ĐỐI KHÔNG vẽ bất kỳ đường kẻ phụ, điểm phụ, chân đường cao kẻ thêm hay tiếp tuyến nào xuất hiện trong lời giải để tránh làm lộ lời giải cho học sinh!\n")
+		contextBuilder.WriteString("👉 Toàn bộ các nét vẽ đều là nét liền (style: \"solid\", color: \"#0f172a\"). KHÔNG dùng nét đứt \"dashed\".\n")
+		contextBuilder.WriteString("=================================================================\n\n")
+	} else if req.Target == "solution" {
+		contextBuilder.WriteString("=================================================================\n")
+		contextBuilder.WriteString("🎯 PHÂN LOẠI MỤC TIÊU DỰNG HÌNH: DỰNG HÌNH VẼ CHO TOÀN BỘ BÀI GIẢI (FULL SOLUTION)\n")
+		contextBuilder.WriteString("👉 BẮT BUỘC: Vẽ ĐẦY ĐỦ các đối tượng của đề bài VÀ tất cả các nét dựng phụ, đường kẻ thêm, giao điểm phụ trong lời giải chi tiết.\n")
+		contextBuilder.WriteString("👉 Phân biệt nét vẽ: Nét đề bài dùng nét liền (style: \"solid\", color: \"#0f172a\"); Nét dựng thêm của bài giải BẮT BUỘC dùng nét đứt (style: \"dashed\", color: \"#2563eb\").\n")
+		contextBuilder.WriteString("=================================================================\n\n")
+	}
+
 	contextBuilder.WriteString("THÔNG TIN BÀI TOÁN CẦN DỰNG HÌNH:\n")
 	if req.Content != "" {
 		contextBuilder.WriteString(fmt.Sprintf("- Đề bài/Nội dung câu hỏi:\n%s\n\n", strings.TrimSpace(req.Content)))
 	}
 	if req.SolutionGuide != "" {
-		contextBuilder.WriteString(fmt.Sprintf("- Lời giải chi tiết:\n%s\n\n", strings.TrimSpace(req.SolutionGuide)))
+		if req.Target == "question" {
+			contextBuilder.WriteString(fmt.Sprintf("- Lời giải chi tiết (CHỈ ĐỂ THAM KHẢO NGỮ CẢNH, TUYỆT ĐỐI KHÔNG VẼ ĐƯỜNG KẺ PHỤ CỦA LỜI GIẢI VÀO HÌNH NÀY):\n%s\n\n", strings.TrimSpace(req.SolutionGuide)))
+		} else {
+			contextBuilder.WriteString(fmt.Sprintf("- Lời giải chi tiết (nhận diện các đường dựng thêm, giao điểm phụ để vẽ nét đứt #2563eb):\n%s\n\n", strings.TrimSpace(req.SolutionGuide)))
+		}
 	}
 	if req.CurrentSVG != "" {
 		if req.CustomPrompt != "" {
@@ -147,11 +168,17 @@ func GenerateGeometrySVG(req GeometryVisualizerRequest) (string, error) {
    - Điểm M được biểu diễn bằng [x, y]: Ox sang phải, Oy hướng LÊN TRÊN (chuẩn toán học).
    - Tọa độ các điểm đặt trong khoảng số đẹp từ 0 đến 10 để hình vẽ cân đối, sắc nét.
 
-3. PHÂN BIỆT RÕ RÀNG GIỮA "NÉT VẼ ĐỀ BÀI" VÀ "NÉT VẼ LỜI GIẢI":
-   - Nét vẽ ĐỀ BÀI GỐC (các điểm, đoạn thẳng, đường tròn đã cho):
-     👉 Đặt "style": "solid", "color": "#0f172a" (nét liền màu xanh than).
-   - Nét vẽ LỜI GIẢI / DỰNG THÊM (đường cao, trung tuyến, phân giác, tiếp tuyến, đường phụ...):
-     👉 Đặt "style": "dashed", "color": "#2563eb" (nét đứt màu xanh dương hoàng gia).
+3. QUY TẮC PHÂN BIỆT "HÌNH VẼ CÂU HỎI" VÀ "HÌNH VẼ TOÀN BỘ BÀI GIẢI":
+   - TRƯỜNG HỢP A - HÌNH VẼ CHO CÂU HỎI (Target: 'question'):
+     👉 Chỉ vẽ các đối tượng hình học xuất hiện TRỰC TIẾP trong nội dung đề bài (đỉnh, cạnh đáy, cạnh bên, đường tròn ban đầu).
+     👉 TUYỆT ĐỐI KHÔNG vẽ các đường kẻ phụ, đường kính phụ, tiếp tuyến phụ, chân đường cao kẻ thêm hay điểm chia suy diễn của lời giải.
+     👉 Tuyệt đối không làm lộ phương pháp chứng minh hoặc đáp số cho học sinh khi làm bài.
+     👉 100% các đoạn thẳng, đường tròn là nét liền ("style": "solid", "color": "#0f172a"). Mảng segments KHÔNG chứa bất kỳ nét đứt "dashed" nào.
+   - TRƯỜNG HỢP B - HÌNH VẼ CHO TOÀN BỘ BÀI GIẢI (Target: 'solution'):
+     👉 Vẽ ĐẦY ĐỦ cả hình vẽ đề bài VÀ tất cả các nét kẻ phụ, điểm dựng thêm được nêu trong phần Lời giải chi tiết.
+     👉 Nét vẽ ĐỀ BÀI GỐC: "style": "solid", "color": "#0f172a" (nét liền màu xanh than).
+     👉 Nét vẽ LỜI GIẢI / DỰNG THÊM (đường cao, trung tuyến, phân giác, tiếp tuyến, đường kính phụ, đoạn nối phụ...): BẮT BUỘC đặt "style": "dashed", "color": "#2563eb" (nét đứt màu xanh dương hoàng gia).
+     👉 Ký hiệu góc vuông, ký hiệu đoạn bằng nhau sinh ra trong quá trình giải: đánh dấu rõ nét.
    - Nếu đề bài có cho số đo cụ thể (ví dụ 6 cm, 8 cm, a):
      👉 Thêm trường "label": "6 cm" vào đoạn thẳng tương ứng.
 

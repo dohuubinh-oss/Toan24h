@@ -7,6 +7,7 @@ import CookieConsentBanner from '@/components/common/CookieConsentBanner'
 import { ToastProvider } from '@/components/ui/ToastProvider'
 import { ImageViewerProvider } from '@/components/ui/ImageViewerProvider'
 import DragScrollProvider from '@/components/common/DragScrollProvider'
+import FaqChatWidget from '@/components/chat/FaqChatWidget'
 
 const lexend = Lexend({ 
   subsets: ['latin', 'vietnamese'],
@@ -133,6 +134,7 @@ export default function RootLayout({
               <GradeSelectionModal />
               <SessionGuard />
               <CookieConsentBanner />
+              <FaqChatWidget />
               {children}
             </DragScrollProvider>
           </ImageViewerProvider>

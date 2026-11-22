@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -92,7 +93,7 @@ func ParseAndProcessExtractedLecture(rawJson string, sourceImages []image.Image,
 
 // ExtractLectureFromImages calls Gemini Vision to extract math lecture types, methods and step-by-step examples.
 // If paraphrase is true, Gemini is instructed to change names, contexts, and numbers in example problems while preserving theory and methods.
-func ExtractLectureFromImages(files [][]byte, mimeTypes []string, paraphrase ...bool) (string, error) {
+func ExtractLectureFromImages(files [][]byte, mimeTypes []string, targetGradeStr string, paraphrase ...bool) (string, error) {
 	if utils.GlobalGeminiPool == nil || utils.GlobalGeminiPool.KeyCount() == 0 {
 		utils.InitGlobalGeminiPool()
 	}
@@ -136,53 +137,79 @@ func ExtractLectureFromImages(files [][]byte, mimeTypes []string, paraphrase ...
 		isParaphrase = true
 	}
 
+	targetGradeInt := 0
+	if targetGradeStr != "" {
+		if g, err := strconv.Atoi(strings.TrimSpace(targetGradeStr)); err == nil {
+			targetGradeInt = g
+		}
+	}
+
+	gradeHint := ""
+	if targetGradeInt >= 5 && targetGradeInt <= 12 {
+		gradeHint = fmt.Sprintf("\nLƯU Ý KHỐI LỚP: Người dùng yêu cầu bóc tách bài giảng & phương pháp giải cho KHỐI LỚP %d. Bạn BẮT BUỘC biên soạn nội dung, thuật ngữ và ví dụ mẫu bám sát 100%% chuẩn chương trình GDPT 2018 của Lớp %d.\n", targetGradeInt, targetGradeInt)
+	}
+
 	paraphraseInstruction := ""
 	if isParaphrase {
 		paraphraseInstruction = `
-QUY TẮC ĐẶC BIỆT: CHẾ ĐỘ LÀM MỚI BÀI TOÁN TRÁNH VI PHẠM BẢN QUYỀN (ANTI-COPYRIGHT PARAPHRASING):
-Người dùng đã tích chọn "Làm mới số liệu ví dụ & bối cảnh". Bạn BẮT BUỘC tuân thủ 4 nguyên tắc sư phạm:
-1. BẢO TOÀN LÝ THUYẾT & LÀM MỚI VĂN PHONG:
-   - Giữ nguyên 100% tên dạng toán ("mathType") và các công thức, định lý gốc.
-   - Diễn đạt lại phương pháp giải tổng quát bằng văn phong sư phạm mới mẻ, gãy gọn, hiện đại, không sao chép nguyên văn câu từ của sách gốc.
-2. LÀM MỚI BÀI TẬP VÍ DỤ VỚI "BỘ SỐ ĐẸP CHUẨN SƯ PHẠM":
-   - BẮT BUỘC THIẾT KẾ BÀI TOÁN NGƯỢC: Chọn trước nghiệm là số nguyên đẹp ($x = 1, 2, -3$) hoặc phân số tối giản mẫu số nhỏ ($1/2, 3/4$), sau đó mới tính ra hệ số của đề bài mới. TUYỆT ĐỐI KHÔNG sinh số liệu ngẫu nhiên tạo ra nghiệm vô tỉ hoặc phân số cồng kềnh.
-   - Với bài hình học: Áp dụng các bộ số Pytago kinh điển ($3-4-5$, $5-12-13$, $6-8-10$) hoặc góc đẹp ($30^\circ, 45^\circ, 60^\circ$).
-   - Bài toán thực tế: Đổi tên nhân vật (An $\rightarrow$ Minh, Nam $\rightarrow$ Hùng...), tình huống và vật phẩm gần gũi với đời sống học sinh hiện đại.
-3. ĐỒNG BỘ TUYỆT ĐỐI GIỮA ĐỀ MỚI VÀ LỜI GIẢI MỚI (CHỐNG "RÂU ÔNG NỌ CẮM CẰM BÀ KIA"):
-   - Tính toán lại 100% toàn bộ các bước giải ("steps"), công thức ("formula") và đáp số ("conclusion") theo bộ số liệu mới. Đảm bảo tính nhất quán tuyệt đối, không để sót bất kỳ số liệu hay dấu vết nào của đề bài cũ.
-4. QUY TẮC BẢO TOÀN SỐ LIỆU ĐỐI VỚI HÌNH VẼ CẮT ([DIAGRAM]):
-   - Nếu bài toán có hình vẽ/đồ thị/bảng số liệu minh họa cắt từ ảnh gốc ([DIAGRAM]) mà trên hình ĐÃ IN SẴN CÁC SỐ ĐO CỐ ĐỊNH (ví dụ cạnh $AB = 4\text{ cm}$, góc $60^\circ$ ghi trực tiếp trên hình): BẮT BUỘC GIỮ NGUYÊN các số đo đó trong đề bài mới để khớp 100% với hình vẽ cắt.
-   - Chỉ làm mới số liệu cho các bài toán mà hình vẽ là hình thuần túy không in chết số đo, hoặc các bài toán đại số không có hình vẽ.
+================================================================================
+CHÍNH SÁCH BẮT BUỘC: BẢO VỆ BẢN QUYỀN TUYỆT ĐỐI (100% ORIGINAL CONTENT)
+================================================================================
+Người dùng đã bật chế độ "Làm mới số liệu ví dụ & bối cảnh để tránh vi phạm bản quyền".
+Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC PHÉP sao chép nguyên văn đề bài, số liệu, bài tập mẫu từ sách giáo khoa (Bộ GD&ĐT), sách bài tập hay các tài liệu luyện thi có bản quyền. BẮT BUỘC tuân thủ 5 thiết luật sau:
+
+1. BẢO TOÀN MỤC TIÊU NĂNG LỰC - TÁI CẤU TRÚC VĂN PHONG SƯ PHẠM 100% MỚI:
+   - Giữ nguyên 100% bản chất định lý, công thức toán học và tên dạng toán ("mathType").
+   - Viết lại toàn bộ câu từ giải thích phương pháp giải ("methods[].solution") bằng văn phong sư phạm mới, ngắn gọn, mạch lạc, trực quan.
+   - Trình bày phương pháp theo từng bước tư duy: "Bước 1: ... \n\n Bước 2: ...". Mỗi bước cách nhau 2 dấu xuống dòng (\n\n).
+
+2. THIẾT KẾ BÀI TOÁN NGƯỢC VỚI BỘ SỐ ĐẸP CHUẨN SƯ PHẠM CHO BÀI TẬP VÍ DỤ MẪU:
+   - BẮT BUỘC THIẾT KẾ BÀI TOÁN NGƯỢC: Chọn trước nghiệm là số nguyên đẹp ($x = 1, 2, -3$) hoặc phân số tối giản mẫu số nhỏ ($1/2, 3/4$), sau đó mới tính ngược ra hệ số của đề bài mới. TUYỆT ĐỐI KHÔNG sinh số liệu ngẫu nhiên tạo ra nghiệm vô tỉ hoặc phân số cồng kềnh.
+   - Bài toán hình học: Áp dụng các bộ số Pytago kinh điển ($3-4-5$, $5-12-13$, $6-8-10$) hoặc góc đặc biệt ($30^\circ, 45^\circ, 60^\circ, 90^\circ$).
+   - Bài toán thực tế: Đổi mới 100% bối cảnh (mua sắm thông minh, tiết kiệm điện nước, vận tốc xe điện, năng lượng mặt trời, nông nghiệp công nghệ cao...), dùng tên nhân vật thuần Việt (Minh, An, Trang, Tuấn, Khoa, Hoàng, Đức, Vy...).
+
+3. ĐỒNG BỘ TUYỆT ĐỐI GIỮA ĐỀ BÀI MỚI VÀ LỜI GIẢI MỚI (CHỐNG LỆCH PHA SỐ LIỆU):
+   - Toàn bộ đề bài ("problem"), các bước giải chi tiết ("steps"), công thức trọng tâm ("formula") và kết luận đáp số ("conclusion") PHẢI ĐƯỢC TÍNH TOÁN LẠI 100% ĐỒNG BỘ theo bộ số liệu mới. Không để sót bất kỳ số liệu hay dấu vết nào của bài toán cũ trong tài liệu gốc.
+
+4. BẢO VỆ BẢN QUYỀN HÌNH VẼ & BẢNG BIỂU (TUYỆT ĐỐI KHÔNG CẮT ẢNH TỪ SÁCH):
+   - TUYỆT ĐỐI KHÔNG cắt ảnh từ tài liệu gốc (không tạo placeholder [DIAGRAM] cắt ảnh từ sách vì hình vẽ trong sách có logo, nét vẽ bản quyền).
+   - Bảng biến thiên, bảng xét dấu, bảng giá trị tọa độ: Chuyển đổi trực tiếp thành bảng HTML sạch (<table class="table-auto border-collapse border border-slate-300">...</table>) hoặc bảng LaTeX nhúng trực tiếp vào văn bản.
+   - Bài toán hình học: Mô tả đề bài rõ ràng, chính xác; hệ thống sẽ hỗ trợ giáo viên dùng AI Dựng hình vector SVG sau khi bóc tách.
+
+5. ĐẦY ĐỦ CÁC BƯỚC GIẢI CHI TIẾT ("steps") VÀ MẸO TRÁNH BẪY ("tips"):
+   - Tự động giải chi tiết từng bước cho các ví dụ mẫu. Nêu rõ định lý, công thức áp dụng.
+   - Thêm "tips" ghi rõ lưu ý sư phạm, mẹo nhận dạng nhanh hoặc các bẫy sai lầm học sinh thường gặp.
 `
 	}
 
-	prompt := `Bạn là Chuyên gia Sư phạm và Tổng chủ biên Số hóa Bài giảng Toán học THCS (Lớp 6, 7, 8, 9) chuẩn chương trình GDPT mới tại Việt Nam.
+	prompt := fmt.Sprintf(`Bạn là Chuyên gia Sư phạm và Tổng chủ biên Số hóa Bài giảng Toán học Việt Nam chuẩn chương trình Giáo dục Phổ thông mới (GDPT 2018) từ cấp THCS (Lớp 6 đến Lớp 9) đến THPT (Lớp 10 đến Lớp 12).
 Hãy đọc các trang ảnh tài liệu bài giảng/sách đính kèm (theo thứ tự từ trang đầu đến trang cuối) và bóc tách TOÀN BỘ các Dạng toán, Phương pháp giải và Bài tập ví dụ mẫu thành định dạng JSON chuẩn.
-` + paraphraseInstruction + `
+%s
+%s
 YÊU CẦU BÓC TÁCH & ĐỊNH DẠNG SƯ PHẠM NGHIÊM NGẶT:
-1. CHUẨN CÔNG THỨC TOÁN LATEX (TƯƠNG THÍCH KATEX 100%):
-   - 100% công thức toán học phải bọc trong cặp dấu $...$ (trong dòng) hoặc $$\n...\n$$ (công thức quan trọng đặt riêng dòng).
+1. CHUẨN CÔNG THỨC TOÁN LATEX (TƯƠNG THÍCH KATEX 100%%):
+   - 100%% công thức toán học phải bọc trong cặp dấu $...$ (trong dòng) hoặc $$\n...\n$$ (công thức quan trọng đặt riêng dòng).
    - Ký hiệu góc hình học: Dùng \widehat{ABC} hoặc \hat{A}. TUYỆT ĐỐI KHÔNG dùng \angle.
    - Quan hệ hình học: \Delta ABC (tam giác), \parallel (song song), \perp (vuông góc).
    - Số thập phân tiếng Việt viết liền mạch dạng $2{,}5$.
 2. QUY TẮC TRÌNH BÀY PHƯƠNG PHÁP GIẢI ("methods[].solution"):
-   - Viết bằng văn phong sư phạm súc tích, mạch lạc, hiện đại, dễ hiểu cho học sinh THCS.
+   - Viết bằng văn phong sư phạm súc tích, mạch lạc, hiện đại, dễ hiểu.
    - TUYỆT ĐỐI KHÔNG viết thành một khối văn bản dính liền nhau.
    - Mỗi định lý, quy tắc hoặc bước giải phải cách nhau 2 dấu xuống dòng (\n\n). Dùng gạch đầu dòng ("- ") hoặc đánh số ("Bước 1: ", "Bước 2: ") rõ ràng.
    - Các công thức toán cốt lõi phải được đặt trên một dòng riêng biệt.
 3. QUY TẮC TRÌNH BÀY VÀ TỰ ĐỘNG GIẢI VÍ DỤ MẪU ("problems"):
    - Đề bài ("problem"): Tách biệt câu dẫn và các ý con a), b), c) bằng dấu xuống dòng (\n hoặc \n\n).
    - TỰ ĐỘNG GIẢI CHI TIẾT THEO BƯỚC ("steps"): Nếu tài liệu chưa có lời giải hoặc lời giải vắn tắt, bạn BẮT BUỘC tự giải chi tiết từng bước theo chuẩn sư phạm:
+     + "step": Thứ tự bước (1, 2, 3...)
      + "title": Tên bước ngắn gọn (ví dụ: "Bước 1: Đặt điều kiện xác định", "Bước 2: Phân tích thành nhân tử").
      + "content": Lời giải thích sư phạm, nêu rõ định lý/công thức áp dụng.
      + "formula": Biểu thức toán học LaTeX trọng tâm của bước đó.
      + "conclusion": Kết luận rõ ràng đáp số cuối cùng của bài toán.
      + "tips": Mẹo giải nhanh, cách nhớ công thức hoặc lưu ý tránh bẫy sai lầm thường gặp.
-4. BẢNG BIẾN THIÊN, BẢNG SỐ LIỆU & HÌNH VẼ HÌNH HỌC (DIAGRAM):
-   - Bảng biến thiên, bảng xét dấu, bảng giá trị tọa độ hoặc đồ thị: BẮT BUỘC XEM LÀ HÌNH MINH HỌA (DIAGRAM).
-   - TUYỆT ĐỐI KHÔNG chuyển thành văn bản hoặc bảng Markdown rời rạc làm vỡ cấu trúc bài giảng.
-   - Chèn mã định danh [DIAGRAM_0_1] (trang 0, hình 1) vào đúng vị trí xuất hiện trong đề bài, phương pháp hoặc lời giải.
-   - Khai báo thông tin vào mảng "diagrams" với tọa độ chuẩn hóa box_2d [ymin, xmin, ymax, xmax] (thang đo 0-1000) bao trọn toàn bộ hình vẽ hoặc bảng dữ liệu đó để hệ thống tự cắt ảnh sắc nét từ bản gốc.
+4. BẢNG BIẾN THIÊN, BẢNG XÉT DẤU & HÌNH VẼ HÌNH HỌC:
+   - TUYỆT ĐỐI KHÔNG cắt ảnh từ sách giáo khoa (không tạo mảng "diagrams" cắt ảnh).
+   - Bảng biến thiên, bảng xét dấu, bảng giá trị tọa độ: Chuyển đổi thành bảng HTML sạch (<table class="table-auto border-collapse border border-slate-300">...</table>) hoặc bảng LaTeX nhúng trực tiếp vào nội dung.
+   - Bài toán hình học: Nêu đầy đủ giả thiết, dữ kiện trong đề bài để hệ thống hỗ trợ giáo viên dùng AI Dựng hình vector sau khi bóc tách.
 5. CẤU TRÚC JSON ĐẦU RA BẮT BUỘC:
    - Trả về DUY NHẤT một mảng JSON thuần túy theo định dạng sau (tuyệt đối KHÔNG kèm markdown fences như ` + "```" + `json hay bất kỳ văn bản giải thích nào ngoài JSON):
 [
@@ -214,16 +241,9 @@ YÊU CẦU BÓC TÁCH & ĐỊNH DẠNG SƯ PHẠM NGHIÊM NGẶT:
           }
         ]
       }
-    ],
-    "diagrams": [
-      {
-        "image_index": 0,
-        "box_2d": [100, 200, 500, 600],
-        "placeholder": "[DIAGRAM_0_1]"
-      }
     ]
   }
-]`
+]`, gradeHint, paraphraseInstruction)
 
 	parts := []map[string]interface{}{
 		{"text": prompt},

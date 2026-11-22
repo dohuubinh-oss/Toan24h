@@ -21,6 +21,7 @@ export interface AiLectureExtractModalProps {
   onExtracted: (jsonString: string) => void
   title?: string
   description?: string
+  defaultGrade?: string
 }
 
 interface ImageFileItem {
@@ -35,25 +36,31 @@ export default function AiLectureExtractModal({
   onExtracted,
   title = 'Bóc tách Dạng toán & Bài tập mẫu bằng AI',
   description = 'Tự động nhận diện dạng toán, phương pháp giải và tự động giải chi tiết ví dụ mẫu',
+  defaultGrade,
 }: AiLectureExtractModalProps) {
   const [images, setImages] = useState<ImageFileItem[]>([])
+  const [selectedGrade, setSelectedGrade] = useState<string>(defaultGrade || '')
   const [isExtracting, setIsExtracting] = useState(false)
-  const [isParaphrase, setIsParaphrase] = useState(false)
+  const [isParaphrase, setIsParaphrase] = useState(true)
   const [statusMessage, setStatusMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      setSelectedGrade(defaultGrade || '')
+      setIsParaphrase(true)
+    } else {
       images.forEach((item) => URL.revokeObjectURL(item.previewUrl))
       setImages([])
+      setSelectedGrade(defaultGrade || '')
+      setIsParaphrase(true)
       setIsExtracting(false)
-      setIsParaphrase(false)
       setStatusMessage('')
       setErrorMessage(null)
     }
-  }, [isOpen])
+  }, [isOpen, defaultGrade])
 
   if (!isOpen) return null
 
@@ -130,6 +137,11 @@ export default function AiLectureExtractModal({
     e.preventDefault()
     setErrorMessage(null)
 
+    if (!selectedGrade) {
+      setErrorMessage('Vui lòng chọn khối lớp của bài giảng trước khi bóc tách!')
+      return
+    }
+
     if (images.length === 0) {
       setErrorMessage('Vui lòng chọn ít nhất 1 ảnh bài giảng')
       return
@@ -140,6 +152,7 @@ export default function AiLectureExtractModal({
       setStatusMessage('Đang tải ảnh bài giảng lên máy chủ...')
 
       const formData = new FormData()
+      formData.append('grade', selectedGrade)
       images.forEach((item) => {
         formData.append('files', item.file)
       })
@@ -226,6 +239,49 @@ export default function AiLectureExtractModal({
               <span>{errorMessage}</span>
             </div>
           )}
+
+          {/* Grade Selection */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="ai-lecture-grade-select"
+                className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>Khối lớp bài giảng</span>
+                <span className="text-rose-500">*</span>
+              </label>
+              {!selectedGrade && (
+                <span className="text-[11px] font-semibold text-rose-500 animate-pulse">
+                  Bắt buộc chọn
+                </span>
+              )}
+            </div>
+            <select
+              id="ai-lecture-grade-select"
+              aria-label="Chọn khối lớp"
+              value={selectedGrade}
+              onChange={(e) => {
+                setSelectedGrade(e.target.value)
+                if (errorMessage) setErrorMessage(null)
+              }}
+              disabled={isExtracting}
+              className={`w-full text-xs sm:text-sm font-semibold rounded-xl border p-2.5 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer disabled:opacity-50 transition-all shadow-xs ${
+                !selectedGrade && errorMessage?.includes('khối lớp')
+                  ? 'border-rose-400 bg-rose-50/30 ring-2 ring-rose-400/20'
+                  : 'border-slate-200'
+              }`}
+            >
+              <option value="">-- Vui lòng chọn khối lớp (Bắt buộc) --</option>
+              <option value="12">Lớp 12 (Chương trình GDPT mới)</option>
+              <option value="11">Lớp 11 (Chương trình GDPT mới)</option>
+              <option value="10">Lớp 10 (Chương trình GDPT mới)</option>
+              <option value="9">Lớp 9 (Chương trình GDPT mới)</option>
+              <option value="8">Lớp 8 (Chương trình GDPT mới)</option>
+              <option value="7">Lớp 7 (Chương trình GDPT mới)</option>
+              <option value="6">Lớp 6 (Chương trình GDPT mới)</option>
+              <option value="5">Lớp 5 (Tiểu học)</option>
+            </select>
+          </div>
 
           {/* Upload Dropzone */}
           <div className="space-y-2">

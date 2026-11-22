@@ -49,6 +49,15 @@ func ConnectDB(dsn string) error {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 
+	// Enable pgvector extension and migrate FAQDocument if pgvector is available
+	if extErr := DB.Exec("CREATE EXTENSION IF NOT EXISTS vector").Error; extErr == nil {
+		if faqErr := DB.AutoMigrate(&models.FAQDocument{}); faqErr != nil {
+			log.Printf("Warning: failed to migrate FAQDocument: %v", faqErr)
+		}
+	} else {
+		log.Printf("Notice: vector extension not enabled or not supported in current postgres instance: %v", extErr)
+	}
+
 	sqlDB, err := DB.DB()
 	if err != nil {
 		return fmt.Errorf("failed to get sql.DB from gorm.DB: %w", err)

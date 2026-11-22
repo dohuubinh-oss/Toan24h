@@ -16,6 +16,7 @@ import {
 import { apiFetch } from '@/lib/api'
 import { toast } from '@/components/ui/ToastProvider'
 import PayOSPaymentModal, { PayOSPaymentData } from '@/components/payment/PayOSPaymentModal'
+import HomeFooter from '@/components/home/HomeFooter'
 
 interface Plan {
   id: string
@@ -34,13 +35,13 @@ interface Plan {
 const PLANS: Plan[] = [
   {
     id: '1_month',
-    name: 'Khóa học trực tuyến 1 Tháng',
+    name: 'Gói 1 Tháng',
     durationMonths: 1,
-    price: 300000,
-    pricePerMonth: '300.000đ / tháng',
-    description: 'Khóa học trực tuyến và dịch vụ hỗ trợ giáo dục, làm quen phương pháp học thông minh.',
+    price: 200000,
+    pricePerMonth: '200.000đ / tháng',
+    description: 'Gói dịch vụ hỗ trợ giáo dục và ôn tập, làm quen phương pháp học thông minh.',
     features: [
-      'Toàn quyền tham gia bài giảng khóa học trực tuyến',
+      'Toàn quyền tham gia bài giảng và chuyên đề trực tuyến',
       'Hệ thống chấm bài tự động & hướng dẫn chi tiết từng bước',
       'Dịch vụ hỗ trợ giáo dục & giải đáp câu hỏi 24/7',
       'Theo dõi tiến độ học tập và năng lực cơ bản',
@@ -48,16 +49,16 @@ const PLANS: Plan[] = [
   },
   {
     id: '3_months',
-    name: 'Khóa học trực tuyến 3 Tháng',
+    name: 'Gói 3 Tháng',
     durationMonths: 3,
-    price: 675000,
-    originalPrice: 900000,
-    pricePerMonth: '225.000đ / tháng',
+    price: 450000,
+    originalPrice: 600000,
+    pricePerMonth: '150.000đ / tháng',
     discountBadge: 'Tiết kiệm 25%',
     popular: true,
-    description: 'Khóa học trực tuyến và dịch vụ hỗ trợ giáo dục bứt phá điểm số thi giữa kỳ & cuối kỳ.',
+    description: 'Gói dịch vụ hỗ trợ giáo dục bứt phá điểm số thi giữa kỳ & cuối kỳ.',
     features: [
-      'Toàn bộ quyền lợi khóa học 1 tháng',
+      'Toàn bộ quyền lợi gói 1 tháng',
       'Kho 50.000+ câu hỏi luyện thi có chấm bài tự động',
       'Dịch vụ hỗ trợ giáo dục và tư vấn khắc phục điểm yếu',
       'Báo cáo điểm số & thời gian học qua Telegram cho phụ huynh',
@@ -65,32 +66,32 @@ const PLANS: Plan[] = [
   },
   {
     id: '9_months',
-    name: 'Khóa học trực tuyến 9 Tháng',
+    name: 'Gói 9 Tháng',
     durationMonths: 9,
-    price: 1755000,
-    originalPrice: 2700000,
-    pricePerMonth: '195.000đ / tháng',
+    price: 1170000,
+    originalPrice: 1800000,
+    pricePerMonth: '130.000đ / tháng',
     discountBadge: 'Tiết kiệm 35%',
-    description: 'Khóa học trực tuyến và dịch vụ hỗ trợ giáo dục đồng hành trọn vẹn cả năm học.',
+    description: 'Gói dịch vụ hỗ trợ giáo dục đồng hành trọn vẹn cả năm học.',
     features: [
-      'Toàn bộ quyền lợi khóa học 3 tháng',
+      'Toàn bộ quyền lợi gói 3 tháng',
       'Đồng hành xuyên suốt cả năm học (Kỳ 1 + Kỳ 2)',
-      'Khóa học ôn thi học kỳ & đề thi thử chọn lọc của các trường điểm',
+      'Gói ôn thi học kỳ & đề thi thử chọn lọc của các trường điểm',
       'Chấm bài tự động bằng AI & chuyên đề ôn thi nâng cao',
     ],
   },
   {
     id: '1_year',
-    name: 'Khóa học trực tuyến 1 Năm',
+    name: 'Gói 1 Năm',
     durationMonths: 12,
-    price: 1800000,
-    originalPrice: 3600000,
-    pricePerMonth: '150.000đ / tháng',
+    price: 1200000,
+    originalPrice: 2400000,
+    pricePerMonth: '100.000đ / tháng',
     discountBadge: 'Tiết kiệm 50%',
     bestValue: true,
-    description: 'Khóa học trực tuyến và dịch vụ hỗ trợ giáo dục toàn diện cả năm và luyện thi vào 10.',
+    description: 'Gói dịch vụ hỗ trợ giáo dục toàn diện cả năm và luyện thi vào 10.',
     features: [
-      'Đặc quyền tham gia toàn bộ Khóa học trực tuyến 365 ngày',
+      'Đặc quyền tham gia toàn bộ Gói học 365 ngày',
       'Kho đề thi vào 10 độc quyền có chấm bài tự động cập nhật liên tục',
       'Dịch vụ hỗ trợ giáo dục toàn diện & định hướng lộ trình 1-1',
       'Phân tích năng lực học sinh và dự đoán phổ điểm thi bằng AI',
@@ -177,8 +178,9 @@ export default function UpgradePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/60 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-slate-50/60 flex flex-col justify-between">
+      <main className="py-12 px-4 sm:px-6 lg:px-8 flex-1">
+        <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
@@ -383,7 +385,11 @@ export default function UpgradePage() {
             </Link>
           </p>
         </div>
-      </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <HomeFooter />
 
       {/* PayOS Payment Modal Component */}
       <PayOSPaymentModal

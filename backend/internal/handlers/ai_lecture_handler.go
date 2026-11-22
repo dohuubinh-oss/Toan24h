@@ -71,14 +71,15 @@ func ExtractAILecture(c *gin.Context) {
 		mimeTypes = append(mimeTypes, mime)
 	}
 
-	paraphrase := false
+	grade := c.PostForm("grade")
+	paraphrase := true
 	if pVals, ok := form.Value["paraphrase"]; ok && len(pVals) > 0 {
 		paraphrase = pVals[0] == "true"
-	} else if c.PostForm("paraphrase") == "true" {
-		paraphrase = true
+	} else if c.PostForm("paraphrase") != "" {
+		paraphrase = c.PostForm("paraphrase") == "true"
 	}
 
-	jsonString, err := services.ExtractLectureFromImages(fileBytesList, mimeTypes, paraphrase)
+	jsonString, err := services.ExtractLectureFromImages(fileBytesList, mimeTypes, grade, paraphrase)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Bóc tách bài giảng thất bại: " + err.Error()})
 		return

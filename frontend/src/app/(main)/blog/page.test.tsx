@@ -144,4 +144,10 @@ describe('BlogListPage with shorts playlist items', () => {
     expect(screen.getByText('Bài viết Bản Nháp Chưa Xuất Bản')).toBeInTheDocument()
     expect(screen.getByText('Bản nháp')).toBeInTheDocument()
   })
+
+  it('renders footer with copyright and essential links', () => {
+    render(<BlogListPage />)
+    expect(screen.getByText(/© 2026 toan6789\.vn/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Về chúng tôi/i })).toBeInTheDocument()
+  })
 })
