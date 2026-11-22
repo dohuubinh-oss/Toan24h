@@ -45,7 +45,7 @@ type FAQAnswerResponse struct {
 
 // SearchRelevantDocuments finds the most relevant FAQs using keyword and semantic search
 func (s *FAQRagService) SearchRelevantDocuments(query string, limit int) ([]models.FAQDocument, error) {
-	if s.db == nil {
+	if s.db == nil || !s.db.Migrator().HasTable(&models.FAQDocument{}) {
 		return nil, nil
 	}
 
